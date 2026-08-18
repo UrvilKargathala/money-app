@@ -1,0 +1,30 @@
+# ---- MoneyMind: backend-only repository ----
+# This repo intentionally tracks ONLY the backend (`api/`) plus the canonical
+# schema/seed scripts (`scripts/`). Everything else in the monorepo working
+# tree (frontend `src/`, `app/`, docs, Android shell, workspace manifests) is
+# permanently ignored — run `git status` before committing to confirm.
+
+# whitelist: ignore everything at the top level, then re-include the backend
+/*
+!/api/
+!/scripts/
+!/vercel.json
+!/README.md
+!/.gitignore
+
+# --- inside api/ ---
+api/node_modules/
+api/dist/
+api/*.tsbuildinfo
+api/.env*
+
+# --- scripts/: only the canonical Python sources are tracked ---
+scripts/.venv/
+scripts/__pycache__/
+
+# --- secrets & local env ---
+.env*
+.vercel
+
+# --- misc ---
+.DS_Store

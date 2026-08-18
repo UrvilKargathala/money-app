@@ -1,0 +1,4 @@
+{
+  "rootDirectory": "api",
+  "framework": "hono"
+}
