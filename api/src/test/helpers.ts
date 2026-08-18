@@ -199,7 +199,8 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        accounts, transactions, transaction_splits,
        tags, tags_transactions, categories,
        budgets, budget_alerts, budget_rollovers, budget_templates, budget_items,
-       account_transfers, audit_logs, login_attempts, access_logs
+       account_transfers, audit_logs, login_attempts, access_logs,
+       bills, subscriptions, payment_history, bill_reminders, subscription_audits
      RESTART IDENTITY CASCADE`
   );
   const alice = await createUser("alice@moneymind.test");

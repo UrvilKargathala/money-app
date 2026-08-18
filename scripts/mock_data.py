@@ -797,8 +797,8 @@ BILL_NAMES = [
     ("Mobile Recharge", 299, "Mobile Recharge", "monthly", 3), ("Gym Membership", 1500, "Personal Care", "monthly", 2),
     ("Society Maintenance", 2500, "Housing", "monthly", 15), ("DTH Recharge", 350, "Entertainment", "monthly", 12),
     ("School Fees", 8000, "Kids School", "monthly", 6), ("Insurance Premium", None, "Insurance", "quarterly", 20),
-    ("Property Tax", None, "Housing", "yearly", 30), ("Club Membership", 5000, "Personal Care", "yearly", 18),
-    ("Vehicle Insurance", None, "Insurance", "yearly", 25), ("Gas Cylinder", 1050, "Groceries", "monthly", 14),
+    ("Property Tax", None, "Housing", "annual", 30), ("Club Membership", 5000, "Personal Care", "annual", 18),
+    ("Vehicle Insurance", None, "Insurance", "annual", 25), ("Gas Cylinder", 1050, "Groceries", "monthly", 14),
     ("Medical Premium", None, "Insurance", "quarterly", 22), ("Library Fee", 200, "Education", "monthly", 9),
 ]
 

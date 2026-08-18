@@ -27,3 +27,5 @@ export type {
 } from "./queries/budgets";
 export type { ActionState, SessionUser, SessionIssued, CategoryRow } from "./types";
 export type { SignupFieldErrors } from "./routes/auth";
+export type { Bill, PaymentHistoryRow, DueItem, BillOverview } from "./routes/bills";
+export type { Subscription } from "./routes/subscriptions";

@@ -578,13 +578,13 @@ TABLES: list[tuple[str, str]] = [
             amount NUMERIC(12,2),
             estimated_amount NUMERIC(12,2),
             due_day INTEGER CHECK (due_day BETWEEN 1 AND 31),
-            frequency TEXT CHECK (frequency IN ('weekly','monthly','quarterly','yearly')),
+            frequency TEXT CHECK (frequency IN ('monthly','quarterly','half_yearly','annual','one_time')),
             account_id UUID REFERENCES accounts(id),
             category_id UUID REFERENCES categories(id),
             reminder_days INTEGER DEFAULT 3,
             is_autopay INTEGER DEFAULT 0,
             notes TEXT,
-            current_period_status TEXT CHECK (current_period_status IN ('upcoming','due_soon','overdue','paid','skipped')),
+            current_period_status TEXT DEFAULT 'upcoming' CHECK (current_period_status IN ('upcoming','due_soon','overdue','paid','skipped')),
             is_active INTEGER DEFAULT 1,
             version INTEGER DEFAULT 1
         )
@@ -602,7 +602,7 @@ TABLES: list[tuple[str, str]] = [
             next_renewal_date DATE NOT NULL,
             account_id UUID REFERENCES accounts(id),
             category_id UUID REFERENCES categories(id),
-            status TEXT CHECK (status IN ('active','paused','cancelled')),
+            status TEXT DEFAULT 'active' CHECK (status IN ('active','paused','cancelled')),
             notes TEXT,
             version INTEGER DEFAULT 1
         )
