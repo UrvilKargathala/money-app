@@ -8,6 +8,7 @@ import { tags } from "./routes/tags";
 import { budgets } from "./routes/budgets";
 import { bills } from "./routes/bills";
 import { subscriptions } from "./routes/subscriptions";
+import { goals } from "./routes/goals";
 import { jobs } from "./routes/jobs";
 
 export const app = new Hono();
@@ -21,6 +22,7 @@ app.route("/api/tags", tags);
 app.route("/api/budgets", budgets);
 app.route("/api/bills", bills);
 app.route("/api/subscriptions", subscriptions);
+app.route("/api/goals", goals);
 app.route("/api/jobs", jobs);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));

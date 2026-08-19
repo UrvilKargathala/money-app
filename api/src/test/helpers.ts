@@ -159,6 +159,42 @@ export async function createIncome(
   return result.rows[0].id;
 }
 
+export async function createGoal(
+  user: TestUser,
+  name: string,
+  target: number,
+  targetDate: string
+): Promise<string> {
+  const res = await postAs(user, "/api/goals", {
+    name,
+    target_amount: String(target),
+    target_date: targetDate,
+    priority: "medium",
+  });
+  if (!res.ok) {
+    throw new Error(`createGoal failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { goal: { id: string } };
+  return body.goal.id;
+}
+
+export async function addContribution(
+  user: TestUser,
+  goalId: string,
+  amount: number,
+  date: string
+): Promise<string> {
+  const res = await postAs(user, `/api/goals/${goalId}/contributions`, {
+    amount: String(amount),
+    date,
+  });
+  if (!res.ok) {
+    throw new Error(`addContribution failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { contribution: { id: string } };
+  return body.contribution.id;
+}
+
 export async function findCategory(name: string): Promise<string> {
   const result = await pool.query<{ id: string }>(
     `SELECT id FROM categories WHERE name = $1 AND user_id IS NULL LIMIT 1`,
@@ -200,7 +236,8 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        tags, tags_transactions, categories,
        budgets, budget_alerts, budget_rollovers, budget_templates, budget_items,
        account_transfers, audit_logs, login_attempts, access_logs,
-       bills, subscriptions, payment_history, bill_reminders, subscription_audits
+       bills, subscriptions, payment_history, bill_reminders, subscription_audits,
+       goals, goal_templates, goal_contributions, goal_snapshots, goal_milestones
      RESTART IDENTITY CASCADE`
   );
   const alice = await createUser("alice@moneymind.test");

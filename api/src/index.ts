@@ -29,3 +29,14 @@ export type { ActionState, SessionUser, SessionIssued, CategoryRow } from "./typ
 export type { SignupFieldErrors } from "./routes/auth";
 export type { Bill, PaymentHistoryRow, DueItem, BillOverview } from "./routes/bills";
 export type { Subscription } from "./routes/subscriptions";
+export type {
+  Goal,
+  GoalRow,
+  Contribution,
+  ContributionRow,
+  GoalTemplate,
+  GoalDashboard,
+  MilestoneRow,
+  SnapshotRow,
+  DistributeSuggestion,
+} from "./queries/goals";

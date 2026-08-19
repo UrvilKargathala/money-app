@@ -1,4 +1,4 @@
-# Routes & API Contract
+﻿# Routes & API Contract
 
 **Scope:** every HTTP endpoint of the MoneyMind API — implemented today and planned (backlog derived from `DOCS/module/*.md`). This is the single source of truth for route naming and the live contract between `api/` (backend) and the web + Capacitor clients.
 
@@ -68,7 +68,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (70): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run.
+Implemented today (98): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute.
 
 ---
 
@@ -275,35 +275,35 @@ Implemented today (70): auth login/signup/logout/me · accounts list/create/patc
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/goals` | List (status tabs, priority filter) | 🧪 |
-| POST | `/api/goals` | Create goal | 🧪 |
-| GET | `/api/goals/:id` | Detail with derived progress | 🧪 |
-| PATCH | `/api/goals/:id` | Update (recalculates monthly contribution) | 🧪 |
-| DELETE | `/api/goals/:id` | Delete + contribution history | 🧪 |
-| POST | `/api/goals/:id/pause` | Pause | 🧪 |
-| POST | `/api/goals/:id/resume` | Resume | 🧪 |
-| POST | `/api/goals/:id/complete` | Mark completed | 🧪 |
-| GET | `/api/goals/dashboard` | Summary cards (saved, target, completion %) | 🧪 |
-| GET | `/api/goals/:id/progress` | Progress visualization data | 🧪 |
-| GET | `/api/goals/:id/feasibility` | On-track indicator | 🧪 |
-| GET | `/api/goals/:id/projection` | Projected completion date | 🧪 |
-| GET | `/api/goals/templates` | List templates (system + custom) | 🧪 |
-| GET | `/api/goals/templates/:id` | Read template | 🧪 |
-| POST | `/api/goals/templates` | Create custom template | 🧪 |
-| PATCH | `/api/goals/templates/:id` | Update template | 🧪 |
-| DELETE | `/api/goals/templates/:id` | Delete template | 🧪 |
-| GET | `/api/goals/:id/contributions` | Contribution history | 🧪 |
-| POST | `/api/goals/:id/contributions` | Log contribution (optionally linked transfer) | 🧪 |
-| PATCH | `/api/goals/:id/contributions/:contributionId` | Edit contribution | 🧪 |
-| DELETE | `/api/goals/:id/contributions/:contributionId` | Delete contribution | 🧪 |
-| POST | `/api/goals/:id/contributions/with-transfer` | Contribute + auto transfer | 🧪 |
-| GET | `/api/goals/:id/snapshots` | Weekly progress snapshots | 🧪 |
-| POST | `/api/goals/:id/snapshots` | Manual snapshot | 🧪 |
-| GET | `/api/goals/:id/milestones` | 25/50/75/100% milestones | 🧪 |
-| GET | `/api/goals/export` | Goals CSV | 🧪 |
-| GET | `/api/goals/:id/contributions/export` | Contributions CSV | 🧪 |
+| GET | `/api/goals` | List (status tabs, priority filter) | ✅ |
+| POST | `/api/goals` | Create goal | ✅ |
+| GET | `/api/goals/:id` | Detail with derived progress | ✅ |
+| PATCH | `/api/goals/:id` | Update (recalculates monthly contribution) | ✅ |
+| DELETE | `/api/goals/:id` | Delete + contribution history | ✅ |
+| POST | `/api/goals/:id/pause` | Pause | ✅ |
+| POST | `/api/goals/:id/resume` | Resume | ✅ |
+| POST | `/api/goals/:id/complete` | Mark completed | ✅ |
+| GET | `/api/goals/dashboard` | Summary cards (saved, target, completion %) | ✅ |
+| GET | `/api/goals/:id/progress` | Progress visualization data | ✅ |
+| GET | `/api/goals/:id/feasibility` | On-track indicator | ✅ |
+| GET | `/api/goals/:id/projection` | Projected completion date | ✅ |
+| GET | `/api/goals/templates` | List templates (system + custom) | ✅ |
+| GET | `/api/goals/templates/:id` | Read template | ✅ |
+| POST | `/api/goals/templates` | Create custom template | ✅ |
+| PATCH | `/api/goals/templates/:id` | Update template | ✅ |
+| DELETE | `/api/goals/templates/:id` | Delete template | ✅ |
+| GET | `/api/goals/:id/contributions` | Contribution history | ✅ |
+| POST | `/api/goals/:id/contributions` | Log contribution (optionally linked transfer) | ✅ |
+| PATCH | `/api/goals/:id/contributions/:contributionId` | Edit contribution | ✅ |
+| DELETE | `/api/goals/:id/contributions/:contributionId` | Delete contribution | ✅ |
+| POST | `/api/goals/:id/contributions/with-transfer` | Contribute + auto transfer | ✅ |
+| GET | `/api/goals/:id/snapshots` | Weekly progress snapshots | ✅ |
+| POST | `/api/goals/:id/snapshots` | Manual snapshot | ✅ |
+| GET | `/api/goals/:id/milestones` | 25/50/75/100% milestones | ✅ |
+| GET | `/api/goals/export` | Goals CSV | ✅ |
+| GET | `/api/goals/:id/contributions/export` | Contributions CSV | ✅ |
 | GET | `/api/goals/:id/report` | Progress chart PDF | 🧪 |
-| POST | `/api/goals/distribute` | Windfall distribution suggestion (enhancement) | 🧪 |
+| POST | `/api/goals/distribute` | Windfall distribution suggestion (enhancement) | ✅ |
 
 ### Module 6 — Debt & Loan Manager
 
