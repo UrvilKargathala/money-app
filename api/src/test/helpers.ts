@@ -159,6 +159,74 @@ export async function createIncome(
   return result.rows[0].id;
 }
 
+export async function createGoal(
+  user: TestUser,
+  name: string,
+  target: number,
+  targetDate: string
+): Promise<string> {
+  const res = await postAs(user, "/api/goals", {
+    name,
+    target_amount: String(target),
+    target_date: targetDate,
+    priority: "medium",
+  });
+  if (!res.ok) {
+    throw new Error(`createGoal failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { goal: { id: string } };
+  return body.goal.id;
+}
+
+export async function addContribution(
+  user: TestUser,
+  goalId: string,
+  amount: number,
+  date: string
+): Promise<string> {
+  const res = await postAs(user, `/api/goals/${goalId}/contributions`, {
+    amount: String(amount),
+    date,
+  });
+  if (!res.ok) {
+    throw new Error(`addContribution failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { contribution: { id: string } };
+  return body.contribution.id;
+}
+
+export async function createDebt(
+  user: TestUser,
+  name: string,
+  params: {
+    type?: string;
+    principalOriginal?: number;
+    principalOutstanding?: number;
+    interestRate?: number;
+    emiAmount?: number;
+    tenureMonths?: number;
+    startDate?: string;
+    accountId?: string;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/debts", {
+    name,
+    type: params.type ?? "personal_loan",
+    principal_original: String(params.principalOriginal ?? params.principalOutstanding ?? 120000),
+    principal_outstanding: String(params.principalOutstanding ?? 120000),
+    interest_rate: String(params.interestRate ?? 12),
+    emi_amount: String(params.emiAmount ?? 10000),
+    tenure_months: String(params.tenureMonths ?? 12),
+    start_date: params.startDate ?? "2025-01-15",
+    ...(params.accountId ? { account_id: params.accountId } : {}),
+  });
+  if (!res.ok) {
+    throw new Error(`createDebt failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { debt: { id: string } };
+  return body.debt.id;
+}
+
 export async function findCategory(name: string): Promise<string> {
   const result = await pool.query<{ id: string }>(
     `SELECT id FROM categories WHERE name = $1 AND user_id IS NULL LIMIT 1`,
@@ -199,7 +267,10 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        accounts, transactions, transaction_splits,
        tags, tags_transactions, categories,
        budgets, budget_alerts, budget_rollovers, budget_templates, budget_items,
-       account_transfers, audit_logs, login_attempts, access_logs
+       account_transfers, audit_logs, login_attempts, access_logs,
+       bills, subscriptions, payment_history, bill_reminders, subscription_audits,
+       goals, goal_templates, goal_contributions, goal_snapshots, goal_milestones,
+       debts, debt_payments, amortization_schedule
      RESTART IDENTITY CASCADE`
   );
   const alice = await createUser("alice@moneymind.test");

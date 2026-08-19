@@ -27,3 +27,29 @@ export type {
 } from "./queries/budgets";
 export type { ActionState, SessionUser, SessionIssued, CategoryRow } from "./types";
 export type { SignupFieldErrors } from "./routes/auth";
+export type { Bill, PaymentHistoryRow, DueItem, BillOverview } from "./routes/bills";
+export type { Subscription } from "./routes/subscriptions";
+export type {
+  Goal,
+  GoalRow,
+  Contribution,
+  ContributionRow,
+  GoalTemplate,
+  GoalDashboard,
+  MilestoneRow,
+  SnapshotRow,
+  DistributeSuggestion,
+} from "./queries/goals";
+export type {
+  Debt,
+  DebtRow,
+  DebtPayment,
+  DebtPaymentRow,
+  ScheduleRow,
+  DebtType,
+  DtiResult,
+  PaymentStatusEntry,
+  StrategyResult,
+  SimulationOutput,
+  HealthAlert,
+} from "./queries/debts";

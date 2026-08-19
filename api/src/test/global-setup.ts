@@ -21,6 +21,15 @@ const ACCOUNT_TYPES = [
   ["ppf", "PPF Account", "shield", 1, 7],
 ];
 
+const DEBT_TYPES = [
+  ["home_loan", "Home Loan", 1, 1],
+  ["car_loan", "Car Loan", 1, 2],
+  ["personal_loan", "Personal Loan", 0, 3],
+  ["education_loan", "Education Loan", 0, 4],
+  ["credit_card", "Credit Card", 0, 5],
+  ["other", "Other Loan", 0, 6],
+];
+
 function findRepoRoot(): string {
   let dir = process.cwd();
   for (let i = 0; i < 6; i++) {
@@ -48,6 +57,15 @@ async function seedLookups(databaseUrl: string): Promise<void> {
        VALUES ${placeholders}
        ON CONFLICT (type_code) DO NOTHING`,
       ACCOUNT_TYPES.flat()
+    );
+    const debtPlaceholders = DEBT_TYPES.map(
+      (_, i) => `($${i * 4 + 1},$${i * 4 + 2},$${i * 4 + 3},$${i * 4 + 4})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO debt_types (type_code, display_name, is_secured, sort_order)
+       VALUES ${debtPlaceholders}
+       ON CONFLICT (type_code) DO NOTHING`,
+      DEBT_TYPES.flat()
     );
   } finally {
     await pool.end();
