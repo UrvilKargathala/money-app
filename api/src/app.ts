@@ -9,6 +9,8 @@ import { budgets } from "./routes/budgets";
 import { bills } from "./routes/bills";
 import { subscriptions } from "./routes/subscriptions";
 import { goals } from "./routes/goals";
+import { debts, debtTypes } from "./routes/debts";
+import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
 export const app = new Hono();
@@ -23,6 +25,9 @@ app.route("/api/budgets", budgets);
 app.route("/api/bills", bills);
 app.route("/api/subscriptions", subscriptions);
 app.route("/api/goals", goals);
+app.route("/api/debts", debts);
+app.route("/api/debt-types", debtTypes);
+app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));

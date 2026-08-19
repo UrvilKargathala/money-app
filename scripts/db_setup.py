@@ -126,6 +126,7 @@ TABLES: list[tuple[str, str]] = [
             language TEXT DEFAULT 'en',
             ai_api_key TEXT,
             ai_enabled INTEGER DEFAULT 0,
+            monthly_income NUMERIC(12,2),
             vault_recovery_wrapped TEXT,
             created_by INTEGER REFERENCES users(user_id),
             updated_by INTEGER REFERENCES users(user_id),
@@ -792,7 +793,8 @@ TABLES: list[tuple[str, str]] = [
             outstanding_after NUMERIC(12,2),
             date DATE,
             transaction_id UUID REFERENCES transactions(id),
-            notes TEXT
+            notes TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
         """,
     ),

@@ -1016,12 +1016,13 @@ def m6_debts(conn, user_ids: list[int], meta: dict[str, tuple[int, str, float]])
             closed = uid == user_ids[0] and dname == "Education Loan" and elapsed >= 96
             schedule = amortize(principal, rate, tenure)
             elapsed = tenure if closed else min(elapsed, tenure)
-            end = dt.date.today() - dt.timedelta(days=30 * (tenure - elapsed))
+            start = dt.date.today() - dt.timedelta(days=30 * elapsed)
+            end = start + dt.timedelta(days=30 * tenure)
             debt_rows.append((did, uid, f"{lender} {dname}", dtype, lender, principal,
                               schedule[elapsed - 1][4] if elapsed > 0 else principal,
                               rate, schedule[0][1], None, tenure,
                               tenure - elapsed if not closed else 0,
-                              days_ago(540 - i * 30), end, pick(uid_savings),
+                              start, end, pick(uid_savings),
                               schedule[elapsed - 1][5] if elapsed > 0 else 0,
                               0 if closed else 1,
                               f"{dtype} EMI {elapsed}/{tenure} paid" if not closed else "Loan closed",
@@ -1032,13 +1033,14 @@ def m6_debts(conn, user_ids: list[int], meta: dict[str, tuple[int, str, float]])
             outstanding_total[uid] += schedule[elapsed - 1][4] if elapsed > 0 else principal
             for k, period, emi, p, interest, out, cum in (
                     (k, *row) for k, row in enumerate(schedule, start=1)):
+                sched_date = start + dt.timedelta(days=30 * (period - 1))
                 sched_rows.append((uid, did, period, money(emi), money(p), money(interest),
                                    money(out), money(cum),
-                                   dt.date.today() - dt.timedelta(days=30 * (tenure - period)),
+                                   sched_date,
                                    NOW - dt.timedelta(days=rng.randint(1, 400))))
                 if period <= elapsed:
                     pay_rows.append((uid, did, "emi", money(emi), money(p), money(interest),
-                                     money(out), dt.date.today() - dt.timedelta(days=30 * (tenure - period)),
+                                     money(out), sched_date,
                                      None, f"EMI #{period}"))
 
         for k in range(14):

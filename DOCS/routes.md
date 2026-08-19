@@ -68,7 +68,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (98): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute.
+Implemented today (126): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export.
 
 ---
 
@@ -309,33 +309,33 @@ Implemented today (98): auth login/signup/logout/me · accounts list/create/patc
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/debts` | List (type filter, active/closed toggle) | 🧪 |
-| POST | `/api/debts` | Add debt/loan | 🧪 |
-| GET | `/api/debts/:id` | Detail | 🧪 |
-| PATCH | `/api/debts/:id` | Edit (recalculates amortization) | 🧪 |
-| DELETE | `/api/debts/:id` | Delete (only if no EMI recorded) | 🧪 |
-| POST | `/api/debts/:id/close` | Mark closed | 🧪 |
-| POST | `/api/debts/:id/reopen` | Reopen | 🧪 |
-| GET | `/api/debts/dashboard` | Totals (outstanding, EMI burden, debt-free date, DTI) | 🧪 |
-| GET | `/api/debt-types` | Lookup: debt types | 🧪 |
-| GET | `/api/debts/:id/amortization` | Full schedule (`?year=`) | 🧪 |
-| POST | `/api/debts/:id/amortization/regenerate` | Regenerate cached schedule | 🧪 |
-| GET | `/api/debts/:id/cost-breakdown` | Principal vs interest | 🧪 |
-| POST | `/api/debts/:id/simulate-prepayment` | Reduce-EMI vs reduce-tenure simulation | 🧪 |
-| POST | `/api/debts/:id/prepayments` | Apply prepayment | 🧪 |
-| GET | `/api/debts/:id/payments` | EMI/prepayment history | 🧪 |
-| POST | `/api/debts/:id/payments` | Log EMI payment (links transaction) | 🧪 |
-| PATCH | `/api/debts/:id/payments/:paymentId` | Edit logged payment | 🧪 |
-| DELETE | `/api/debts/:id/payments/:paymentId` | Delete logged payment | 🧪 |
-| GET | `/api/debts/:id/payment-status` | 12-month paid/missed/scheduled timeline | 🧪 |
-| GET | `/api/debts/dti` | Debt-to-income ratio | 🧪 |
-| PATCH | `/api/users/me/settings/monthly-income` | Monthly income for DTI | 🧪 |
-| GET | `/api/debts/strategies/compare` | Avalanche vs snowball comparison | 🧪 |
-| GET | `/api/debts/combined-timeline` | Consolidated payoff timeline | 🧪 |
-| GET | `/api/debts/combined/strategies` | Portfolio-level strategy comparison | 🧪 |
-| GET | `/api/debts/health-alerts` | Health flags (high DTI, missed payments) | 🧪 |
-| GET | `/api/debts/export` | Debt summary CSV | 🧪 |
-| GET | `/api/debts/:id/amortization/export` | Schedule CSV | 🧪 |
+| GET | `/api/debts` | List (type filter, active/closed toggle) | ✅ |
+| POST | `/api/debts` | Add debt/loan | ✅ |
+| GET | `/api/debts/:id` | Detail | ✅ |
+| PATCH | `/api/debts/:id` | Edit (recalculates amortization) | ✅ |
+| DELETE | `/api/debts/:id` | Delete (only if no EMI recorded) | ✅ |
+| POST | `/api/debts/:id/close` | Mark closed | ✅ |
+| POST | `/api/debts/:id/reopen` | Reopen | ✅ |
+| GET | `/api/debts/dashboard` | Totals (outstanding, EMI burden, debt-free date, DTI) | ✅ |
+| GET | `/api/debt-types` | Lookup: debt types | ✅ |
+| GET | `/api/debts/:id/amortization` | Full schedule (`?year=`) | ✅ |
+| POST | `/api/debts/:id/amortization/regenerate` | Regenerate cached schedule | ✅ |
+| GET | `/api/debts/:id/cost-breakdown` | Principal vs interest | ✅ |
+| POST | `/api/debts/:id/simulate-prepayment` | Reduce-EMI vs reduce-tenure simulation | ✅ |
+| POST | `/api/debts/:id/prepayments` | Apply prepayment | ✅ |
+| GET | `/api/debts/:id/payments` | EMI/prepayment history | ✅ |
+| POST | `/api/debts/:id/payments` | Log EMI payment (links transaction) | ✅ |
+| PATCH | `/api/debts/:id/payments/:paymentId` | Edit logged payment | ✅ |
+| DELETE | `/api/debts/:id/payments/:paymentId` | Delete logged payment | ✅ |
+| GET | `/api/debts/:id/payment-status` | 12-month paid/missed/scheduled timeline | ✅ |
+| GET | `/api/debts/dti` | Debt-to-income ratio | ✅ |
+| PATCH | `/api/users/me/settings/monthly-income` | Monthly income for DTI | ✅ |
+| POST | `/api/debts/strategies/compare` | Avalanche vs snowball comparison | ✅ |
+| GET | `/api/debts/combined-timeline` | Consolidated payoff timeline | ✅ |
+| POST | `/api/debts/combined/strategies` | Portfolio-level strategy comparison | ✅ |
+| GET | `/api/debts/health-alerts` | Health flags (high DTI, missed payments) | ✅ |
+| GET | `/api/debts/export` | Debt summary CSV | ✅ |
+| GET | `/api/debts/:id/amortization/export` | Schedule CSV | ✅ |
 | GET | `/api/debts/:id/report` | Prepayment comparison PDF | 🧪 |
 
 ### Module 7 — Tax Planning

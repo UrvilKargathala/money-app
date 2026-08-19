@@ -40,3 +40,16 @@ export type {
   SnapshotRow,
   DistributeSuggestion,
 } from "./queries/goals";
+export type {
+  Debt,
+  DebtRow,
+  DebtPayment,
+  DebtPaymentRow,
+  ScheduleRow,
+  DebtType,
+  DtiResult,
+  PaymentStatusEntry,
+  StrategyResult,
+  SimulationOutput,
+  HealthAlert,
+} from "./queries/debts";
