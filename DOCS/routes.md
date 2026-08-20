@@ -68,7 +68,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (126): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export.
+Implemented today (151): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr.
 
 ---
 
@@ -342,34 +342,34 @@ Implemented today (126): auth login/signup/logout/me · accounts list/create/pat
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/tax/investments` | List (`?fy=`, section/proof-status filters) | 🧪 |
-| POST | `/api/tax/investments` | Record investment entry | 🧪 |
-| GET | `/api/tax/investments/:id` | Read entry | 🧪 |
-| PATCH | `/api/tax/investments/:id` | Edit entry | 🧪 |
-| DELETE | `/api/tax/investments/:id` | Delete entry | 🧪 |
-| GET | `/api/tax/sections` | Lookup: sections with limits | 🧪 |
-| GET | `/api/tax/utilization` | Section utilization dashboard for FY | 🧪 |
-| GET | `/api/tax/salary-structure` | Salary structure for FY | 🧪 |
-| PATCH | `/api/tax/salary-structure` | Upsert structure (salaried/freelancer) | 🧪 |
-| POST | `/api/tax/calculate` | Calculate liability for a regime | 🧪 |
-| GET | `/api/tax/compare-regimes` | Old vs new regime comparison + recommendation | 🧪 |
-| GET | `/api/tax/regime-slabs` | Lookup: slabs for FY | 🧪 |
-| GET | `/api/tax/regime-recommendation` | Recommended regime with ₹ difference | 🧪 |
-| GET | `/api/tax/summary` | FY summary card | 🧪 |
-| GET | `/api/tax/financial-years` | FYs with data | 🧪 |
-| GET | `/api/tax/itr-documents` | ITR checklist for FY | 🧪 |
-| POST | `/api/tax/itr-documents` | Add document entry | 🧪 |
-| PATCH | `/api/tax/itr-documents/:id` | Update status/notes | 🧪 |
-| DELETE | `/api/tax/itr-documents/:id` | Delete entry | 🧪 |
-| POST | `/api/tax/itr-documents/suggestions` | Generate built-in suggested docs | 🧪 |
-| GET | `/api/tax/itr-documents/completion` | Checklist completion pie data | 🧪 |
-| GET | `/api/tax/suggestions` | Suggestions from unused limits | 🧪 |
+| GET | `/api/tax/sections` | Lookup: sections with limits | ✅ |
+| GET | `/api/tax/regime-slabs` | Lookup: slabs for FY + regime | ✅ |
+| POST | `/api/tax/investments` | Record investment entry | ✅ |
+| GET | `/api/tax/investments` | List (`?financial_year=`, section/proof-status filters) | ✅ |
+| GET | `/api/tax/investments/:id` | Read entry | ✅ |
+| PATCH | `/api/tax/investments/:id` | Edit entry (optimistic version) | ✅ |
+| DELETE | `/api/tax/investments/:id` | Delete entry | ✅ |
+| GET | `/api/tax/utilization` | Section utilization dashboard for FY | ✅ |
+| GET | `/api/tax/summary` | FY summary card (invested, deduction, computation) | ✅ |
+| GET | `/api/tax/compare` | Old vs new regime comparison + recommendation | ✅ |
+| GET | `/api/tax/suggestions` | Suggestions from unused limits | ✅ |
+| POST | `/api/tax/salary` | Upsert salary structure for FY | ✅ |
+| GET | `/api/tax/salary` | Salary structure for FY | ✅ |
+| PATCH | `/api/tax/salary` | Partial update of salary structure | ✅ |
+| POST | `/api/tax/itr/suggest` | Generate built-in suggested docs | ✅ |
+| GET | `/api/tax/itr` | ITR checklist for FY (category/status filters) | ✅ |
+| GET | `/api/tax/itr/completion` | Checklist completion pie data | ✅ |
+| GET | `/api/tax/itr/:id` | Read document entry | ✅ |
+| POST | `/api/tax/itr` | Add document entry | ✅ |
+| PATCH | `/api/tax/itr/:id` | Update status/notes | ✅ |
+| DELETE | `/api/tax/itr/:id` | Delete entry | ✅ |
+| GET | `/api/tax/financial-years` | FYs with user data | ✅ |
+| GET | `/api/tax/exports/utilization` | Section utilization CSV | ✅ |
+| GET | `/api/tax/exports/investments` | Tax investments CSV | ✅ |
+| GET | `/api/tax/exports/itr` | ITR checklist CSV | ✅ |
 | POST | `/api/tax/form16/upload` | Upload Form 16 PDF for parsing (enhancement) | 🧪 |
 | POST | `/api/tax/advance-tax/calculate` | Quarterly advance tax (enhancement) | 🧪 |
-| GET | `/api/tax/export` | Section utilization CSV | 🧪 |
 | GET | `/api/tax/report` | Regime comparison PDF | 🧪 |
-| GET | `/api/tax/itr-documents/export` | ITR checklist CSV | 🧪 |
-| GET | `/api/tax/investments/export` | Tax investments CSV | 🧪 |
 
 ### Module 8 — Investment Tracker
 

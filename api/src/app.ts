@@ -10,6 +10,7 @@ import { bills } from "./routes/bills";
 import { subscriptions } from "./routes/subscriptions";
 import { goals } from "./routes/goals";
 import { debts, debtTypes } from "./routes/debts";
+import { tax } from "./routes/tax";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
@@ -27,6 +28,7 @@ app.route("/api/subscriptions", subscriptions);
 app.route("/api/goals", goals);
 app.route("/api/debts", debts);
 app.route("/api/debt-types", debtTypes);
+app.route("/api/tax", tax);
 app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 

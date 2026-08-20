@@ -53,3 +53,15 @@ export type {
   SimulationOutput,
   HealthAlert,
 } from "./queries/debts";
+export type {
+  TaxInvestment,
+  TaxSection,
+  TaxSlab,
+  SalaryStructure,
+  ItrDocument,
+  UtilizationItem,
+  Suggestion,
+  TaxComputation,
+  RegimeComparison,
+  ItrCompletion,
+} from "./queries/tax";

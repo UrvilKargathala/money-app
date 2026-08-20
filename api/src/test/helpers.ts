@@ -227,6 +227,36 @@ export async function createDebt(
   return body.debt.id;
 }
 
+export async function createTaxInvestment(
+  user: TestUser,
+  params: {
+    section?: string;
+    name?: string;
+    amount?: number;
+    investmentDate?: string;
+    proofStatus?: string;
+    financialYear?: string;
+    transactionId?: string;
+    notes?: string;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/tax/investments", {
+    section: params.section ?? "80C",
+    name: params.name ?? "PPF - SBI",
+    amount: String(params.amount ?? 50000),
+    investment_date: params.investmentDate ?? "2026-05-15",
+    proof_status: params.proofStatus ?? "collected",
+    financial_year: params.financialYear ?? "2026-27",
+    ...(params.transactionId ? { transaction_id: params.transactionId } : {}),
+    ...(params.notes ? { notes: params.notes } : {}),
+  });
+  if (!res.ok) {
+    throw new Error(`createTaxInvestment failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { investment: { id: string } };
+  return body.investment.id;
+}
+
 export async function findCategory(name: string): Promise<string> {
   const result = await pool.query<{ id: string }>(
     `SELECT id FROM categories WHERE name = $1 AND user_id IS NULL LIMIT 1`,
@@ -270,7 +300,8 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        account_transfers, audit_logs, login_attempts, access_logs,
        bills, subscriptions, payment_history, bill_reminders, subscription_audits,
        goals, goal_templates, goal_contributions, goal_snapshots, goal_milestones,
-       debts, debt_payments, amortization_schedule
+       debts, debt_payments, amortization_schedule,
+       tax_investments, salary_structures, itr_documents
      RESTART IDENTITY CASCADE`
   );
   const alice = await createUser("alice@moneymind.test");

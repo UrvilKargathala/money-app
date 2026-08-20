@@ -144,17 +144,27 @@ def lookup_rows(conn) -> dict[str, str]:
         ("STD", "Standard Deduction", "Flat standard deduction", 50000, "both", 11),
     ]
     slabs = [
-        ("FY-2025-26", "old", 0, 250000, 0.0, 0.04),
-        ("FY-2025-26", "old", 250000, 500000, 0.05, 0.04),
-        ("FY-2025-26", "old", 500000, 1000000, 0.20, 0.04),
-        ("FY-2025-26", "old", 1000000, 999999999, 0.30, 0.04),
-        ("FY-2025-26", "new", 0, 400000, 0.0, 0.04),
-        ("FY-2025-26", "new", 400000, 800000, 0.05, 0.04),
-        ("FY-2025-26", "new", 800000, 1200000, 0.10, 0.04),
-        ("FY-2025-26", "new", 1200000, 1600000, 0.15, 0.04),
-        ("FY-2025-26", "new", 1600000, 2000000, 0.20, 0.04),
-        ("FY-2025-26", "new", 2000000, 2400000, 0.25, 0.04),
-        ("FY-2025-26", "new", 2400000, 999999999, 0.30, 0.04),
+        ("2025-26", "old", 0, 250000, 0.0, 0.04),
+        ("2025-26", "old", 250000, 500000, 0.05, 0.04),
+        ("2025-26", "old", 500000, 1000000, 0.20, 0.04),
+        ("2025-26", "old", 1000000, 999999999, 0.30, 0.04),
+        ("2025-26", "new", 0, 400000, 0.0, 0.04),
+        ("2025-26", "new", 400000, 800000, 0.05, 0.04),
+        ("2025-26", "new", 800000, 1200000, 0.10, 0.04),
+        ("2025-26", "new", 1200000, 1600000, 0.15, 0.04),
+        ("2025-26", "new", 1600000, 2000000, 0.20, 0.04),
+        ("2025-26", "new", 2000000, 2400000, 0.25, 0.04),
+        ("2025-26", "new", 2400000, 999999999, 0.30, 0.04),
+        ("2026-27", "old", 0, 250000, 0.0, 0.04),
+        ("2026-27", "old", 250000, 500000, 0.05, 0.04),
+        ("2026-27", "old", 500000, 1000000, 0.20, 0.04),
+        ("2026-27", "old", 1000000, 999999999, 0.30, 0.04),
+        ("2026-27", "new", 0, 300000, 0.0, 0.04),
+        ("2026-27", "new", 300000, 600000, 0.05, 0.04),
+        ("2026-27", "new", 600000, 900000, 0.10, 0.04),
+        ("2026-27", "new", 900000, 1200000, 0.15, 0.04),
+        ("2026-27", "new", 1200000, 1500000, 0.20, 0.04),
+        ("2026-27", "new", 1500000, 999999999, 0.30, 0.04),
     ]
     note_templates = [
         ("passport", "Passport", "Passport number and details",
@@ -1118,10 +1128,10 @@ def m7_tax(conn, user_ids: list[int]) -> None:
     sal_rows: list[tuple] = []
     itr_rows: list[tuple] = []
     for uid in user_ids:
-        for fy in ("FY-2024-25", "FY-2025-26"):
+        for fy in ("2025-26", "2026-27"):
             for k in range(36):
                 section, name, amt = TAX_ITEMS[k % len(TAX_ITEMS)]
-                fy_start = dt.date(int(fy.split("-")[1]) - 1 if fy == "FY-2024-25" else 2025, 4, 1)
+                fy_start = dt.date(int(fy.split("-")[0]), 4, 1)
                 inv_rows.append((uid, section, fy, f"{name} {k // len(TAX_ITEMS) + 1}",
                                  money(amt * rand(0.8, 1.0)),
                                  fy_start + dt.timedelta(days=rng.randint(0, 340)),
@@ -1140,8 +1150,8 @@ def m7_tax(conn, user_ids: list[int]) -> None:
                              round((basic + basic * 0.44 + basic * 0.22) * 12 + 12000, 2) if is_salaried else 480000,
                              money(rand(0, 50000)), money(rand(15000, 40000)) if is_salaried else 0))
         for k in range(40):
-            cat = pick(["form16", "26as", "proof", "statement", "other"])
-            fy = pick(["FY-2024-25", "FY-2025-26"])
+            cat = pick(["income_proof", "investment_proof", "deduction_proof", "other"])
+            fy = pick(["2025-26", "2026-27"])
             itr_rows.append((uid, fy, cat,
                              pick([f"Form 16 - {fy}", f"Form 26AS - {fy}", "ELSS statement",
                                    "PPF passbook", "Health premium receipt", "Donation receipt",
