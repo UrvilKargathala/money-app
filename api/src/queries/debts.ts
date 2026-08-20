@@ -1,4 +1,5 @@
 import { query } from "../db";
+import { isoDate } from "../utils/format";
 
 export type Queryable = { query: typeof query };
 
@@ -157,11 +158,7 @@ export function addMonths(dateStr: string, months: number): string {
   return `${ny}-${String(nm).padStart(2, "0")}-${String(Math.min(d, daysInMonth)).padStart(2, "0")}`;
 }
 
-export function isoDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate()
-  ).padStart(2, "0")}`;
-}
+export { isoDate };
 
 /** Standard EMI formula: P·r·(1+r)ⁿ / ((1+r)ⁿ − 1), r = annual/1200. */
 export function emiFor(principal: number, annualRate: number, months: number): number {
@@ -526,25 +523,34 @@ export async function regenerateSchedule(
   const n = deriveMonths(outstanding, annualRate, emiAmount);
   if (n <= 0) return 0;
   const rows = amortize(outstanding, annualRate, n, anchorDate);
-  for (const row of rows) {
-    await q.query(
-      `INSERT INTO amortization_schedule
-         (user_id, debt_id, period, emi_amount, principal_part, interest_part,
-          outstanding_after, cumulative_interest, scheduled_date, regenerated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::date, CURRENT_TIMESTAMP)`,
-      [
-        userId,
-        debtId,
-        row.period,
-        row.emi_amount,
-        row.principal_part,
-        row.interest_part,
-        row.outstanding_after,
-        row.cumulative_interest,
-        row.scheduled_date,
-      ]
-    );
-  }
+  if (rows.length === 0) return 0;
+
+  const values = rows
+    .map(
+      (_, i) =>
+        `($${i * 9 + 1}, $${i * 9 + 2}, $${i * 9 + 3}, $${i * 9 + 4}, $${i * 9 + 5}, ` +
+        `$${i * 9 + 6}, $${i * 9 + 7}, $${i * 9 + 8}, $${i * 9 + 9}, CURRENT_TIMESTAMP)`
+    )
+    .join(", ");
+  const params = rows.flatMap((row) => [
+    userId,
+    debtId,
+    row.period,
+    row.emi_amount,
+    row.principal_part,
+    row.interest_part,
+    row.outstanding_after,
+    row.cumulative_interest,
+    row.scheduled_date,
+  ]);
+
+  await q.query(
+    `INSERT INTO amortization_schedule
+       (user_id, debt_id, period, emi_amount, principal_part, interest_part,
+        outstanding_after, cumulative_interest, scheduled_date, regenerated_at)
+     VALUES ${values}`,
+    params
+  );
   return n;
 }
 
@@ -725,23 +731,32 @@ export async function replayPayments(
   let out = Number(initial.rows[0]?.outstanding ?? 0) + Number(sum.rows[0]?.total ?? 0);
   let totalInterest = 0;
 
-  for (const payment of payments.rows) {
+  const updates = payments.rows.map((payment) => {
     const amount = Number(payment.amount);
     const split = splitPayment(out, annualRate, amount);
-    await q.query(
-      `UPDATE debt_payments
-       SET principal_part = $3, interest_part = $4, outstanding_after = $5
-       WHERE user_id = $1 AND id = $2`,
-      [
-        userId,
-        payment.id,
-        split.principal_part,
-        split.interest_part,
-        split.outstanding_after,
-      ]
-    );
     out = split.outstanding_after;
     totalInterest = money(totalInterest + split.interest_part);
+    return { id: payment.id, ...split };
+  });
+
+  if (updates.length > 0) {
+    await q.query(
+      `UPDATE debt_payments p
+       SET principal_part = u.principal,
+           interest_part = u.interest,
+           outstanding_after = u.outstanding_after
+       FROM unnest(
+         $1::uuid[], $2::numeric(12,2)[], $3::numeric(12,2)[], $4::numeric(12,2)[]
+       ) AS u(id, principal, interest, outstanding_after)
+       WHERE p.user_id = $5 AND p.id = u.id`,
+      [
+        updates.map((u) => u.id),
+        updates.map((u) => u.principal_part),
+        updates.map((u) => u.interest_part),
+        updates.map((u) => u.outstanding_after),
+        userId,
+      ]
+    );
   }
   return { outstanding: out, totalInterestPaid: totalInterest };
 }
@@ -753,6 +768,43 @@ export async function getMonthlyIncome(userId: number): Promise<number | null> {
   );
   const raw = result.rows[0]?.monthly_income;
   return raw === null || raw === undefined ? null : Number(raw);
+}
+
+export async function getSettings(userId: number): Promise<{
+  currency: string;
+  theme: string;
+  language: string;
+  notifications_enabled: number;
+  monthly_income: number | null;
+}> {
+  const result = await query<{
+    currency: string;
+    theme: string;
+    language: string;
+    notifications_enabled: number;
+    monthly_income: string | null;
+  }>(
+    `SELECT currency, theme, language, notifications_enabled, monthly_income::text
+     FROM user_settings WHERE user_id = $1`,
+    [userId]
+  );
+  const row = result.rows[0];
+  if (!row) {
+    return {
+      currency: "INR",
+      theme: "light",
+      language: "en",
+      notifications_enabled: 1,
+      monthly_income: null,
+    };
+  }
+  return {
+    currency: row.currency,
+    theme: row.theme,
+    language: row.language,
+    notifications_enabled: row.notifications_enabled,
+    monthly_income: row.monthly_income == null ? null : Number(row.monthly_income),
+  };
 }
 
 export async function setMonthlyIncome(
@@ -807,34 +859,18 @@ export async function getDti(userId: number): Promise<DtiResult> {
   return dtiOf(income, Number(result.rows[0]?.total_emi ?? 0));
 }
 
-/** FR-6.27: paid / missed / partial / scheduled per scheduled period, last 12 months. */
-export async function getPaymentStatus(
-  userId: number,
-  debtId: string
-): Promise<PaymentStatusEntry[]> {
-  const sched = await query<{
-    period: number;
-    emi_amount: string;
-    scheduled_date: string | null;
-  }>(
-    `SELECT period, emi_amount::text, scheduled_date::text
-     FROM amortization_schedule
-     WHERE user_id = $1 AND debt_id = $2
-     ORDER BY period ASC`,
-    [userId, debtId]
-  );
-  if (sched.rows.length === 0) return [];
+type StatusSchedRow = { period: number; emi_amount: string; scheduled_date: string | null };
+type StatusPayRow = { amount: string; date: string };
 
-  const pays = await query<{ amount: string; date: string }>(
-    `SELECT amount::text, date::text
-     FROM debt_payments
-     WHERE user_id = $1 AND debt_id = $2 AND type = 'emi'
-     ORDER BY date ASC`,
-    [userId, debtId]
-  );
+/** In-memory payment-status computation shared by single-debt and bulk paths. */
+function computeStatusEntries(
+  schedRows: StatusSchedRow[],
+  paysRows: StatusPayRow[]
+): PaymentStatusEntry[] {
+  if (schedRows.length === 0) return [];
 
   const byMonth = new Map<string, number>();
-  for (const p of pays.rows) {
+  for (const p of paysRows) {
     byMonth.set(p.date.slice(0, 7), Number(p.amount));
   }
 
@@ -843,7 +879,7 @@ export async function getPaymentStatus(
   for (let i = 11; i >= 0; i--) {
     const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
-    const periodRow = sched.rows.find(
+    const periodRow = schedRows.find(
       (r) => r.scheduled_date?.slice(0, 7) === key
     );
     if (!periodRow) {
@@ -876,6 +912,31 @@ export async function getPaymentStatus(
     });
   }
   return entries;
+}
+
+/** FR-6.27: paid / missed / partial / scheduled per scheduled period, last 12 months. */
+export async function getPaymentStatus(
+  userId: number,
+  debtId: string
+): Promise<PaymentStatusEntry[]> {
+  const sched = await query<StatusSchedRow>(
+    `SELECT period, emi_amount::text, scheduled_date::text
+     FROM amortization_schedule
+     WHERE user_id = $1 AND debt_id = $2
+     ORDER BY period ASC`,
+    [userId, debtId]
+  );
+  if (sched.rows.length === 0) return [];
+
+  const pays = await query<StatusPayRow>(
+    `SELECT amount::text, date::text
+     FROM debt_payments
+     WHERE user_id = $1 AND debt_id = $2 AND type = 'emi'
+     ORDER BY date ASC`,
+    [userId, debtId]
+  );
+
+  return computeStatusEntries(sched.rows, pays.rows);
 }
 
 export function getDebtTypes(): Promise<DebtType[]> {
@@ -1084,15 +1145,54 @@ export async function getHealthAlerts(userId: number): Promise<{
   }
 
   const debts = await getDebts(userId, undefined, "active");
+  const emiDebts = debts.filter((d) => d.emi_amount !== null);
+  if (emiDebts.length === 0) {
+    const summary = { critical: 0, warning: 0, info: 0 };
+    for (const alert of alerts) summary[alert.severity] += 1;
+    return { alerts, summary };
+  }
+
+  const [schedResult, paysResult] = await Promise.all([
+    query<{ debt_id: string } & StatusSchedRow>(
+      `SELECT debt_id, period, emi_amount::text, scheduled_date::text
+       FROM amortization_schedule
+       WHERE user_id = $1
+       ORDER BY debt_id ASC, period ASC`,
+      [userId]
+    ),
+    query<{ debt_id: string } & StatusPayRow>(
+      `SELECT debt_id, amount::text, date::text
+       FROM debt_payments
+       WHERE user_id = $1 AND type = 'emi'
+       ORDER BY debt_id ASC, date ASC`,
+      [userId]
+    ),
+  ]);
+
+  const schedByDebt = new Map<string, StatusSchedRow[]>();
+  for (const row of schedResult.rows) {
+    const list = schedByDebt.get(row.debt_id) ?? [];
+    list.push(row);
+    schedByDebt.set(row.debt_id, list);
+  }
+  const paysByDebt = new Map<string, StatusPayRow[]>();
+  for (const row of paysResult.rows) {
+    const list = paysByDebt.get(row.debt_id) ?? [];
+    list.push(row);
+    paysByDebt.set(row.debt_id, list);
+  }
+
   const missedDetails: {
     debt_id: string;
     name: string;
     missed_months: string[];
     partial_months: string[];
   }[] = [];
-  for (const debt of debts) {
-    if (debt.emi_amount === null) continue;
-    const status = await getPaymentStatus(userId, debt.id);
+  for (const debt of emiDebts) {
+    const status = computeStatusEntries(
+      schedByDebt.get(debt.id) ?? [],
+      paysByDebt.get(debt.id) ?? []
+    );
     const missed = status.filter((s) => s.status === "missed").map((s) => s.month);
     const partial = status
       .filter((s) => s.status === "partial")
@@ -1118,23 +1218,15 @@ export async function getHealthAlerts(userId: number): Promise<{
   }
 
   const recent: { debt_id: string; name: string; days_since: number | null }[] = [];
-  for (const debt of debts) {
-    if (debt.emi_amount === null || debt.months_remaining === 0) continue;
-    const last = await query<{ last_date: string | null }>(
-      `SELECT MAX(date)::text AS last_date
-       FROM debt_payments WHERE user_id = $1 AND debt_id = $2 AND type = 'emi'`,
-      [userId, debt.id]
+  const today = new Date();
+  for (const debt of emiDebts) {
+    if (debt.months_remaining === 0) continue;
+    const pays = paysByDebt.get(debt.id) ?? [];
+    const lastDate = pays.length > 0 ? pays[pays.length - 1].date : null;
+    if (lastDate === null) continue;
+    const daysSince = Math.floor(
+      (today.getTime() - new Date(`${lastDate}T00:00:00`).getTime()) / 86400000
     );
-    const lastDate = last.rows[0]?.last_date ?? null;
-    const today = new Date();
-    let daysSince: number | null = null;
-    if (lastDate !== null) {
-      daysSince = Math.floor(
-        (today.getTime() - new Date(`${lastDate}T00:00:00`).getTime()) / 86400000
-      );
-    } else {
-      continue;
-    }
     if (daysSince > 45) {
       recent.push({ debt_id: debt.id, name: debt.name, days_since: daysSince });
     }

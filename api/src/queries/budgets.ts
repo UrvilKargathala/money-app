@@ -81,42 +81,41 @@ function toBudget(row: BudgetRow): Budget {
 }
 
 /**
- * Spend for a category (or its descendants, FR-3.24) within a date range:
- * direct expense transactions on those categories (excluding split parents)
- * plus split amounts assigned to those categories.
+ * Per-category spend (direct expense transactions plus split amounts) for the
+ * user within a date range, grouped by category. One query regardless of how
+ * many budgets exist.
  */
-async function spendForCategory(
+async function groupedSpend(
   userId: number,
-  categoryId: string,
   from: string,
   to: string
-): Promise<number> {
-  const result = await query<{ spent: string }>(
-    `WITH cat_set AS (
-       SELECT id FROM categories WHERE id = $1 OR parent_id = $1
-     ),
-     direct AS (
-       SELECT COALESCE(SUM(t.amount), 0)::numeric(12,2) AS total
+): Promise<Map<string, number>> {
+  const result = await query<{ category_id: string; spent: string }>(
+    `WITH direct AS (
+       SELECT t.category_id, COALESCE(SUM(t.amount), 0)::numeric(12,2) AS spent
        FROM transactions t
-       WHERE t.user_id = $2 AND t.type = 'expense'
-         AND t.category_id IN (SELECT id FROM cat_set)
-         AND t.date >= $3 AND t.date <= $4
+       WHERE t.user_id = $1 AND t.type = 'expense'
+         AND t.date >= $2 AND t.date <= $3
          AND NOT EXISTS (
            SELECT 1 FROM transaction_splits s WHERE s.transaction_id = t.id
          )
+       GROUP BY t.category_id
      ),
      split AS (
-       SELECT COALESCE(SUM(s.amount), 0)::numeric(12,2) AS total
+       SELECT s.category_id, COALESCE(SUM(s.amount), 0)::numeric(12,2) AS spent
        FROM transaction_splits s
        JOIN transactions t ON t.id = s.transaction_id
-       WHERE s.user_id = $2 AND t.type = 'expense'
-         AND s.category_id IN (SELECT id FROM cat_set)
-         AND t.date >= $3 AND t.date <= $4
+       WHERE s.user_id = $1 AND t.type = 'expense' AND t.date >= $2 AND t.date <= $3
+       GROUP BY s.category_id
      )
-     SELECT ((SELECT total FROM direct) + (SELECT total FROM split))::numeric(12,2) AS spent`,
-    [categoryId, userId, from, to]
+     SELECT category_id, SUM(spent)::numeric(12,2) AS spent
+     FROM (SELECT * FROM direct UNION ALL SELECT * FROM split) u
+     GROUP BY category_id`,
+    [userId, from, to]
   );
-  return Number(result.rows[0]?.spent ?? 0);
+  const map = new Map<string, number>();
+  for (const row of result.rows) map.set(row.category_id, Number(row.spent));
+  return map;
 }
 
 /** Total expenses in a date range (used for the Overall budget). */
@@ -128,6 +127,25 @@ async function spendOverall(userId: number, from: string, to: string): Promise<n
     [userId, from, to]
   );
   return Number(result.rows[0]?.spent ?? 0);
+}
+
+/** Child categories grouped by their parent id (budget spend includes descendants). */
+async function categoryChildren(userId: number): Promise<Map<string, string[]>> {
+  const result = await query<{ id: string; parent_id: string | null }>(
+    `SELECT id, parent_id
+     FROM categories
+     WHERE user_id = $1 OR (user_id IS NULL AND is_system = 1)`,
+    [userId]
+  );
+  const children = new Map<string, string[]>();
+  for (const row of result.rows) {
+    if (row.parent_id !== null) {
+      const list = children.get(row.parent_id) ?? [];
+      list.push(row.id);
+      children.set(row.parent_id, list);
+    }
+  }
+  return children;
 }
 
 function withUtilization(budget: Budget, spent: number): BudgetWithUtilization {
@@ -152,15 +170,26 @@ export async function getBudgets(
      WHERE b.user_id = $1 AND b.month = $2 AND b.year = $3 AND b.is_active = 1`,
     [userId, month, year]
   );
-  const budgets: BudgetWithUtilization[] = [];
-  for (const row of result.rows) {
+  const rows = result.rows;
+  if (rows.length === 0) return [];
+
+  const [spendMap, overall, children] = await Promise.all([
+    groupedSpend(userId, from, to),
+    rows.some((r) => r.category_id === null)
+      ? spendOverall(userId, from, to)
+      : Promise.resolve(0),
+    categoryChildren(userId),
+  ]);
+
+  const budgets = rows.map((row) => {
     const budget = toBudget(row);
-    const spent =
-      budget.category_id === null
-        ? await spendOverall(userId, from, to)
-        : await spendForCategory(userId, budget.category_id, from, to);
-    budgets.push(withUtilization(budget, spent));
-  }
+    let spent = overall;
+    if (budget.category_id !== null) {
+      const catSet = [budget.category_id, ...(children.get(budget.category_id) ?? [])];
+      spent = catSet.reduce((sum, id) => sum + (spendMap.get(id) ?? 0), 0);
+    }
+    return withUtilization(budget, spent);
+  });
   budgets.sort((a, b) => b.utilization_pct - a.utilization_pct);
   return budgets;
 }
@@ -177,10 +206,16 @@ export async function getBudgetById(
   if (!row) return null;
   const budget = toBudget(row);
   const { from, to } = monthRange(budget.month, budget.year);
-  const spent =
-    budget.category_id === null
-      ? await spendOverall(userId, from, to)
-      : await spendForCategory(userId, budget.category_id, from, to);
+  const [spendMap, overall, children] = await Promise.all([
+    groupedSpend(userId, from, to),
+    budget.category_id === null ? spendOverall(userId, from, to) : Promise.resolve(0),
+    categoryChildren(userId),
+  ]);
+  let spent = overall;
+  if (budget.category_id !== null) {
+    const catSet = [budget.category_id, ...(children.get(budget.category_id) ?? [])];
+    spent = catSet.reduce((sum, id) => sum + (spendMap.get(id) ?? 0), 0);
+  }
   return withUtilization(budget, spent);
 }
 

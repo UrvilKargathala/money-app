@@ -3,6 +3,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
+import { csvEscape, isoDate } from "../utils/format";
 import type { PaymentHistoryRow } from "./bills";
 
 const subscriptions = new Hono();
@@ -52,10 +53,6 @@ function startOfToday(): Date {
   return today;
 }
 
-function isoDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 function daysUntil(date: Date): number {
   return Math.round((date.getTime() - startOfToday().getTime()) / 86400000);
 }
@@ -84,13 +81,6 @@ function addMonths(date: Date, months: number): Date {
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 function toSubscription(row: {

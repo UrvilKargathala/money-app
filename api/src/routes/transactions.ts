@@ -3,6 +3,7 @@ import { withUser } from "../db";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
+import { csvEscape } from "../utils/format";
 import {
   getTransactions,
   getTransactionSummary,
@@ -17,13 +18,6 @@ const TRANSACTION_TYPES = ["income", "expense", "transfer"] as const;
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 async function readFilters(c: { req: { query: (key: string) => string | undefined } }): Promise<TransactionFilters> {

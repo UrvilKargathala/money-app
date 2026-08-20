@@ -100,41 +100,41 @@ function filterClause(
   userId: number,
   filters: TransactionFilters
 ): { where: string; params: unknown[] } {
-  const clauses: string[] = [];
+const clauses: string[] = ["t.user_id = $1"];
   const params: unknown[] = [userId];
 
   if (filters.from) {
     params.push(filters.from);
-    clauses.push(`t.date >= $${1 + clauses.length}::date`);
+    clauses.push(`t.date >= $${params.length}::date`);
   }
   if (filters.to) {
     params.push(filters.to);
-    clauses.push(`t.date <= $${1 + clauses.length}::date`);
+    clauses.push(`t.date <= $${params.length}::date`);
   }
   if (filters.accountId) {
     params.push(filters.accountId);
-    clauses.push(`t.account_id = $${1 + clauses.length}`);
+    clauses.push(`t.account_id = $${params.length}`);
   }
   if (filters.categoryId) {
     params.push(filters.categoryId);
     clauses.push(
-      `(t.category_id = $${1 + clauses.length} OR t.category_id IN (
-         SELECT id FROM categories WHERE parent_id = $${1 + clauses.length}
+      `(t.category_id = $${params.length} OR t.category_id IN (
+         SELECT id FROM categories WHERE parent_id = $${params.length}
        ))`
     );
   }
   if (filters.type) {
     params.push(filters.type);
-    clauses.push(`t.type = $${1 + clauses.length}`);
+    clauses.push(`t.type = $${params.length}`);
   }
   if (filters.q) {
     params.push(`%${filters.q}%`);
     clauses.push(
-      `(t.description ILIKE $${1 + clauses.length} OR t.merchant_clean ILIKE $${1 + clauses.length})`
+      `(t.description ILIKE $${params.length} OR t.merchant_clean ILIKE $${params.length})`
     );
   }
 
-  const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+  const where = `WHERE ${clauses.join(" AND ")}`;
   return { where, params };
 }
 

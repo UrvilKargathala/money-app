@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { auth } from "./routes/auth";
-import { accounts } from "./routes/accounts";
+import { accounts, accountTypes } from "./routes/accounts";
 import { transfers } from "./routes/transfers";
 import { transactions } from "./routes/transactions";
 import { categories } from "./routes/categories";
@@ -18,6 +18,7 @@ export const app = new Hono();
 
 app.route("/api/auth", auth);
 app.route("/api/accounts", accounts);
+app.route("/api/account-types", accountTypes);
 app.route("/api/transfers", transfers);
 app.route("/api/transactions", transactions);
 app.route("/api/categories", categories);

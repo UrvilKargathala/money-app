@@ -4,6 +4,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
+import { csvEscape, isoDate } from "../utils/format";
 
 const bills = new Hono();
 
@@ -118,10 +119,6 @@ function daysUntil(date: Date): number {
   return Math.round((date.getTime() - startOfToday().getTime()) / 86400000);
 }
 
-function isoDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 function monthlyObligation(
   amount: string | null,
   estimatedAmount: string | null,
@@ -136,13 +133,6 @@ function monthlyObligation(
     one_time: 0,
   };
   return effective * (multiplier[frequency] ?? 1);
-}
-
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 function toPaymentRow(row: {

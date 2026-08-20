@@ -14,7 +14,7 @@ Every route follows these rules. **New routes MUST conform** — the naming syst
 - All endpoints live under `/api/`.
 - Resources are **plural nouns, lowercase, kebab-case** for multi-word: `/api/net-worth`, `/api/manual-assets`, `/api/recurring-transactions`.
 - **No version prefix today.** Add `/v1` only when a breaking contract change requires old and new clients to coexist.
-- JSON keys are camelCase (`openingBalance`, not `opening_balance`).
+- JSON keys: query params and generic contract keys are camelCase (`openingBalance`, `includeInactive`), while **resource payload keys mirror DB columns in snake_case** (`account_id`, `monthly_income`, `opening_balance`) — the live codebase convention, applied consistently since module 1. New payload fields follow the resource's DB column naming.
 
 ### R2 — HTTP verbs
 | Verb | Meaning |
@@ -48,7 +48,8 @@ Reference data has no `:id` collection endpoint: `/api/account-types`, `/api/deb
 
 ### R8 — Response shape & status codes
 - Success: `200 { "success": true }` (current code convention; `201` is not used).
-- Payloads: plain camelCase JSON objects/arrays (e.g. `GET /api/auth/me` returns the user object).
+- Payloads: plain snake_case JSON objects/arrays mirroring DB columns (e.g. `GET /api/auth/me` returns the user object).
+- Exceptions: `POST /api/auth/login` and `POST /api/auth/signup` return `{ "token", "maxAge" }` — the web layer owns the `mm_session` cookie (HttpOnly/Secure/SameSite set there) and the API never touches cookies.
 - Validation failure: `400 { "fieldErrors": { … } }`.
 - `401` unauthenticated · `404` not found · `409` conflict (optimistic-lock version mismatch, guarded rule violation, duplicate) · `429` rate-limited · `500` unexpected.
 - Generic error: `{ "error": "…" }`.
@@ -57,7 +58,7 @@ Reference data has no `:id` collection endpoint: `/api/account-types`, `/api/deb
 camelCase; booleans as `0/1` (`?includeInactive=1`); date ranges as short codes (`?range=6M` — `1M/3M/6M/1Y/5Y/All`); paginated lists use `?page=1&pageSize=25` returning `{ items, total, page, pageSize }`.
 
 ### R10 — Auth
-Every route requires the session cookie (`requireAuth`) **unless explicitly listed public**: auth entry points (`signup`, `login`, `forgot-password`, `reset-password`, magic-link consume, email verify) and `GET /api/jobs/run` (guarded by `x-cron-secret` header).
+Every route requires the session cookie (`requireAuth`) **unless explicitly listed public**: auth entry points (`signup`, `login`, `forgot-password`, `reset-password`, magic-link consume, email verify) and `GET /api/jobs/run` (guarded by the `x-cron-secret` header — query-string secrets are rejected).
 
 ---
 
@@ -68,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (151): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr.
+Implemented today (153): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr.
 
 ---
 
@@ -92,7 +93,7 @@ Implemented today (151): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/users/me/profile` | Read profile | 🧪 |
 | PATCH | `/api/users/me/profile` | Update profile (name, email → re-verification) | 🧪 |
 | POST | `/api/users/me/avatar` | Upload avatar | 🧪 |
-| GET | `/api/users/me/settings` | Read settings (currency, theme, language, notifications, AI) | 🧪 |
+| GET | `/api/users/me/settings` | Read settings (currency, theme, language, notifications, AI) | ✅ |
 | PATCH | `/api/users/me/settings` | Update settings | 🧪 |
 | GET | `/api/users/me/sessions` | List active sessions | 🧪 |
 | DELETE | `/api/users/me/sessions/:id` | Revoke a session | 🧪 |
@@ -121,7 +122,7 @@ Implemented today (151): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/accounts/:id/balance` | Computed balance (opening + transactions) | 🧪 |
 | POST | `/api/accounts/:id/snapshots` | Record manual balance snapshot | 🧪 |
 | GET | `/api/accounts/:id/credit-utilization` | Credit card utilization metrics | 🧪 |
-| GET | `/api/account-types` | Lookup: account types | 🧪 |
+| GET | `/api/account-types` | Lookup: account types | ✅ |
 | GET | `/api/transfers` | List transfers | ✅ |
 | POST | `/api/transfers` | Create transfer (atomic debit + credit) | ✅ |
 | GET | `/api/transfers/:id` | Read transfer | 🧪 |

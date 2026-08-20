@@ -1,10 +1,16 @@
 import { Hono } from "hono";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { setMonthlyIncome } from "../queries/debts";
+import { getSettings, setMonthlyIncome } from "../queries/debts";
 import { readJson } from "./helpers";
 
 const settings = new Hono();
+
+settings.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
+  const settings = await getSettings(user.user_id);
+  return c.json({ settings });
+});
 
 settings.patch("/monthly-income", requireAuth, async (c) => {
   const user = c.get("user");

@@ -10,8 +10,16 @@ import { ACCOUNT_COLOR_PALETTE, ACCOUNT_TYPES } from "../constants";
 import { parseAmount, parseBoolean } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
+import { csvEscape } from "../utils/format";
 
 const accounts = new Hono();
+
+const accountTypes = new Hono();
+
+accountTypes.get("/", requireAuth, async (c) => {
+  const types = await getAccountTypes();
+  return c.json({ types });
+});
 
 const RANGES: Record<string, { label: string; days: number | null }> = {
   "1M": { label: "1M", days: 30 },
@@ -21,12 +29,6 @@ const RANGES: Record<string, { label: string; days: number | null }> = {
   "5Y": { label: "5Y", days: 1826 },
   All: { label: "All", days: null },
 };
-
-function csvEscape(value: string | number | null): string {
-  const s = value == null ? "" : String(value);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
 
 accounts.get("/", requireAuth, async (c) => {
   const user = c.get("user");
@@ -310,4 +312,4 @@ accounts.get("/:id/history", requireAuth, async (c) => {
   return c.json({ account: { name: account.name, type: account.type }, points });
 });
 
-export { accounts };
+export { accounts, accountTypes };

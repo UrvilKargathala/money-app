@@ -3,6 +3,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
+import { csvEscape } from "../utils/format";
 import {
   addMonths,
   countDebtPayments,
@@ -55,13 +56,6 @@ function isoDateStr(value: string): string | null {
 
 function validUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 /** Anchor for schedule regeneration: the most recent payment month (or the start date). */

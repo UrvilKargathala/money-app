@@ -57,8 +57,12 @@ export async function getSessionUserByToken(
   const session = result.rows[0];
   if (!session) return null;
 
+  // Throttled: only writes once every 5 minutes per session to avoid a write
+  // on every authenticated request.
   await pool.query(
-    `UPDATE auth_tokens SET last_seen_at = CURRENT_TIMESTAMP WHERE token_id = $1`,
+    `UPDATE auth_tokens SET last_seen_at = CURRENT_TIMESTAMP
+     WHERE token_id = $1
+       AND last_seen_at < CURRENT_TIMESTAMP - INTERVAL '5 minutes'`,
     [session.token_id]
   );
 
