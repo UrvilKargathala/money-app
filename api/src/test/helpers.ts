@@ -331,3 +331,37 @@ export function fixtureDb(): {
   });
   return state;
 }
+
+export async function createInvestment(
+  user: TestUser,
+  params: {
+    name?: string;
+    type?: string;
+    category?: string;
+    units?: number;
+    buyPrice?: number;
+    currentPrice?: number;
+    purchaseDate?: string;
+    maturityDate?: string | null;
+    accountId?: string;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/investments", {
+    name: params.name ?? "Axis Bluechip Fund",
+    type: params.type ?? "mutual_fund",
+    category: params.category ?? "equity",
+    units: String(params.units ?? 500),
+    buy_price: String(params.buyPrice ?? 100),
+    current_price: String(params.currentPrice ?? 110),
+    purchase_date: params.purchaseDate ?? "2026-01-15",
+    ...(params.maturityDate !== undefined
+      ? { maturity_date: params.maturityDate }
+      : {}),
+    ...(params.accountId ? { account_id: params.accountId } : {}),
+  });
+  if (!res.ok) {
+    throw new Error(`createInvestment failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { investment: { id: string } };
+  return body.investment.id;
+}

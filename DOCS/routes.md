@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (153): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr.
+Implemented today (195): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete.
 
 ---
 
@@ -376,48 +376,48 @@ Implemented today (153): auth login/signup/logout/me · accounts list/create/pat
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/investments` | List (search, type/category/status filters) | 🧪 |
-| POST | `/api/investments` | Add holding | 🧪 |
-| GET | `/api/investments/:id` | Detail (lots, returns, dividends) | 🧪 |
-| PATCH | `/api/investments/:id` | Update (recalculates values) | 🧪 |
-| DELETE | `/api/investments/:id` | Delete holding | 🧪 |
-| POST | `/api/investments/:id/close` | Mark closed/sold | 🧪 |
-| POST | `/api/investments/:id/price` | Update price (appends history, snapshots) | 🧪 |
-| GET | `/api/investments/:id/price-history` | Append-only price history | 🧪 |
-| GET | `/api/investments/portfolio-summary` | Dashboard totals | 🧪 |
-| GET | `/api/investments/asset-allocation` | Allocation by asset class | 🧪 |
-| GET | `/api/investments/:id/returns` | XIRR for holding | 🧪 |
-| GET | `/api/investments/returns/portfolio` | Portfolio XIRR | 🧪 |
-| GET | `/api/investments/:id/transactions` | Buy/sell/reinvestment list | 🧪 |
-| POST | `/api/investments/:id/transactions` | Add transaction | 🧪 |
-| PATCH | `/api/investments/:id/transactions/:txnId` | Edit transaction | 🧪 |
-| DELETE | `/api/investments/:id/transactions/:txnId` | Delete transaction | 🧪 |
-| GET | `/api/investments/:id/snapshots` | Holding value snapshots | 🧪 |
-| POST | `/api/investments/:id/snapshots` | Holding snapshot | 🧪 |
-| GET | `/api/investments/snapshots` | Portfolio snapshots | 🧪 |
-| POST | `/api/investments/snapshots` | Manual portfolio snapshot | 🧪 |
-| GET | `/api/investments/portfolio-trend` | Value trend data | 🧪 |
-| GET | `/api/investments/maturity-alerts` | Maturities in 30 days | 🧪 |
-| POST | `/api/investments/prices/bulk-update` | Bulk price update (enhancement) | 🧪 |
-| GET | `/api/investments/export` | Portfolio CSV | 🧪 |
-| GET | `/api/investments/:id/transactions/export` | Holding txn history CSV | 🧪 |
-| POST | `/api/investments/sip-calculator` | SIP what-if calculator (enhancement) | 🧪 |
-| GET | `/api/sips` | List SIPs | 🧪 |
-| POST | `/api/sips` | Create SIP | 🧪 |
-| GET | `/api/sips/:id` | Read SIP | 🧪 |
-| PATCH | `/api/sips/:id` | Update SIP | 🧪 |
-| DELETE | `/api/sips/:id` | Delete SIP | 🧪 |
-| POST | `/api/sips/:id/installment` | Log installment (creates transaction) | 🧪 |
-| POST | `/api/sips/:id/pause` | Pause | 🧪 |
-| POST | `/api/sips/:id/resume` | Resume | 🧪 |
-| POST | `/api/sips/:id/complete` | Mark completed | 🧪 |
-| GET | `/api/sips/due` | SIPs due in 7 days | 🧪 |
-| GET | `/api/sips/export` | SIPs CSV | 🧪 |
-| GET | `/api/dividends` | List payouts | 🧪 |
-| POST | `/api/dividends` | Record payout | 🧪 |
-| GET | `/api/dividends/:id` | Read payout | 🧪 |
-| PATCH | `/api/dividends/:id` | Edit payout | 🧪 |
-| DELETE | `/api/dividends/:id` | Delete payout | 🧪 |
+| GET | `/api/investments` | List (search, type/category/status filters) | ✅ |
+| POST | `/api/investments` | Add holding | ✅ |
+| GET | `/api/investments/:id` | Detail (lots, returns, dividends) | ✅ |
+| PATCH | `/api/investments/:id` | Update (recalculates values) | ✅ |
+| DELETE | `/api/investments/:id` | Delete holding | ✅ |
+| POST | `/api/investments/:id/close` | Mark closed/sold | ✅ |
+| POST | `/api/investments/:id/price` | Update price (appends history, snapshots) | ✅ |
+| GET | `/api/investments/:id/price-history` | Append-only price history | ✅ |
+| GET | `/api/investments/portfolio-summary` | Dashboard totals | ✅ |
+| GET | `/api/investments/asset-allocation` | Allocation by asset class | ✅ |
+| GET | `/api/investments/:id/returns` | XIRR for holding | ✅ |
+| GET | `/api/investments/returns/portfolio` | Portfolio XIRR | ✅ |
+| GET | `/api/investments/:id/transactions` | Buy/sell/reinvestment list | ✅ |
+| POST | `/api/investments/:id/transactions` | Add transaction | ✅ |
+| PATCH | `/api/investments/:id/transactions/:txnId` | Edit transaction | ✅ |
+| DELETE | `/api/investments/:id/transactions/:txnId` | Delete transaction | ✅ |
+| GET | `/api/investments/:id/snapshots` | Holding value snapshots | ✅ |
+| POST | `/api/investments/:id/snapshots` | Holding snapshot | ✅ |
+| GET | `/api/investments/snapshots` | Portfolio snapshots | ✅ |
+| POST | `/api/investments/snapshots` | Manual portfolio snapshot | ✅ |
+| GET | `/api/investments/portfolio-trend` | Value trend data | ✅ |
+| GET | `/api/investments/maturity-alerts` | Maturities in 30 days | ✅ |
+| POST | `/api/investments/prices/bulk-update` | Bulk price update (enhancement) | ✅ |
+| GET | `/api/investments/export` | Portfolio CSV | ✅ |
+| GET | `/api/investments/:id/transactions/export` | Holding txn history CSV | ✅ |
+| POST | `/api/investments/sip-calculator` | SIP what-if calculator (enhancement) | ✅ |
+| GET | `/api/sips` | List SIPs | ✅ |
+| POST | `/api/sips` | Create SIP | ✅ |
+| GET | `/api/sips/:id` | Read SIP | ✅ |
+| PATCH | `/api/sips/:id` | Update SIP | ✅ |
+| DELETE | `/api/sips/:id` | Delete SIP | ✅ |
+| POST | `/api/sips/:id/installment` | Log installment (creates transaction) | ✅ |
+| POST | `/api/sips/:id/pause` | Pause | ✅ |
+| POST | `/api/sips/:id/resume` | Resume | ✅ |
+| POST | `/api/sips/:id/complete` | Mark completed | ✅ |
+| GET | `/api/sips/due` | SIPs due in 7 days | ✅ |
+| GET | `/api/sips/export` | SIPs CSV | ✅ |
+| GET | `/api/dividends` | List payouts | ✅ |
+| POST | `/api/dividends` | Record payout | ✅ |
+| GET | `/api/dividends/:id` | Read payout | ✅ |
+| PATCH | `/api/dividends/:id` | Edit payout | ✅ |
+| DELETE | `/api/dividends/:id` | Delete payout | ✅ |
 
 ### Module 9 — Net Worth Tracker
 

@@ -11,6 +11,9 @@ import { subscriptions } from "./routes/subscriptions";
 import { goals } from "./routes/goals";
 import { debts, debtTypes } from "./routes/debts";
 import { tax } from "./routes/tax";
+import { investments } from "./routes/investments";
+import { sips } from "./routes/sips";
+import { dividends } from "./routes/dividends";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
@@ -30,6 +33,9 @@ app.route("/api/goals", goals);
 app.route("/api/debts", debts);
 app.route("/api/debt-types", debtTypes);
 app.route("/api/tax", tax);
+app.route("/api/investments", investments);
+app.route("/api/sips", sips);
+app.route("/api/dividends", dividends);
 app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 

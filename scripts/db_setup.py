@@ -1008,7 +1008,7 @@ TABLES: list[tuple[str, str]] = [
             frequency TEXT CHECK (frequency IN ('monthly','quarterly')),
             next_date DATE,
             account_id UUID REFERENCES accounts(id),
-            status TEXT CHECK (status IN ('active','paused','cancelled')),
+            status TEXT CHECK (status IN ('active','paused','completed')),
             start_date DATE,
             end_date DATE,
             notes TEXT
