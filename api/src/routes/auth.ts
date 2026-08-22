@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
-import { query, withUser } from "../db";
+import { withUser } from "../db";
 import {
   getClientIp,
   isRateLimited,
@@ -14,6 +14,7 @@ import {
   isValidPassword,
   passwordPolicyHint,
 } from "../auth";
+import { createUserWithDefaults, findActiveUserByEmail } from "../queries/auth";
 import {
   createSessionRecord,
   revokeSessionByToken,
@@ -34,12 +35,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_PASSWORD_LENGTH = 128;
-
-type UserRow = {
-  user_id: number;
-  email: string;
-  hashed_password: string | null;
-};
 
 const auth = new Hono();
 
@@ -65,12 +60,7 @@ auth.post("/login", async (c) => {
     );
   }
 
-  const userResult = await query<UserRow>(
-    `SELECT user_id, email, hashed_password FROM users
-     WHERE email = $1 AND deleted_at IS NULL`,
-    [email]
-  );
-  const user = userResult.rows[0];
+  const user = await findActiveUserByEmail(email);
 
   let passwordOk = false;
   if (user?.hashed_password != null) {
@@ -149,29 +139,11 @@ auth.post("/signup", async (c) => {
   try {
     userId = await withUser(0, async (client) => {
       const hashedPassword = await hashPassword(password);
-
-      const userResult = await client.query<{ user_id: number }>(
-        `INSERT INTO users (email, hashed_password)
-         VALUES ($1, $2)
-         RETURNING user_id`,
-        [email, hashedPassword]
-      );
-      const uid = userResult.rows[0].user_id;
-
-      await client.query(
-        `INSERT INTO user_profiles (user_id, full_name) VALUES ($1, $2)`,
-        [uid, name]
-      );
-      await client.query(
-        `INSERT INTO user_settings (user_id, currency, theme, language)
-         VALUES ($1, 'INR', 'light', 'en')`,
-        [uid]
-      );
-      await client.query(
-        `INSERT INTO access_logs (user_id, action) VALUES ($1, 'signup')`,
-        [uid]
-      );
-      return uid;
+      return createUserWithDefaults(client, {
+        email,
+        hashedPassword,
+        name,
+      });
     });
   } catch (err) {
     if (isUniqueViolation(err)) {

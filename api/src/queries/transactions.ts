@@ -96,7 +96,7 @@ const ROW_SELECT = `
   LEFT JOIN tags g ON g.id = tt.tag_id
 `;
 
-function filterClause(
+export function filterClause(
   userId: number,
   filters: TransactionFilters
 ): { where: string; params: unknown[] } {
@@ -203,4 +203,127 @@ export async function getTransactionById(
     ...toTransaction(row),
     splits: row.splits.map((s) => ({ ...s, amount: Number(s.amount) })),
   };
+}
+export type Queryable = { query: typeof query };
+
+const DB: Queryable = { query };
+
+export function insertManualTransaction(
+  q: Queryable,
+  params: {
+    userId: number;
+    accountId: string;
+    type: string;
+    amount: number;
+    description: string | null;
+    categoryId: string | null;
+    date: string;
+    notes: string | null;
+  }
+) {
+  return q.query(
+    `INSERT INTO transactions
+       (user_id, account_id, type, amount, description, category_id, date, notes,
+        source, created_by, updated_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, 'manual', $1, $1)`,
+    [
+      params.userId,
+      params.accountId,
+      params.type,
+      params.amount,
+      params.description,
+      params.categoryId,
+      params.date,
+      params.notes,
+    ]
+  );
+}
+
+export async function getTransactionTransferGroup(
+  userId: number,
+  id: string,
+  q: Queryable = DB
+): Promise<string | null> {
+  const result = await q.query<{ transfer_group_id: string | null }>(
+    `SELECT transfer_group_id FROM transactions WHERE user_id = $1 AND id = $2`,
+    [userId, id]
+  );
+  return result.rowCount === 1 ? result.rows[0].transfer_group_id : null;
+}
+
+export function updateTransactionFields(
+  q: Queryable,
+  params: {
+    userId: number;
+    id: string;
+    type: string;
+    amount: number;
+    description: string | null;
+    categoryId: string | null;
+    date: string;
+    notes: string | null;
+    accountId: string;
+    version: number;
+  }
+) {
+  return q.query(
+    `UPDATE transactions
+     SET type = $3, amount = $4, description = $5, category_id = $6,
+         date = $7::date, notes = $8, account_id = $9,
+         version = version + 1, updated_by = $1
+     WHERE user_id = $1 AND id = $2 AND version = $10`,
+    [
+      params.userId,
+      params.id,
+      params.type,
+      params.amount,
+      params.description,
+      params.categoryId,
+      params.date,
+      params.notes,
+      params.accountId,
+      params.version,
+    ]
+  );
+}
+
+export function deleteTransactionById(q: Queryable, userId: number, id: string) {
+  return q.query(`DELETE FROM transactions WHERE user_id = $1 AND id = $2`, [
+    userId,
+    id,
+  ]);
+}
+
+export function transactionExists(
+  userId: number,
+  id: string,
+  q: Queryable = DB
+) {
+  return q.query<{ id: string }>(
+    `SELECT id FROM transactions WHERE user_id = $1 AND id = $2`,
+    [userId, id]
+  );
+}
+
+export function attachTransactionTag(
+  q: Queryable,
+  params: { userId: number; transactionId: string; tagId: string }
+) {
+  return q.query(
+    `INSERT INTO tags_transactions (user_id, transaction_id, tag_id)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, transaction_id, tag_id) DO NOTHING`,
+    [params.userId, params.transactionId, params.tagId]
+  );
+}
+
+export function detachTransactionTag(
+  q: Queryable,
+  params: { userId: number; transactionId: string; tagId: string }
+) {
+  return q.query(
+    `DELETE FROM tags_transactions
+     WHERE user_id = $1 AND transaction_id = $2 AND tag_id = $3`,
+    [params.userId, params.transactionId, params.tagId]
+  );
 }

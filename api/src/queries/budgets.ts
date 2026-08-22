@@ -60,6 +60,7 @@ export type BudgetOverview = {
   unbudgeted: UnbudgetedCategory[];
 };
 
+/** Tenant clause is baked into the fragment — compositions may only append AND conditions. */
 const BUDGET_SELECT = `
   SELECT b.id, b.category_id, c.name AS category_name, c.icon AS category_icon,
          c.color AS category_color, c.parent_id, b.amount, b.period, b.month,
@@ -67,6 +68,7 @@ const BUDGET_SELECT = `
          b.is_active, b.version
   FROM budgets b
   LEFT JOIN categories c ON c.id = b.category_id
+  WHERE b.user_id = $1
 `;
 
 export function monthRange(month: number, year: number): { from: string; to: string } {
@@ -167,7 +169,7 @@ export async function getBudgets(
   const { from, to } = monthRange(month, year);
   const result = await query<BudgetRow>(
     `${BUDGET_SELECT}
-     WHERE b.user_id = $1 AND b.month = $2 AND b.year = $3 AND b.is_active = 1`,
+     AND b.month = $2 AND b.year = $3 AND b.is_active = 1`,
     [userId, month, year]
   );
   const rows = result.rows;
@@ -199,7 +201,7 @@ export async function getBudgetById(
   id: string
 ): Promise<BudgetWithUtilization | null> {
   const { rows } = await query<BudgetRow>(
-    `${BUDGET_SELECT} WHERE b.user_id = $1 AND b.id = $2`,
+    `${BUDGET_SELECT} AND b.id = $2`,
     [userId, id]
   );
   const row = rows[0];

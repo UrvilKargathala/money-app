@@ -1,30 +1,22 @@
 import { Hono } from "hono";
-import { query, withUser } from "../db";
+import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson, isUniqueViolation } from "./helpers";
+import {
+  deleteCategory,
+  getCategoryParentId,
+  getCategoryUsageCounts,
+  categoryNameClashExists,
+  insertCategory,
+  listCategories,
+  updateCategory,
+} from "../queries/categories";
 
 const categories = new Hono();
 
-type CategoryRow = {
-  id: string;
-  name: string;
-  parent_id: string | null;
-  color: string | null;
-  icon: string | null;
-  is_system: number;
-  version: number;
-};
-
 categories.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await query<CategoryRow>(
-    `SELECT id, name, parent_id, color, icon, is_system, version
-     FROM categories
-     WHERE (user_id IS NULL AND is_system = 1) OR user_id = $1
-     ORDER BY is_system DESC, sort_order, name`,
-    [user.user_id]
-  );
-  return c.json({ categories: result.rows });
+  return c.json({ categories: await listCategories(user.user_id) });
 });
 
 categories.post("/", requireAuth, async (c) => {
@@ -45,33 +37,26 @@ categories.post("/", requireAuth, async (c) => {
     if (!fieldErrors.name) {
       await withUser(user.user_id, async (client) => {
         if (parentId) {
-          const parent = await client.query<{ parent_id: string | null }>(
-            `SELECT parent_id FROM categories
-             WHERE id = $1 AND ((user_id IS NULL AND is_system = 1) OR user_id = $2)`,
-            [parentId, user.user_id]
-          );
-          if (parent.rowCount !== 1) {
+          const parent = await getCategoryParentId(client, parentId, user.user_id);
+          if (!parent) {
             throw new Error("INVALID_PARENT");
           }
-          if (parent.rows[0].parent_id !== null) {
+          if (parent.parent_id !== null) {
             throw new Error("PARENT_TOO_DEEP");
           }
         }
 
-        const clash = await client.query<{ id: string }>(
-          `SELECT id FROM categories
-           WHERE name = $1 AND ((user_id IS NULL AND is_system = 1) OR user_id = $2)`,
-          [name, user.user_id]
-        );
-        if ((clash.rowCount ?? 0) > 0) {
+        if (await categoryNameClashExists(client, name, user.user_id)) {
           throw new Error("DUPLICATE_NAME");
         }
 
-        await client.query(
-          `INSERT INTO categories (user_id, parent_id, name, is_system, color, icon, sort_order)
-           VALUES ($1, $2, $3, 0, $4, $5, 100)`,
-          [user.user_id, parentId, name, color, icon]
-        );
+        await insertCategory(client, {
+          userId: user.user_id,
+          parentId,
+          name,
+          color,
+          icon,
+        });
       });
     }
   } catch (err) {
@@ -123,12 +108,14 @@ categories.patch("/:id", requireAuth, async (c) => {
 
   try {
     const result = await withUser(user.user_id, (client) =>
-      client.query(
-        `UPDATE categories
-         SET name = $3, color = $4, icon = $5, version = version + 1
-         WHERE user_id = $1 AND id = $2 AND is_system = 0 AND version = $6`,
-        [user.user_id, id, name, color, icon, version]
-      )
+      updateCategory(client, {
+        userId: user.user_id,
+        id,
+        name,
+        color,
+        icon,
+        version,
+      })
     );
     if (result.rowCount === 0) {
       return c.json(
@@ -157,20 +144,10 @@ categories.delete("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
-  const counts = await query<{ txns: string; splits: string; budgets: string; subs: string }>(
-    `SELECT
-       (SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND category_id = $2)::text AS txns,
-       (SELECT COUNT(*) FROM transaction_splits WHERE user_id = $1 AND category_id = $2)::text AS splits,
-       (SELECT COUNT(*) FROM budgets WHERE user_id = $1 AND category_id = $2 AND deleted_at IS NULL)::text AS budgets,
-       (SELECT COUNT(*) FROM subscriptions WHERE user_id = $1 AND category_id = $2)::text AS subs`,
-    [user.user_id, id]
-  );
-  const usage = Number(counts.rows[0]?.txns ?? 0) +
-    Number(counts.rows[0]?.splits ?? 0) +
-    Number(counts.rows[0]?.budgets ?? 0) +
-    Number(counts.rows[0]?.subs ?? 0);
-
-  if (usage > 0) {
+  const usage = await getCategoryUsageCounts(user.user_id, id);
+  if (
+    usage.txns + usage.splits + usage.budgets + usage.subs > 0
+  ) {
     return c.json(
       {
         error:
@@ -181,10 +158,7 @@ categories.delete("/:id", requireAuth, async (c) => {
   }
 
   const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `DELETE FROM categories WHERE user_id = $1 AND id = $2 AND is_system = 0`,
-      [user.user_id, id]
-    )
+    deleteCategory(client, user.user_id, id)
   );
   if (result.rowCount === 0) {
     return c.json({ error: "Not found" }, 404);

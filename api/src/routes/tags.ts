@@ -1,26 +1,14 @@
 import { Hono } from "hono";
-import { query, withUser } from "../db";
+import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson, isUniqueViolation } from "./helpers";
+import { deleteTag, insertTag, listTags, updateTag } from "../queries/tags";
 
 const tags = new Hono();
 
-export type TagRow = {
-  id: string;
-  name: string;
-  color: string | null;
-  version: number;
-};
-
 tags.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await query<TagRow>(
-    `SELECT id, name, color, version
-     FROM tags WHERE user_id = $1
-     ORDER BY name`,
-    [user.user_id]
-  );
-  return c.json({ tags: result.rows });
+  return c.json({ tags: await listTags(user.user_id) });
 });
 
 tags.post("/", requireAuth, async (c) => {
@@ -36,11 +24,7 @@ tags.post("/", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, (client) =>
-      client.query(
-        `INSERT INTO tags (user_id, name, color)
-         VALUES ($1, $2, $3)`,
-        [user.user_id, name, color]
-      )
+      insertTag(client, { userId: user.user_id, name, color })
     );
   } catch (err) {
     if (isUniqueViolation(err)) {
@@ -68,12 +52,7 @@ tags.patch("/:id", requireAuth, async (c) => {
 
   try {
     const result = await withUser(user.user_id, (client) =>
-      client.query(
-        `UPDATE tags
-         SET name = $3, color = $4, version = version + 1
-         WHERE user_id = $1 AND id = $2 AND version = $5`,
-        [user.user_id, id, name, color, version]
-      )
+      updateTag(client, { userId: user.user_id, id, name, color, version })
     );
     if (result.rowCount === 0) {
       return c.json(
@@ -97,10 +76,7 @@ tags.delete("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
 
   const result = await withUser(user.user_id, (client) =>
-    client.query(`DELETE FROM tags WHERE user_id = $1 AND id = $2`, [
-      user.user_id,
-      id,
-    ])
+    deleteTag(client, user.user_id, id)
   );
   if (result.rowCount === 0) {
     return c.json({ error: "Not found" }, 404);

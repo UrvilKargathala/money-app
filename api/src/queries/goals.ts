@@ -1,4 +1,4 @@
-import { query } from "../db";
+﻿import { query } from "../db";
 import { isoDate } from "../utils/format";
 
 export type Queryable = { query: typeof query };
@@ -437,7 +437,7 @@ export async function deleteContribution(
 
 /**
  * FR-5.20/5.21: milestone rows mirror the derived progress. Called after
- * every contribution mutation — rows are inserted the first time a threshold
+ * every contribution mutation â€” rows are inserted the first time a threshold
  * is crossed (unique per goal + pct, reached_date = crossing date) and
  * removed again if the goal drops below the threshold.
  */
@@ -455,8 +455,8 @@ export async function recomputeMilestones(
   const target = Number(goal.rows[0].target);
   const sum = await q.query<{ total: string }>(
     `SELECT COALESCE(SUM(amount), 0)::numeric(12,2) AS total
-     FROM goal_contributions WHERE goal_id = $1`,
-    [goalId]
+     FROM goal_contributions WHERE user_id = $2 AND goal_id = $1`,
+    [goalId, userId]
   );
   const current = Number(sum.rows[0]?.total ?? 0);
   const crossed = [25, 50, 75, 100].filter(
@@ -493,8 +493,8 @@ export async function upsertSnapshot(
 ): Promise<void> {
   const sum = await q.query<{ total: string }>(
     `SELECT COALESCE(SUM(amount), 0)::numeric(12,2) AS total
-     FROM goal_contributions WHERE goal_id = $1`,
-    [goalId]
+     FROM goal_contributions WHERE user_id = $2 AND goal_id = $1`,
+    [goalId, userId]
   );
   const current = Number(sum.rows[0]?.total ?? 0);
   await q.query(
@@ -710,4 +710,29 @@ export async function distributeSuggestion(
       amount: amt,
     };
   });
+}
+export async function goalRowExists(
+  q: Queryable,
+  userId: number,
+  goalId: string
+): Promise<boolean> {
+  const result = await q.query<{ id: string }>(
+    `SELECT id FROM goals WHERE user_id = $1 AND id = $2`,
+    [userId, goalId]
+  );
+  return result.rowCount === 1;
+}
+
+export async function getContributionDate(
+  userId: number,
+  goalId: string,
+  contributionId: string,
+  q: Queryable = DB
+): Promise<string> {
+  const result = await q.query<{ date: string }>(
+    `SELECT date::text FROM goal_contributions
+     WHERE user_id = $1 AND goal_id = $2 AND id = $3`,
+    [userId, goalId, contributionId]
+  );
+  return result.rows[0]?.date ?? isoDate(new Date());
 }

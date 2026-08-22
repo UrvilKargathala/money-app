@@ -4,6 +4,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, isUniqueViolation } from "./helpers";
+import { categoryReferenceExists } from "../queries/references";
 import {
   createBudget,
   deleteBudget,
@@ -71,15 +72,8 @@ budgets.post("/", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, async (client) => {
-      if (categoryId !== null) {
-        const category = await client.query<{ id: string }>(
-          `SELECT id FROM categories
-           WHERE id = $1 AND ((user_id IS NULL AND is_system = 1) OR user_id = $2)`,
-          [categoryId, user.user_id]
-        );
-        if (category.rowCount !== 1) {
-          throw new Error("INVALID_CATEGORY");
-        }
+      if (categoryId !== null && !(await categoryReferenceExists(categoryId, user.user_id, client))) {
+        throw new Error("INVALID_CATEGORY");
       }
       await createBudget(
         {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pool } from "../db";
-import type { Bill, BillOverview, PaymentHistoryRow } from "../routes/bills";
+import type { Bill, BillOverview, PaymentHistoryRow } from "../queries/bills";
 import {
   createAccount,
   createCategory,
@@ -576,7 +576,10 @@ describe("bills calendar/upcoming/overview", () => {
   it("upcoming returns overdue/due-soon and bills due within 7 days", async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const farDueDay = Math.min(28, today.getDate() + 10);
+    // A due day whose next occurrence is always >7 days out, regardless of
+    // today's date: derive it from a real date 12 days ahead.
+    const farTarget = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 12);
+    const farDueDay = Math.min(28, farTarget.getDate());
     const nearDueDay = today.getDate() + 2 > 28 ? 1 : today.getDate() + 2;
 
     const overdue = await createBill({

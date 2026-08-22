@@ -6,6 +6,7 @@ import { readJson } from "./helpers";
 import { csvEscape } from "../utils/format";
 import {
   addMonths,
+  applyDebtPaymentState,
   countDebtPayments,
   createDebt,
   deleteDebt,
@@ -13,27 +14,39 @@ import {
   deriveMonths,
   getDashboard,
   getDebtById,
+  getDebtForPaymentLog,
+  getDebtReplayTerms,
+  getDebtTerms,
   getDebts,
   getDebtTypes,
+  getLastDebtPaymentDate,
   getDti,
   getHealthAlerts,
   getPaymentStatus,
   getPayments,
   getScheduleRows,
+  insertDebtExpenseTransaction,
   insertPayment,
   isoDate,
   money,
   regenerateSchedule,
   replayPayments,
+  restoreDebtOutstanding,
   setDebtActive,
+  settleDebtAfterReplay,
+  settleDebtFully,
   simulatePrepayment,
   simulateStrategies,
   splitPayment,
+  debtRowExists,
   updateDebt,
+  updateDebtAfterReplay,
   updateDebtDerived,
   updatePayment,
 } from "../queries/debts";
 import type { Queryable } from "../queries/debts";
+import { accountExists } from "../queries/references";
+import { transactionExists } from "../queries/transactions";
 
 const debts = new Hono();
 
@@ -65,13 +78,7 @@ async function scheduleAnchor(
   debtId: string,
   startDate: string
 ): Promise<string> {
-  const result = await q.query<{ last: string | null }>(
-    `SELECT MAX(date)::text AS last FROM debt_payments
-     WHERE user_id = $1 AND debt_id = $2`,
-    [userId, debtId]
-  );
-  const last = result.rows[0]?.last;
-  return last ?? startDate;
+  return (await getLastDebtPaymentDate(q, userId, debtId)) ?? startDate;
 }
 
 debts.get("/", requireAuth, async (c) => {
@@ -175,14 +182,8 @@ debts.post("/", requireAuth, async (c) => {
 
   try {
     const id = await withUser(user.user_id, async (client) => {
-      if (accountId !== null) {
-        const account = await client.query<{ id: string }>(
-          `SELECT id FROM accounts WHERE user_id = $1 AND id = $2`,
-          [user.user_id, accountId]
-        );
-        if (account.rowCount !== 1) {
-          throw new Error("INVALID_ACCOUNT");
-        }
+      if (accountId !== null && !(await accountExists(accountId, user.user_id, client))) {
+        throw new Error("INVALID_ACCOUNT");
       }
       const outstanding = principalOutstanding as number;
       const rate = interestRate as number;
@@ -487,21 +488,11 @@ debts.patch("/:id", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, async (client) => {
-      const existing = await client.query<{ id: string }>(
-        `SELECT id FROM debts WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (existing.rowCount !== 1) {
+      if (!(await debtRowExists(client, user.user_id, id))) {
         throw new Error("DEBT_NOT_FOUND");
       }
-      if (accountId) {
-        const account = await client.query<{ id: string }>(
-          `SELECT id FROM accounts WHERE user_id = $1 AND id = $2`,
-          [user.user_id, accountId]
-        );
-        if (account.rowCount !== 1) {
-          throw new Error("INVALID_ACCOUNT");
-        }
+      if (accountId && !(await accountExists(accountId, user.user_id, client))) {
+        throw new Error("INVALID_ACCOUNT");
       }
       const updated = await updateDebt(
         {
@@ -534,18 +525,8 @@ debts.patch("/:id", requireAuth, async (c) => {
         emiAmount !== undefined ||
         startDate !== undefined;
       if (needsRecompute) {
-        const current = await client.query<{
-          principal_outstanding: string;
-          interest_rate: string;
-          emi_amount: string | null;
-          start_date: string;
-        }>(
-          `SELECT principal_outstanding::text, interest_rate::text,
-                  emi_amount::text, start_date::text
-           FROM debts WHERE user_id = $1 AND id = $2`,
-          [user.user_id, id]
-        );
-        const row = current.rows[0];
+        const row = await getDebtTerms(client, user.user_id, id);
+        if (!row) throw new Error("DEBT_NOT_FOUND");
         const outstanding = Number(row.principal_outstanding);
         const rate = Number(row.interest_rate);
         const emi = row.emi_amount === null ? null : Number(row.emi_amount);
@@ -610,11 +591,7 @@ debts.delete("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
   try {
     const deleted = await withUser(user.user_id, async (client) => {
-      const debt = await client.query<{ id: string }>(
-        `SELECT id FROM debts WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (debt.rowCount !== 1) {
+      if (!(await debtRowExists(client, user.user_id, id))) {
         throw new Error("DEBT_NOT_FOUND");
       }
       const paymentCount = await countDebtPayments(client, user.user_id, id);
@@ -647,15 +624,11 @@ debts.post("/:id/close", requireAuth, async (c) => {
   const id = c.req.param("id");
   try {
     const closed = await withUser(user.user_id, async (client) => {
-      const debt = await client.query<{ principal_outstanding: string }>(
-        `SELECT principal_outstanding::text FROM debts
-         WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (debt.rowCount !== 1) {
+      const terms = await getDebtTerms(client, user.user_id, id);
+      if (!terms) {
         throw new Error("DEBT_NOT_FOUND");
       }
-      if (Number(debt.rows[0].principal_outstanding) > 0) {
+      if (Number(terms.principal_outstanding) > 0) {
         throw new Error("HAS_BALANCE");
       }
       return setDebtActive(client, user.user_id, id, 0, isoDate(new Date()));
@@ -881,33 +854,19 @@ debts.post("/:id/prepayments", requireAuth, async (c) => {
 
   try {
     const result = await withUser(user.user_id, async (client) => {
-      const debt = await client.query<{
-        principal_outstanding: string;
-        interest_rate: string;
-        emi_amount: string | null;
-        start_date: string;
-      }>(
-        `SELECT principal_outstanding::text, interest_rate::text,
-                emi_amount::text, start_date::text
-         FROM debts WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (debt.rowCount !== 1) {
+      const terms = await getDebtTerms(client, user.user_id, id);
+      if (!terms) {
         throw new Error("DEBT_NOT_FOUND");
       }
-      const row = debt.rows[0];
       if (transactionId !== null) {
-        const transaction = await client.query<{ id: string }>(
-          `SELECT id FROM transactions WHERE user_id = $1 AND id = $2`,
-          [user.user_id, transactionId]
-        );
-        if (transaction.rowCount !== 1) {
+        const exists = await transactionExists(user.user_id, transactionId, client);
+        if (exists.rowCount !== 1) {
           throw new Error("INVALID_TRANSACTION");
         }
       }
-      const outstanding = Number(row.principal_outstanding);
-      const rate = Number(row.interest_rate);
-      const emi = row.emi_amount === null ? null : Number(row.emi_amount);
+      const outstanding = Number(terms.principal_outstanding);
+      const rate = Number(terms.interest_rate);
+      const emi = terms.emi_amount === null ? null : Number(terms.emi_amount);
       const split = splitPayment(outstanding, rate, amount as number);
       const paymentId = await insertPayment(
         {
@@ -926,32 +885,24 @@ debts.post("/:id/prepayments", requireAuth, async (c) => {
       );
       const after = split.outstanding_after;
       if (after <= 0) {
-        await client.query(
-          `UPDATE debts
-           SET principal_outstanding = 0, total_interest_paid = total_interest_paid + $3,
-               months_remaining = 0, end_date = $4::date, is_active = 0,
-               closed_date = $4::date
-           WHERE user_id = $1 AND id = $2`,
-          [user.user_id, id, split.interest_part, date]
-        );
+        await settleDebtFully(client, {
+          userId: user.user_id,
+          debtId: id,
+          interestPart: split.interest_part,
+          date: date as string,
+        });
         await regenerateSchedule(client, user.user_id, id, 0, rate, emi, date as string);
       } else {
         const months = emi !== null ? deriveMonths(after, rate, emi) : null;
         const anchor = date as string;
-        await client.query(
-          `UPDATE debts
-           SET principal_outstanding = $3, total_interest_paid = total_interest_paid + $4,
-               months_remaining = $5, end_date = $6::date
-           WHERE user_id = $1 AND id = $2`,
-          [
-            user.user_id,
-            id,
-            after,
-            split.interest_part,
-            months,
-            months !== null ? addMonths(anchor, months) : null,
-          ]
-        );
+        await applyDebtPaymentState(client, {
+          userId: user.user_id,
+          debtId: id,
+          outstanding: after,
+          interestPart: split.interest_part,
+          months,
+          endDate: months !== null ? addMonths(anchor, months) : null,
+        });
         await regenerateSchedule(client, user.user_id, id, after, rate, emi, anchor);
       }
       return { paymentId, after };
@@ -1016,47 +967,28 @@ debts.post("/:id/payments", requireAuth, async (c) => {
 
   try {
     const result = await withUser(user.user_id, async (client) => {
-      const debt = await client.query<{
-        id: string;
-        name: string;
-        principal_outstanding: string;
-        interest_rate: string;
-        emi_amount: string | null;
-        account_id: string | null;
-        start_date: string;
-      }>(
-        `SELECT id, name, principal_outstanding::text, interest_rate::text,
-                emi_amount::text, account_id, start_date::text
-         FROM debts WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (debt.rowCount !== 1) {
+      const row = await getDebtForPaymentLog(client, user.user_id, id);
+      if (!row) {
         throw new Error("DEBT_NOT_FOUND");
       }
-      const row = debt.rows[0];
       const effectiveAmount = amount ?? Number(row.emi_amount ?? 0);
       if (effectiveAmount <= 0) {
         throw new Error("AMOUNT_REQUIRED");
       }
       let linkedTransactionId = transactionId;
       if (linkedTransactionId !== null) {
-        const transaction = await client.query<{ id: string }>(
-          `SELECT id FROM transactions WHERE user_id = $1 AND id = $2`,
-          [user.user_id, linkedTransactionId]
-        );
-        if (transaction.rowCount !== 1) {
+        const exists = await transactionExists(user.user_id, linkedTransactionId, client);
+        if (exists.rowCount !== 1) {
           throw new Error("INVALID_TRANSACTION");
         }
       } else if (linkTransaction && row.account_id !== null) {
-        const tx = await client.query<{ id: string }>(
-          `INSERT INTO transactions
-             (user_id, account_id, type, amount, description, date, source,
-              created_by, updated_by)
-           VALUES ($1, $2, 'expense', $3, $4, $5::date, 'manual', $1, $1)
-           RETURNING id`,
-          [user.user_id, row.account_id, effectiveAmount, `EMI - ${row.name}`, date]
-        );
-        linkedTransactionId = tx.rows[0].id;
+        linkedTransactionId = await insertDebtExpenseTransaction(client, {
+          userId: user.user_id,
+          accountId: row.account_id,
+          amount: effectiveAmount,
+          description: `EMI - ${row.name}`,
+          date: date as string,
+        });
       }
       const outstanding = Number(row.principal_outstanding);
       const rate = Number(row.interest_rate);
@@ -1079,32 +1011,24 @@ debts.post("/:id/payments", requireAuth, async (c) => {
       );
       const after = split.outstanding_after;
       if (after <= 0) {
-        await client.query(
-          `UPDATE debts
-           SET principal_outstanding = 0, total_interest_paid = total_interest_paid + $3,
-               months_remaining = 0, end_date = $4::date, is_active = 0,
-               closed_date = $4::date
-           WHERE user_id = $1 AND id = $2`,
-          [user.user_id, id, split.interest_part, date]
-        );
+        await settleDebtFully(client, {
+          userId: user.user_id,
+          debtId: id,
+          interestPart: split.interest_part,
+          date: date as string,
+        });
         await regenerateSchedule(client, user.user_id, id, 0, rate, emi, date as string);
       } else {
         const months = emi !== null ? deriveMonths(after, rate, emi) : null;
         const anchor = date as string;
-        await client.query(
-          `UPDATE debts
-           SET principal_outstanding = $3, total_interest_paid = total_interest_paid + $4,
-               months_remaining = $5, end_date = $6::date
-           WHERE user_id = $1 AND id = $2`,
-          [
-            user.user_id,
-            id,
-            after,
-            split.interest_part,
-            months,
-            months !== null ? addMonths(anchor, months) : null,
-          ]
-        );
+        await applyDebtPaymentState(client, {
+          userId: user.user_id,
+          debtId: id,
+          outstanding: after,
+          interestPart: split.interest_part,
+          months,
+          endDate: months !== null ? addMonths(anchor, months) : null,
+        });
         await regenerateSchedule(client, user.user_id, id, after, rate, emi, anchor);
       }
       return { paymentId, after, isActive: after <= 0 ? 0 : 1 };
@@ -1199,12 +1123,7 @@ debts.delete("/:id/payments/:paymentId", requireAuth, async (c) => {
     const deleted = await deletePayment(user.user_id, id, paymentId, client);
     if (!deleted.ok) return false;
     if (deleted.principalPart !== null && deleted.principalPart !== 0) {
-      await client.query(
-        `UPDATE debts
-         SET principal_outstanding = principal_outstanding + $3
-         WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id, deleted.principalPart]
-      );
+      await restoreDebtOutstanding(client, user.user_id, id, deleted.principalPart);
     }
     await syncDebtAfterPaymentChange(client, user.user_id, id);
     return true;
@@ -1221,53 +1140,31 @@ async function syncDebtAfterPaymentChange(
   userId: number,
   debtId: string
 ): Promise<void> {
-  const debt = await client.query<{
-    interest_rate: string;
-    emi_amount: string | null;
-    start_date: string;
-    is_active: number;
-  }>(
-    `SELECT interest_rate::text, emi_amount::text, start_date::text, is_active
-     FROM debts WHERE user_id = $1 AND id = $2`,
-    [userId, debtId]
-  );
-  const row = debt.rows[0];
+  const row = await getDebtReplayTerms(client, userId, debtId);
   if (!row) return;
   const replay = await replayPayments(client, userId, debtId, Number(row.interest_rate));
   const outstanding = replay.outstanding;
   const emi = row.emi_amount === null ? null : Number(row.emi_amount);
-  const payments = await client.query<{ last: string | null }>(
-    `SELECT MAX(date)::text AS last FROM debt_payments
-     WHERE user_id = $1 AND debt_id = $2`,
-    [userId, debtId]
-  );
-  const lastDate = payments.rows[0]?.last ?? null;
+  const lastDate = await getLastDebtPaymentDate(client, userId, debtId);
   const anchor = lastDate ?? row.start_date;
   if (outstanding <= 0) {
-    await client.query(
-      `UPDATE debts
-       SET principal_outstanding = 0, total_interest_paid = $3,
-           months_remaining = 0, end_date = $4::date
-       WHERE user_id = $1 AND id = $2`,
-      [userId, debtId, replay.totalInterestPaid, lastDate ?? row.start_date]
-    );
+    await settleDebtAfterReplay(client, {
+      userId,
+      debtId,
+      totalInterestPaid: replay.totalInterestPaid,
+      anchorDate: lastDate ?? row.start_date,
+    });
     await regenerateSchedule(client, userId, debtId, 0, Number(row.interest_rate), emi, anchor);
   } else {
     const months = emi !== null ? deriveMonths(outstanding, Number(row.interest_rate), emi) : null;
-    await client.query(
-      `UPDATE debts
-       SET principal_outstanding = $3, total_interest_paid = $4,
-           months_remaining = $5, end_date = $6::date
-       WHERE user_id = $1 AND id = $2`,
-      [
-        userId,
-        debtId,
-        outstanding,
-        replay.totalInterestPaid,
-        months,
-        months !== null ? addMonths(anchor, months) : null,
-      ]
-    );
+    await updateDebtAfterReplay(client, {
+      userId,
+      debtId,
+      outstanding,
+      totalInterestPaid: replay.totalInterestPaid,
+      months,
+      endDate: months !== null ? addMonths(anchor, months) : null,
+    });
     await regenerateSchedule(client, userId, debtId, outstanding, Number(row.interest_rate), emi, anchor);
   }
 }

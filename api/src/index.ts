@@ -16,7 +16,7 @@ export type {
   TransactionTag,
   TransactionSplit,
 } from "./queries/transactions";
-export type { TagRow } from "./routes/tags";
+export type { TagRow } from "./queries/tags";
 export type {
   Budget,
   BudgetRow,
@@ -27,8 +27,13 @@ export type {
 } from "./queries/budgets";
 export type { ActionState, SessionUser, SessionIssued, CategoryRow } from "./types";
 export type { SignupFieldErrors } from "./routes/auth";
-export type { Bill, PaymentHistoryRow, DueItem, BillOverview } from "./routes/bills";
-export type { Subscription } from "./routes/subscriptions";
+export type {
+  Bill,
+  PaymentHistoryRow,
+  DueItem,
+  BillOverview,
+} from "./queries/bills";
+export type { Subscription } from "./queries/subscriptions";
 export type {
   Goal,
   GoalRow,

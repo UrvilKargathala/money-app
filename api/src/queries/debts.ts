@@ -1245,3 +1245,224 @@ export async function getHealthAlerts(userId: number): Promise<{
   }
   return { alerts, summary };
 }
+export async function debtRowExists(
+  q: Queryable,
+  userId: number,
+  debtId: string
+): Promise<boolean> {
+  const result = await q.query<{ id: string }>(
+    `SELECT id FROM debts WHERE user_id = $1 AND id = $2`,
+    [userId, debtId]
+  );
+  return result.rowCount === 1;
+}
+
+export type DebtReplayTermsRow = {
+  interest_rate: string;
+  emi_amount: string | null;
+  start_date: string;
+};
+
+export async function getDebtReplayTerms(
+  q: Queryable,
+  userId: number,
+  debtId: string
+): Promise<DebtReplayTermsRow | null> {
+  const result = await q.query<DebtReplayTermsRow>(
+    `SELECT interest_rate::text, emi_amount::text, start_date::text
+     FROM debts WHERE user_id = $1 AND id = $2`,
+    [userId, debtId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export type DebtTermsRow = {
+  principal_outstanding: string;
+  interest_rate: string;
+  emi_amount: string | null;
+  start_date: string;
+};
+
+export async function getDebtTerms(
+  q: Queryable,
+  userId: number,
+  debtId: string
+): Promise<DebtTermsRow | null> {
+  const result = await q.query<DebtTermsRow>(
+    `SELECT principal_outstanding::text, interest_rate::text,
+            emi_amount::text, start_date::text
+     FROM debts WHERE user_id = $1 AND id = $2`,
+    [userId, debtId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export type DebtForPaymentLogRow = DebtTermsRow & {
+  id: string;
+  name: string;
+  account_id: string | null;
+};
+
+export async function getDebtForPaymentLog(
+  q: Queryable,
+  userId: number,
+  debtId: string
+): Promise<DebtForPaymentLogRow | null> {
+  const result = await q.query<DebtForPaymentLogRow>(
+    `SELECT id, name, principal_outstanding::text, interest_rate::text,
+            emi_amount::text, account_id, start_date::text
+     FROM debts WHERE user_id = $1 AND id = $2`,
+    [userId, debtId]
+  );
+  return result.rows[0] ?? null;
+}
+
+/** Settles a fully-paid debt: zeroes the balance and closes it. */
+export function settleDebtFully(
+  q: Queryable,
+  params: {
+    userId: number;
+    debtId: string;
+    interestPart: number;
+    date: string;
+  }
+) {
+  return q.query(
+    `UPDATE debts
+     SET principal_outstanding = 0, total_interest_paid = total_interest_paid + $3,
+         months_remaining = 0, end_date = $4::date, is_active = 0,
+         closed_date = $4::date
+     WHERE user_id = $1 AND id = $2`,
+    [params.userId, params.debtId, params.interestPart, params.date]
+  );
+}
+
+/** Applies a partial payment to the running debt state. */
+export function applyDebtPaymentState(
+  q: Queryable,
+  params: {
+    userId: number;
+    debtId: string;
+    outstanding: number;
+    interestPart: number;
+    months: number | null;
+    endDate: string | null;
+  }
+) {
+  return q.query(
+    `UPDATE debts
+     SET principal_outstanding = $3, total_interest_paid = total_interest_paid + $4,
+         months_remaining = $5, end_date = $6::date
+     WHERE user_id = $1 AND id = $2`,
+    [
+      params.userId,
+      params.debtId,
+      params.outstanding,
+      params.interestPart,
+      params.months,
+      params.endDate,
+    ]
+  );
+}
+
+/** Restores principal after a payment deletion. */
+export function restoreDebtOutstanding(
+  q: Queryable,
+  userId: number,
+  debtId: string,
+  principalPart: number
+) {
+  return q.query(
+    `UPDATE debts
+     SET principal_outstanding = principal_outstanding + $3
+     WHERE user_id = $1 AND id = $2`,
+    [userId, debtId, principalPart]
+  );
+}
+
+export async function getLastDebtPaymentDate(
+  q: Queryable,
+  userId: number,
+  debtId: string
+): Promise<string | null> {
+  const result = await q.query<{ last: string | null }>(
+    `SELECT MAX(date)::text AS last FROM debt_payments
+     WHERE user_id = $1 AND debt_id = $2`,
+    [userId, debtId]
+  );
+  return result.rows[0]?.last ?? null;
+}
+
+/** Final state write after a full chain replay (debt settled). */
+export function settleDebtAfterReplay(
+  q: Queryable,
+  params: {
+    userId: number;
+    debtId: string;
+    totalInterestPaid: number;
+    anchorDate: string;
+  }
+) {
+  return q.query(
+    `UPDATE debts
+     SET principal_outstanding = 0, total_interest_paid = $3,
+         months_remaining = 0, end_date = $4::date
+     WHERE user_id = $1 AND id = $2`,
+    [
+      params.userId,
+      params.debtId,
+      params.totalInterestPaid,
+      params.anchorDate,
+    ]
+  );
+}
+
+/** State write after a chain replay with balance remaining. */
+export function updateDebtAfterReplay(
+  q: Queryable,
+  params: {
+    userId: number;
+    debtId: string;
+    outstanding: number;
+    totalInterestPaid: number;
+    months: number | null;
+    endDate: string | null;
+  }
+) {
+  return q.query(
+    `UPDATE debts
+     SET principal_outstanding = $3, total_interest_paid = $4,
+         months_remaining = $5, end_date = $6::date
+     WHERE user_id = $1 AND id = $2`,
+    [
+      params.userId,
+      params.debtId,
+      params.outstanding,
+      params.totalInterestPaid,
+      params.months,
+      params.endDate,
+    ]
+  );
+}
+
+export function insertDebtExpenseTransaction(
+  q: Queryable,
+  params: {
+    userId: number;
+    accountId: string;
+    amount: number;
+    description: string;
+    date: string;
+  }
+): Promise<string> {
+  return q
+    .query<{ id: string }>(
+      `INSERT INTO transactions
+         (user_id, account_id, type, amount, description, date, source,
+          created_by, updated_by)
+       VALUES ($1, $2, 'expense', $3, $4, $5::date, 'manual', $1, $1)
+       RETURNING id`,
+      [params.userId, params.accountId, params.amount, params.description, params.date]
+    )
+    .then((r) => r.rows[0].id);
+}
