@@ -156,6 +156,10 @@ Single transaction, multi-row batched inserts (psycopg `executemany`); full seed
 | `EMAIL_PROVIDER` | `console` | Emails print to terminal (links copyable) |
 | `STORAGE_DRIVER` | `local` | Exports/attachments → `./storage/` (adapter contract from hosting doc § 7) |
 | `CRON_SECRET` | dev value | Guards `/api/jobs/run` (API package) |
+| `DATA_ENCRYPTION_KEY` | optional locally — a fixed dev fallback key is used with a console warning | Seals the vault recovery copy (Module 11). **Required in production** (Vercel env var) |
+| `BLOB_READ_WRITE_TOKEN` | unset locally | Encrypted note attachments (Module 11). Unset → files persist under `.data/attachments/` (gitignored). On Vercel: create a Blob store (Storage tab → Blob) and connect it; the token is injected automatically |
+
+**Attachment storage selection (`api/src/utils/object-storage.ts`)**: token set → Vercel Blob · `NODE_ENV=test` → in-memory · otherwise → local disk. A Vercel deployment without a token fails fast with a descriptive error instead of silently losing files.
 
 The app is a pnpm workspace: the web app (root) depends on the `@moneymind/api` workspace package (`pnpm-workspace.yaml` → `packages: [api]`). `pnpm install` installs both; the backend reads the same `process.env` as the web app, so a single `.env.local` covers everything.
 

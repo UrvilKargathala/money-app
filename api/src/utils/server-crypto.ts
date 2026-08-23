@@ -7,13 +7,31 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
  * key without it being readable in the database.
  *
  * DATA_ENCRYPTION_KEY is any secret string; a stable 32-byte key is derived.
+ * Local development falls back to a fixed dev key (warned once) so the
+ * feature works with zero setup; production deployments must set it.
  */
+let warnedDevFallback = false;
+
 function dataKey(): Buffer {
   const secret = process.env.DATA_ENCRYPTION_KEY;
   if (!secret) {
-    throw new Error(
-      "DATA_ENCRYPTION_KEY is not configured — cannot handle the recovery copy."
-    );
+    const inProduction =
+      process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+    if (inProduction) {
+      throw new Error(
+        "DATA_ENCRYPTION_KEY is not configured — set it in your Vercel environment variables."
+      );
+    }
+    if (!warnedDevFallback) {
+      warnedDevFallback = true;
+      console.warn(
+        "[vault] DATA_ENCRYPTION_KEY not set — using a local dev fallback key. " +
+          "Set it before deploying."
+      );
+    }
+    return createHash("sha256")
+      .update("moneymind-local-dev-data-encryption-key")
+      .digest();
   }
   return createHash("sha256").update(secret).digest();
 }
