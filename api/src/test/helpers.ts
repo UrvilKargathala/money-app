@@ -301,7 +301,11 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        bills, subscriptions, payment_history, bill_reminders, subscription_audits,
        goals, goal_templates, goal_contributions, goal_snapshots, goal_milestones,
        debts, debt_payments, amortization_schedule,
-       tax_investments, salary_structures, itr_documents
+       tax_investments, salary_structures, itr_documents,
+       investments, investment_transactions, investment_snapshots,
+       investment_price_history, portfolio_snapshots,
+       dividend_income, sip_trackers,
+       net_worth_snapshots, manual_assets, net_worth_milestones
      RESTART IDENTITY CASCADE`
   );
   const alice = await createUser("alice@moneymind.test");
@@ -364,4 +368,31 @@ export async function createInvestment(
   }
   const body = (await res.json()) as { investment: { id: string } };
   return body.investment.id;
+}
+
+export async function createManualAsset(
+  user: TestUser,
+  params: {
+    name?: string;
+    category?: string;
+    valuation?: number;
+    acquisitionDate?: string;
+  } = {}
+): Promise<string> {
+  const name = params.name ?? "Family Home";
+  const res = await postAs(user, "/api/manual-assets", {
+    name,
+    category: params.category ?? "property",
+    valuation: String(params.valuation ?? 5000000),
+    acquisition_date: params.acquisitionDate ?? "2020-06-15",
+  });
+  if (!res.ok) {
+    throw new Error(`createManualAsset failed: ${res.status} ${await res.text()}`);
+  }
+  // The create route returns success-only; fetch the id from the list by name.
+  const list = await requestAs(user, "/api/manual-assets");
+  const assets = (await list.json()) as { assets: { id: string; name: string }[] };
+  const match = assets.assets.find((a) => a.name === name);
+  if (!match) throw new Error(`createManualAsset: "${name}" not found in list`);
+  return match.id;
 }

@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (195): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete.
+Implemented today (214; report/chart PDF+PNG deferred to Module 10 reporting infra): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/export (report+chart 🧪 M10). · manual-assets list/create/detail/patch/delete/export.
 
 ---
 
@@ -423,27 +423,27 @@ Implemented today (195): auth login/signup/logout/me · accounts list/create/pat
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/net-worth` | Current net worth (computed on read) | 🧪 |
-| GET | `/api/net-worth/trend` | Snapshot series (`?range=`) | 🧪 |
-| GET | `/api/net-worth/breakdown` | Asset/liability breakdown by source | 🧪 |
-| GET | `/api/net-worth/ratio` | Assets vs liabilities ratio + % change | 🧪 |
-| GET | `/api/net-worth/summary` | Hero display (MoM, YoY) | 🧪 |
-| GET | `/api/net-worth/snapshots` | Daily snapshots | 🧪 |
-| POST | `/api/net-worth/snapshots/run` | Manual snapshot run | 🧪 |
-| GET | `/api/net-worth/milestones` | List milestones | 🧪 |
-| POST | `/api/net-worth/milestones` | Create milestone | 🧪 |
-| PATCH | `/api/net-worth/milestones/:id` | Update milestone | 🧪 |
-| DELETE | `/api/net-worth/milestones/:id` | Delete milestone | 🧪 |
-| POST | `/api/net-worth/milestones/:id/toggle` | Enable/disable | 🧪 |
-| GET | `/api/net-worth/export` | Time series CSV | 🧪 |
+| GET | `/api/net-worth` | Current net worth (computed on read) | ✅ |
+| GET | `/api/net-worth/trend` | Snapshot series (`?range=`) | ✅ |
+| GET | `/api/net-worth/breakdown` | Asset/liability breakdown by source | ✅ |
+| GET | `/api/net-worth/ratio` | Assets vs liabilities ratio + % change | ✅ |
+| GET | `/api/net-worth/summary` | Hero display (MoM, YoY) | ✅ |
+| GET | `/api/net-worth/snapshots` | Daily snapshots | ✅ |
+| POST | `/api/net-worth/snapshots/run` | Manual snapshot run | ✅ |
+| GET | `/api/net-worth/milestones` | List milestones | ✅ |
+| POST | `/api/net-worth/milestones` | Create milestone | ✅ |
+| PATCH | `/api/net-worth/milestones/:id` | Update milestone | ✅ |
+| DELETE | `/api/net-worth/milestones/:id` | Delete milestone | ✅ |
+| POST | `/api/net-worth/milestones/:id/toggle` | Enable/disable | ✅ |
+| GET | `/api/net-worth/export` | Time series CSV | ✅ |
 | GET | `/api/net-worth/report` | Report PDF | 🧪 |
 | GET | `/api/net-worth/chart` | Trend chart PNG | 🧪 |
-| GET | `/api/manual-assets` | List (category filter) | 🧪 |
-| POST | `/api/manual-assets` | Add asset | 🧪 |
-| GET | `/api/manual-assets/:id` | Read asset | 🧪 |
-| PATCH | `/api/manual-assets/:id` | Update asset | 🧪 |
-| DELETE | `/api/manual-assets/:id` | Delete asset | 🧪 |
-| GET | `/api/manual-assets/export` | Assets CSV | 🧪 |
+| GET | `/api/manual-assets` | List (category filter) | ✅ |
+| POST | `/api/manual-assets` | Add asset | ✅ |
+| GET | `/api/manual-assets/:id` | Read asset | ✅ |
+| PATCH | `/api/manual-assets/:id` | Update asset | ✅ |
+| DELETE | `/api/manual-assets/:id` | Delete asset | ✅ |
+| GET | `/api/manual-assets/export` | Assets CSV | ✅ |
 
 ### Module 10 — Reports & Analytics Dashboard
 

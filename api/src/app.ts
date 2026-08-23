@@ -14,6 +14,8 @@ import { tax } from "./routes/tax";
 import { investments } from "./routes/investments";
 import { sips } from "./routes/sips";
 import { dividends } from "./routes/dividends";
+import { netWorth } from "./routes/net-worth";
+import { manualAssets } from "./routes/manual-assets";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
@@ -36,6 +38,8 @@ app.route("/api/tax", tax);
 app.route("/api/investments", investments);
 app.route("/api/sips", sips);
 app.route("/api/dividends", dividends);
+app.route("/api/net-worth", netWorth);
+app.route("/api/manual-assets", manualAssets);
 app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 
