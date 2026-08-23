@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (263): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle). · notes list/create/detail/patch/soft-delete/restore/purge/pin/unpin/categories-list/categories-rename/trash/export. · note-templates list/detail. · note-attachments list/upload/download/preview/delete. · vault wrapped-key/unlock/lock/verify-password/rewrap/recovery-status (export/import 🧪 deferred).
+Implemented today (274): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags/quick-add/merchants-recent/bulk/date-groups/splits-list-create-patch-delete \· merchant-mappings list/create-update/patch \· categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle). · notes list/create/detail/patch/soft-delete/restore/purge/pin/unpin/categories-list/categories-rename/trash/export. · note-templates list/detail. · note-attachments list/upload/download/preview/delete. · vault wrapped-key/unlock/lock/verify-password/rewrap/recovery-status (export/import 🧪 deferred).
 
 ---
 
@@ -140,15 +140,15 @@ Implemented today (263): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/transactions/:id` | Detail (tags, notes) | ✅ |
 | PATCH | `/api/transactions/:id` | Update (atomic, version lock) | ✅ |
 | DELETE | `/api/transactions/:id` | Delete | ✅ |
-| POST | `/api/transactions/quick-add` | Quick-add (auto-fill last merchant/category/account) | 🧪 |
-| GET | `/api/transactions/merchants/recent` | 5 most recent merchants | 🧪 |
-| POST | `/api/transactions/bulk` | Bulk edit (categorize/tag/delete) | 🧪 |
+| POST | `/api/transactions/quick-add` | Quick-add (auto-fill last merchant/category/account) | ✅ |
+| GET | `/api/transactions/merchants/recent` | 5 most recent merchants | ✅ |
+| POST | `/api/transactions/bulk` | Bulk edit (categorize/tag/delete) | ✅ |
 | GET | `/api/transactions/summary` | Income/expense/net/count aggregates by period | ✅ |
-| GET | `/api/transactions/date-groups` | Date-grouped list with daily totals | 🧪 |
-| GET | `/api/transactions/:id/splits` | List splits | 🧪 |
-| POST | `/api/transactions/:id/splits` | Add split (sum = parent amount) | 🧪 |
-| PATCH | `/api/transactions/:id/splits/:splitId` | Edit split | 🧪 |
-| DELETE | `/api/transactions/:id/splits/:splitId` | Delete split | 🧪 |
+| GET | `/api/transactions/date-groups` | Date-grouped list with daily totals | ✅ |
+| GET | `/api/transactions/:id/splits` | List splits | ✅ |
+| POST | `/api/transactions/:id/splits` | Add split (sum = parent amount) | ✅ |
+| PATCH | `/api/transactions/:id/splits/:splitId` | Edit split | ✅ |
+| DELETE | `/api/transactions/:id/splits/:splitId` | Delete split | ✅ |
 | POST | `/api/transactions/:id/tags` | Attach tag | ✅ |
 | DELETE | `/api/transactions/:id/tags/:tagId` | Detach tag | ✅ |
 | GET | `/api/transactions/export` | CSV export | ✅ |
@@ -160,9 +160,9 @@ Implemented today (263): auth login/signup/logout/me · accounts list/create/pat
 | POST | `/api/tags` | Create tag | ✅ |
 | PATCH | `/api/tags/:id` | Update tag | ✅ |
 | DELETE | `/api/tags/:id` | Delete tag | ✅ |
-| GET | `/api/merchant-mappings` | List merchant→category mappings | 🧪 |
-| POST | `/api/merchant-mappings` | Create/override mapping | 🧪 |
-| PATCH | `/api/merchant-mappings/:id` | Update mapping | 🧪 |
+| GET | `/api/merchant-mappings` | List merchant→category mappings | ✅ |
+| POST | `/api/merchant-mappings` | Create/override mapping | ✅ |
+| PATCH | `/api/merchant-mappings/:id` | Update mapping | ✅ |
 | GET | `/api/recurring-transactions` | List templates | 🧪 |
 | POST | `/api/recurring-transactions` | Create template | 🧪 |
 | GET | `/api/recurring-transactions/:id` | Read template | 🧪 |

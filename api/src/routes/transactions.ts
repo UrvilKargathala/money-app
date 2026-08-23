@@ -3,7 +3,7 @@ import { withUser } from "../db";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
-import { csvEscape } from "../utils/format";
+import { csvEscape, isoDate } from "../utils/format";
 import {
   attachTransactionTag,
   deleteTransactionById,
@@ -19,6 +19,21 @@ import {
 } from "../queries/transactions";
 import { activeAccountExists } from "../queries/references";
 import { tagExistsForUser } from "../queries/tags";
+import {
+  bulkAttachTags,
+  bulkCategorize,
+  bulkDeleteTransactions,
+  getDateGroups,
+  getLastExpenseContext,
+  getRecentMerchants,
+  insertQuickAddTransaction,
+} from "../queries/transaction-extras";
+import {
+  addSplit,
+  deleteSplit,
+  listSplits,
+  updateSplit,
+} from "../queries/splits";
 
 const transactions = new Hono();
 
@@ -110,6 +125,309 @@ transactions.get("/export", requireAuth, async (c) => {
         .slice(0, 10)}.csv"`,
     },
   });
+});
+
+transactions.post("/quick-add", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+
+  const amount = parseAmount(body.amount != null ? String(body.amount) : null);
+  if (amount === null || amount <= 0) {
+    return c.json(
+      { fieldErrors: { amount: "Enter an amount greater than zero." } },
+      400
+    );
+  }
+  const rawDate = String(body.date ?? isoDate(new Date()));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+    return c.json({ fieldErrors: { date: "Choose a valid date." } }, 400);
+  }
+
+  try {
+    const result = await withUser(user.user_id, async (client) => {
+      // Heuristic: fall back to the last expense's account/category/merchant.
+      const heuristic = await getLastExpenseContext(user.user_id, client);
+      const accountId =
+        String(body.account_id ?? "") || heuristic?.account_id || null;
+      if (!accountId) throw new Error("ACCOUNT_REQUIRED");
+
+      const type = String(body.type ?? "expense");
+      if (!(TRANSACTION_TYPES as readonly string[]).includes(type) || type === "transfer") {
+        throw new Error("INVALID_TYPE");
+      }
+
+      const categoryId =
+        body.category_id !== undefined && String(body.category_id)
+          ? String(body.category_id)
+          : heuristic?.category_id ?? null;
+      const merchantClean =
+        body.merchant_clean !== undefined
+          ? String(body.merchant_clean ?? "").trim() || null
+          : heuristic?.merchant_clean ?? null;
+      const description =
+        String(body.description ?? "").trim() ||
+        (merchantClean ? `${merchantClean} purchase` : "Quick add");
+
+      const id = await insertQuickAddTransaction(client, {
+        userId: user.user_id,
+        accountId,
+        type,
+        amount,
+        description,
+        categoryId,
+        date: rawDate,
+        merchantClean,
+      });
+      return {
+        id,
+        applied: {
+          account_id: accountId,
+          category_id: categoryId,
+          merchant_clean: merchantClean,
+        },
+      };
+    });
+    return c.json({ success: true, transaction: { id: result.id }, applied: result.applied });
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === "ACCOUNT_REQUIRED") {
+        return c.json(
+          {
+            fieldErrors: {
+              account_id:
+                "No account to default to — add an account or pass account_id.",
+            },
+          },
+          400
+        );
+      }
+      if (err.message === "INVALID_TYPE") {
+        return c.json({ fieldErrors: { type: "Choose expense or income." } }, 400);
+      }
+    }
+    console.error("[api] quick-add failed:", err);
+    return c.json(
+      { error: "Could not save the transaction. Please try again." },
+      500
+    );
+  }
+});
+
+transactions.get("/merchants/recent", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({
+    merchants: await getRecentMerchants(user.user_id, 5),
+  });
+});
+
+transactions.post("/bulk", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+
+  const rawIds = Array.isArray(body.ids) ? body.ids.map(String).filter(Boolean) : [];
+  const action = String(body.action ?? "");
+  if (rawIds.length === 0 || rawIds.length > 500) {
+    return c.json({ error: "Provide between 1 and 500 transaction ids." }, 400);
+  }
+
+  const uuidRe = /^[0-9a-f-]{36}$/i;
+  const ids = rawIds.filter((id: string) => uuidRe.test(id));
+  if (ids.length !== rawIds.length) {
+    return c.json({ error: "One or more ids are invalid." }, 400);
+  }
+
+  try {
+    let affected: number;
+    switch (action) {
+      case "categorize": {
+        const categoryId = String(body.category_id ?? "");
+        if (!uuidRe.test(categoryId)) {
+          return c.json(
+            { fieldErrors: { category_id: "Please choose a category." } },
+            400
+          );
+        }
+        const res = await withUser(user.user_id, (client) =>
+          bulkCategorize(client, { userId: user.user_id, ids, categoryId })
+        );
+        affected = res.rowCount ?? 0;
+        break;
+      }
+      case "tag": {
+        const tagIds = Array.isArray(body.tag_ids)
+          ? body.tag_ids.map(String).filter((t: string) => uuidRe.test(t))
+          : [];
+        if (tagIds.length === 0) {
+          return c.json(
+            { fieldErrors: { tag_ids: "Provide at least one tag id." } },
+            400
+          );
+        }
+        const res = await withUser(user.user_id, (client) =>
+          bulkAttachTags(client, { userId: user.user_id, ids, tagIds })
+        );
+        affected = ids.length;
+        void res;
+        break;
+      }
+      case "delete": {
+        const res = await withUser(user.user_id, (client) =>
+          bulkDeleteTransactions(client, user.user_id, ids)
+        );
+        affected = res.rowCount ?? 0;
+        break;
+      }
+      default:
+        return c.json(
+          { error: "action must be categorize, tag or delete." },
+          400
+        );
+    }
+    return c.json({ success: true, affected });
+  } catch (err) {
+    console.error("[api] bulk edit failed:", err);
+    return c.json(
+      { error: "Could not apply the bulk edit. Please try again." },
+      500
+    );
+  }
+});
+
+transactions.get("/date-groups", requireAuth, async (c) => {
+  const user = c.get("user");
+  const from = c.req.query("from") || null;
+  const to = c.req.query("to") || null;
+  for (const [label, value] of [["from", from], ["to", to]] as const) {
+    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return c.json({ error: `Invalid ${label} date.` }, 400);
+    }
+  }
+  return c.json({
+    groups: await getDateGroups(user.user_id, from, to),
+  });
+});
+
+// ---- splits (nested under :id; registered alongside the other :id routes) --
+
+transactions.get("/:id/splits", requireAuth, async (c) => {
+  const user = c.get("user");
+  const summary = await listSplits(user.user_id, c.req.param("id"));
+  if (!summary) return c.json({ error: "Not found" }, 404);
+  return c.json(summary);
+});
+
+transactions.post("/:id/splits", requireAuth, async (c) => {
+  const user = c.get("user");
+  const txnId = c.req.param("id");
+  const body = await readJson(c);
+
+  const categoryId = String(body.category_id ?? "");
+  const amount = parseAmount(body.amount != null ? String(body.amount) : null);
+  const notes = String(body.notes ?? "").trim() || null;
+
+  if (!/^[0-9a-f-]{36}$/i.test(categoryId)) {
+    return c.json({ fieldErrors: { category_id: "Please choose a category." } }, 400);
+  }
+  if (amount === null || amount <= 0) {
+    return c.json(
+      { fieldErrors: { amount: "Split amounts must be greater than zero." } },
+      400
+    );
+  }
+
+  try {
+    const splitId = await withUser(user.user_id, (client) =>
+      addSplit(client, {
+        userId: user.user_id,
+        transactionId: txnId,
+        categoryId,
+        amount,
+        notes,
+      })
+    );
+    return c.json({ success: true, split: { id: splitId } });
+  } catch (err) {
+    if (err instanceof Error) {
+      const map: Record<string, [number, Record<string, unknown>]> = {
+        NOT_FOUND: [404, { error: "Not found" }],
+        IS_TRANSFER: [
+          409,
+          { error: "Transfer transactions can't be split — edit the transfer instead." },
+        ],
+        SUM_EXCEEDS_PARENT: [
+          400,
+          { error: "Splits can't exceed the transaction total." },
+        ],
+        DUPLICATE_CATEGORY: [
+          409,
+          { error: "This transaction already has a split for that category — edit it instead." },
+        ],
+      };
+      const entry = map[err.message];
+      if (entry) return c.json(entry[1], entry[0] as 400 | 404 | 409);
+    }
+    console.error("[api] add split failed:", err);
+    return c.json({ error: "Could not add the split. Please try again." }, 500);
+  }
+});
+
+transactions.patch("/:id/splits/:splitId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const txnId = c.req.param("id");
+  const splitId = c.req.param("splitId");
+  const body = await readJson(c);
+
+  const categoryId = String(body.category_id ?? "");
+  const amount = parseAmount(body.amount != null ? String(body.amount) : null);
+  const notes = String(body.notes ?? "").trim() || null;
+
+  if (!/^[0-9a-f-]{36}$/i.test(categoryId)) {
+    return c.json({ fieldErrors: { category_id: "Please choose a category." } }, 400);
+  }
+  if (amount === null || amount <= 0) {
+    return c.json(
+      { fieldErrors: { amount: "Split amounts must be greater than zero." } },
+      400
+    );
+  }
+
+  try {
+    const ok = await withUser(user.user_id, (client) =>
+      updateSplit(client, {
+        userId: user.user_id,
+        transactionId: txnId,
+        splitId,
+        categoryId,
+        amount,
+        notes,
+      })
+    );
+    if (!ok) return c.json({ error: "Not found" }, 404);
+  } catch (err) {
+    if (err instanceof Error) {
+      const map: Record<string, [number, Record<string, unknown>]> = {
+        NOT_FOUND: [404, { error: "Not found" }],
+        IS_TRANSFER: [409, { error: "Transfer transactions can't be split." }],
+        SUM_EXCEEDS_PARENT: [400, { error: "Splits can't exceed the transaction total." }],
+        DUPLICATE_CATEGORY: [409, { error: "Another split already uses that category." }],
+      };
+      const entry = map[err.message];
+      if (entry) return c.json(entry[1], entry[0] as 400 | 404 | 409);
+    }
+    console.error("[api] update split failed:", err);
+    return c.json({ error: "Could not update the split. Please try again." }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
+transactions.delete("/:id/splits/:splitId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const ok = await withUser(user.user_id, (client) =>
+    deleteSplit(client, user.user_id, c.req.param("id"), c.req.param("splitId"))
+  );
+  if (!ok) return c.json({ error: "Not found" }, 404);
+  return c.json({ success: true });
 });
 
 transactions.get("/:id", requireAuth, async (c) => {
