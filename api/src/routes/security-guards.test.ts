@@ -151,6 +151,8 @@ describe("security guard: tenant scoping in query modules", () => {
     "net_worth_milestones",
     "report_exports",
     "report_templates",
+    "secure_notes",
+    "note_attachments",
   ];
 
   /** Statements that legitimately read across users via an already-scoped parent. */

@@ -396,3 +396,30 @@ export async function createManualAsset(
   if (!match) throw new Error(`createManualAsset: "${name}" not found in list`);
   return match.id;
 }
+
+export async function createNote(
+  user: TestUser,
+  params: {
+    title?: string;
+    category?: string;
+    templateCode?: string | null;
+    payload?: string;
+    pinned?: boolean;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/notes", {
+    title: params.title ?? "Bank Account Details",
+    category: params.category ?? "financial",
+    ...(params.templateCode === undefined
+      ? {}
+      : { template_code: params.templateCode }),
+    data_encrypted: Buffer.from(params.payload ?? "secret-content").toString("base64"),
+    data_iv: "iv-1234567890ab",
+  });
+  if (!res.ok) {
+    throw new Error(`createNote failed: ${res.status} ${await res.text()}`);
+  }
+  const id = ((await res.json()) as { note: { id: string } }).note.id;
+  if (params.pinned) await postAs(user, `/api/notes/${id}/pin`, {});
+  return id;
+}

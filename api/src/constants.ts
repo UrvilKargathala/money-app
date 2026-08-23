@@ -32,3 +32,15 @@ export const TAG_COLOR_PALETTE = [
   "#AB47BC",
   "#26A69A",
 ];
+export const NOTE_CATEGORIES = [
+  "personal",
+  "financial",
+  "document",
+  "vehicle",
+  "health",
+  "insurance",
+  "work",
+  "home",
+  "travel",
+  "other",
+] as const;

@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import { auth } from "./routes/auth";
 import { accounts, accountTypes } from "./routes/accounts";
 import { transfers } from "./routes/transfers";
@@ -19,6 +19,9 @@ import { manualAssets } from "./routes/manual-assets";
 import { reports } from "./routes/reports";
 import { reportTemplates } from "./routes/report-templates";
 import { reportExports } from "./routes/report-exports";
+import { notes } from "./routes/notes";
+import { vault } from "./routes/vault";
+import { registerNoteTemplateRoutes } from "./routes/note-templates";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
@@ -46,6 +49,9 @@ app.route("/api/manual-assets", manualAssets);
 app.route("/api/reports", reports);
 app.route("/api/report-templates", reportTemplates);
 app.route("/api/report-exports", reportExports);
+app.route("/api/notes", notes);
+app.route("/api/vault", vault);
+registerNoteTemplateRoutes(app);
 app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 

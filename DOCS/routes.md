@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (237): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle).
+Implemented today (263): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle). · notes list/create/detail/patch/soft-delete/restore/purge/pin/unpin/categories-list/categories-rename/trash/export. · note-templates list/detail. · note-attachments list/upload/download/preview/delete. · vault wrapped-key/unlock/lock/verify-password/rewrap/recovery-status (export/import 🧪 deferred).
 
 ---
 
@@ -476,34 +476,34 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/notes` | List (pinned first, category filter, search) | 🧪 |
-| POST | `/api/notes` | Create note (encrypted payload) | 🧪 |
-| GET | `/api/notes/:id` | Read note (ciphertext + IV, decrypt client-side) | 🧪 |
-| PATCH | `/api/notes/:id` | Update (re-encrypt, optimistic lock on version) | 🧪 |
-| DELETE | `/api/notes/:id` | Soft-delete (30-day restore window) | 🧪 |
-| POST | `/api/notes/:id/restore` | Restore from trash | 🧪 |
-| DELETE | `/api/notes/:id/purge` | Permanent purge | 🧪 |
-| GET | `/api/notes/trash` | Soft-deleted notes | 🧪 |
-| POST | `/api/notes/:id/pin` | Pin to top | 🧪 |
-| POST | `/api/notes/:id/unpin` | Unpin | 🧪 |
-| GET | `/api/notes/categories` | Distinct categories (seeded + custom) | 🧪 |
-| PATCH | `/api/notes/categories` | Rename category (batch, one transaction) | 🧪 |
-| GET | `/api/note-templates` | Seeded templates with field schemas | 🧪 |
-| GET | `/api/note-templates/:code` | Read single template | 🧪 |
-| GET | `/api/notes/:id/attachments` | List attachments | 🧪 |
-| POST | `/api/notes/:id/attachments` | Upload client-encrypted file | 🧪 |
-| GET | `/api/notes/:id/attachments/:attachmentId` | Download (decrypt client-side) | 🧪 |
-| GET | `/api/notes/:id/attachments/:attachmentId/preview` | Image/PDF preview | 🧪 |
-| DELETE | `/api/notes/:id/attachments/:attachmentId` | Remove attachment | 🧪 |
-| GET | `/api/vault/wrapped-key` | Wrapped vault key + KDF params | 🧪 |
-| POST | `/api/vault/unlock` | Unlock vault | 🧪 |
-| POST | `/api/vault/lock` | Lock vault | 🧪 |
-| POST | `/api/vault/verify-password` | Verify password for vault access | 🧪 |
-| POST | `/api/vault/rewrap` | Re-wrap key after password change/reset | 🧪 |
-| GET | `/api/vault/recovery-status` | Recovery copy status | 🧪 |
+| GET | `/api/notes` | List (pinned first, category filter, search) | ✅ |
+| POST | `/api/notes` | Create note (encrypted payload) | ✅ |
+| GET | `/api/notes/:id` | Read note (ciphertext + IV, decrypt client-side) | ✅ |
+| PATCH | `/api/notes/:id` | Update (re-encrypt, optimistic lock on version) | ✅ |
+| DELETE | `/api/notes/:id` | Soft-delete (30-day restore window) | ✅ |
+| POST | `/api/notes/:id/restore` | Restore from trash | ✅ |
+| DELETE | `/api/notes/:id/purge` | Permanent purge | ✅ |
+| GET | `/api/notes/trash` | Soft-deleted notes | ✅ |
+| POST | `/api/notes/:id/pin` | Pin to top | ✅ |
+| POST | `/api/notes/:id/unpin` | Unpin | ✅ |
+| GET | `/api/notes/categories` | Distinct categories (seeded + custom) | ✅ |
+| PATCH | `/api/notes/categories` | Rename category (batch, one transaction) | ✅ |
+| GET | `/api/note-templates` | Seeded templates with field schemas | ✅ |
+| GET | `/api/note-templates/:code` | Read single template | ✅ |
+| GET | `/api/notes/:id/attachments` | List attachments | ✅ |
+| POST | `/api/notes/:id/attachments` | Upload client-encrypted file | ✅ |
+| GET | `/api/notes/:id/attachments/:attachmentId` | Download (decrypt client-side) | ✅ |
+| GET | `/api/notes/:id/attachments/:attachmentId/preview` | Image/PDF preview | ✅ |
+| DELETE | `/api/notes/:id/attachments/:attachmentId` | Remove attachment | ✅ |
+| GET | `/api/vault/wrapped-key` | Wrapped vault key + KDF params | ✅ |
+| POST | `/api/vault/unlock` | Unlock vault | ✅ |
+| POST | `/api/vault/lock` | Lock vault | ✅ |
+| POST | `/api/vault/verify-password` | Verify password for vault access | ✅ |
+| POST | `/api/vault/rewrap` | Re-wrap key after password change/reset | ✅ |
+| GET | `/api/vault/recovery-status` | Recovery copy status | ✅ |
 | POST | `/api/vault/export` | Encrypted vault backup (enhancement) | 🧪 |
 | POST | `/api/vault/import` | Restore from backup (enhancement) | 🧪 |
-| GET | `/api/notes/export` | Note headers CSV | 🧪 |
+| GET | `/api/notes/export` | Note headers CSV | ✅ |
 
 ### C1 — Financial Calendar Component
 
