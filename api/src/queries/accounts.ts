@@ -159,3 +159,128 @@ export async function getTransfers(userId: number): Promise<TransferRow[]> {
   );
   return result.rows;
 }
+export type Queryable = { query: typeof query };
+
+const DB: Queryable = { query };
+
+export async function countAccounts(userId: number, q: Queryable = DB): Promise<number> {
+  const result = await q.query<{ n: string }>(
+    `SELECT COUNT(*)::text AS n FROM accounts WHERE user_id = $1`,
+    [userId]
+  );
+  return Number(result.rows[0]?.n ?? 0);
+}
+
+export function insertAccount(
+  q: Queryable,
+  params: {
+    userId: number;
+    name: string;
+    type: string;
+    institution: string | null;
+    openingBalance: number;
+    creditLimit: number | null;
+    color: string | null;
+    notes: string | null;
+  }
+) {
+  return q.query(
+    `INSERT INTO accounts
+       (user_id, name, type, institution, opening_balance, credit_limit, color, notes,
+        created_by, updated_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $1, $1)`,
+    [
+      params.userId,
+      params.name,
+      params.type,
+      params.institution,
+      params.openingBalance,
+      params.creditLimit,
+      params.color,
+      params.notes,
+    ]
+  );
+}
+
+export function updateAccountDetails(
+  q: Queryable,
+  params: {
+    userId: number;
+    accountId: string;
+    name: string;
+    institution: string | null;
+    notes: string | null;
+    color: string | null;
+    creditLimit: number | null;
+    version: number;
+  }
+) {
+  return q.query(
+    `UPDATE accounts
+     SET name = $3, institution = $4, notes = $5, color = $6,
+         credit_limit = $7, version = version + 1, updated_by = $1
+     WHERE user_id = $1 AND id = $2 AND version = $8`,
+    [
+      params.userId,
+      params.accountId,
+      params.name,
+      params.institution,
+      params.notes,
+      params.color,
+      params.creditLimit,
+      params.version,
+    ]
+  );
+}
+
+export function deactivateAccount(q: Queryable, userId: number, accountId: string) {
+  return q.query(
+    `UPDATE accounts
+     SET is_active = 0, deleted_at = CURRENT_TIMESTAMP, deleted_by = $1,
+         version = version + 1, updated_by = $1
+     WHERE user_id = $2 AND id = $3 AND deleted_at IS NULL`,
+    [userId, userId, accountId]
+  );
+}
+
+export function reactivateAccount(q: Queryable, userId: number, accountId: string) {
+  return q.query(
+    `UPDATE accounts
+     SET is_active = 1, deleted_at = NULL, deleted_by = NULL,
+         version = version + 1, updated_by = $1
+     WHERE user_id = $2 AND id = $3`,
+    [userId, userId, accountId]
+  );
+}
+
+export async function getAccountUsageSummary(
+  userId: number,
+  accountId: string,
+  q: Queryable = DB
+): Promise<{ txns: number; balance: number }> {
+  const result = await q.query<{ txns: string; balance: string }>(
+    `SELECT
+       (SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND account_id = $2)::text AS txns,
+       COALESCE((SELECT SUM(CASE
+         WHEN type = 'income' THEN amount
+         WHEN type = 'expense' THEN -amount
+         WHEN type = 'transfer' THEN
+           CASE WHEN EXISTS (
+             SELECT 1 FROM account_transfers tf
+             WHERE tf.from_transaction_id = transactions.id
+           ) THEN -amount ELSE amount END
+         ELSE 0 END) FROM transactions WHERE user_id = $1 AND account_id = $2), 0)::text AS balance`,
+    [userId, accountId]
+  );
+  return {
+    txns: Number(result.rows[0]?.txns ?? 0),
+    balance: Number(result.rows[0]?.balance ?? 0),
+  };
+}
+
+export function deleteAccountById(q: Queryable, userId: number, accountId: string) {
+  return q.query(`DELETE FROM accounts WHERE user_id = $1 AND id = $2`, [
+    userId,
+    accountId,
+  ]);
+}

@@ -3,12 +3,22 @@ import { withUser } from "../db";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
+import { csvEscape } from "../utils/format";
 import {
+  attachTransactionTag,
+  deleteTransactionById,
+  detachTransactionTag,
   getTransactions,
-  getTransactionSummary,
   getTransactionById,
+  getTransactionSummary,
+  getTransactionTransferGroup,
+  insertManualTransaction,
+  transactionExists,
+  updateTransactionFields,
   type TransactionFilters,
 } from "../queries/transactions";
+import { activeAccountExists } from "../queries/references";
+import { tagExistsForUser } from "../queries/tags";
 
 const transactions = new Hono();
 
@@ -17,13 +27,6 @@ const TRANSACTION_TYPES = ["income", "expense", "transfer"] as const;
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 async function readFilters(c: { req: { query: (key: string) => string | undefined } }): Promise<TransactionFilters> {
@@ -145,33 +148,24 @@ transactions.post("/", requireAuth, async (c) => {
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
   }
+  const validAmount = amount as number;
 
   try {
     await withUser(user.user_id, async (client) => {
-      const account = await client.query<{ id: string; is_active: number }>(
-        `SELECT id, is_active FROM accounts WHERE user_id = $1 AND id = $2`,
-        [user.user_id, accountId]
-      );
-      if (account.rowCount !== 1 || account.rows[0].is_active !== 1) {
+      if (!(await activeAccountExists(accountId, user.user_id, client))) {
         throw new Error("INVALID_ACCOUNT");
       }
 
-      await client.query(
-        `INSERT INTO transactions
-           (user_id, account_id, type, amount, description, category_id, date, notes,
-            source, created_by, updated_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, 'manual', $1, $1)`,
-        [
-          user.user_id,
-          accountId,
-          type,
-          amount,
-          description,
-          categoryId,
-          rawDate,
-          notes,
-        ]
-      );
+      await insertManualTransaction(client, {
+        userId: user.user_id,
+        accountId,
+        type,
+        amount: validAmount,
+        description,
+        categoryId,
+        date: rawDate,
+        notes,
+      });
     });
   } catch (err) {
     if (err instanceof Error && err.message === "INVALID_ACCOUNT") {
@@ -217,47 +211,34 @@ transactions.patch("/:id", requireAuth, async (c) => {
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
   }
+  const validAmount = amount as number;
 
   try {
     const result = await withUser(user.user_id, async (client) => {
-      const existing = await client.query<{ transfer_group_id: string | null }>(
-        `SELECT transfer_group_id FROM transactions WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (existing.rowCount !== 1) {
+      const transferGroupId = await getTransactionTransferGroup(user.user_id, id, client);
+      if (transferGroupId === null) {
         return { notFound: true as const };
       }
-      if (existing.rows[0].transfer_group_id) {
+      if (transferGroupId) {
         return { isTransfer: true as const };
       }
 
-      const account = await client.query<{ id: string; is_active: number }>(
-        `SELECT id, is_active FROM accounts WHERE user_id = $1 AND id = $2`,
-        [user.user_id, accountId]
-      );
-      if (account.rowCount !== 1 || account.rows[0].is_active !== 1) {
+      if (!(await activeAccountExists(accountId, user.user_id, client))) {
         throw new Error("INVALID_ACCOUNT");
       }
 
-      const updated = await client.query(
-        `UPDATE transactions
-         SET type = $3, amount = $4, description = $5, category_id = $6,
-             date = $7::date, notes = $8, account_id = $9,
-             version = version + 1, updated_by = $1
-         WHERE user_id = $1 AND id = $2 AND version = $10`,
-        [
-          user.user_id,
-          id,
-          type,
-          amount,
-          description,
-          categoryId,
-          rawDate,
-          notes,
-          accountId,
-          version,
-        ]
-      );
+      const updated = await updateTransactionFields(client, {
+        userId: user.user_id,
+        id,
+        type,
+        amount: validAmount,
+        description,
+        categoryId,
+        date: rawDate,
+        notes,
+        accountId,
+        version,
+      });
       if (updated.rowCount === 0) {
         return { conflicted: true as const };
       }
@@ -296,20 +277,14 @@ transactions.delete("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
 
   const result = await withUser(user.user_id, async (client) => {
-    const existing = await client.query<{ transfer_group_id: string | null }>(
-      `SELECT transfer_group_id FROM transactions WHERE user_id = $1 AND id = $2`,
-      [user.user_id, id]
-    );
-    if (existing.rowCount !== 1) {
+    const transferGroupId = await getTransactionTransferGroup(user.user_id, id, client);
+    if (transferGroupId === null) {
       return { notFound: true as const };
     }
-    if (existing.rows[0].transfer_group_id) {
+    if (transferGroupId) {
       return { isTransfer: true as const };
     }
-    await client.query(`DELETE FROM transactions WHERE user_id = $1 AND id = $2`, [
-      user.user_id,
-      id,
-    ]);
+    await deleteTransactionById(client, user.user_id, id);
     return { ok: true as const };
   });
 
@@ -336,26 +311,19 @@ transactions.post("/:id/tags", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, async (client) => {
-      const txn = await client.query<{ id: string }>(
-        `SELECT id FROM transactions WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
+      const txn = await transactionExists(user.user_id, id, client);
       if (txn.rowCount !== 1) {
         throw new Error("NOT_FOUND");
       }
-      const tag = await client.query<{ id: string }>(
-        `SELECT id FROM tags WHERE user_id = $1 AND id = $2`,
-        [user.user_id, tagId]
-      );
-      if (tag.rowCount !== 1) {
+      const tag = await tagExistsForUser(client, user.user_id, tagId);
+      if (!tag) {
         throw new Error("INVALID_TAG");
       }
-      await client.query(
-        `INSERT INTO tags_transactions (user_id, transaction_id, tag_id)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (user_id, transaction_id, tag_id) DO NOTHING`,
-        [user.user_id, id, tagId]
-      );
+      await attachTransactionTag(client, {
+        userId: user.user_id,
+        transactionId: id,
+        tagId,
+      });
     });
   } catch (err) {
     if (err instanceof Error && err.message === "NOT_FOUND") {
@@ -377,11 +345,11 @@ transactions.delete("/:id/tags/:tagId", requireAuth, async (c) => {
   const tagId = c.req.param("tagId");
 
   await withUser(user.user_id, (client) =>
-    client.query(
-      `DELETE FROM tags_transactions
-       WHERE user_id = $1 AND transaction_id = $2 AND tag_id = $3`,
-      [user.user_id, id, tagId]
-    )
+    detachTransactionTag(client, {
+      userId: user.user_id,
+      transactionId: id,
+      tagId,
+    })
   );
 
   return c.json({ success: true });

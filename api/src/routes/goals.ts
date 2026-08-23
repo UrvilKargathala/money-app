@@ -5,6 +5,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, isUniqueViolation } from "./helpers";
+import { csvEscape } from "../utils/format";
 import {
   addContribution,
   createGoal,
@@ -13,6 +14,7 @@ import {
   deleteGoal,
   deleteTemplate,
   distributeSuggestion,
+  getContributionDate,
   getContributions,
   getDashboard,
   getGoalById,
@@ -21,6 +23,7 @@ import {
   getSnapshots,
   getTemplateById,
   getTemplates,
+  goalRowExists,
   isoDate,
   recomputeMilestones,
   setGoalStatus,
@@ -30,7 +33,10 @@ import {
   updateTemplate,
   upsertSnapshot,
 } from "../queries/goals";
-import type { GoalRow, Queryable } from "../queries/goals";
+import type { GoalRow } from "../queries/goals";
+import { accountExists } from "../queries/references";
+import { createTransfer, getActiveAccountsByIds } from "../queries/transfers";
+import { transactionExists } from "../queries/transactions";
 
 const goals = new Hono();
 
@@ -46,13 +52,6 @@ function isoDateStr(value: string): string | null {
 
 function validUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 goals.get("/", requireAuth, async (c) => {
@@ -114,14 +113,8 @@ goals.post("/", requireAuth, async (c) => {
 
   try {
     const id = await withUser(user.user_id, async (client) => {
-      if (accountId !== null) {
-        const account = await client.query<{ id: string }>(
-          `SELECT id FROM accounts WHERE user_id = $1 AND id = $2`,
-          [user.user_id, accountId]
-        );
-        if (account.rowCount !== 1) {
-          throw new Error("INVALID_ACCOUNT");
-        }
+      if (accountId !== null && !(await accountExists(accountId, user.user_id, client))) {
+        throw new Error("INVALID_ACCOUNT");
       }
       return createGoal(
         {
@@ -435,19 +428,11 @@ goals.patch("/:id", requireAuth, async (c) => {
     if (!existing) {
       return c.json({ error: "Not found" }, 404);
     }
-    if (accountId) {
-      const account = await withUser(user.user_id, (client) =>
-        client.query<{ id: string }>(
-          `SELECT id FROM accounts WHERE user_id = $1 AND id = $2`,
-          [user.user_id, accountId]
-        )
+    if (accountId && !(await accountExists(accountId, user.user_id))) {
+      return c.json(
+        { fieldErrors: { account_id: "This account doesn't exist." } },
+        400
       );
-      if (account.rowCount !== 1) {
-        return c.json(
-          { fieldErrors: { account_id: "This account doesn't exist." } },
-          400
-        );
-      }
     }
     const ok = await updateGoal({
       userId: user.user_id,
@@ -630,73 +615,40 @@ goals.post("/:id/contributions/with-transfer", requireAuth, async (c) => {
 
   try {
     const contributionId = await withUser(user.user_id, async (client) => {
-      const goal = await client.query<{ id: string }>(
-        `SELECT id FROM goals WHERE user_id = $1 AND id = $2`,
-        [user.user_id, goalId]
-      );
-      if (goal.rowCount !== 1) {
+      if (!(await goalRowExists(client, user.user_id, goalId))) {
         throw new Error("GOAL_NOT_FOUND");
       }
-      const accounts = await client.query<{ id: string; is_active: number }>(
-        `SELECT id, is_active FROM accounts
-         WHERE user_id = $1 AND id = ANY($2::uuid[])`,
-        [user.user_id, [fromId, toId]]
-      );
-      if (accounts.rowCount !== 2 || accounts.rows.some((a) => a.is_active !== 1)) {
+      const accounts = await getActiveAccountsByIds(client, user.user_id, [
+        fromId,
+        toId,
+      ]);
+      if (accounts.length !== 2 || accounts.some((a) => a.is_active !== 1)) {
         throw new Error("INVALID_ACCOUNTS");
       }
 
-      const groupId = randomUUID();
-      const date = rawDate;
-
-      const fromTx = await client.query<{ id: string }>(
-        `INSERT INTO transactions
-           (user_id, account_id, type, amount, description, date, transfer_group_id,
-            source, created_by, updated_by)
-         VALUES ($1, $2, 'transfer', $3, $4, $5::date, $6, 'manual', $1, $1)
-         RETURNING id`,
-        [user.user_id, fromId, amount, `Transfer to ${toId.slice(0, 8)}`, date, groupId]
-      );
-      const toTx = await client.query<{ id: string }>(
-        `INSERT INTO transactions
-           (user_id, account_id, type, amount, description, date, transfer_group_id,
-            source, created_by, updated_by)
-         VALUES ($1, $2, 'transfer', $3, $4, $5::date, $6, 'manual', $1, $1)
-         RETURNING id`,
-        [user.user_id, toId, amount, `Transfer from ${fromId.slice(0, 8)}`, date, groupId]
-      );
-
-      await client.query(
-        `INSERT INTO account_transfers
-           (user_id, transfer_group_id, from_account_id, to_account_id,
-            from_transaction_id, to_transaction_id, amount, date, notes, version)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, 1)`,
-        [
-          user.user_id,
-          groupId,
-          fromId,
-          toId,
-          fromTx.rows[0].id,
-          toTx.rows[0].id,
-          amount,
-          date,
-          notes,
-        ]
-      );
+      const { toTransactionId } = await createTransfer(client, {
+        userId: user.user_id,
+        fromId,
+        toId,
+        amount: amount as number,
+        date: rawDate,
+        notes,
+        groupId: randomUUID(),
+      });
 
       const contributionId = await addContribution(
         {
           userId: user.user_id,
           goalId,
           amount: amount as number,
-          date,
+          date: rawDate,
           notes,
-          transactionId: toTx.rows[0].id,
+          transactionId: toTransactionId,
         },
         client
       );
-      await recomputeMilestones(client, user.user_id, goalId, date);
-      await upsertSnapshot(client, user.user_id, goalId, date);
+      await recomputeMilestones(client, user.user_id, goalId, rawDate);
+      await upsertSnapshot(client, user.user_id, goalId, rawDate);
       return contributionId;
     });
     return c.json({ success: true, contribution: { id: contributionId } });
@@ -743,19 +695,12 @@ goals.post("/:id/contributions", requireAuth, async (c) => {
 
   try {
     const id = await withUser(user.user_id, async (client) => {
-      const goal = await client.query<{ id: string }>(
-        `SELECT id FROM goals WHERE user_id = $1 AND id = $2`,
-        [user.user_id, goalId]
-      );
-      if (goal.rowCount !== 1) {
+      if (!(await goalRowExists(client, user.user_id, goalId))) {
         throw new Error("GOAL_NOT_FOUND");
       }
       if (transactionId !== null) {
-        const transaction = await client.query<{ id: string }>(
-          `SELECT id FROM transactions WHERE user_id = $1 AND id = $2`,
-          [user.user_id, transactionId]
-        );
-        if (transaction.rowCount !== 1) {
+        const exists = await transactionExists(user.user_id, transactionId, client);
+        if (exists.rowCount !== 1) {
           throw new Error("INVALID_TRANSACTION");
         }
       }
@@ -830,7 +775,8 @@ goals.patch("/:id/contributions/:contributionId", requireAuth, async (c) => {
         client
       );
       if (!updated) return false;
-      const effectiveDate = date ?? (await getContributionDate(client, user.user_id, goalId, contributionId));
+      const effectiveDate =
+        date ?? (await getContributionDate(user.user_id, goalId, contributionId, client));
       await recomputeMilestones(client, user.user_id, goalId, effectiveDate);
       await upsertSnapshot(client, user.user_id, goalId, effectiveDate);
       return true;
@@ -848,20 +794,6 @@ goals.patch("/:id/contributions/:contributionId", requireAuth, async (c) => {
 
   return c.json({ success: true });
 });
-
-async function getContributionDate(
-  client: Queryable,
-  userId: number,
-  goalId: string,
-  contributionId: string
-): Promise<string> {
-  const result = await client.query<{ date: string }>(
-    `SELECT date::text FROM goal_contributions
-     WHERE user_id = $1 AND goal_id = $2 AND id = $3`,
-    [userId, goalId, contributionId]
-  );
-  return result.rows[0]?.date ?? isoDate(new Date());
-}
 
 goals.delete("/:id/contributions/:contributionId", requireAuth, async (c) => {
   const user = c.get("user");
@@ -929,11 +861,7 @@ goals.post("/:id/snapshots", requireAuth, async (c) => {
   }
   try {
     await withUser(user.user_id, async (client) => {
-      const goal = await client.query<{ id: string }>(
-        `SELECT id FROM goals WHERE user_id = $1 AND id = $2`,
-        [user.user_id, goalId]
-      );
-      if (goal.rowCount !== 1) {
+      if (!(await goalRowExists(client, user.user_id, goalId))) {
         throw new Error("GOAL_NOT_FOUND");
       }
       await upsertSnapshot(client, user.user_id, goalId, date as string);

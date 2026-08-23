@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { auth } from "./routes/auth";
-import { accounts } from "./routes/accounts";
+import { accounts, accountTypes } from "./routes/accounts";
 import { transfers } from "./routes/transfers";
 import { transactions } from "./routes/transactions";
 import { categories } from "./routes/categories";
@@ -10,6 +10,15 @@ import { bills } from "./routes/bills";
 import { subscriptions } from "./routes/subscriptions";
 import { goals } from "./routes/goals";
 import { debts, debtTypes } from "./routes/debts";
+import { tax } from "./routes/tax";
+import { investments } from "./routes/investments";
+import { sips } from "./routes/sips";
+import { dividends } from "./routes/dividends";
+import { netWorth } from "./routes/net-worth";
+import { manualAssets } from "./routes/manual-assets";
+import { reports } from "./routes/reports";
+import { reportTemplates } from "./routes/report-templates";
+import { reportExports } from "./routes/report-exports";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
@@ -17,6 +26,7 @@ export const app = new Hono();
 
 app.route("/api/auth", auth);
 app.route("/api/accounts", accounts);
+app.route("/api/account-types", accountTypes);
 app.route("/api/transfers", transfers);
 app.route("/api/transactions", transactions);
 app.route("/api/categories", categories);
@@ -27,6 +37,15 @@ app.route("/api/subscriptions", subscriptions);
 app.route("/api/goals", goals);
 app.route("/api/debts", debts);
 app.route("/api/debt-types", debtTypes);
+app.route("/api/tax", tax);
+app.route("/api/investments", investments);
+app.route("/api/sips", sips);
+app.route("/api/dividends", dividends);
+app.route("/api/net-worth", netWorth);
+app.route("/api/manual-assets", manualAssets);
+app.route("/api/reports", reports);
+app.route("/api/report-templates", reportTemplates);
+app.route("/api/report-exports", reportExports);
 app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 

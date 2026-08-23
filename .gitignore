@@ -8,6 +8,7 @@
 /*
 !/api/
 !/scripts/
+!/.githooks/
 !/vercel.json
 !/README.md
 !/.gitignore

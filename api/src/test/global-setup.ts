@@ -30,6 +30,33 @@ const DEBT_TYPES = [
   ["other", "Other Loan", 0, 6],
 ];
 
+const TAX_SECTIONS = [
+  ["80C", "Section 80C - ELSS, PPF, EPF, Life Insurance", "Deductions on 80C investments", 150000, "old", 1],
+  ["80CCD-1B", "Section 80CCD(1B) - NPS Additional", "NPS extra deduction", 50000, "both", 2],
+  ["80D", "Section 80D - Health Insurance", "Health insurance premiums", 100000, "both", 3],
+  ["80DD", "Section 80DD - Disabled Dependent", "Medical of disabled dependent", 150000, "old", 4],
+  ["80E", "Section 80E - Education Loan Interest", "Interest on education loans", 999999, "old", 5],
+  ["80G", "Section 80G - Donations", "Donations to eligible funds", 50000, "old", 6],
+  ["80TTA", "Section 80TTA - Savings Interest", "Interest up to 10000 exempt", 10000, "old", 7],
+  ["24B", "Section 24(b) - Home Loan Interest", "Self-occupied property interest", 200000, "old", 8],
+  ["HRA", "HRA Exemption", "House rent allowance exemption", 999999, "old", 9],
+  ["LTA", "LTA Exemption", "Leave travel allowance", 999999, "old", 10],
+  ["STD", "Standard Deduction", "Flat standard deduction", 50000, "both", 11],
+];
+
+const TAX_SLABS = [
+  ["2026-27", "old", 0, 250000, 0.0, 0.04],
+  ["2026-27", "old", 250000, 500000, 0.05, 0.04],
+  ["2026-27", "old", 500000, 1000000, 0.2, 0.04],
+  ["2026-27", "old", 1000000, 999999999, 0.3, 0.04],
+  ["2026-27", "new", 0, 300000, 0.0, 0.04],
+  ["2026-27", "new", 300000, 600000, 0.05, 0.04],
+  ["2026-27", "new", 600000, 900000, 0.1, 0.04],
+  ["2026-27", "new", 900000, 1200000, 0.15, 0.04],
+  ["2026-27", "new", 1200000, 1500000, 0.2, 0.04],
+  ["2026-27", "new", 1500000, 999999999, 0.3, 0.04],
+];
+
 function findRepoRoot(): string {
   let dir = process.cwd();
   for (let i = 0; i < 6; i++) {
@@ -66,6 +93,24 @@ async function seedLookups(databaseUrl: string): Promise<void> {
        VALUES ${debtPlaceholders}
        ON CONFLICT (type_code) DO NOTHING`,
       DEBT_TYPES.flat()
+    );
+    const sectionPlaceholders = TAX_SECTIONS.map(
+      (_, i) => `($${i * 6 + 1},$${i * 6 + 2},$${i * 6 + 3},$${i * 6 + 4},$${i * 6 + 5},$${i * 6 + 6})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO tax_sections (section_code, name, description, max_limit, applicable_regime, sort_order)
+       VALUES ${sectionPlaceholders}
+       ON CONFLICT (section_code) DO NOTHING`,
+      TAX_SECTIONS.flat()
+    );
+    const slabPlaceholders = TAX_SLABS.map(
+      (_, i) => `($${i * 6 + 1},$${i * 6 + 2},$${i * 6 + 3},$${i * 6 + 4},$${i * 6 + 5},$${i * 6 + 6})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO tax_regime_slabs (financial_year, regime, slab_from, slab_to, rate, cess_rate)
+       VALUES ${slabPlaceholders}
+       ON CONFLICT (id) DO NOTHING`,
+      TAX_SLABS.flat()
     );
   } finally {
     await pool.end();

@@ -842,7 +842,7 @@ TABLES: list[tuple[str, str]] = [
             name TEXT,
             amount NUMERIC(12,2),
             investment_date DATE,
-            proof_status TEXT CHECK (proof_status IN ('pending','collected','submitted')),
+            proof_status TEXT CHECK (proof_status IN ('pending','collected','submitted','verified')),
             transaction_id UUID REFERENCES transactions(id),
             notes TEXT,
             version INTEGER DEFAULT 1
@@ -892,7 +892,7 @@ TABLES: list[tuple[str, str]] = [
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
             financial_year TEXT,
-            category TEXT CHECK (category IN ('form16','26as','proof','statement','other')),
+            category TEXT CHECK (category IN ('income_proof','investment_proof','deduction_proof','other')),
             document_name TEXT,
             status TEXT CHECK (status IN ('pending','collected','submitted')),
             is_suggested INTEGER DEFAULT 1,
@@ -1008,7 +1008,7 @@ TABLES: list[tuple[str, str]] = [
             frequency TEXT CHECK (frequency IN ('monthly','quarterly')),
             next_date DATE,
             account_id UUID REFERENCES accounts(id),
-            status TEXT CHECK (status IN ('active','paused','cancelled')),
+            status TEXT CHECK (status IN ('active','paused','completed')),
             start_date DATE,
             end_date DATE,
             notes TEXT

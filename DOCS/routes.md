@@ -14,7 +14,7 @@ Every route follows these rules. **New routes MUST conform** — the naming syst
 - All endpoints live under `/api/`.
 - Resources are **plural nouns, lowercase, kebab-case** for multi-word: `/api/net-worth`, `/api/manual-assets`, `/api/recurring-transactions`.
 - **No version prefix today.** Add `/v1` only when a breaking contract change requires old and new clients to coexist.
-- JSON keys are camelCase (`openingBalance`, not `opening_balance`).
+- JSON keys: query params and generic contract keys are camelCase (`openingBalance`, `includeInactive`), while **resource payload keys mirror DB columns in snake_case** (`account_id`, `monthly_income`, `opening_balance`) — the live codebase convention, applied consistently since module 1. New payload fields follow the resource's DB column naming.
 
 ### R2 — HTTP verbs
 | Verb | Meaning |
@@ -48,7 +48,8 @@ Reference data has no `:id` collection endpoint: `/api/account-types`, `/api/deb
 
 ### R8 — Response shape & status codes
 - Success: `200 { "success": true }` (current code convention; `201` is not used).
-- Payloads: plain camelCase JSON objects/arrays (e.g. `GET /api/auth/me` returns the user object).
+- Payloads: plain snake_case JSON objects/arrays mirroring DB columns (e.g. `GET /api/auth/me` returns the user object).
+- Exceptions: `POST /api/auth/login` and `POST /api/auth/signup` return `{ "token", "maxAge" }` — the web layer owns the `mm_session` cookie (HttpOnly/Secure/SameSite set there) and the API never touches cookies.
 - Validation failure: `400 { "fieldErrors": { … } }`.
 - `401` unauthenticated · `404` not found · `409` conflict (optimistic-lock version mismatch, guarded rule violation, duplicate) · `429` rate-limited · `500` unexpected.
 - Generic error: `{ "error": "…" }`.
@@ -57,7 +58,7 @@ Reference data has no `:id` collection endpoint: `/api/account-types`, `/api/deb
 camelCase; booleans as `0/1` (`?includeInactive=1`); date ranges as short codes (`?range=6M` — `1M/3M/6M/1Y/5Y/All`); paginated lists use `?page=1&pageSize=25` returning `{ items, total, page, pageSize }`.
 
 ### R10 — Auth
-Every route requires the session cookie (`requireAuth`) **unless explicitly listed public**: auth entry points (`signup`, `login`, `forgot-password`, `reset-password`, magic-link consume, email verify) and `GET /api/jobs/run` (guarded by `x-cron-secret` header).
+Every route requires the session cookie (`requireAuth`) **unless explicitly listed public**: auth entry points (`signup`, `login`, `forgot-password`, `reset-password`, magic-link consume, email verify) and `GET /api/jobs/run` (guarded by the `x-cron-secret` header — query-string secrets are rejected).
 
 ---
 
@@ -68,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (126): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export.
+Implemented today (237): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle).
 
 ---
 
@@ -92,7 +93,7 @@ Implemented today (126): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/users/me/profile` | Read profile | 🧪 |
 | PATCH | `/api/users/me/profile` | Update profile (name, email → re-verification) | 🧪 |
 | POST | `/api/users/me/avatar` | Upload avatar | 🧪 |
-| GET | `/api/users/me/settings` | Read settings (currency, theme, language, notifications, AI) | 🧪 |
+| GET | `/api/users/me/settings` | Read settings (currency, theme, language, notifications, AI) | ✅ |
 | PATCH | `/api/users/me/settings` | Update settings | 🧪 |
 | GET | `/api/users/me/sessions` | List active sessions | 🧪 |
 | DELETE | `/api/users/me/sessions/:id` | Revoke a session | 🧪 |
@@ -121,7 +122,7 @@ Implemented today (126): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/accounts/:id/balance` | Computed balance (opening + transactions) | 🧪 |
 | POST | `/api/accounts/:id/snapshots` | Record manual balance snapshot | 🧪 |
 | GET | `/api/accounts/:id/credit-utilization` | Credit card utilization metrics | 🧪 |
-| GET | `/api/account-types` | Lookup: account types | 🧪 |
+| GET | `/api/account-types` | Lookup: account types | ✅ |
 | GET | `/api/transfers` | List transfers | ✅ |
 | POST | `/api/transfers` | Create transfer (atomic debit + credit) | ✅ |
 | GET | `/api/transfers/:id` | Read transfer | 🧪 |
@@ -342,134 +343,134 @@ Implemented today (126): auth login/signup/logout/me · accounts list/create/pat
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/tax/investments` | List (`?fy=`, section/proof-status filters) | 🧪 |
-| POST | `/api/tax/investments` | Record investment entry | 🧪 |
-| GET | `/api/tax/investments/:id` | Read entry | 🧪 |
-| PATCH | `/api/tax/investments/:id` | Edit entry | 🧪 |
-| DELETE | `/api/tax/investments/:id` | Delete entry | 🧪 |
-| GET | `/api/tax/sections` | Lookup: sections with limits | 🧪 |
-| GET | `/api/tax/utilization` | Section utilization dashboard for FY | 🧪 |
-| GET | `/api/tax/salary-structure` | Salary structure for FY | 🧪 |
-| PATCH | `/api/tax/salary-structure` | Upsert structure (salaried/freelancer) | 🧪 |
-| POST | `/api/tax/calculate` | Calculate liability for a regime | 🧪 |
-| GET | `/api/tax/compare-regimes` | Old vs new regime comparison + recommendation | 🧪 |
-| GET | `/api/tax/regime-slabs` | Lookup: slabs for FY | 🧪 |
-| GET | `/api/tax/regime-recommendation` | Recommended regime with ₹ difference | 🧪 |
-| GET | `/api/tax/summary` | FY summary card | 🧪 |
-| GET | `/api/tax/financial-years` | FYs with data | 🧪 |
-| GET | `/api/tax/itr-documents` | ITR checklist for FY | 🧪 |
-| POST | `/api/tax/itr-documents` | Add document entry | 🧪 |
-| PATCH | `/api/tax/itr-documents/:id` | Update status/notes | 🧪 |
-| DELETE | `/api/tax/itr-documents/:id` | Delete entry | 🧪 |
-| POST | `/api/tax/itr-documents/suggestions` | Generate built-in suggested docs | 🧪 |
-| GET | `/api/tax/itr-documents/completion` | Checklist completion pie data | 🧪 |
-| GET | `/api/tax/suggestions` | Suggestions from unused limits | 🧪 |
+| GET | `/api/tax/sections` | Lookup: sections with limits | ✅ |
+| GET | `/api/tax/regime-slabs` | Lookup: slabs for FY + regime | ✅ |
+| POST | `/api/tax/investments` | Record investment entry | ✅ |
+| GET | `/api/tax/investments` | List (`?financial_year=`, section/proof-status filters) | ✅ |
+| GET | `/api/tax/investments/:id` | Read entry | ✅ |
+| PATCH | `/api/tax/investments/:id` | Edit entry (optimistic version) | ✅ |
+| DELETE | `/api/tax/investments/:id` | Delete entry | ✅ |
+| GET | `/api/tax/utilization` | Section utilization dashboard for FY | ✅ |
+| GET | `/api/tax/summary` | FY summary card (invested, deduction, computation) | ✅ |
+| GET | `/api/tax/compare` | Old vs new regime comparison + recommendation | ✅ |
+| GET | `/api/tax/suggestions` | Suggestions from unused limits | ✅ |
+| POST | `/api/tax/salary` | Upsert salary structure for FY | ✅ |
+| GET | `/api/tax/salary` | Salary structure for FY | ✅ |
+| PATCH | `/api/tax/salary` | Partial update of salary structure | ✅ |
+| POST | `/api/tax/itr/suggest` | Generate built-in suggested docs | ✅ |
+| GET | `/api/tax/itr` | ITR checklist for FY (category/status filters) | ✅ |
+| GET | `/api/tax/itr/completion` | Checklist completion pie data | ✅ |
+| GET | `/api/tax/itr/:id` | Read document entry | ✅ |
+| POST | `/api/tax/itr` | Add document entry | ✅ |
+| PATCH | `/api/tax/itr/:id` | Update status/notes | ✅ |
+| DELETE | `/api/tax/itr/:id` | Delete entry | ✅ |
+| GET | `/api/tax/financial-years` | FYs with user data | ✅ |
+| GET | `/api/tax/exports/utilization` | Section utilization CSV | ✅ |
+| GET | `/api/tax/exports/investments` | Tax investments CSV | ✅ |
+| GET | `/api/tax/exports/itr` | ITR checklist CSV | ✅ |
 | POST | `/api/tax/form16/upload` | Upload Form 16 PDF for parsing (enhancement) | 🧪 |
 | POST | `/api/tax/advance-tax/calculate` | Quarterly advance tax (enhancement) | 🧪 |
-| GET | `/api/tax/export` | Section utilization CSV | 🧪 |
 | GET | `/api/tax/report` | Regime comparison PDF | 🧪 |
-| GET | `/api/tax/itr-documents/export` | ITR checklist CSV | 🧪 |
-| GET | `/api/tax/investments/export` | Tax investments CSV | 🧪 |
 
 ### Module 8 — Investment Tracker
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/investments` | List (search, type/category/status filters) | 🧪 |
-| POST | `/api/investments` | Add holding | 🧪 |
-| GET | `/api/investments/:id` | Detail (lots, returns, dividends) | 🧪 |
-| PATCH | `/api/investments/:id` | Update (recalculates values) | 🧪 |
-| DELETE | `/api/investments/:id` | Delete holding | 🧪 |
-| POST | `/api/investments/:id/close` | Mark closed/sold | 🧪 |
-| POST | `/api/investments/:id/price` | Update price (appends history, snapshots) | 🧪 |
-| GET | `/api/investments/:id/price-history` | Append-only price history | 🧪 |
-| GET | `/api/investments/portfolio-summary` | Dashboard totals | 🧪 |
-| GET | `/api/investments/asset-allocation` | Allocation by asset class | 🧪 |
-| GET | `/api/investments/:id/returns` | XIRR for holding | 🧪 |
-| GET | `/api/investments/returns/portfolio` | Portfolio XIRR | 🧪 |
-| GET | `/api/investments/:id/transactions` | Buy/sell/reinvestment list | 🧪 |
-| POST | `/api/investments/:id/transactions` | Add transaction | 🧪 |
-| PATCH | `/api/investments/:id/transactions/:txnId` | Edit transaction | 🧪 |
-| DELETE | `/api/investments/:id/transactions/:txnId` | Delete transaction | 🧪 |
-| GET | `/api/investments/:id/snapshots` | Holding value snapshots | 🧪 |
-| POST | `/api/investments/:id/snapshots` | Holding snapshot | 🧪 |
-| GET | `/api/investments/snapshots` | Portfolio snapshots | 🧪 |
-| POST | `/api/investments/snapshots` | Manual portfolio snapshot | 🧪 |
-| GET | `/api/investments/portfolio-trend` | Value trend data | 🧪 |
-| GET | `/api/investments/maturity-alerts` | Maturities in 30 days | 🧪 |
-| POST | `/api/investments/prices/bulk-update` | Bulk price update (enhancement) | 🧪 |
-| GET | `/api/investments/export` | Portfolio CSV | 🧪 |
-| GET | `/api/investments/:id/transactions/export` | Holding txn history CSV | 🧪 |
-| POST | `/api/investments/sip-calculator` | SIP what-if calculator (enhancement) | 🧪 |
-| GET | `/api/sips` | List SIPs | 🧪 |
-| POST | `/api/sips` | Create SIP | 🧪 |
-| GET | `/api/sips/:id` | Read SIP | 🧪 |
-| PATCH | `/api/sips/:id` | Update SIP | 🧪 |
-| DELETE | `/api/sips/:id` | Delete SIP | 🧪 |
-| POST | `/api/sips/:id/installment` | Log installment (creates transaction) | 🧪 |
-| POST | `/api/sips/:id/pause` | Pause | 🧪 |
-| POST | `/api/sips/:id/resume` | Resume | 🧪 |
-| POST | `/api/sips/:id/complete` | Mark completed | 🧪 |
-| GET | `/api/sips/due` | SIPs due in 7 days | 🧪 |
-| GET | `/api/sips/export` | SIPs CSV | 🧪 |
-| GET | `/api/dividends` | List payouts | 🧪 |
-| POST | `/api/dividends` | Record payout | 🧪 |
-| GET | `/api/dividends/:id` | Read payout | 🧪 |
-| PATCH | `/api/dividends/:id` | Edit payout | 🧪 |
-| DELETE | `/api/dividends/:id` | Delete payout | 🧪 |
+| GET | `/api/investments` | List (search, type/category/status filters) | ✅ |
+| POST | `/api/investments` | Add holding | ✅ |
+| GET | `/api/investments/:id` | Detail (lots, returns, dividends) | ✅ |
+| PATCH | `/api/investments/:id` | Update (recalculates values) | ✅ |
+| DELETE | `/api/investments/:id` | Delete holding | ✅ |
+| POST | `/api/investments/:id/close` | Mark closed/sold | ✅ |
+| POST | `/api/investments/:id/price` | Update price (appends history, snapshots) | ✅ |
+| GET | `/api/investments/:id/price-history` | Append-only price history | ✅ |
+| GET | `/api/investments/portfolio-summary` | Dashboard totals | ✅ |
+| GET | `/api/investments/asset-allocation` | Allocation by asset class | ✅ |
+| GET | `/api/investments/:id/returns` | XIRR for holding | ✅ |
+| GET | `/api/investments/returns/portfolio` | Portfolio XIRR | ✅ |
+| GET | `/api/investments/:id/transactions` | Buy/sell/reinvestment list | ✅ |
+| POST | `/api/investments/:id/transactions` | Add transaction | ✅ |
+| PATCH | `/api/investments/:id/transactions/:txnId` | Edit transaction | ✅ |
+| DELETE | `/api/investments/:id/transactions/:txnId` | Delete transaction | ✅ |
+| GET | `/api/investments/:id/snapshots` | Holding value snapshots | ✅ |
+| POST | `/api/investments/:id/snapshots` | Holding snapshot | ✅ |
+| GET | `/api/investments/snapshots` | Portfolio snapshots | ✅ |
+| POST | `/api/investments/snapshots` | Manual portfolio snapshot | ✅ |
+| GET | `/api/investments/portfolio-trend` | Value trend data | ✅ |
+| GET | `/api/investments/maturity-alerts` | Maturities in 30 days | ✅ |
+| POST | `/api/investments/prices/bulk-update` | Bulk price update (enhancement) | ✅ |
+| GET | `/api/investments/export` | Portfolio CSV | ✅ |
+| GET | `/api/investments/:id/transactions/export` | Holding txn history CSV | ✅ |
+| POST | `/api/investments/sip-calculator` | SIP what-if calculator (enhancement) | ✅ |
+| GET | `/api/sips` | List SIPs | ✅ |
+| POST | `/api/sips` | Create SIP | ✅ |
+| GET | `/api/sips/:id` | Read SIP | ✅ |
+| PATCH | `/api/sips/:id` | Update SIP | ✅ |
+| DELETE | `/api/sips/:id` | Delete SIP | ✅ |
+| POST | `/api/sips/:id/installment` | Log installment (creates transaction) | ✅ |
+| POST | `/api/sips/:id/pause` | Pause | ✅ |
+| POST | `/api/sips/:id/resume` | Resume | ✅ |
+| POST | `/api/sips/:id/complete` | Mark completed | ✅ |
+| GET | `/api/sips/due` | SIPs due in 7 days | ✅ |
+| GET | `/api/sips/export` | SIPs CSV | ✅ |
+| GET | `/api/dividends` | List payouts | ✅ |
+| POST | `/api/dividends` | Record payout | ✅ |
+| GET | `/api/dividends/:id` | Read payout | ✅ |
+| PATCH | `/api/dividends/:id` | Edit payout | ✅ |
+| DELETE | `/api/dividends/:id` | Delete payout | ✅ |
 
 ### Module 9 — Net Worth Tracker
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/net-worth` | Current net worth (computed on read) | 🧪 |
-| GET | `/api/net-worth/trend` | Snapshot series (`?range=`) | 🧪 |
-| GET | `/api/net-worth/breakdown` | Asset/liability breakdown by source | 🧪 |
-| GET | `/api/net-worth/ratio` | Assets vs liabilities ratio + % change | 🧪 |
-| GET | `/api/net-worth/summary` | Hero display (MoM, YoY) | 🧪 |
-| GET | `/api/net-worth/snapshots` | Daily snapshots | 🧪 |
-| POST | `/api/net-worth/snapshots/run` | Manual snapshot run | 🧪 |
-| GET | `/api/net-worth/milestones` | List milestones | 🧪 |
-| POST | `/api/net-worth/milestones` | Create milestone | 🧪 |
-| PATCH | `/api/net-worth/milestones/:id` | Update milestone | 🧪 |
-| DELETE | `/api/net-worth/milestones/:id` | Delete milestone | 🧪 |
-| POST | `/api/net-worth/milestones/:id/toggle` | Enable/disable | 🧪 |
-| GET | `/api/net-worth/export` | Time series CSV | 🧪 |
-| GET | `/api/net-worth/report` | Report PDF | 🧪 |
-| GET | `/api/net-worth/chart` | Trend chart PNG | 🧪 |
-| GET | `/api/manual-assets` | List (category filter) | 🧪 |
-| POST | `/api/manual-assets` | Add asset | 🧪 |
-| GET | `/api/manual-assets/:id` | Read asset | 🧪 |
-| PATCH | `/api/manual-assets/:id` | Update asset | 🧪 |
-| DELETE | `/api/manual-assets/:id` | Delete asset | 🧪 |
-| GET | `/api/manual-assets/export` | Assets CSV | 🧪 |
+| GET | `/api/net-worth` | Current net worth (computed on read) | ✅ |
+| GET | `/api/net-worth/trend` | Snapshot series (`?range=`) | ✅ |
+| GET | `/api/net-worth/breakdown` | Asset/liability breakdown by source | ✅ |
+| GET | `/api/net-worth/ratio` | Assets vs liabilities ratio + % change | ✅ |
+| GET | `/api/net-worth/summary` | Hero display (MoM, YoY) | ✅ |
+| GET | `/api/net-worth/snapshots` | Daily snapshots | ✅ |
+| POST | `/api/net-worth/snapshots/run` | Manual snapshot run | ✅ |
+| GET | `/api/net-worth/milestones` | List milestones | ✅ |
+| POST | `/api/net-worth/milestones` | Create milestone | ✅ |
+| PATCH | `/api/net-worth/milestones/:id` | Update milestone | ✅ |
+| DELETE | `/api/net-worth/milestones/:id` | Delete milestone | ✅ |
+| POST | `/api/net-worth/milestones/:id/toggle` | Enable/disable | ✅ |
+| GET | `/api/net-worth/export` | Time series CSV | ✅ |
+| GET | `/api/net-worth/report` | Report PDF (pdfkit) | ✅ |
+| GET | `/api/net-worth/chart` | Trend chart (SVG) | ✅ |
+| GET | `/api/manual-assets` | List (category filter) | ✅ |
+| POST | `/api/manual-assets` | Add asset | ✅ |
+| GET | `/api/manual-assets/:id` | Read asset | ✅ |
+| PATCH | `/api/manual-assets/:id` | Update asset | ✅ |
+| DELETE | `/api/manual-assets/:id` | Delete asset | ✅ |
+| GET | `/api/manual-assets/export` | Assets CSV | ✅ |
 
 ### Module 10 — Reports & Analytics Dashboard
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/reports/cashflow` | Income vs expense for period | 🧪 |
-| GET | `/api/reports/spending-by-category` | Category breakdown | 🧪 |
-| GET | `/api/reports/trends` | Cumulative spend trend (3/6/12 months) | 🧪 |
-| GET | `/api/reports/budget-vs-actual` | Budget vs actual (from Module 3 metrics) | 🧪 |
-| GET | `/api/reports/heatmap` | Daily spending heatmap | 🧪 |
-| GET | `/api/reports/net-worth` | Net worth over time | 🧪 |
-| GET | `/api/reports/debt-payoff` | Payoff progress | 🧪 |
-| GET | `/api/reports/income-sources` | Income by source category | 🧪 |
-| GET | `/api/reports/top-merchants` | Top merchants by spend/frequency | 🧪 |
-| GET | `/api/reports/summary` | Combined key metrics | 🧪 |
+| GET | `/api/reports/cashflow` | Income vs expense for period | ✅ |
+| GET | `/api/reports/spending-by-category` | Category breakdown | ✅ |
+| GET | `/api/reports/trends` | Cumulative spend trend (3/6/12 months) | ✅ |
+| GET | `/api/reports/budget-vs-actual` | Budget vs actual (from Module 3 metrics) | ✅ |
+| GET | `/api/reports/heatmap` | Daily spending heatmap | ✅ |
+| GET | `/api/reports/net-worth` | Net worth over time | ✅ |
+| GET | `/api/reports/debt-payoff` | Payoff progress | ✅ |
+| GET | `/api/reports/income-sources` | Income by source category | ✅ |
+| GET | `/api/reports/top-merchants` | Top merchants by spend/frequency | ✅ |
+| GET | `/api/reports/summary` | Combined key metrics | ✅ |
 | POST | `/api/reports/explain` | Explain-This (AI on aggregated snapshot) | 🧪 |
-| GET | `/api/report-templates` | List templates (system + user) | 🧪 |
-| GET | `/api/report-templates/:id` | Read template | 🧪 |
-| POST | `/api/report-templates` | Create user template | 🧪 |
-| PATCH | `/api/report-templates/:id` | Update template | 🧪 |
-| DELETE | `/api/report-templates/:id` | Delete template | 🧪 |
-| POST | `/api/report-templates/:id/duplicate` | Duplicate | 🧪 |
-| POST | `/api/reports/export-pdf` | Create dashboard PDF job | 🧪 |
-| GET | `/api/report-exports` | List export records | 🧪 |
-| GET | `/api/report-exports/:id/download` | Download generated file | 🧪 |
-| GET | `/api/reports/export` | Underlying data CSV | 🧪 |
-| GET | `/api/reports/cashflow/export` | Cash flow chart data CSV | 🧪 |
+| GET | `/api/report-templates` | List templates (system + user) | ✅ |
+| GET | `/api/report-templates/:id` | Read template | ✅ |
+| POST | `/api/report-templates` | Create user template | ✅ |
+| PATCH | `/api/report-templates/:id` | Update template | ✅ |
+| DELETE | `/api/report-templates/:id` | Delete template | ✅ |
+| POST | `/api/report-templates/:id/duplicate` | Duplicate | ✅ |
+| POST | `/api/reports/export-pdf` | Create dashboard PDF job | ✅ |
+| GET | `/api/report-exports` | List export records | ✅ |
+| GET | `/api/report-exports/:id/download` | Download generated file | ✅ |
+| GET | `/api/reports/export` | Underlying data CSV | ✅ |
+| GET | `/api/reports/cashflow/export` | Cash flow chart data CSV | ✅ |
 
 ### Module 11 — Secure Notes & Vault
 

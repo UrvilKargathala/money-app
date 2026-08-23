@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { pool } from "../db";
-import type { PaymentHistoryRow } from "../routes/bills";
-import type { Subscription } from "../routes/subscriptions";
+import type { PaymentHistoryRow } from "../queries/bills";
+import type { Subscription } from "../queries/subscriptions";
 import {
   createAccount,
   fixtureDb,

@@ -1,17 +1,32 @@
 import { Hono } from "hono";
-import { query, withUser } from "../db";
+import { withUser } from "../db";
 import {
+  countAccounts,
+  deleteAccountById,
+  deactivateAccount,
   getAccountById,
-  getAccountsWithBalances,
   getAccountTypes,
+  getAccountUsageSummary,
+  getAccountsWithBalances,
   getBalanceHistory,
+  insertAccount,
+  reactivateAccount,
+  updateAccountDetails,
 } from "../queries/accounts";
 import { ACCOUNT_COLOR_PALETTE, ACCOUNT_TYPES } from "../constants";
 import { parseAmount, parseBoolean } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
+import { csvEscape } from "../utils/format";
 
 const accounts = new Hono();
+
+const accountTypes = new Hono();
+
+accountTypes.get("/", requireAuth, async (c) => {
+  const types = await getAccountTypes();
+  return c.json({ types });
+});
 
 const RANGES: Record<string, { label: string; days: number | null }> = {
   "1M": { label: "1M", days: 30 },
@@ -21,12 +36,6 @@ const RANGES: Record<string, { label: string; days: number | null }> = {
   "5Y": { label: "5Y", days: 1826 },
   All: { label: "All", days: null },
 };
-
-function csvEscape(value: string | number | null): string {
-  const s = value == null ? "" : String(value);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
 
 accounts.get("/", requireAuth, async (c) => {
   const user = c.get("user");
@@ -70,32 +79,22 @@ accounts.post("/", requireAuth, async (c) => {
 
   let assignedColor = color;
   if (!assignedColor) {
-    const count = await query<{ n: string }>(
-      `SELECT COUNT(*)::text AS n FROM accounts WHERE user_id = $1`,
-      [user.user_id]
-    );
     assignedColor =
-      ACCOUNT_COLOR_PALETTE[Number(count.rows[0]?.n ?? 0) % ACCOUNT_COLOR_PALETTE.length];
+      ACCOUNT_COLOR_PALETTE[(await countAccounts(user.user_id)) % ACCOUNT_COLOR_PALETTE.length];
   }
 
   try {
     await withUser(user.user_id, (client) =>
-      client.query(
-        `INSERT INTO accounts
-           (user_id, name, type, institution, opening_balance, credit_limit, color, notes,
-            created_by, updated_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $1, $1)`,
-        [
-          user.user_id,
-          name,
-          type,
-          institution,
-          openingBalance,
-          type === "credit_card" ? creditLimit : null,
-          assignedColor,
-          notes,
-        ]
-      )
+      insertAccount(client, {
+        userId: user.user_id,
+        name,
+        type,
+        institution,
+        openingBalance,
+        creditLimit: type === "credit_card" ? creditLimit : null,
+        color: assignedColor,
+        notes,
+      })
     );
   } catch (err) {
     console.error("[api] create account failed:", err);
@@ -134,22 +133,16 @@ accounts.patch("/:id", requireAuth, async (c) => {
 
   try {
     const result = await withUser(user.user_id, (client) =>
-      client.query(
-        `UPDATE accounts
-         SET name = $3, institution = $4, notes = $5, color = $6,
-             credit_limit = $7, version = version + 1, updated_by = $1
-         WHERE user_id = $1 AND id = $2 AND version = $8`,
-        [
-          user.user_id,
-          accountId,
-          name,
-          institution,
-          notes,
-          color,
-          type === "credit_card" ? creditLimit : null,
-          version,
-        ]
-      )
+      updateAccountDetails(client, {
+        userId: user.user_id,
+        accountId,
+        name,
+        institution,
+        notes,
+        color,
+        creditLimit: type === "credit_card" ? creditLimit : null,
+        version,
+      })
     );
     if (result.rowCount === 0) {
       return c.json(
@@ -173,13 +166,7 @@ accounts.post("/:id/deactivate", requireAuth, async (c) => {
   const accountId = c.req.param("id");
 
   await withUser(user.user_id, (client) =>
-    client.query(
-      `UPDATE accounts
-       SET is_active = 0, deleted_at = CURRENT_TIMESTAMP, deleted_by = $1,
-           version = version + 1, updated_by = $1
-       WHERE user_id = $2 AND id = $3 AND deleted_at IS NULL`,
-      [user.user_id, user.user_id, accountId]
-    )
+    deactivateAccount(client, user.user_id, accountId)
   );
 
   return c.json({ success: true });
@@ -190,13 +177,7 @@ accounts.post("/:id/reactivate", requireAuth, async (c) => {
   const accountId = c.req.param("id");
 
   await withUser(user.user_id, (client) =>
-    client.query(
-      `UPDATE accounts
-       SET is_active = 1, deleted_at = NULL, deleted_by = NULL,
-           version = version + 1, updated_by = $1
-       WHERE user_id = $2 AND id = $3`,
-      [user.user_id, user.user_id, accountId]
-    )
+    reactivateAccount(client, user.user_id, accountId)
   );
 
   return c.json({ success: true });
@@ -206,24 +187,8 @@ accounts.delete("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const accountId = c.req.param("id");
 
-  const counts = await query<{ txns: string; balance: string }>(
-    `SELECT
-       (SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND account_id = $2)::text AS txns,
-       COALESCE((SELECT SUM(CASE
-         WHEN type = 'income' THEN amount
-         WHEN type = 'expense' THEN -amount
-         WHEN type = 'transfer' THEN
-           CASE WHEN EXISTS (
-             SELECT 1 FROM account_transfers tf
-             WHERE tf.from_transaction_id = transactions.id
-           ) THEN -amount ELSE amount END
-         ELSE 0 END) FROM transactions WHERE user_id = $1 AND account_id = $2), 0)::text AS balance`,
-    [user.user_id, accountId]
-  );
-  const txns = Number(counts.rows[0]?.txns ?? 0);
-  const balance = Number(counts.rows[0]?.balance ?? 0);
-
-  if (txns > 0 || balance !== 0) {
+  const usage = await getAccountUsageSummary(user.user_id, accountId);
+  if (usage.txns > 0 || usage.balance !== 0) {
     return c.json(
       {
         error:
@@ -234,10 +199,7 @@ accounts.delete("/:id", requireAuth, async (c) => {
   }
 
   await withUser(user.user_id, (client) =>
-    client.query(`DELETE FROM accounts WHERE user_id = $1 AND id = $2`, [
-      user.user_id,
-      accountId,
-    ])
+    deleteAccountById(client, user.user_id, accountId)
   );
 
   return c.json({ success: true });
@@ -310,4 +272,4 @@ accounts.get("/:id/history", requireAuth, async (c) => {
   return c.json({ account: { name: account.name, type: account.type }, points });
 });
 
-export { accounts };
+export { accounts, accountTypes };

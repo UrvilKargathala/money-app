@@ -1,0 +1,12 @@
+#!/bin/sh
+# MoneyMind pre-push gate: typecheck + security guard-rail tests.
+# Install once per clone:  git config core.hooksPath .githooks
+# Full suite (`pnpm test`) remains part of the manual verify step.
+
+echo "[pre-push] typecheck..."
+pnpm --filter @moneymind/api typecheck || exit 1
+
+echo "[pre-push] security guards..."
+npx vitest run --project api src/routes/security-guards.test.ts || exit 1
+
+echo "[pre-push] OK"

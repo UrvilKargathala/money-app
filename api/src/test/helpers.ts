@@ -227,6 +227,36 @@ export async function createDebt(
   return body.debt.id;
 }
 
+export async function createTaxInvestment(
+  user: TestUser,
+  params: {
+    section?: string;
+    name?: string;
+    amount?: number;
+    investmentDate?: string;
+    proofStatus?: string;
+    financialYear?: string;
+    transactionId?: string;
+    notes?: string;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/tax/investments", {
+    section: params.section ?? "80C",
+    name: params.name ?? "PPF - SBI",
+    amount: String(params.amount ?? 50000),
+    investment_date: params.investmentDate ?? "2026-05-15",
+    proof_status: params.proofStatus ?? "collected",
+    financial_year: params.financialYear ?? "2026-27",
+    ...(params.transactionId ? { transaction_id: params.transactionId } : {}),
+    ...(params.notes ? { notes: params.notes } : {}),
+  });
+  if (!res.ok) {
+    throw new Error(`createTaxInvestment failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { investment: { id: string } };
+  return body.investment.id;
+}
+
 export async function findCategory(name: string): Promise<string> {
   const result = await pool.query<{ id: string }>(
     `SELECT id FROM categories WHERE name = $1 AND user_id IS NULL LIMIT 1`,
@@ -270,7 +300,12 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        account_transfers, audit_logs, login_attempts, access_logs,
        bills, subscriptions, payment_history, bill_reminders, subscription_audits,
        goals, goal_templates, goal_contributions, goal_snapshots, goal_milestones,
-       debts, debt_payments, amortization_schedule
+       debts, debt_payments, amortization_schedule,
+       tax_investments, salary_structures, itr_documents,
+       investments, investment_transactions, investment_snapshots,
+       investment_price_history, portfolio_snapshots,
+       dividend_income, sip_trackers,
+       net_worth_snapshots, manual_assets, net_worth_milestones
      RESTART IDENTITY CASCADE`
   );
   const alice = await createUser("alice@moneymind.test");
@@ -299,4 +334,65 @@ export function fixtureDb(): {
     state.bob = users.bob;
   });
   return state;
+}
+
+export async function createInvestment(
+  user: TestUser,
+  params: {
+    name?: string;
+    type?: string;
+    category?: string;
+    units?: number;
+    buyPrice?: number;
+    currentPrice?: number;
+    purchaseDate?: string;
+    maturityDate?: string | null;
+    accountId?: string;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/investments", {
+    name: params.name ?? "Axis Bluechip Fund",
+    type: params.type ?? "mutual_fund",
+    category: params.category ?? "equity",
+    units: String(params.units ?? 500),
+    buy_price: String(params.buyPrice ?? 100),
+    current_price: String(params.currentPrice ?? 110),
+    purchase_date: params.purchaseDate ?? "2026-01-15",
+    ...(params.maturityDate !== undefined
+      ? { maturity_date: params.maturityDate }
+      : {}),
+    ...(params.accountId ? { account_id: params.accountId } : {}),
+  });
+  if (!res.ok) {
+    throw new Error(`createInvestment failed: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { investment: { id: string } };
+  return body.investment.id;
+}
+
+export async function createManualAsset(
+  user: TestUser,
+  params: {
+    name?: string;
+    category?: string;
+    valuation?: number;
+    acquisitionDate?: string;
+  } = {}
+): Promise<string> {
+  const name = params.name ?? "Family Home";
+  const res = await postAs(user, "/api/manual-assets", {
+    name,
+    category: params.category ?? "property",
+    valuation: String(params.valuation ?? 5000000),
+    acquisition_date: params.acquisitionDate ?? "2020-06-15",
+  });
+  if (!res.ok) {
+    throw new Error(`createManualAsset failed: ${res.status} ${await res.text()}`);
+  }
+  // The create route returns success-only; fetch the id from the list by name.
+  const list = await requestAs(user, "/api/manual-assets");
+  const assets = (await list.json()) as { assets: { id: string; name: string }[] };
+  const match = assets.assets.find((a) => a.name === name);
+  if (!match) throw new Error(`createManualAsset: "${name}" not found in list`);
+  return match.id;
 }

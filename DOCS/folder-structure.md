@@ -263,6 +263,24 @@ Create the page folder `src/app/(app)/budgets/`:
 ### Step 7 — Verify
 `npx eslint src` → `pnpm --filter @moneymind/api typecheck` → `pnpm test` → `pnpm build` → browser/phone smoke (no dev-server dependency for the checks).
 
+### Step 8 — Mandatory module checklist (enforced by tests + pre-push hook)
+
+Every new module/route MUST satisfy these rules. `api/src/routes/security-guards.test.ts` verifies them automatically and a pre-push hook runs it — violations cannot be pushed:
+
+> **Enable the hook once per clone:** `git config core.hooksPath .githooks` (runs typecheck + the guards suite on every push; the full suite stays in the manual verify step).
+
+| # | Rule | Enforced by |
+|---|------|-------------|
+| 1 | **SQL lives only in `api/src/queries/*.ts`.** Route files contain zero inline SQL and never import `query` from `../db`; they call query-module functions and wrap writes in `withUser(...)`. | guards: "routes contain no SQL" |
+| 2 | **Tenant filter on every statement** touching a user-owned table: `WHERE <alias>.user_id = $1` with `$1` always the userId, never an empty clause list. Composable SELECT fragments must bake the tenant clause in; callers may only append `AND …`. | guards: tenant scans + filterClause contract |
+| 3 | **No per-row query loops (N+1).** Batch-load with `IN`/`unnest`, group in memory. Deliberate bounded loops must be pinned in the guards allowlist with a comment. | guards: N+1 scan |
+| 4 | **Secrets never travel in query strings.** Header-only (`x-cron-secret`) for jobs; `?secret=`-style params are banned everywhere except jobs.ts's explicit rejection. | guards: secrets scan |
+| 5 | **Shared helpers are defined once** in `api/src/utils/` (`isoDate`, `csvEscape`). Never redefine them locally. | guards: helper singularity |
+| 6 | **Every route requires auth** unless listed in the guards' public allowlist (auth entry points + `GET /api/jobs/run`). New public routes require editing that allowlist deliberately. | guards: 401 sweep |
+| 7 | **Cross-user isolation test for every new resource**: alice/bob fixtures prove alice can't read or mutate bob's rows (list scoping + 404 on foreign ids). Add to the module's `*.test.ts`. | code review + suite |
+| 8 | **Writes carry `user_id` in the SQL itself** (defense-in-depth under RLS), even when ownership was checked earlier in the same transaction. | guards: INSERT/UPDATE scan |
+| 9 | **routes.md flipped 🧪→✅** for every implemented endpoint, summary count updated. | PR checklist |
+
 ---
 
 ## 9. Testing Baseline (Vitest)

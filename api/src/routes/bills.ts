@@ -1,71 +1,43 @@
 import { Hono } from "hono";
-import type { Context } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
+import { csvEscape, isoDate } from "../utils/format";
+import {
+  BILL_FREQUENCIES,
+  billExists,
+  deactivateBill,
+  getBill,
+  getBillActivation,
+  getBillForPayment,
+  getBillForSkip,
+  getBillPaymentsYoY,
+  insertBill,
+  insertBillPaymentTransaction,
+  listActiveBillObligations,
+  listActiveBillsForScheduling,
+  listActiveSubscriptionRenewals,
+  listBillPayments,
+  listBillPaymentsForExport,
+  listBills,
+  markBillPeriodPaid,
+  reactivateBill,
+  setBillAutopay,
+  skipBillPeriod,
+  updateBill,
+} from "../queries/bills";
+import type {
+  BillOverview,
+  DueItem,
+} from "../queries/bills";
+import {
+  activeAccountExists,
+  categoryReferenceExists,
+} from "../queries/references";
+import { insertPaymentHistory } from "../queries/subscriptions";
 
 const bills = new Hono();
-
-export const BILL_FREQUENCIES = [
-  "monthly",
-  "quarterly",
-  "half_yearly",
-  "annual",
-  "one_time",
-] as const;
-
-type BillFrequency = (typeof BILL_FREQUENCIES)[number];
-
-export type Bill = {
-  id: string;
-  name: string;
-  amount: number | null;
-  estimated_amount: number | null;
-  due_day: number;
-  frequency: string;
-  account_id: string | null;
-  account_name: string | null;
-  category_id: string | null;
-  category_name: string | null;
-  reminder_days: number;
-  is_autopay: number;
-  notes: string | null;
-  current_period_status: string;
-  is_active: number;
-  version: number;
-  last_paid_date: string | null;
-  last_paid_amount: number | null;
-};
-
-export type PaymentHistoryRow = {
-  id: string;
-  payable_type: "bill" | "subscription";
-  payable_id: string;
-  transaction_id: string | null;
-  amount: number;
-  period_label: string;
-  period_month: number;
-  period_year: number;
-  notes: string | null;
-  created_at: string;
-};
-
-export type DueItem = {
-  type: "bill" | "subscription";
-  id: string;
-  label: string;
-  amount: number;
-  due_date: string;
-  status: string;
-};
-
-export type BillOverview = {
-  total_monthly_obligation: number;
-  due_this_week: number;
-  overdue_count: number;
-  upcoming: DueItem[];
-};
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -85,14 +57,14 @@ function currentPeriod(): { label: string; month: number; year: number } {
   };
 }
 
-function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
-}
-
 function startOfToday(): Date {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
 }
 
 function clampedDay(year: number, month: number, dueDay: number): number {
@@ -118,10 +90,6 @@ function daysUntil(date: Date): number {
   return Math.round((date.getTime() - startOfToday().getTime()) / 86400000);
 }
 
-function isoDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 function monthlyObligation(
   amount: string | null,
   estimatedAmount: string | null,
@@ -138,92 +106,16 @@ function monthlyObligation(
   return effective * (multiplier[frequency] ?? 1);
 }
 
-function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
+function toCsv(header: string[], rows: (string | number)[][]): string {
+  return (
+    "\uFEFF" +
+    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n")
+  );
 }
-
-function toPaymentRow(row: {
-  id: string;
-  payable_type: string;
-  payable_id: string;
-  transaction_id: string | null;
-  amount: string;
-  period_label: string;
-  period_month: number;
-  period_year: number;
-  notes: string | null;
-  created_at: Date;
-}): PaymentHistoryRow {
-  return {
-    ...row,
-    payable_type: row.payable_type as PaymentHistoryRow["payable_type"],
-    amount: Number(row.amount),
-    created_at: row.created_at.toISOString(),
-  };
-}
-
-function toBill(row: {
-  id: string;
-  name: string;
-  amount: string | null;
-  estimated_amount: string | null;
-  due_day: number;
-  frequency: string;
-  account_id: string | null;
-  account_name: string | null;
-  category_id: string | null;
-  category_name: string | null;
-  reminder_days: number;
-  is_autopay: number;
-  notes: string | null;
-  current_period_status: string;
-  is_active: number;
-  version: number;
-  last_paid_date: Date | null;
-  last_paid_amount: string | null;
-}): Bill {
-  return {
-    ...row,
-    amount: row.amount === null ? null : Number(row.amount),
-    estimated_amount:
-      row.estimated_amount === null ? null : Number(row.estimated_amount),
-    last_paid_date:
-      row.last_paid_date === null ? null : row.last_paid_date.toISOString().slice(0, 10),
-    last_paid_amount:
-      row.last_paid_amount === null ? null : Number(row.last_paid_amount),
-  };
-}
-
-const BILL_SELECT = `
-  SELECT b.id, b.name, b.amount, b.estimated_amount, b.due_day, b.frequency,
-         b.account_id, a.name AS account_name,
-         b.category_id, cat.name AS category_name,
-         b.reminder_days, b.is_autopay, b.notes,
-         b.current_period_status, b.is_active, b.version,
-         ph.created_at AS last_paid_date, ph.amount AS last_paid_amount
-  FROM bills b
-  LEFT JOIN accounts a ON a.id = b.account_id
-  LEFT JOIN categories cat ON cat.id = b.category_id
-  LEFT JOIN LATERAL (
-    SELECT created_at, amount FROM payment_history
-    WHERE user_id = b.user_id AND payable_type = 'bill' AND payable_id = b.id
-    ORDER BY created_at DESC LIMIT 1
-  ) ph ON true
-`;
 
 bills.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await withUser(user.user_id, (client) =>
-    client.query(`
-      ${BILL_SELECT}
-      WHERE b.user_id = $1
-      ORDER BY b.due_day, b.name
-    `, [user.user_id])
-  );
-  return c.json({ bills: result.rows.map(toBill) });
+  return c.json({ bills: await listBills(user.user_id) });
 });
 
 bills.post("/", requireAuth, async (c) => {
@@ -272,35 +164,25 @@ bills.post("/", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, async (client) => {
-      if (accountId !== null) {
-        const account = await client.query<{ id: string }>(
-          `SELECT id FROM accounts WHERE user_id = $1 AND id = $2 AND is_active = 1`,
-          [user.user_id, accountId]
-        );
-        if (account.rowCount !== 1) {
-          throw new Error("INVALID_ACCOUNT");
-        }
+      if (accountId !== null && !(await activeAccountExists(accountId, user.user_id, client))) {
+        throw new Error("INVALID_ACCOUNT");
       }
-      if (categoryId !== null) {
-        const category = await client.query<{ id: string }>(
-          `SELECT id FROM categories
-           WHERE id = $1 AND ((user_id IS NULL AND is_system = 1) OR user_id = $2)`,
-          [categoryId, user.user_id]
-        );
-        if (category.rowCount !== 1) {
-          throw new Error("INVALID_CATEGORY");
-        }
+      if (categoryId !== null && !(await categoryReferenceExists(categoryId, user.user_id, client))) {
+        throw new Error("INVALID_CATEGORY");
       }
-      await client.query(
-        `INSERT INTO bills
-           (user_id, name, amount, estimated_amount, due_day, frequency,
-            account_id, category_id, reminder_days, is_autopay, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [
-          user.user_id, name, amount, estimatedAmount, dueDay, frequency,
-          accountId, categoryId, reminderDays, isAutopay, notes,
-        ]
-      );
+      await insertBill(client, {
+        userId: user.user_id,
+        name,
+        amount,
+        estimatedAmount,
+        dueDay,
+        frequency,
+        accountId,
+        categoryId,
+        reminderDays,
+        isAutopay,
+        notes,
+      });
     });
   } catch (err) {
     if (err instanceof Error && err.message === "INVALID_ACCOUNT") {
@@ -324,29 +206,20 @@ bills.post("/", requireAuth, async (c) => {
 
 bills.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `${BILL_SELECT} WHERE b.user_id = $1 ORDER BY b.due_day, b.name`,
-      [user.user_id]
-    )
-  );
-  const rows = result.rows.map(toBill);
+  const rows = await listBills(user.user_id);
 
-  const header = [
-    "Name", "Amount", "Due Day", "Frequency", "Account", "Status", "Last Paid Date",
-  ];
-  const csvRows = rows.map((b) => [
-    b.name,
-    String(b.amount ?? b.estimated_amount ?? ""),
-    String(b.due_day),
-    b.frequency,
-    b.account_name ?? "",
-    b.current_period_status,
-    b.last_paid_date ?? "",
-  ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const csv = toCsv(
+    ["Name", "Amount", "Due Day", "Frequency", "Account", "Status", "Last Paid Date"],
+    rows.map((b) => [
+      b.name,
+      String(b.amount ?? b.estimated_amount ?? ""),
+      String(b.due_day),
+      b.frequency,
+      b.account_name ?? "",
+      b.current_period_status,
+      b.last_paid_date ?? "",
+    ])
+  );
 
   return new Response(csv, {
     headers: {
@@ -358,18 +231,11 @@ bills.get("/export", requireAuth, async (c) => {
 
 bills.get("/calendar", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `SELECT id, name, amount, estimated_amount, due_day, current_period_status
-       FROM bills WHERE user_id = $1 AND is_active = 1
-       ORDER BY due_day, name`,
-      [user.user_id]
-    )
-  );
+  const rows = await listActiveBillsForScheduling(user.user_id);
 
   const today = startOfToday();
   const horizon = new Date(today.getTime() + 30 * 86400000);
-  const events = result.rows
+  const events = rows
     .map((row) => {
       const due = nextDueDate(row.due_day, today);
       if (due > horizon) return null;
@@ -390,16 +256,10 @@ bills.get("/calendar", requireAuth, async (c) => {
 
 bills.get("/upcoming", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `SELECT id, name, amount, estimated_amount, due_day, current_period_status
-       FROM bills WHERE user_id = $1 AND is_active = 1`,
-      [user.user_id]
-    )
-  );
+  const rows = await listActiveBillsForScheduling(user.user_id, undefined, false);
 
   const today = startOfToday();
-  const items = result.rows
+  const items = rows
     .map((row) => {
       const due = nextDueDate(row.due_day, today);
       const days = daysUntil(due);
@@ -424,89 +284,76 @@ bills.get("/upcoming", requireAuth, async (c) => {
 
 bills.get("/overview", requireAuth, async (c) => {
   const user = c.get("user");
-  const overview = await withUser(user.user_id, async (client) => {
-    const billResult = await client.query(
-      `SELECT id, name, amount, estimated_amount, due_day, frequency, current_period_status
-       FROM bills WHERE user_id = $1 AND is_active = 1`,
-      [user.user_id]
-    );
-    const subResult = await client.query(
-      `SELECT id, service_name, amount, frequency, next_renewal_date, status
-       FROM subscriptions WHERE user_id = $1 AND status = 'active'`,
-      [user.user_id]
-    );
 
-    const today = startOfToday();
-    const billsTotal = billResult.rows.reduce(
-      (sum, row) => sum + monthlyObligation(row.amount, row.estimated_amount, row.frequency),
-      0
-    );
-    const subsTotal = subResult.rows.reduce(
-      (sum, row) => {
-        const multiplier: Record<string, number> = {
-          monthly: 1,
-          quarterly: 1 / 3,
-          annual: 1 / 12,
-        };
-        return sum + Number(row.amount) * (multiplier[row.frequency] ?? 1);
-      },
-      0
-    );
+  const [billRows, subRows] = [
+    await listActiveBillObligations(user.user_id),
+    await listActiveSubscriptionRenewals(user.user_id),
+  ];
 
-    const dueThisWeek = billResult.rows.filter((row) => {
-      const due = nextDueDate(row.due_day, today);
-      return daysUntil(due) <= 7;
-    }).length;
+  const today = startOfToday();
+  const billsTotal = billRows.reduce(
+    (sum, row) => sum + monthlyObligation(row.amount, row.estimated_amount, row.frequency),
+    0
+  );
+  const subsTotal = subRows.reduce(
+    (sum, row) => {
+      const multiplier: Record<string, number> = {
+        monthly: 1,
+        quarterly: 1 / 3,
+        annual: 1 / 12,
+      };
+      return sum + Number(row.amount) * (multiplier[row.frequency] ?? 1);
+    },
+    0
+  );
 
-    const overdueCount = billResult.rows.filter(
-      (row) => row.current_period_status === "overdue"
-    ).length;
+  const dueThisWeek = billRows.filter((row) => {
+    const due = nextDueDate(row.due_day, today);
+    return daysUntil(due) <= 7;
+  }).length;
 
-    const upcoming: DueItem[] = [
-      ...billResult.rows.map((row) => ({
-        type: "bill" as const,
-        id: row.id,
-        label: row.name,
-        amount: Number(row.amount ?? row.estimated_amount ?? 0),
-        due_date: isoDate(nextDueDate(row.due_day, today)),
-        status: row.current_period_status,
-      })),
-      ...subResult.rows.map((row) => ({
-        type: "subscription" as const,
-        id: row.id,
-        label: row.service_name,
-        amount: Number(row.amount),
-        due_date: isoDate(row.next_renewal_date),
-        status: row.status,
-      })),
-    ]
-      .sort((a, b) => a.due_date.localeCompare(b.due_date))
-      .slice(0, 5);
+  const overdueCount = billRows.filter(
+    (row) => row.current_period_status === "overdue"
+  ).length;
 
-    const overview: BillOverview = {
-      total_monthly_obligation: billsTotal + subsTotal,
-      due_this_week: dueThisWeek,
-      overdue_count: overdueCount,
-      upcoming,
-    };
-    return overview;
-  });
+  const upcoming: DueItem[] = [
+    ...billRows.map((row) => ({
+      type: "bill" as const,
+      id: row.id,
+      label: row.name,
+      amount: Number(row.amount ?? row.estimated_amount ?? 0),
+      due_date: isoDate(nextDueDate(row.due_day, today)),
+      status: row.current_period_status,
+    })),
+    ...subRows.map((row) => ({
+      type: "subscription" as const,
+      id: row.id,
+      label: row.service_name,
+      amount: Number(row.amount),
+      due_date: isoDate(row.next_renewal_date),
+      status: row.status,
+    })),
+  ]
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))
+    .slice(0, 5);
+
+  const overview: BillOverview = {
+    total_monthly_obligation: billsTotal + subsTotal,
+    due_this_week: dueThisWeek,
+    overdue_count: overdueCount,
+    upcoming,
+  };
 
   return c.json({ overview });
 });
 
 bills.get("/:id", requireAuth, async (c) => {
   const user = c.get("user");
-  const result = await withUser(user.user_id, (client) =>
-    client.query(`${BILL_SELECT} WHERE b.user_id = $1 AND b.id = $2`, [
-      user.user_id,
-      c.req.param("id"),
-    ])
-  );
-  if (result.rowCount !== 1) {
+  const bill = await getBill(user.user_id, c.req.param("id"));
+  if (!bill) {
     return c.json({ error: "Not found" }, 404);
   }
-  return c.json({ bill: toBill(result.rows[0]) });
+  return c.json({ bill });
 });
 
 bills.patch("/:id", requireAuth, async (c) => {
@@ -553,62 +400,37 @@ bills.patch("/:id", requireAuth, async (c) => {
 
   try {
     const ok = await withUser(user.user_id, async (client) => {
-      if (accountId !== undefined && accountId !== null) {
-        const account = await client.query<{ id: string }>(
-          `SELECT id FROM accounts WHERE user_id = $1 AND id = $2 AND is_active = 1`,
-          [user.user_id, accountId]
-        );
-        if (account.rowCount !== 1) {
-          throw new Error("INVALID_ACCOUNT");
-        }
+      if (accountId !== undefined && accountId !== null &&
+          !(await activeAccountExists(accountId, user.user_id, client))) {
+        throw new Error("INVALID_ACCOUNT");
       }
-      if (categoryId !== undefined && categoryId !== null) {
-        const category = await client.query<{ id: string }>(
-          `SELECT id FROM categories
-           WHERE id = $1 AND ((user_id IS NULL AND is_system = 1) OR user_id = $2)`,
-          [categoryId, user.user_id]
-        );
-        if (category.rowCount !== 1) {
-          throw new Error("INVALID_CATEGORY");
-        }
+      if (categoryId !== undefined && categoryId !== null &&
+          !(await categoryReferenceExists(categoryId, user.user_id, client))) {
+        throw new Error("INVALID_CATEGORY");
       }
-      const result = await client.query(
-        `UPDATE bills SET
-           name = COALESCE($3, name),
-           amount = COALESCE($4, amount),
-           estimated_amount = COALESCE($5, estimated_amount),
-           due_day = COALESCE($6, due_day),
-           frequency = COALESCE($7, frequency),
-           account_id = COALESCE($8, account_id),
-           category_id = COALESCE($9, category_id),
-           reminder_days = COALESCE($10, reminder_days),
-           is_autopay = COALESCE($11, is_autopay),
-           notes = COALESCE($12, notes),
-           version = version + 1
-         WHERE user_id = $1 AND id = $2 AND version = $13
-         RETURNING id`,
-        [
-          user.user_id, id,
-          name ?? null, amount ?? null, estimatedAmount ?? null,
-          dueDay ?? null, frequency ?? null, accountId ?? null,
-          categoryId ?? null, reminderDays ?? null, isAutopay ?? null,
-          notes ?? null, version,
-        ]
-      );
-      return result.rowCount === 1;
+      return updateBill(client, {
+        userId: user.user_id,
+        id,
+        name: name ?? null,
+        amount: amount ?? null,
+        estimatedAmount: estimatedAmount ?? null,
+        dueDay: dueDay ?? null,
+        frequency: frequency ?? null,
+        accountId: accountId ?? null,
+        categoryId: categoryId ?? null,
+        reminderDays: reminderDays ?? null,
+        isAutopay: isAutopay ?? null,
+        notes: notes ?? null,
+        version,
+      });
     });
     if (!ok) {
-      const exists = await withUser(user.user_id, (client) =>
-        client.query(`SELECT id FROM bills WHERE user_id = $1 AND id = $2`, [
-          user.user_id,
-          id,
-        ])
-      );
+      const existing = await getBillActivation(user.user_id, id);
       return c.json(
-        exists.rowCount === 1
+        existing
           ? { error: "This bill was modified elsewhere. Refresh and try again." }
           : { error: "Not found" },
-        exists.rowCount === 1 ? 409 : 404
+        existing ? 409 : 404
       );
     }
   } catch (err) {
@@ -636,21 +458,11 @@ bills.delete("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
 
   const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `UPDATE bills SET is_active = 0, version = version + 1
-       WHERE user_id = $1 AND id = $2 AND is_active = 1
-       RETURNING id`,
-      [user.user_id, id]
-    )
+    deactivateBill(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    const exists = await withUser(user.user_id, (client) =>
-      client.query(`SELECT id, is_active FROM bills WHERE user_id = $1 AND id = $2`, [
-        user.user_id,
-        id,
-      ])
-    );
-    if (exists.rowCount !== 1) {
+    const existing = await getBillActivation(user.user_id, id);
+    if (!existing) {
       return c.json({ error: "Not found" }, 404);
     }
     return c.json({ error: "The bill is already deactivated." }, 409);
@@ -664,21 +476,11 @@ bills.post("/:id/reactivate", requireAuth, async (c) => {
   const id = c.req.param("id");
 
   const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `UPDATE bills SET is_active = 1, version = version + 1
-       WHERE user_id = $1 AND id = $2 AND is_active = 0
-       RETURNING id`,
-      [user.user_id, id]
-    )
+    reactivateBill(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    const exists = await withUser(user.user_id, (client) =>
-      client.query(`SELECT id, is_active FROM bills WHERE user_id = $1 AND id = $2`, [
-        user.user_id,
-        id,
-      ])
-    );
-    if (exists.rowCount !== 1) {
+    const existing = await getBillActivation(user.user_id, id);
+    if (!existing) {
       return c.json({ error: "Not found" }, 404);
     }
     return c.json({ error: "The bill is already active." }, 409);
@@ -706,24 +508,10 @@ bills.post("/:id/mark-paid", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, async (client) => {
-      const billResult = await client.query<{
-        id: string;
-        name: string;
-        amount: string | null;
-        category_id: string | null;
-        account_id: string | null;
-        frequency: string;
-        current_period_status: string;
-        is_active: number;
-      }>(
-        `SELECT id, name, amount, category_id, account_id, frequency, current_period_status, is_active
-         FROM bills WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (billResult.rowCount !== 1) {
+      const bill = await getBillForPayment(client, user.user_id, id);
+      if (!bill) {
         throw new Error("NOT_FOUND");
       }
-      const bill = billResult.rows[0];
       if (bill.is_active !== 1) {
         throw new Error("INACTIVE");
       }
@@ -735,52 +523,39 @@ bills.post("/:id/mark-paid", requireAuth, async (c) => {
       if (bill.amount === null && (amount === null || amount <= 0)) {
         throw new Error("AMOUNT_REQUIRED");
       }
+      const paidAmount = amount as number;
 
       const payAccountId = accountId ?? bill.account_id;
       if (!payAccountId) {
         throw new Error("ACCOUNT_REQUIRED");
       }
-      const account = await client.query<{ id: string }>(
-        `SELECT id FROM accounts WHERE user_id = $1 AND id = $2 AND is_active = 1`,
-        [user.user_id, payAccountId]
-      );
-      if (account.rowCount !== 1) {
+      if (!(await activeAccountExists(payAccountId, user.user_id, client))) {
         throw new Error("INVALID_ACCOUNT");
       }
 
       const { label, month, year } = currentPeriod();
-      const transaction = await client.query<{ id: string }>(
-        `INSERT INTO transactions
-           (user_id, account_id, type, amount, description, category_id, date, notes,
-            source, created_by, updated_by)
-         VALUES ($1, $2, 'expense', $3, $4, $5, CURRENT_DATE, $6, 'bill', $1, $1)
-         RETURNING id`,
-        [
-          user.user_id, payAccountId, amount,
-          `${bill.name} — ${monthName(year, month)}`,
-          bill.category_id, notes,
-        ]
-      );
+      const transactionId = await insertBillPaymentTransaction(client, {
+        userId: user.user_id,
+        accountId: payAccountId,
+        amount: paidAmount,
+        description: `${bill.name} — ${monthName(year, month)}`,
+        categoryId: bill.category_id,
+        notes,
+      });
 
-      await client.query(
-        `INSERT INTO payment_history
-           (user_id, payable_type, payable_id, transaction_id, amount,
-            period_label, period_month, period_year, notes)
-         VALUES ($1, 'bill', $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          user.user_id, id, transaction.rows[0].id, amount,
-          label, month, year, notes,
-        ]
-      );
+      await insertPaymentHistory(client, {
+        userId: user.user_id,
+        payableType: "bill",
+        payableId: id,
+        transactionId,
+        amount: paidAmount,
+        periodLabel: label,
+        periodMonth: month,
+        periodYear: year,
+        notes,
+      });
 
-      await client.query(
-        `UPDATE bills
-         SET current_period_status = 'paid',
-             is_active = CASE WHEN frequency = 'one_time' THEN 0 ELSE is_active END,
-             version = version + 1
-         WHERE id = $1`,
-        [id]
-      );
+      await markBillPeriodPaid(client, user.user_id, id);
     });
   } catch (err) {
     if (err instanceof Error) {
@@ -810,19 +585,10 @@ bills.post("/:id/skip", requireAuth, async (c) => {
 
   try {
     await withUser(user.user_id, async (client) => {
-      const billResult = await client.query<{
-        id: string;
-        is_active: number;
-        current_period_status: string;
-      }>(
-        `SELECT id, is_active, current_period_status FROM bills
-         WHERE user_id = $1 AND id = $2`,
-        [user.user_id, id]
-      );
-      if (billResult.rowCount !== 1) {
+      const bill = await getBillForSkip(client, user.user_id, id);
+      if (!bill) {
         throw new Error("NOT_FOUND");
       }
-      const bill = billResult.rows[0];
       if (bill.is_active !== 1) {
         throw new Error("INACTIVE");
       }
@@ -832,11 +598,7 @@ bills.post("/:id/skip", requireAuth, async (c) => {
       if (bill.current_period_status === "skipped") {
         throw new Error("ALREADY_SKIPPED");
       }
-      await client.query(
-        `UPDATE bills SET current_period_status = 'skipped', version = version + 1
-         WHERE id = $1`,
-        [id]
-      );
+      await skipBillPeriod(client, user.user_id, id);
     });
   } catch (err) {
     if (err instanceof Error) {
@@ -865,21 +627,11 @@ bills.patch("/:id/autopay", requireAuth, async (c) => {
 
   const isAutopay = body.is_autopay === true || body.is_autopay === 1 ? 1 : 0;
   const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `UPDATE bills SET is_autopay = $3, version = version + 1
-       WHERE user_id = $1 AND id = $2 AND is_active = 1
-       RETURNING id`,
-      [user.user_id, id, isAutopay]
-    )
+    setBillAutopay(client, user.user_id, id, isAutopay)
   );
   if (result.rowCount !== 1) {
-    const exists = await withUser(user.user_id, (client) =>
-      client.query(`SELECT id FROM bills WHERE user_id = $1 AND id = $2`, [
-        user.user_id,
-        id,
-      ])
-    );
-    if (exists.rowCount !== 1) {
+    const existing = await getBillActivation(user.user_id, id);
+    if (!existing) {
       return c.json({ error: "Not found" }, 404);
     }
     return c.json({ error: "The bill is deactivated." }, 409);
@@ -892,58 +644,23 @@ bills.get("/:id/payments", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
-  const exists = await withUser(user.user_id, (client) =>
-    client.query(`SELECT id FROM bills WHERE user_id = $1 AND id = $2`, [
-      user.user_id,
-      id,
-    ])
-  );
-  if (exists.rowCount !== 1) {
+  if (!(await billExists(user.user_id, id))) {
     return c.json({ error: "Not found" }, 404);
   }
 
-  const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `SELECT id, payable_type, payable_id, transaction_id, amount, period_label,
-              period_month, period_year, notes, created_at
-       FROM payment_history
-       WHERE user_id = $1 AND payable_type = 'bill' AND payable_id = $2
-       ORDER BY period_year DESC, period_month DESC, created_at DESC`,
-      [user.user_id, id]
-    )
-  );
-  return c.json({ payments: result.rows.map(toPaymentRow) });
+  return c.json({ payments: await listBillPayments(user.user_id, id) });
 });
 
 bills.get("/:id/payments/yoy", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
-  const exists = await withUser(user.user_id, (client) =>
-    client.query(`SELECT id FROM bills WHERE user_id = $1 AND id = $2`, [
-      user.user_id,
-      id,
-    ])
-  );
-  if (exists.rowCount !== 1) {
+  if (!(await billExists(user.user_id, id))) {
     return c.json({ error: "Not found" }, 404);
   }
 
   const { month, year } = currentPeriod();
-  const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `SELECT period_year, COALESCE(SUM(amount), 0)::numeric(12,2) AS total
-       FROM payment_history
-       WHERE user_id = $1 AND payable_type = 'bill' AND payable_id = $2
-         AND period_month = $3 AND period_year IN ($4, $5)
-       GROUP BY period_year`,
-      [user.user_id, id, month, year, year - 1]
-    )
-  );
-  const totals: Record<number, number> = {};
-  for (const row of result.rows) {
-    totals[row.period_year] = Number(row.total);
-  }
+  const totals = await getBillPaymentsYoY(user.user_id, id, month, year);
   return c.json({
     current: { year, total: totals[year] ?? 0 },
     previous: { year: year - 1, total: totals[year - 1] ?? 0 },
@@ -954,36 +671,21 @@ bills.get("/:id/payments/export", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
-  const exists = await withUser(user.user_id, (client) =>
-    client.query(`SELECT id FROM bills WHERE user_id = $1 AND id = $2`, [
-      user.user_id,
-      id,
-    ])
-  );
-  if (exists.rowCount !== 1) {
+  if (!(await billExists(user.user_id, id))) {
     return c.json({ error: "Not found" }, 404);
   }
 
-  const result = await withUser(user.user_id, (client) =>
-    client.query(
-      `SELECT amount, period_label, notes, created_at
-       FROM payment_history
-       WHERE user_id = $1 AND payable_type = 'bill' AND payable_id = $2
-       ORDER BY period_year, period_month`,
-      [user.user_id, id]
-    )
-  );
+  const rows = await listBillPaymentsForExport(user.user_id, id);
 
-  const header = ["Period", "Date", "Amount", "Notes"];
-  const csvRows = result.rows.map((row) => [
-    row.period_label,
-    row.created_at.toISOString().slice(0, 10),
-    Number(row.amount).toFixed(2),
-    row.notes ?? "",
-  ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const csv = toCsv(
+    ["Period", "Date", "Amount", "Notes"],
+    rows.map((row) => [
+      row.period_label,
+      row.date,
+      row.amount.toFixed(2),
+      row.notes ?? "",
+    ])
+  );
 
   return new Response(csv, {
     headers: {

@@ -157,7 +157,7 @@ describe("debts auth + validation", () => {
     expect(debt.minimum_due).toBe(1250);
 
     const sched = await requestAs(db.alice, `/api/debts/${body.debt.id}/amortization`);
-    expect((await sched.json()).schedule_length).toBe(0);
+    expect(((await sched.json()) as { schedule_length: number }).schedule_length).toBe(0);
   });
 });
 
@@ -246,7 +246,7 @@ describe("debts CRUD and derived amortization state", () => {
     expect(filteredBody.debts.length).toBe(2);
 
     const closed = await requestAs(db.alice, "/api/debts?status=closed");
-    expect((await closed.json()).debts.length).toBe(0);
+    expect(((await closed.json()) as { debts: unknown[] }).debts.length).toBe(0);
   });
 
   it("isolates debts between users", async () => {
@@ -254,7 +254,7 @@ describe("debts CRUD and derived amortization state", () => {
     const res = await requestAs(db.bob, `/api/debts/${debtId}`);
     expect(res.status).toBe(404);
     const list = await requestAs(db.bob, "/api/debts");
-    expect((await list.json()).debts.length).toBe(0);
+    expect(((await list.json()) as { debts: unknown[] }).debts.length).toBe(0);
   });
 
   it("patches non-schedule fields without recomputing", async () => {
@@ -459,7 +459,7 @@ describe("payments", () => {
     expect(debt.progress_pct).toBe(100);
 
     const sched = await requestAs(db.alice, `/api/debts/${debtId}/amortization`);
-    expect((await sched.json()).schedule_length).toBe(0);
+    expect(((await sched.json()) as { schedule_length: number }).schedule_length).toBe(0);
   });
 
   it("applies a prepayment and reduces the remaining tenure", async () => {
@@ -606,18 +606,19 @@ describe("amortization view, breakdown and prepayment simulation", () => {
       strategy: "reduce_tenure",
     });
     expect(tenureRes.status).toBe(200);
-    const tenure = (await tenureRes.json()).simulation;
-    expect(tenure.new_emi).toBe(1000);
-    expect(tenure.new_tenure_months).toBe(10);
-    expect(tenure.months_saved).toBe(2);
-    expect(tenure.interest_saved).toBe(0);
+    const tenure = (await tenureRes.json()) as { simulation: { new_emi: number; new_tenure_months: number; months_saved: number; interest_saved: number } };
+    const simulation = tenure.simulation;
+    expect(simulation.new_emi).toBe(1000);
+    expect(simulation.new_tenure_months).toBe(10);
+    expect(simulation.months_saved).toBe(2);
+    expect(simulation.interest_saved).toBe(0);
 
     const emiRes = await postAs(db.alice, `/api/debts/${debtId}/simulate-prepayment`, {
       amount: "2000",
       strategy: "reduce_emi",
     });
     expect(emiRes.status).toBe(200);
-    const emi = (await emiRes.json()).simulation;
+    const emi = ((await emiRes.json()) as { simulation: { new_emi: number; new_tenure_months: number; months_saved: number } }).simulation;
     expect(emi.new_emi).toBe(833.33);
     expect(emi.new_tenure_months).toBe(12);
     expect(emi.months_saved).toBe(0);
@@ -644,7 +645,7 @@ describe("amortization view, breakdown and prepayment simulation", () => {
       interest_rate: "36",
       minimum_due: "500",
     });
-    const ccId = (await cc.json()).debt.id;
+    const ccId = ((await cc.json()) as { debt: { id: string } }).debt.id;
     const ccSim = await postAs(db.alice, `/api/debts/${ccId}/simulate-prepayment`, {
       amount: "1000",
       strategy: "reduce_tenure",
@@ -758,16 +759,25 @@ describe("dashboard, strategies and combined timeline", () => {
       tenureMonths: 12,
     });
     const res = await requestAs(db.alice, "/api/debts/dashboard");
-    const body = (await res.json()).dashboard;
+    const body = ((await res.json()) as {
+      dashboard: {
+        total_outstanding: number;
+        total_monthly_emi: number;
+        active_count: number;
+        closed_count: number;
+        dti: { dti: number | null };
+        debts: { id: string; progress_pct: number | null }[];
+      };
+    }).dashboard;
     expect(body.total_outstanding).toBe(132000);
     expect(body.total_monthly_emi).toBe(11000);
     expect(body.active_count).toBe(2);
     expect(body.closed_count).toBe(0);
     expect(body.dti.dti).toBeNull();
-    const zeroDebt = body.debts.find((d: { id: string }) => d.id === zero);
-    const rateDebt = body.debts.find((d: { id: string }) => d.id === rate);
-    expect(zeroDebt.progress_pct).toBe(0);
-    expect(rateDebt.progress_pct).toBe(0);
+    const zeroDebt = body.debts.find((d) => d.id === zero);
+    const rateDebt = body.debts.find((d) => d.id === rate);
+    expect(zeroDebt?.progress_pct).toBe(0);
+    expect(rateDebt?.progress_pct).toBe(0);
   });
 
   it("compares avalanche vs snowball with divergent payoff orders", async () => {

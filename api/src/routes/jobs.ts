@@ -7,7 +7,10 @@ const jobs = new Hono();
  * Vercel Cron (or any scheduler) with header `x-cron-secret`.
  */
 jobs.get("/run", async (c) => {
-  const secret = c.req.header("x-cron-secret") ?? c.req.query("secret");
+  if (c.req.query("secret") != null) {
+    return c.json({ error: "Secret must be sent via the x-cron-secret header." }, 400);
+  }
+  const secret = c.req.header("x-cron-secret");
   if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
     return c.json({ error: "Unauthorized" }, 401);
   }
