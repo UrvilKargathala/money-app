@@ -16,6 +16,9 @@ import { sips } from "./routes/sips";
 import { dividends } from "./routes/dividends";
 import { netWorth } from "./routes/net-worth";
 import { manualAssets } from "./routes/manual-assets";
+import { reports } from "./routes/reports";
+import { reportTemplates } from "./routes/report-templates";
+import { reportExports } from "./routes/report-exports";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
 
@@ -40,6 +43,9 @@ app.route("/api/sips", sips);
 app.route("/api/dividends", dividends);
 app.route("/api/net-worth", netWorth);
 app.route("/api/manual-assets", manualAssets);
+app.route("/api/reports", reports);
+app.route("/api/report-templates", reportTemplates);
+app.route("/api/report-exports", reportExports);
 app.route("/api/users/me/settings", settings);
 app.route("/api/jobs", jobs);
 

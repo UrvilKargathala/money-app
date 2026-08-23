@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (214; report/chart PDF+PNG deferred to Module 10 reporting infra): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/export (report+chart 🧪 M10). · manual-assets list/create/detail/patch/delete/export.
+Implemented today (237): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle).
 
 ---
 
@@ -436,8 +436,8 @@ Implemented today (214; report/chart PDF+PNG deferred to Module 10 reporting inf
 | DELETE | `/api/net-worth/milestones/:id` | Delete milestone | ✅ |
 | POST | `/api/net-worth/milestones/:id/toggle` | Enable/disable | ✅ |
 | GET | `/api/net-worth/export` | Time series CSV | ✅ |
-| GET | `/api/net-worth/report` | Report PDF | 🧪 |
-| GET | `/api/net-worth/chart` | Trend chart PNG | 🧪 |
+| GET | `/api/net-worth/report` | Report PDF (pdfkit) | ✅ |
+| GET | `/api/net-worth/chart` | Trend chart (SVG) | ✅ |
 | GET | `/api/manual-assets` | List (category filter) | ✅ |
 | POST | `/api/manual-assets` | Add asset | ✅ |
 | GET | `/api/manual-assets/:id` | Read asset | ✅ |
@@ -449,28 +449,28 @@ Implemented today (214; report/chart PDF+PNG deferred to Module 10 reporting inf
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/reports/cashflow` | Income vs expense for period | 🧪 |
-| GET | `/api/reports/spending-by-category` | Category breakdown | 🧪 |
-| GET | `/api/reports/trends` | Cumulative spend trend (3/6/12 months) | 🧪 |
-| GET | `/api/reports/budget-vs-actual` | Budget vs actual (from Module 3 metrics) | 🧪 |
-| GET | `/api/reports/heatmap` | Daily spending heatmap | 🧪 |
-| GET | `/api/reports/net-worth` | Net worth over time | 🧪 |
-| GET | `/api/reports/debt-payoff` | Payoff progress | 🧪 |
-| GET | `/api/reports/income-sources` | Income by source category | 🧪 |
-| GET | `/api/reports/top-merchants` | Top merchants by spend/frequency | 🧪 |
-| GET | `/api/reports/summary` | Combined key metrics | 🧪 |
+| GET | `/api/reports/cashflow` | Income vs expense for period | ✅ |
+| GET | `/api/reports/spending-by-category` | Category breakdown | ✅ |
+| GET | `/api/reports/trends` | Cumulative spend trend (3/6/12 months) | ✅ |
+| GET | `/api/reports/budget-vs-actual` | Budget vs actual (from Module 3 metrics) | ✅ |
+| GET | `/api/reports/heatmap` | Daily spending heatmap | ✅ |
+| GET | `/api/reports/net-worth` | Net worth over time | ✅ |
+| GET | `/api/reports/debt-payoff` | Payoff progress | ✅ |
+| GET | `/api/reports/income-sources` | Income by source category | ✅ |
+| GET | `/api/reports/top-merchants` | Top merchants by spend/frequency | ✅ |
+| GET | `/api/reports/summary` | Combined key metrics | ✅ |
 | POST | `/api/reports/explain` | Explain-This (AI on aggregated snapshot) | 🧪 |
-| GET | `/api/report-templates` | List templates (system + user) | 🧪 |
-| GET | `/api/report-templates/:id` | Read template | 🧪 |
-| POST | `/api/report-templates` | Create user template | 🧪 |
-| PATCH | `/api/report-templates/:id` | Update template | 🧪 |
-| DELETE | `/api/report-templates/:id` | Delete template | 🧪 |
-| POST | `/api/report-templates/:id/duplicate` | Duplicate | 🧪 |
-| POST | `/api/reports/export-pdf` | Create dashboard PDF job | 🧪 |
-| GET | `/api/report-exports` | List export records | 🧪 |
-| GET | `/api/report-exports/:id/download` | Download generated file | 🧪 |
-| GET | `/api/reports/export` | Underlying data CSV | 🧪 |
-| GET | `/api/reports/cashflow/export` | Cash flow chart data CSV | 🧪 |
+| GET | `/api/report-templates` | List templates (system + user) | ✅ |
+| GET | `/api/report-templates/:id` | Read template | ✅ |
+| POST | `/api/report-templates` | Create user template | ✅ |
+| PATCH | `/api/report-templates/:id` | Update template | ✅ |
+| DELETE | `/api/report-templates/:id` | Delete template | ✅ |
+| POST | `/api/report-templates/:id/duplicate` | Duplicate | ✅ |
+| POST | `/api/reports/export-pdf` | Create dashboard PDF job | ✅ |
+| GET | `/api/report-exports` | List export records | ✅ |
+| GET | `/api/report-exports/:id/download` | Download generated file | ✅ |
+| GET | `/api/reports/export` | Underlying data CSV | ✅ |
+| GET | `/api/reports/cashflow/export` | Cash flow chart data CSV | ✅ |
 
 ### Module 11 — Secure Notes & Vault
 
