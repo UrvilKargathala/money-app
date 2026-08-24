@@ -157,6 +157,7 @@ describe("security guard: tenant scoping in query modules", () => {
     "recurring_transaction_templates",
     "import_batches",
     "import_errors",
+    "calendar_events",
   ];
 
   /** Tables whose tenant column isn't user_id (checked against these instead). */
