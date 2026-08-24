@@ -1286,6 +1286,11 @@ INDEX_SQL: list[str] = [
     "CREATE UNIQUE INDEX idx_ts_pair ON transaction_splits(user_id, transaction_id, category_id)",
     "CREATE INDEX idx_ts_category ON transaction_splits(user_id, category_id)",
     "CREATE INDEX idx_recrt_active ON recurring_transaction_templates(is_active)",
+    # Module 2: link executed occurrences back to their template (history
+    # survives template deletion via SET NULL). Added here because the
+    # transactions table is created before the templates table.
+    "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS recurring_template_id UUID REFERENCES recurring_transaction_templates(id) ON DELETE SET NULL",
+    "CREATE INDEX IF NOT EXISTS idx_txn_recurring_template ON transactions(recurring_template_id) WHERE recurring_template_id IS NOT NULL",
     "CREATE INDEX idx_recrt_next ON recurring_transaction_templates(next_due_date)",
     "CREATE INDEX idx_ib_status ON import_batches(status)",
     "CREATE INDEX idx_ie_batch ON import_errors(import_batch_id)",
