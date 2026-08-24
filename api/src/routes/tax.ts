@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
@@ -54,7 +54,7 @@ function isoDateStr(raw: string): string | null {
   return raw;
 }
 
-// ── Lookups ──────────────────────────────────────────────────────────────────
+// â”€â”€ Lookups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 tax.get("/sections", requireAuth, async (c) => {
   const sections = await getTaxSections();
   return c.json({ sections });
@@ -71,7 +71,7 @@ tax.get("/regime-slabs", requireAuth, async (c) => {
   return c.json({ financial_year: fy, slabs });
 });
 
-// ── Investments ──────────────────────────────────────────────────────────────
+// â”€â”€ Investments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 tax.post("/investments", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -247,7 +247,7 @@ tax.delete("/investments/:id", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// ── Utilization / summary / suggestions ──────────────────────────────────────
+// â”€â”€ Utilization / summary / suggestions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 tax.get("/utilization", requireAuth, async (c) => {
   const user = c.get("user");
   const { fy, error } = fyParam(c.req.query("financial_year"));
@@ -288,7 +288,7 @@ tax.get("/suggestions", requireAuth, async (c) => {
   return c.json({ financial_year: fy, suggestions });
 });
 
-// ── Salary structure ─────────────────────────────────────────────────────────
+// â”€â”€ Salary structure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 tax.post("/salary", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -419,7 +419,7 @@ tax.patch("/salary", requireAuth, async (c) => {
   return c.json({ salary });
 });
 
-// ── ITR documents ────────────────────────────────────────────────────────────
+// â”€â”€ ITR documents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 tax.post("/itr/suggest", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -564,7 +564,7 @@ tax.delete("/itr/:id", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// ── Financial years / exports ────────────────────────────────────────────────
+// â”€â”€ Financial years / exports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 tax.get("/financial-years", requireAuth, async (c) => {
   const user = c.get("user");
   const financialYears = await listFinancialYears(user.user_id);

@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (237): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags · categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle).
+Implemented today (337): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags/quick-add/merchants-recent/bulk/date-groups/splits-list-create-patch-delete \· merchant-mappings list/create-update/patch \· categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle). · notes list/create/detail/patch/soft-delete/restore/purge/pin/unpin/categories-list/categories-rename/trash/export. · note-templates list/detail. · note-attachments list/upload/download/preview/delete. · vault wrapped-key/unlock/lock/verify-password/rewrap/recovery-status (export/import 🧪 deferred).
 
 ---
 
@@ -118,10 +118,10 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/accounts/:id/history` | Balance history (`?range=1M…All`) | ✅ |
 | GET | `/api/accounts/export` | CSV of accounts | ✅ |
 | GET | `/api/accounts/:id` | Detail with computed balance | 🧪 |
-| GET | `/api/accounts/summary` | Dashboard totals (assets, liabilities, net) | 🧪 |
+| GET | `/api/accounts/summary` | Dashboard totals (assets, liabilities, net) | ✅ |
 | GET | `/api/accounts/:id/balance` | Computed balance (opening + transactions) | 🧪 |
-| POST | `/api/accounts/:id/snapshots` | Record manual balance snapshot | 🧪 |
-| GET | `/api/accounts/:id/credit-utilization` | Credit card utilization metrics | 🧪 |
+| POST | `/api/accounts/:id/snapshots` | Record manual balance snapshot | ✅ |
+| GET | `/api/accounts/:id/credit-utilization` | Credit card utilization metrics | ✅ |
 | GET | `/api/account-types` | Lookup: account types | ✅ |
 | GET | `/api/transfers` | List transfers | ✅ |
 | POST | `/api/transfers` | Create transfer (atomic debit + credit) | ✅ |
@@ -140,15 +140,15 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/transactions/:id` | Detail (tags, notes) | ✅ |
 | PATCH | `/api/transactions/:id` | Update (atomic, version lock) | ✅ |
 | DELETE | `/api/transactions/:id` | Delete | ✅ |
-| POST | `/api/transactions/quick-add` | Quick-add (auto-fill last merchant/category/account) | 🧪 |
-| GET | `/api/transactions/merchants/recent` | 5 most recent merchants | 🧪 |
-| POST | `/api/transactions/bulk` | Bulk edit (categorize/tag/delete) | 🧪 |
+| POST | `/api/transactions/quick-add` | Quick-add (auto-fill last merchant/category/account) | ✅ |
+| GET | `/api/transactions/merchants/recent` | 5 most recent merchants | ✅ |
+| POST | `/api/transactions/bulk` | Bulk edit (categorize/tag/delete) | ✅ |
 | GET | `/api/transactions/summary` | Income/expense/net/count aggregates by period | ✅ |
-| GET | `/api/transactions/date-groups` | Date-grouped list with daily totals | 🧪 |
-| GET | `/api/transactions/:id/splits` | List splits | 🧪 |
-| POST | `/api/transactions/:id/splits` | Add split (sum = parent amount) | 🧪 |
-| PATCH | `/api/transactions/:id/splits/:splitId` | Edit split | 🧪 |
-| DELETE | `/api/transactions/:id/splits/:splitId` | Delete split | 🧪 |
+| GET | `/api/transactions/date-groups` | Date-grouped list with daily totals | ✅ |
+| GET | `/api/transactions/:id/splits` | List splits | ✅ |
+| POST | `/api/transactions/:id/splits` | Add split (sum = parent amount) | ✅ |
+| PATCH | `/api/transactions/:id/splits/:splitId` | Edit split | ✅ |
+| DELETE | `/api/transactions/:id/splits/:splitId` | Delete split | ✅ |
 | POST | `/api/transactions/:id/tags` | Attach tag | ✅ |
 | DELETE | `/api/transactions/:id/tags/:tagId` | Detach tag | ✅ |
 | GET | `/api/transactions/export` | CSV export | ✅ |
@@ -160,44 +160,44 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | POST | `/api/tags` | Create tag | ✅ |
 | PATCH | `/api/tags/:id` | Update tag | ✅ |
 | DELETE | `/api/tags/:id` | Delete tag | ✅ |
-| GET | `/api/merchant-mappings` | List merchant→category mappings | 🧪 |
-| POST | `/api/merchant-mappings` | Create/override mapping | 🧪 |
-| PATCH | `/api/merchant-mappings/:id` | Update mapping | 🧪 |
-| GET | `/api/recurring-transactions` | List templates | 🧪 |
-| POST | `/api/recurring-transactions` | Create template | 🧪 |
-| GET | `/api/recurring-transactions/:id` | Read template | 🧪 |
-| PATCH | `/api/recurring-transactions/:id` | Update template | 🧪 |
-| DELETE | `/api/recurring-transactions/:id` | Delete template | 🧪 |
-| POST | `/api/recurring-transactions/:id/execute` | Confirm due occurrence → transaction | 🧪 |
-| POST | `/api/recurring-transactions/:id/skip` | Skip next occurrence | 🧪 |
-| POST | `/api/transactions/import` | Upload CSV → import batch (column auto-detect) | 🧪 |
-| POST | `/api/transactions/import/preview` | Preview rows for column mapping | 🧪 |
-| POST | `/api/transactions/import/validate` | Validate rows without importing | 🧪 |
-| POST | `/api/transactions/import/confirm` | Confirm import with mapping | 🧪 |
-| GET | `/api/import-batches` | Import history | 🧪 |
-| GET | `/api/import-batches/:id` | Batch detail | 🧪 |
-| GET | `/api/import-batches/:id/progress` | Rows processed/total | 🧪 |
-| GET | `/api/import-batches/:id/errors` | Row-level errors | 🧪 |
-| GET | `/api/import-batches/:id/errors/export` | Error log CSV | 🧪 |
-| POST | `/api/import-batches/:id/duplicates/resolve` | Skip/import/merge duplicates | 🧪 |
-| POST | `/api/transactions/duplicates/merge` | Merge duplicate into existing | 🧪 |
-| GET | `/api/shared-groups` | List shared groups | 🧪 |
-| POST | `/api/shared-groups` | Create group (creator = admin) | 🧪 |
-| GET | `/api/shared-groups/:id` | Group detail | 🧪 |
-| PATCH | `/api/shared-groups/:id` | Update group | 🧪 |
-| DELETE | `/api/shared-groups/:id` | Delete group | 🧪 |
-| GET | `/api/shared-groups/:id/members` | List members | 🧪 |
-| POST | `/api/shared-groups/:id/invites` | Invite by email (7-day tokenized link) | 🧪 |
-| GET | `/api/shared-groups/:id/invites` | Pending invites | 🧪 |
-| DELETE | `/api/shared-groups/:id/invites/:inviteId` | Revoke invite | 🧪 |
-| GET | `/api/shared-groups/invites/:token` | Resolve invite token | 🧪 |
-| POST | `/api/shared-groups/invites/:token/accept` | Accept invite (SECURITY DEFINER, read-only) | 🧪 |
-| POST | `/api/shared-groups/invites/:token/decline` | Decline invite | 🧪 |
-| GET | `/api/shared-groups/:id/transactions` | Group transactions | 🧪 |
-| DELETE | `/api/shared-groups/:id/members/:userId` | Remove member (owner only) | 🧪 |
-| POST | `/api/shared-groups/:id/leave` | Leave group | 🧪 |
-| POST | `/api/shared-groups/:id/transfer-ownership` | Transfer ownership | 🧪 |
-| GET | `/api/shared-groups/:id/transactions/export` | Group transactions CSV | 🧪 |
+| GET | `/api/merchant-mappings` | List merchant→category mappings | ✅ |
+| POST | `/api/merchant-mappings` | Create/override mapping | ✅ |
+| PATCH | `/api/merchant-mappings/:id` | Update mapping | ✅ |
+| GET | `/api/recurring-transactions` | List templates | ✅ |
+| POST | `/api/recurring-transactions` | Create template | ✅ |
+| GET | `/api/recurring-transactions/:id` | Read template | ✅ |
+| PATCH | `/api/recurring-transactions/:id` | Update template | ✅ |
+| DELETE | `/api/recurring-transactions/:id` | Delete template | ✅ |
+| POST | `/api/recurring-transactions/:id/execute` | Confirm due occurrence → transaction | ✅ |
+| POST | `/api/recurring-transactions/:id/skip` | Skip next occurrence | ✅ |
+| POST | `/api/transactions/import` | Upload CSV → import batch (column auto-detect) | ✅ |
+| POST | `/api/transactions/import/preview` | Preview rows for column mapping | ✅ |
+| POST | `/api/transactions/import/validate` | Validate rows without importing | ✅ |
+| POST | `/api/transactions/import/confirm` | Confirm import with mapping | ✅ |
+| GET | `/api/import-batches` | Import history | ✅ |
+| GET | `/api/import-batches/:id` | Batch detail | ✅ |
+| GET | `/api/import-batches/:id/progress` | Rows processed/total | ✅ |
+| GET | `/api/import-batches/:id/errors` | Row-level errors | ✅ |
+| GET | `/api/import-batches/:id/errors/export` | Error log CSV | ✅ |
+| POST | `/api/import-batches/:id/duplicates/resolve` | Skip/import/merge duplicates | ✅ |
+| POST | `/api/transactions/duplicates/merge` | Merge duplicate into existing | ✅ |
+| GET | `/api/shared-groups` | List shared groups | ✅ |
+| POST | `/api/shared-groups` | Create group (creator = admin) | ✅ |
+| GET | `/api/shared-groups/:id` | Group detail | ✅ |
+| PATCH | `/api/shared-groups/:id` | Update group | ✅ |
+| DELETE | `/api/shared-groups/:id` | Delete group | ✅ |
+| GET | `/api/shared-groups/:id/members` | List members | ✅ |
+| POST | `/api/shared-groups/:id/invites` | Invite by email (7-day tokenized link) | ✅ |
+| GET | `/api/shared-groups/:id/invites` | Pending invites | ✅ |
+| DELETE | `/api/shared-groups/:id/invites/:inviteId` | Revoke invite | ✅ |
+| GET | `/api/shared-groups/invites/:token` | Resolve invite token | ✅ |
+| POST | `/api/shared-groups/invites/:token/accept` | Accept invite (SECURITY DEFINER, read-only) | ✅ |
+| POST | `/api/shared-groups/invites/:token/decline` | Decline invite | ✅ |
+| GET | `/api/shared-groups/:id/transactions` | Group transactions | ✅ |
+| DELETE | `/api/shared-groups/:id/members/:userId` | Remove member (owner only) | ✅ |
+| POST | `/api/shared-groups/:id/leave` | Leave group | ✅ |
+| POST | `/api/shared-groups/:id/transfer-ownership` | Transfer ownership | ✅ |
+| GET | `/api/shared-groups/:id/transactions/export` | Group transactions CSV | ✅ |
 
 ### Module 3 — Budget
 
@@ -211,22 +211,22 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/budgets/overview` | Dashboard summary (totals, over-budget count) | ✅ |
 | GET | `/api/budgets/:id/utilization` | Spent/remaining/percentage | ✅ |
 | GET | `/api/budgets/:id/breakdown` | Leaf-category breakdown for parent budget | ✅ |
-| GET | `/api/budgets/:id/history` | Month-over-month budget vs actual | 🧪 |
-| PATCH | `/api/budgets/:id/rollover` | Enable/disable rollover | 🧪 |
-| GET | `/api/budgets/rollovers` | Rollover history | 🧪 |
-| GET | `/api/budgets/suggested-amount` | Suggest from 3-month average | 🧪 |
-| GET | `/api/budgets/alerts` | Threshold alerts | 🧪 |
-| POST | `/api/budgets/alerts/:id/dismiss` | Dismiss alert | 🧪 |
-| GET | `/api/budgets/templates` | List templates | 🧪 |
-| POST | `/api/budgets/templates` | Save current budget set as template | 🧪 |
-| GET | `/api/budgets/templates/:id` | Read template with items | 🧪 |
-| PATCH | `/api/budgets/templates/:id` | Update template | 🧪 |
-| DELETE | `/api/budgets/templates/:id` | Delete template | 🧪 |
-| POST | `/api/budgets/templates/:id/apply` | Apply template to current month | 🧪 |
-| POST | `/api/budgets/templates/:id/set-default` | Default template for rollover | 🧪 |
+| GET | `/api/budgets/:id/history` | Month-over-month budget vs actual | ✅ |
+| PATCH | `/api/budgets/:id/rollover` | Enable/disable rollover | ✅ |
+| GET | `/api/budgets/rollovers` | Rollover history | ✅ |
+| GET | `/api/budgets/suggested-amount` | Suggest from 3-month average | ✅ |
+| GET | `/api/budgets/alerts` | Threshold alerts | ✅ |
+| POST | `/api/budgets/alerts/:id/dismiss` | Dismiss alert | ✅ |
+| GET | `/api/budgets/templates` | List templates | ✅ |
+| POST | `/api/budgets/templates` | Save current budget set as template | ✅ |
+| GET | `/api/budgets/templates/:id` | Read template with items | ✅ |
+| PATCH | `/api/budgets/templates/:id` | Update template | ✅ |
+| DELETE | `/api/budgets/templates/:id` | Delete template | ✅ |
+| POST | `/api/budgets/templates/:id/apply` | Apply template to current month | ✅ |
+| POST | `/api/budgets/templates/:id/set-default` | Default template for rollover | ✅ |
 | GET | `/api/budgets/export` | Budget vs actual CSV | ✅ |
-| GET | `/api/budgets/report` | Budget dashboard PDF | 🧪 |
-| GET | `/api/budgets/status/:month/:year` | Month status aggregate | 🧪 |
+| GET | `/api/budgets/report` | Budget dashboard PDF | ✅ |
+| GET | `/api/budgets/status/:month/:year` | Month status aggregate | ✅ |
 
 ### Module 4 — Bills & Subscriptions Tracker
 
@@ -247,14 +247,14 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/bills/calendar` | 30-day rolling due calendar | ✅ |
 | GET | `/api/bills/upcoming` | Due-soon/overdue set | ✅ |
 | GET | `/api/bills/overview` | Dashboard widget (obligation, due this week, overdue) | ✅ |
-| GET | `/api/bills/cashflow-projection` | Monthly projection per account | 🧪 |
-| GET | `/api/bills/cashflow-waterfall` | Balance waterfall for upcoming bills | 🧪 |
-| GET | `/api/bills/:id/reminders` | Reminder configs | 🧪 |
-| POST | `/api/bills/:id/reminders` | Create reminder config | 🧪 |
-| PATCH | `/api/bills/:id/reminders/:reminderId` | Update reminder config | 🧪 |
-| DELETE | `/api/bills/:id/reminders/:reminderId` | Delete reminder config | 🧪 |
+| GET | `/api/bills/cashflow-projection` | Monthly projection per account | ✅ |
+| GET | `/api/bills/cashflow-waterfall` | Balance waterfall for upcoming bills | ✅ |
+| GET | `/api/bills/:id/reminders` | Reminder configs | ✅ |
+| POST | `/api/bills/:id/reminders` | Create reminder config | ✅ |
+| PATCH | `/api/bills/:id/reminders/:reminderId` | Update reminder config | ✅ |
+| DELETE | `/api/bills/:id/reminders/:reminderId` | Delete reminder config | ✅ |
 | GET | `/api/bills/export` | Bills CSV | ✅ |
-| POST | `/api/bills/suggest-recurring` | Suggest recurring debits as bills (90 days) | 🧪 |
+| POST | `/api/bills/suggest-recurring` | Suggest recurring debits as bills (90 days) | ✅ |
 | GET | `/api/subscriptions` | List (status tabs) | ✅ |
 | POST | `/api/subscriptions` | Create subscription | ✅ |
 | GET | `/api/subscriptions/:id` | Detail | ✅ |
@@ -263,7 +263,7 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | POST | `/api/subscriptions/:id/pause` | Pause | ✅ |
 | POST | `/api/subscriptions/:id/resume` | Resume | ✅ |
 | POST | `/api/subscriptions/:id/renew` | Confirm renewal (creates transaction) | ✅ |
-| POST | `/api/subscriptions/:id/snooze` | Snooze due renewal | 🧪 |
+| POST | `/api/subscriptions/:id/snooze` | Snooze due renewal | ✅ |
 | GET | `/api/subscriptions/:id/payments` | Payment history | ✅ |
 | GET | `/api/subscriptions/:id/payments/export` | Payment history CSV | ✅ |
 | GET | `/api/subscriptions/due-renewals` | Renewals in next 7 days | ✅ |
@@ -303,7 +303,7 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/goals/:id/milestones` | 25/50/75/100% milestones | ✅ |
 | GET | `/api/goals/export` | Goals CSV | ✅ |
 | GET | `/api/goals/:id/contributions/export` | Contributions CSV | ✅ |
-| GET | `/api/goals/:id/report` | Progress chart PDF | 🧪 |
+| GET | `/api/goals/:id/report` | Progress chart PDF | ✅ |
 | POST | `/api/goals/distribute` | Windfall distribution suggestion (enhancement) | ✅ |
 
 ### Module 6 — Debt & Loan Manager
@@ -337,7 +337,7 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/debts/health-alerts` | Health flags (high DTI, missed payments) | ✅ |
 | GET | `/api/debts/export` | Debt summary CSV | ✅ |
 | GET | `/api/debts/:id/amortization/export` | Schedule CSV | ✅ |
-| GET | `/api/debts/:id/report` | Prepayment comparison PDF | 🧪 |
+| GET | `/api/debts/:id/report` | Prepayment comparison PDF | ✅ |
 
 ### Module 7 — Tax Planning
 
@@ -370,7 +370,7 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/tax/exports/itr` | ITR checklist CSV | ✅ |
 | POST | `/api/tax/form16/upload` | Upload Form 16 PDF for parsing (enhancement) | 🧪 |
 | POST | `/api/tax/advance-tax/calculate` | Quarterly advance tax (enhancement) | 🧪 |
-| GET | `/api/tax/report` | Regime comparison PDF | 🧪 |
+| GET | `/api/tax/report` | Regime comparison PDF | ✅ |
 
 ### Module 8 — Investment Tracker
 
@@ -459,7 +459,7 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/reports/income-sources` | Income by source category | ✅ |
 | GET | `/api/reports/top-merchants` | Top merchants by spend/frequency | ✅ |
 | GET | `/api/reports/summary` | Combined key metrics | ✅ |
-| POST | `/api/reports/explain` | Explain-This (AI on aggregated snapshot) | 🧪 |
+| POST | `/api/reports/explain` | Explain-This (AI on aggregated snapshot) | ✅ |
 | GET | `/api/report-templates` | List templates (system + user) | ✅ |
 | GET | `/api/report-templates/:id` | Read template | ✅ |
 | POST | `/api/report-templates` | Create user template | ✅ |
@@ -476,72 +476,72 @@ Implemented today (237): auth login/signup/logout/me · accounts list/create/pat
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/notes` | List (pinned first, category filter, search) | 🧪 |
-| POST | `/api/notes` | Create note (encrypted payload) | 🧪 |
-| GET | `/api/notes/:id` | Read note (ciphertext + IV, decrypt client-side) | 🧪 |
-| PATCH | `/api/notes/:id` | Update (re-encrypt, optimistic lock on version) | 🧪 |
-| DELETE | `/api/notes/:id` | Soft-delete (30-day restore window) | 🧪 |
-| POST | `/api/notes/:id/restore` | Restore from trash | 🧪 |
-| DELETE | `/api/notes/:id/purge` | Permanent purge | 🧪 |
-| GET | `/api/notes/trash` | Soft-deleted notes | 🧪 |
-| POST | `/api/notes/:id/pin` | Pin to top | 🧪 |
-| POST | `/api/notes/:id/unpin` | Unpin | 🧪 |
-| GET | `/api/notes/categories` | Distinct categories (seeded + custom) | 🧪 |
-| PATCH | `/api/notes/categories` | Rename category (batch, one transaction) | 🧪 |
-| GET | `/api/note-templates` | Seeded templates with field schemas | 🧪 |
-| GET | `/api/note-templates/:code` | Read single template | 🧪 |
-| GET | `/api/notes/:id/attachments` | List attachments | 🧪 |
-| POST | `/api/notes/:id/attachments` | Upload client-encrypted file | 🧪 |
-| GET | `/api/notes/:id/attachments/:attachmentId` | Download (decrypt client-side) | 🧪 |
-| GET | `/api/notes/:id/attachments/:attachmentId/preview` | Image/PDF preview | 🧪 |
-| DELETE | `/api/notes/:id/attachments/:attachmentId` | Remove attachment | 🧪 |
-| GET | `/api/vault/wrapped-key` | Wrapped vault key + KDF params | 🧪 |
-| POST | `/api/vault/unlock` | Unlock vault | 🧪 |
-| POST | `/api/vault/lock` | Lock vault | 🧪 |
-| POST | `/api/vault/verify-password` | Verify password for vault access | 🧪 |
-| POST | `/api/vault/rewrap` | Re-wrap key after password change/reset | 🧪 |
-| GET | `/api/vault/recovery-status` | Recovery copy status | 🧪 |
+| GET | `/api/notes` | List (pinned first, category filter, search) | ✅ |
+| POST | `/api/notes` | Create note (encrypted payload) | ✅ |
+| GET | `/api/notes/:id` | Read note (ciphertext + IV, decrypt client-side) | ✅ |
+| PATCH | `/api/notes/:id` | Update (re-encrypt, optimistic lock on version) | ✅ |
+| DELETE | `/api/notes/:id` | Soft-delete (30-day restore window) | ✅ |
+| POST | `/api/notes/:id/restore` | Restore from trash | ✅ |
+| DELETE | `/api/notes/:id/purge` | Permanent purge | ✅ |
+| GET | `/api/notes/trash` | Soft-deleted notes | ✅ |
+| POST | `/api/notes/:id/pin` | Pin to top | ✅ |
+| POST | `/api/notes/:id/unpin` | Unpin | ✅ |
+| GET | `/api/notes/categories` | Distinct categories (seeded + custom) | ✅ |
+| PATCH | `/api/notes/categories` | Rename category (batch, one transaction) | ✅ |
+| GET | `/api/note-templates` | Seeded templates with field schemas | ✅ |
+| GET | `/api/note-templates/:code` | Read single template | ✅ |
+| GET | `/api/notes/:id/attachments` | List attachments | ✅ |
+| POST | `/api/notes/:id/attachments` | Upload client-encrypted file | ✅ |
+| GET | `/api/notes/:id/attachments/:attachmentId` | Download (decrypt client-side) | ✅ |
+| GET | `/api/notes/:id/attachments/:attachmentId/preview` | Image/PDF preview | ✅ |
+| DELETE | `/api/notes/:id/attachments/:attachmentId` | Remove attachment | ✅ |
+| GET | `/api/vault/wrapped-key` | Wrapped vault key + KDF params | ✅ |
+| POST | `/api/vault/unlock` | Unlock vault | ✅ |
+| POST | `/api/vault/lock` | Lock vault | ✅ |
+| POST | `/api/vault/verify-password` | Verify password for vault access | ✅ |
+| POST | `/api/vault/rewrap` | Re-wrap key after password change/reset | ✅ |
+| GET | `/api/vault/recovery-status` | Recovery copy status | ✅ |
 | POST | `/api/vault/export` | Encrypted vault backup (enhancement) | 🧪 |
 | POST | `/api/vault/import` | Restore from backup (enhancement) | 🧪 |
-| GET | `/api/notes/export` | Note headers CSV | 🧪 |
+| GET | `/api/notes/export` | Note headers CSV | ✅ |
 
 ### C1 — Financial Calendar Component
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/calendar/events` | Month grid (derived + custom events, one request) | 🧪 |
-| GET | `/api/calendar/events?date=:date` | Day detail panel | 🧪 |
-| GET | `/api/calendar/upcoming` | Next 7/30 days with per-day totals | 🧪 |
-| GET | `/api/calendar/cashflow-projection` | Daily projection per account (+7/+30) | 🧪 |
-| GET | `/api/calendar/tax-deadlines` | Seeded tax deadline registry | 🧪 |
-| POST | `/api/calendar/events` | Create custom event | 🧪 |
-| GET | `/api/calendar/events/:id` | Read custom event | 🧪 |
-| PATCH | `/api/calendar/events/:id` | Update custom event | 🧪 |
-| DELETE | `/api/calendar/events/:id` | Delete custom event | 🧪 |
-| POST | `/api/calendar/events/:id/duplicate` | Duplicate event | 🧪 |
+| GET | `/api/calendar/events` | Month grid (derived + custom events, one request) | ✅ |
+| GET | `/api/calendar/events?date=:date` | Day detail panel | ✅ |
+| GET | `/api/calendar/upcoming` | Next 7/30 days with per-day totals | ✅ |
+| GET | `/api/calendar/cashflow-projection` | Daily projection per account (+7/+30) | ✅ |
+| GET | `/api/calendar/tax-deadlines` | Seeded tax deadline registry | ✅ |
+| POST | `/api/calendar/events` | Create custom event | ✅ |
+| GET | `/api/calendar/events/:id` | Read custom event | ✅ |
+| PATCH | `/api/calendar/events/:id` | Update custom event | ✅ |
+| DELETE | `/api/calendar/events/:id` | Delete custom event | ✅ |
+| POST | `/api/calendar/events/:id/duplicate` | Duplicate event | ✅ |
 | GET | `/api/calendar/export` | iCal (.ics) export (enhancement) | 🧪 |
-| GET | `/api/calendar/month/:month/:year` | Grid for specific month | 🧪 |
+| GET | `/api/calendar/month/:month/:year` | Grid for specific month | ✅ |
 
 ### C2 — Notifications & Alerts Center
 
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
-| GET | `/api/notifications` | Feed (25/page, read/unread/dismissed) | 🧪 |
-| GET | `/api/notifications/unread-count` | Badge count | 🧪 |
-| GET | `/api/notifications/:id` | Read one | 🧪 |
-| POST | `/api/notifications/:id/read` | Mark read | 🧪 |
-| POST | `/api/notifications/read-all` | Mark all read | 🧪 |
-| POST | `/api/notifications/:id/dismiss` | Dismiss | 🧪 |
-| POST | `/api/notifications/:id/restore` | Restore to feed | 🧪 |
-| POST | `/api/notifications/bulk` | Bulk dismiss/archive | 🧪 |
-| POST | `/api/notifications/:id/action` | Take action (deep-link target) | 🧪 |
-| GET | `/api/notifications/stream` | SSE stream (real-time) | 🧪 |
-| GET | `/api/notifications/archive` | Searchable archive (ILIKE + filters) | 🧪 |
-| GET | `/api/notification-preferences` | Per-type per-channel matrix | 🧪 |
-| PATCH | `/api/notification-preferences` | Upsert toggles (in-app/email per type) | 🧪 |
-| PATCH | `/api/notification-preferences/:type/:channel` | Toggle single preference | 🧪 |
-| GET | `/api/notification-emails` | Email delivery log | 🧪 |
-| POST | `/api/notifications/email/preview` | Preview email | 🧪 |
+| GET | `/api/notifications` | Feed (25/page, read/unread/dismissed) | ✅ |
+| GET | `/api/notifications/unread-count` | Badge count | ✅ |
+| GET | `/api/notifications/:id` | Read one | ✅ |
+| POST | `/api/notifications/:id/read` | Mark read | ✅ |
+| POST | `/api/notifications/read-all` | Mark all read | ✅ |
+| POST | `/api/notifications/:id/dismiss` | Dismiss | ✅ |
+| POST | `/api/notifications/:id/restore` | Restore to feed | ✅ |
+| POST | `/api/notifications/bulk` | Bulk dismiss/archive | ✅ |
+| POST | `/api/notifications/:id/action` | Take action (deep-link target) | ✅ |
+| GET | `/api/notifications/stream` | SSE stream (real-time) | ✅ |
+| GET | `/api/notifications/archive` | Searchable archive (ILIKE + filters) | ✅ |
+| GET | `/api/notification-preferences` | Per-type per-channel matrix | ✅ |
+| PATCH | `/api/notification-preferences` | Upsert toggles (in-app/email per type) | ✅ |
+| PATCH | `/api/notification-preferences/:type/:channel` | Toggle single preference | ✅ |
+| GET | `/api/notification-emails` | Email delivery log | ✅ |
+| POST | `/api/notifications/email/preview` | Preview email | ✅ |
 
 ### C3 — Data Export Component
 

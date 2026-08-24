@@ -186,6 +186,7 @@ export type BillScheduleRow = {
   amount: string | null;
   estimated_amount: string | null;
   due_day: number;
+  frequency: string;
   current_period_status: string;
 };
 
@@ -195,7 +196,7 @@ export async function listActiveBillsForScheduling(
   ordered = true
 ): Promise<BillScheduleRow[]> {
   const result = await q.query<BillScheduleRow>(
-    `SELECT id, name, amount, estimated_amount, due_day, current_period_status
+    `SELECT id, name, amount, estimated_amount, due_day, frequency, current_period_status
      FROM bills WHERE user_id = $1 AND is_active = 1
      ${ordered ? "ORDER BY due_day, name" : ""}`,
     [userId]

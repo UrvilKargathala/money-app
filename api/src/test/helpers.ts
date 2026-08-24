@@ -92,11 +92,16 @@ export async function createUser(email: string): Promise<TestUser> {
   return { userId, email, token };
 }
 
-export async function createAccount(user: TestUser, name: string): Promise<string> {
+export async function createAccount(
+  user: TestUser,
+  name = "Test Account",
+  type: string = "bank_savings",
+  openingBalance = 100000
+): Promise<string> {
   const res = await postAs(user, "/api/accounts", {
     name,
-    type: "bank_savings",
-    opening_balance: 100000,
+    type,
+    opening_balance: openingBalance,
   });
   if (!res.ok) throw new Error(`createAccount failed: ${res.status}`);
   const list = (await (
@@ -395,4 +400,31 @@ export async function createManualAsset(
   const match = assets.assets.find((a) => a.name === name);
   if (!match) throw new Error(`createManualAsset: "${name}" not found in list`);
   return match.id;
+}
+
+export async function createNote(
+  user: TestUser,
+  params: {
+    title?: string;
+    category?: string;
+    templateCode?: string | null;
+    payload?: string;
+    pinned?: boolean;
+  } = {}
+): Promise<string> {
+  const res = await postAs(user, "/api/notes", {
+    title: params.title ?? "Bank Account Details",
+    category: params.category ?? "financial",
+    ...(params.templateCode === undefined
+      ? {}
+      : { template_code: params.templateCode }),
+    data_encrypted: Buffer.from(params.payload ?? "secret-content").toString("base64"),
+    data_iv: "iv-1234567890ab",
+  });
+  if (!res.ok) {
+    throw new Error(`createNote failed: ${res.status} ${await res.text()}`);
+  }
+  const id = ((await res.json()) as { note: { id: string } }).note.id;
+  if (params.pinned) await postAs(user, `/api/notes/${id}/pin`, {});
+  return id;
 }

@@ -32,3 +32,59 @@ export const TAG_COLOR_PALETTE = [
   "#AB47BC",
   "#26A69A",
 ];
+export const NOTE_CATEGORIES = [
+  "personal",
+  "financial",
+  "document",
+  "vehicle",
+  "health",
+  "insurance",
+  "work",
+  "home",
+  "travel",
+  "other",
+] as const;
+
+export type TaxDeadline = {
+  /** MM-DD within any year. */
+  date: string;
+  label: string;
+  description: string;
+};
+
+/**
+ * Fixed annual tax deadline registry (C1 FR-C1.6). App config, not DB rows —
+ * rendered by the calendar service for the requested year.
+ */
+export const CALENDAR_TAX_DEADLINES: readonly TaxDeadline[] = [
+  {
+    date: "03-15",
+    label: "Advance tax — Q4 (FY final installment)",
+    description: "Last advance-tax installment for the running financial year.",
+  },
+  {
+    date: "04-01",
+    label: "New financial year begins",
+    description: "FY selector auto-advances; new tax slabs apply.",
+  },
+  {
+    date: "06-15",
+    label: "Advance tax — Q1",
+    description: "First advance-tax installment (= ?10,000 liability).",
+  },
+  {
+    date: "07-31",
+    label: "ITR filing deadline",
+    description: "Income-tax return filing for the previous assessment year.",
+  },
+  {
+    date: "09-15",
+    label: "Advance tax — Q2",
+    description: "Second advance-tax installment.",
+  },
+  {
+    date: "12-15",
+    label: "Advance tax — Q3",
+    description: "Third advance-tax installment.",
+  },
+] as const;

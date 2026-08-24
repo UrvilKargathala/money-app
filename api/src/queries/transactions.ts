@@ -1,4 +1,4 @@
-import { query } from "../db";
+﻿import { query } from "../db";
 
 export type TransactionTag = {
   id: string;
@@ -208,7 +208,7 @@ export type Queryable = { query: typeof query };
 
 const DB: Queryable = { query };
 
-export function insertManualTransaction(
+export async function insertManualTransaction(
   q: Queryable,
   params: {
     userId: number;
@@ -220,12 +220,13 @@ export function insertManualTransaction(
     date: string;
     notes: string | null;
   }
-) {
-  return q.query(
+): Promise<string> {
+  const result = await q.query<{ id: string }>(
     `INSERT INTO transactions
        (user_id, account_id, type, amount, description, category_id, date, notes,
         source, created_by, updated_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, 'manual', $1, $1)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, 'manual', $1, $1)
+     RETURNING id`,
     [
       params.userId,
       params.accountId,
@@ -237,18 +238,23 @@ export function insertManualTransaction(
       params.notes,
     ]
   );
+  return result.rows[0].id;
 }
 
 export async function getTransactionTransferGroup(
   userId: number,
   id: string,
   q: Queryable = DB
-): Promise<string | null> {
+): Promise<{ found: boolean; transferGroupId: string | null }> {
   const result = await q.query<{ transfer_group_id: string | null }>(
-    `SELECT transfer_group_id FROM transactions WHERE user_id = $1 AND id = $2`,
+    `SELECT transfer_group_id FROM transactions WHERE user_id = $1 AND id = $2::uuid`,
     [userId, id]
   );
-  return result.rowCount === 1 ? result.rows[0].transfer_group_id : null;
+  if (result.rowCount !== 1) return { found: false, transferGroupId: null };
+  return {
+    found: true,
+    transferGroupId: result.rows[0].transfer_group_id,
+  };
 }
 
 export function updateTransactionFields(
@@ -264,14 +270,18 @@ export function updateTransactionFields(
     notes: string | null;
     accountId: string;
     version: number;
+    /** Shared-group assignment. undefined = untouched; null clears. */
+    groupId?: string | null;
   }
 ) {
+  const groupProvided = params.groupId !== undefined;
   return q.query(
     `UPDATE transactions
      SET type = $3, amount = $4, description = $5, category_id = $6,
          date = $7::date, notes = $8, account_id = $9,
+         group_id = CASE WHEN $11::boolean THEN $10::uuid ELSE group_id END,
          version = version + 1, updated_by = $1
-     WHERE user_id = $1 AND id = $2 AND version = $10`,
+     WHERE user_id = $1 AND id = $2::uuid AND version = $12`,
     [
       params.userId,
       params.id,
@@ -282,6 +292,8 @@ export function updateTransactionFields(
       params.date,
       params.notes,
       params.accountId,
+      params.groupId ?? null,
+      groupProvided,
       params.version,
     ]
   );

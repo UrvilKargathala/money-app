@@ -12,7 +12,10 @@ import {
   insertAccount,
   reactivateAccount,
   updateAccountDetails,
+  getAccountSummaryTotals,
+  getCreditUtilization,
 } from "../queries/accounts";
+import { createManualSnapshot } from "../queries/accounts";
 import { ACCOUNT_COLOR_PALETTE, ACCOUNT_TYPES } from "../constants";
 import { parseAmount, parseBoolean } from "../validation";
 import { readJson } from "./helpers";
@@ -270,6 +273,65 @@ accounts.get("/:id/history", requireAuth, async (c) => {
   }));
 
   return c.json({ account: { name: account.name, type: account.type }, points });
+});
+
+accounts.get("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const account = await getAccountById(user.user_id, id);
+  if (!account) return c.json({ error: "Not found" }, 404);
+
+  // Compute balance inline (opening + signed txns).
+  const usage = await getAccountUsageSummary(user.user_id, id);
+  return c.json({
+    account: { ...account, balance: account.opening_balance + usage.balance },
+    txn_count: usage.txns,
+  });
+});
+
+accounts.get("/summary", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ summary: await getAccountSummaryTotals(user.user_id) });
+});
+
+accounts.get("/:id/balance", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  if (!(await getAccountById(user.user_id, id))) {
+    return c.json({ error: "Not found" }, 404);
+  }
+  const usage = await getAccountUsageSummary(user.user_id, id);
+  const detail = await getAccountById(user.user_id, id);
+  return c.json({
+    account_id: id,
+    balance: Math.round((Number(detail?.opening_balance ?? 0) + usage.balance) * 100) / 100,
+    txn_count: usage.txns,
+  });
+});
+
+accounts.post("/:id/snapshots", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await readJson(c);
+  const balance = Number(body.balance ?? NaN);
+  const date = String(body.date ?? new Date().toISOString().slice(0, 10));
+  if (!Number.isFinite(balance)) {
+    return c.json({ fieldErrors: { balance: "Enter a valid balance." } }, 400);
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ fieldErrors: { date: "Choose a valid date." } }, 400);
+  }
+  await withUser(user.user_id, (client) =>
+    createManualSnapshot(client, { userId: user.user_id, accountId: id, balance, date })
+  );
+  return c.json({ success: true });
+});
+
+accounts.get("/:id/credit-utilization", requireAuth, async (c) => {
+  const user = c.get("user");
+  const result = await getCreditUtilization(user.user_id, c.req.param("id"));
+  if (!result) return c.json({ error: "Not found or not a credit card" }, 404);
+  return c.json(result);
 });
 
 export { accounts, accountTypes };

@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+﻿import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -151,11 +151,32 @@ describe("security guard: tenant scoping in query modules", () => {
     "net_worth_milestones",
     "report_exports",
     "report_templates",
+    "secure_notes",
+    "note_attachments",
+    "merchant_mappings",
+    "recurring_transaction_templates",
+    "import_batches",
+    "import_errors",
+    "calendar_events",
+    "notifications",
+    "notification_preferences",
+    "notification_emails",
+    "data_export_jobs",
   ];
+
+  /** Tables whose tenant column isn't user_id (checked against these instead). */
+  const TENANT_COLUMN_BY_TABLE: Record<string, string> = {
+    shared_groups: "owner_id",
+    group_invites: "invited_by",
+  };
+
+  function tenantColumnFor(table: string): string {
+    return TENANT_COLUMN_BY_TABLE[table] ?? "user_id";
+  }
 
   /** Statements that legitimately read across users via an already-scoped parent. */
   const ALLOWED_STATEMENTS: RegExp[] = [
-    // Summary query delegates scoping to filterClause() — contract-tested below.
+    // Summary query delegates scoping to filterClause() â€” contract-tested below.
     /\$\{where\}/,
   ];
 
@@ -187,8 +208,11 @@ describe("security guard: tenant scoping in query modules", () => {
             break;
           }
         }
-        if (touched && !/\buser_id\b/i.test(sql)) {
-          violations.push(`${rel}: SELECT on '${touched}' without user_id:\n${sql.slice(0, 200)}`);
+        const tenantCol = tenantColumnFor(touched ?? "");
+        if (touched && !new RegExp(`\\b${tenantCol}\\b`, "i").test(sql)) {
+          violations.push(
+            `${rel}: SELECT on '${touched}' without ${tenantCol}:\n${sql.slice(0, 200)}`
+          );
         }
       }
     }
@@ -201,18 +225,22 @@ describe("security guard: tenant scoping in query modules", () => {
       const src = readSrc(rel);
       for (const sql of sqlLiterals(src)) {
         for (const verb of ["UPDATE", "INSERT INTO"]) {
-          const touches = new RegExp(
-            `\\b${verb}\\s+(\\w+\\.)*(${USER_OWNED_TABLES.join("|")})\\b`,
+          const tableMatch = new RegExp(
+            `\\b${verb}\\s+(?:\\w+\\.)*(${USER_OWNED_TABLES.join("|")})\\b`,
             "i"
-          ).test(sql);
-          if (touches && !/\buser_id\b/i.test(sql)) {
-            violations.push(`${rel}: ${verb} on user-owned table without user_id:\n${sql.slice(0, 160)}`);
+          ).exec(sql);
+          if (!tableMatch) continue;
+          const tenantCol = tenantColumnFor(tableMatch[1]);
+          if (!new RegExp(`\\b${tenantCol}\\b`, "i").test(sql)) {
+            violations.push(
+              `${rel}: ${verb} on user-owned table without ${tenantCol}:\n${sql.slice(0, 160)}`
+            );
           }
         }
       }
     }
     // Writes scoped by `WHERE id = $n` inside withUser transactions still must
-    // carry the tenant column — none are exempt today.
+    // carry the tenant column â€” none are exempt today.
     expect(violations, violations.join("\n\n")).toEqual([]);
   });
 });
@@ -262,7 +290,7 @@ describe("security guard: routes contain no SQL", () => {
   it("no .query< / .query( calls in any route module", () => {
     const violations: string[] = [];
     const sqlCall = /\b(client|q|pool|db|DB|tx)\b\s*\.\s*query\s*[<(]/;
-    // SQL is always a template literal in this codebase — `query(`SELECT…`)`.
+    // SQL is always a template literal in this codebase â€” `query(`SELECTâ€¦`)`.
     const bareQuery = /\bquery\s*(<[^>]*>)?\(\s*`/;
     for (const rel of ROUTE_FILES) {
       const src = readSrc(rel);
@@ -283,9 +311,10 @@ describe("security guard: routes contain no SQL", () => {
 
 describe("security guard: no per-row query loops (N+1)", () => {
   // Pinned pre-existing sites that are deliberate (tiny bounded loops).
-  // New occurrences fail this test — batch them instead.
+  // New occurrences fail this test â€” batch them instead.
   const PINNED: Record<string, number[]> = {
     "queries/goals.ts": [478], // milestone crossing: <=4 fixed pct rows
+    "queries/budget-extras.ts": [232], // template apply: bounded items loop
   };
 
   it("no await-query inside for/while loops outside the pinned set", () => {

@@ -57,6 +57,25 @@ const TAX_SLABS = [
   ["2026-27", "new", 1500000, 999999999, 0.3, 0.04],
 ];
 
+const NOTE_TEMPLATES: [string, string, string, object, string, number][] = [
+  ["passport", "Passport", "Passport number and details",
+    { fields: [{ key: "passport_no", label: "Passport Number" }, { key: "expiry", label: "Expiry Date" }] }, "globe", 1],
+  ["pan_card", "PAN Card", "PAN number",
+    { fields: [{ key: "pan_no", label: "PAN Number" }] }, "file", 2],
+  ["aadhaar", "Aadhaar", "Aadhaar number",
+    { fields: [{ key: "aadhaar_no", label: "Aadhaar Number" }] }, "id", 3],
+  ["driving_license", "Driving License", "Driving license details",
+    { fields: [{ key: "license_no", label: "License Number" }, { key: "expiry", label: "Expiry Date" }] }, "car", 4],
+  ["vehicle_rc", "Vehicle RC", "Vehicle registration certificate",
+    { fields: [{ key: "reg_no", label: "Registration Number" }, { key: "chassis_no", label: "Chassis Number" }] }, "car", 5],
+  ["health_insurance", "Health Insurance Policy", "Health policy details",
+    { fields: [{ key: "policy_no", label: "Policy Number" }, { key: "expiry", label: "Expiry Date" }, { key: "sum_insured", label: "Sum Insured" }] }, "heart", 6],
+  ["vehicle_insurance", "Vehicle Insurance", "Vehicle policy details",
+    { fields: [{ key: "policy_no", label: "Policy Number" }, { key: "expiry", label: "Expiry Date" }] }, "car", 7],
+  ["membership", "Membership Card", "Gym / club membership",
+    { fields: [{ key: "member_id", label: "Membership ID" }, { key: "expiry", label: "Expiry Date" }] }, "star", 8],
+];
+
 function findRepoRoot(): string {
   let dir = process.cwd();
   for (let i = 0; i < 6; i++) {
@@ -111,6 +130,20 @@ async function seedLookups(databaseUrl: string): Promise<void> {
        VALUES ${slabPlaceholders}
        ON CONFLICT (id) DO NOTHING`,
       TAX_SLABS.flat()
+    );
+    const templateRows = NOTE_TEMPLATES.map(
+      ([code, name, description, fields, icon, sortOrder]) => [
+        code, name, description, JSON.stringify(fields), icon, sortOrder,
+      ]
+    );
+    const templatePlaceholders = templateRows.map(
+      (_, i) => `($${i * 6 + 1},$${i * 6 + 2},$${i * 6 + 3},$${i * 6 + 4}::jsonb,$${i * 6 + 5},$${i * 6 + 6})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO note_templates (template_code, name, description, fields, icon, sort_order)
+       VALUES ${templatePlaceholders}
+       ON CONFLICT (template_code) DO NOTHING`,
+      templateRows.flat()
     );
   } finally {
     await pool.end();

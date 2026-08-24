@@ -2,7 +2,7 @@ import { query } from "../db";
 
 export type Queryable = { query: typeof query };
 
-const DB: Queryable = { query };
+const DB: Queryable = { query: query };
 
 export async function getActiveAccountsByIds(
   q: Queryable,
@@ -76,15 +76,8 @@ export async function createTransfer(
         from_transaction_id, to_transaction_id, amount, date, notes, version)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, 1)`,
     [
-      params.userId,
-      params.groupId,
-      params.fromId,
-      params.toId,
-      fromTx.rows[0].id,
-      toTx.rows[0].id,
-      params.amount,
-      params.date,
-      params.notes,
+      params.userId, params.groupId, params.fromId, params.toId,
+      fromTx.rows[0].id, toTx.rows[0].id, params.amount, params.date, params.notes,
     ]
   );
 
@@ -92,4 +85,67 @@ export async function createTransfer(
     fromTransactionId: fromTx.rows[0].id,
     toTransactionId: toTx.rows[0].id,
   };
+}
+
+/** Finds both legs of a transfer for editing. */
+export async function getTransferLegs(
+  q: Queryable,
+  userId: number,
+  groupId: string
+): Promise<{ id: string; direction: string }[]> {
+  const result = await q.query<{ id: string; direction: string }>(
+    `SELECT t.id,
+            CASE WHEN tf.from_transaction_id = t.id THEN 'out' ELSE 'in' END AS direction
+     FROM transactions t
+     JOIN account_transfers atf ON atf.from_transaction_id = t.id OR atf.to_transaction_id = t.id
+     WHERE t.user_id = $1 AND atf.transfer_group_id = $2::uuid`,
+    [userId, groupId]
+  );
+  return result.rows;
+}
+
+export function updateTransferLeg(
+  q: Queryable,
+  params: { userId: number; legId: string; notes: string | null; date: string | null }
+) {
+  return q.query(
+    `UPDATE transactions SET
+       notes = COALESCE($3, notes),
+       date = COALESCE($4::date, date),
+       version = version + 1, updated_by = $1
+     WHERE user_id = $1 AND id = $2::uuid`,
+    [params.userId, params.legId, params.notes, params.date]
+  );
+}
+
+export function updateTransferGroupNotes(
+  q: Queryable,
+  params: { userId: number; groupId: string; notes: string }
+) {
+  return q.query(
+    `UPDATE account_transfers SET notes = $3
+     WHERE user_id = $1 AND transfer_group_id = $2::uuid`,
+    [params.userId, params.groupId, params.notes]
+  );
+}
+
+export function deleteTransferByGroupId(q: Queryable, userId: number, groupId: string) {
+  return q.query<{ id: string }>(
+    `SELECT id FROM account_transfers WHERE user_id = $1 AND transfer_group_id = $2::uuid`,
+    [userId, groupId]
+  );
+}
+
+export function deleteTransferTransactions(q: Queryable, userId: number, groupId: string) {
+  return q.query(
+    `DELETE FROM transactions WHERE user_id = $1 AND transfer_group_id = $2::uuid`,
+    [userId, groupId]
+  );
+}
+
+export function deleteTransferRecord(q: Queryable, userId: number, groupId: string) {
+  return q.query(
+    `DELETE FROM account_transfers WHERE user_id = $1 AND transfer_group_id = $2::uuid`,
+    [userId, groupId]
+  );
 }

@@ -27,5 +27,8 @@ scripts/__pycache__/
 .env*
 .vercel
 
+# --- local attachment storage (LocalFileProvider, dev only) ---
+.data/
+
 # --- misc ---
 .DS_Store
