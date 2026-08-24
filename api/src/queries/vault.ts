@@ -83,3 +83,52 @@ export async function getUserPasswordHash(
   );
   return result.rows[0]?.hashed_password ?? null;
 }
+
+// ---- Vault export/import backup ----
+
+export type VaultExportNote = {
+  id: string;
+  title: string;
+  category: string;
+  template_code: string | null;
+  data_encrypted: string;
+  data_iv: string;
+  is_pinned: number;
+};
+
+export async function loadVaultNotes(
+  userId: number,
+  q: Queryable = DB
+): Promise<VaultExportNote[]> {
+  const result = await q.query<VaultExportNote>(
+    `SELECT id, title, category, template_code, data_encrypted, data_iv,
+            is_pinned
+     FROM secure_notes WHERE user_id = $1 AND deleted_at IS NULL`,
+    [userId]
+  );
+  return result.rows;
+}
+
+export async function insertImportedNote(
+  q: Queryable,
+  params: {
+    userId: number;
+    title: string;
+    category: string;
+    templateCode: string | null;
+    dataEncrypted: string;
+    dataIv: string;
+    isPinned: number;
+  }
+): Promise<void> {
+  await q.query(
+    `INSERT INTO secure_notes
+       (user_id, title, category, template_code, data_encrypted,
+        data_iv, is_pinned, created_by, updated_by)
+     VALUES ($1, $2, $3::text, $4::text, $5::text, $6::text, $7, $1, $1)`,
+    [
+      params.userId, params.title, params.category, params.templateCode,
+      params.dataEncrypted, params.dataIv, params.isPinned,
+    ]
+  );
+}

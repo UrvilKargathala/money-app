@@ -10,6 +10,7 @@ import { sharedGroups } from "./routes/shared-groups";
 import { calendar } from "./routes/calendar";
 import { notifications } from "./routes/notifications";
 import { notificationPrefs, notificationEmailsLog } from "./routes/notification-settings";
+import { userLifecycle } from "./routes/user-lifecycle";
 import { exportJobs } from "./routes/export";
 import { categories } from "./routes/categories";
 import { tags } from "./routes/tags";
@@ -70,6 +71,7 @@ app.route("/api/notes", notes);
 app.route("/api/vault", vault);
 registerNoteTemplateRoutes(app);
 app.route("/api/users/me/settings", settings);
+app.route("/api/users/me", userLifecycle);
 app.route("/api/jobs", jobs);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
