@@ -158,6 +158,9 @@ describe("security guard: tenant scoping in query modules", () => {
     "import_batches",
     "import_errors",
     "calendar_events",
+    "notifications",
+    "notification_preferences",
+    "notification_emails",
   ];
 
   /** Tables whose tenant column isn't user_id (checked against these instead). */
