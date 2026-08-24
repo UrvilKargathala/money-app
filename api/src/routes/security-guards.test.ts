@@ -155,6 +155,8 @@ describe("security guard: tenant scoping in query modules", () => {
     "note_attachments",
     "merchant_mappings",
     "recurring_transaction_templates",
+    "import_batches",
+    "import_errors",
   ];
 
   /** Statements that legitimately read across users via an already-scoped parent. */

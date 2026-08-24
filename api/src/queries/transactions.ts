@@ -1,4 +1,4 @@
-import { query } from "../db";
+﻿import { query } from "../db";
 
 export type TransactionTag = {
   id: string;
@@ -208,7 +208,7 @@ export type Queryable = { query: typeof query };
 
 const DB: Queryable = { query };
 
-export function insertManualTransaction(
+export async function insertManualTransaction(
   q: Queryable,
   params: {
     userId: number;
@@ -220,12 +220,13 @@ export function insertManualTransaction(
     date: string;
     notes: string | null;
   }
-) {
-  return q.query(
+): Promise<string> {
+  const result = await q.query<{ id: string }>(
     `INSERT INTO transactions
        (user_id, account_id, type, amount, description, category_id, date, notes,
         source, created_by, updated_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, 'manual', $1, $1)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, 'manual', $1, $1)
+     RETURNING id`,
     [
       params.userId,
       params.accountId,
@@ -237,6 +238,7 @@ export function insertManualTransaction(
       params.notes,
     ]
   );
+  return result.rows[0].id;
 }
 
 export async function getTransactionTransferGroup(

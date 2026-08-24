@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
@@ -34,6 +34,7 @@ import {
   listSplits,
   updateSplit,
 } from "../queries/splits";
+import { registerImportRoutes } from "./import-routes";
 
 const transactions = new Hono();
 
@@ -195,7 +196,7 @@ transactions.post("/quick-add", requireAuth, async (c) => {
           {
             fieldErrors: {
               account_id:
-                "No account to default to — add an account or pass account_id.",
+                "No account to default to â€” add an account or pass account_id.",
             },
           },
           400
@@ -352,7 +353,7 @@ transactions.post("/:id/splits", requireAuth, async (c) => {
         NOT_FOUND: [404, { error: "Not found" }],
         IS_TRANSFER: [
           409,
-          { error: "Transfer transactions can't be split — edit the transfer instead." },
+          { error: "Transfer transactions can't be split â€” edit the transfer instead." },
         ],
         SUM_EXCEEDS_PARENT: [
           400,
@@ -360,7 +361,7 @@ transactions.post("/:id/splits", requireAuth, async (c) => {
         ],
         DUPLICATE_CATEGORY: [
           409,
-          { error: "This transaction already has a split for that category — edit it instead." },
+          { error: "This transaction already has a split for that category â€” edit it instead." },
         ],
       };
       const entry = map[err.message];
@@ -469,12 +470,12 @@ transactions.post("/", requireAuth, async (c) => {
   const validAmount = amount as number;
 
   try {
-    await withUser(user.user_id, async (client) => {
+    const newId = await withUser(user.user_id, async (client) => {
       if (!(await activeAccountExists(accountId, user.user_id, client))) {
         throw new Error("INVALID_ACCOUNT");
       }
 
-      await insertManualTransaction(client, {
+      return insertManualTransaction(client, {
         userId: user.user_id,
         accountId,
         type,
@@ -485,6 +486,7 @@ transactions.post("/", requireAuth, async (c) => {
         notes,
       });
     });
+    return c.json({ success: true, transaction: { id: newId } });
   } catch (err) {
     if (err instanceof Error && err.message === "INVALID_ACCOUNT") {
       return c.json({ error: "The account is no longer active." }, 409);
@@ -566,7 +568,7 @@ transactions.patch("/:id", requireAuth, async (c) => {
     if ("notFound" in result) return c.json({ error: "Not found" }, 404);
     if ("isTransfer" in result) {
       return c.json(
-        { error: "Transfer transactions can't be edited here — edit the transfer instead." },
+        { error: "Transfer transactions can't be edited here â€” edit the transfer instead." },
         409
       );
     }
@@ -609,7 +611,7 @@ transactions.delete("/:id", requireAuth, async (c) => {
   if ("notFound" in result) return c.json({ error: "Not found" }, 404);
   if ("isTransfer" in result) {
     return c.json(
-      { error: "Transfer transactions can't be deleted here — delete the transfer instead." },
+      { error: "Transfer transactions can't be deleted here â€” delete the transfer instead." },
       409
     );
   }
@@ -672,5 +674,7 @@ transactions.delete("/:id/tags/:tagId", requireAuth, async (c) => {
 
   return c.json({ success: true });
 });
+
+registerImportRoutes(transactions);
 
 export { transactions };

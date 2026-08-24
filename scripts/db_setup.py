@@ -351,6 +351,7 @@ TABLES: list[tuple[str, str]] = [
             status TEXT CHECK (status IN ('processing','completed','partial','failed')),
             date_from DATE,
             date_to DATE,
+            account_id UUID REFERENCES accounts(id) ON DELETE SET NULL,
             error_log_path TEXT,
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )

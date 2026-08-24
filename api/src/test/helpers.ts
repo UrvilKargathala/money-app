@@ -92,11 +92,16 @@ export async function createUser(email: string): Promise<TestUser> {
   return { userId, email, token };
 }
 
-export async function createAccount(user: TestUser, name: string): Promise<string> {
+export async function createAccount(
+  user: TestUser,
+  name = "Test Account",
+  type: string = "bank_savings",
+  openingBalance = 100000
+): Promise<string> {
   const res = await postAs(user, "/api/accounts", {
     name,
-    type: "bank_savings",
-    opening_balance: 100000,
+    type,
+    opening_balance: openingBalance,
   });
   if (!res.ok) throw new Error(`createAccount failed: ${res.status}`);
   const list = (await (
