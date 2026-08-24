@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
-import { normalizeEmail, isValidPassword, passwordPolicyHint, hashPassword, verifyPassword } from "../auth";
+import { normalizeEmail, isValidPassword, passwordPolicyHint, hashPassword, verifyPassword, isEmailActionRateLimited, getClientIp } from "../auth";
 import { findActiveUserByEmail } from "../queries/auth";
 import { createAuthToken } from "../queries/user-tokens";
 import {
@@ -14,29 +14,40 @@ import {
 } from "../queries/user-lifecycle";
 import { getVaultInfo } from "../queries/vault";
 import { sendLinkEmail } from "../utils/email";
+import { recordAccessLog } from "../auth";
 
 /**
  * Registers password-reset / email-verification / magic-link endpoints on
  * the existing auth router.
  */
 export function registerAuthExtras(auth: import("hono").Hono): void {
+  // ---- forgot-password (public, IP-rate-limited) ----
   auth.post("/forgot-password", async (c) => {
+    const ip = getClientIp(c);
+    if (await isEmailActionRateLimited(ip)) {
+      return c.json(
+        { error: "Too many password reset requests. Please try again later." },
+        429
+      );
+    }
+
     const body = await readJson(c);
     const email = normalizeEmail(String(body.email ?? ""));
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return c.json({ error: "Please enter a valid email address." }, 400);
     }
     const user = await findActiveUserByEmail(email);
+    await recordAccessLog(user?.user_id ?? null, c, "forgot_password");
     if (!user) return c.json({ success: true });
 
     const rawToken = await withUser(user.user_id, (client) =>
-      createAuthToken(client, { userId: user.user_id, tokenType: "password_reset", expiresInSeconds: 1800 })
+      createAuthToken(client, { userId: user.user_id, tokenType: "password_reset", expiresInSeconds: 600 })
     );
     const url = `${process.env.APP_URL ?? "http://localhost:3000"}/reset-password?token=${rawToken}`;
     await sendLinkEmail({
       to: email, subject: "Reset your MoneyMind password",
       intro: "Someone requested a password reset.", url,
-      ctaText: "Reset Password", expiresInMinutes: 30,
+      ctaText: "Reset Password", expiresInMinutes: 10,
     });
     return c.json({ success: true });
   });
@@ -91,12 +102,21 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
   });
 
   auth.post("/magic-link", async (c) => {
+    const ip = getClientIp(c);
+    if (await isEmailActionRateLimited(ip)) {
+      return c.json(
+        { error: "Too many login link requests. Please try again later." },
+        429
+      );
+    }
+
     const body = await readJson(c);
     const email = normalizeEmail(String(body.email ?? ""));
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return c.json({ error: "Please enter a valid email address." }, 400);
     }
     const user = await findActiveUserByEmail(email);
+    await recordAccessLog(user?.user_id ?? null, c, "magic_link");
     if (!user) return c.json({ success: true });
 
     const rawToken = await withUser(user.user_id, (client) =>
