@@ -69,7 +69,7 @@ Every route requires the session cookie (`requireAuth`) **unless explicitly list
 | ✅ | **Implemented** — live in `api/src/routes/*.ts`, verified |
 | 🧪 | **Planned** — required by module specs, not yet built (backlog) |
 
-Implemented today (292): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags/quick-add/merchants-recent/bulk/date-groups/splits-list-create-patch-delete \· merchant-mappings list/create-update/patch \· categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle). · notes list/create/detail/patch/soft-delete/restore/purge/pin/unpin/categories-list/categories-rename/trash/export. · note-templates list/detail. · note-attachments list/upload/download/preview/delete. · vault wrapped-key/unlock/lock/verify-password/rewrap/recovery-status (export/import 🧪 deferred).
+Implemented today (309): auth login/signup/logout/me · accounts list/create/patch/delete/deactivate/reactivate/export/history + account-types lookup · settings read/monthly-income · transfers list/create · transactions list/create/detail/patch/delete/summary/export/tags/quick-add/merchants-recent/bulk/date-groups/splits-list-create-patch-delete \· merchant-mappings list/create-update/patch \· categories list/create/patch/delete · tags list/create/patch/delete · budgets list/create/detail/patch/delete/overview/utilization/breakdown/export · bills list/create/detail/patch/delete/reactivate/mark-paid/skip/autopay/payments/payments-yoy/payments-export/calendar/upcoming/overview/export · subscriptions list/create/detail/patch/cancel/pause/resume/renew/payments/payments-export/due-renewals/monthly-burn/export · jobs run. · goals list/create/detail/patch/delete/pause/resume/complete/dashboard/progress/feasibility/projection/templates-list/create/detail/patch/delete/contributions-list/create/patch/delete/with-transfer/export/snapshots-list/create/milestones/export/distribute. · debts list/create/detail/patch/delete/close/reopen/dashboard/debt-types/amortization/amortization-regenerate/cost-breakdown/simulate-prepayment/prepayments/payments-list/create/patch/delete/payment-status/dti/monthly-income/strategies-compare/combined-timeline/combined-strategies/health-alerts/export/amortization-export. · tax sections/regime-slabs/investments-list/create/detail/patch/delete/utilization/summary/compare/suggestions/salary-post/get/patch/itr-suggest/itr-list/completion/detail/create/patch/delete/financial-years/exports-utilization/investments/itr. · investments list/create/detail/patch/delete/close/price/price-history/portfolio-summary/asset-allocation/returns-holding/returns-portfolio/transactions-list/create/patch/delete/snapshots-holding-create/snapshots-portfolio/trend/maturity-alerts/prices-bulk-update/export/export-transactions/sip-calculator. · sips list/create/detail/patch/delete/installment/pause/resume/complete/due/export. · dividends list/create/detail/patch/delete. · net-worth computed-read/trend/breakdown/ratio/summary/snapshots/snapshots-run/milestones-list/create/patch/delete/toggle/report-pdf/chart-svg/export. · manual-assets list/create/detail/patch/delete/export. · reports cashflow/spending-by-category/trends/budget-vs-actual/heatmap/net-worth/debt-payoff/income-sources/top-merchants/summary/export/cashflow-export/export-pdf/report-exports-list/download. · report-templates list/create/detail/patch/delete/duplicate. · explain 🧪 deferred (needs AI key + consent toggle). · notes list/create/detail/patch/soft-delete/restore/purge/pin/unpin/categories-list/categories-rename/trash/export. · note-templates list/detail. · note-attachments list/upload/download/preview/delete. · vault wrapped-key/unlock/lock/verify-password/rewrap/recovery-status (export/import 🧪 deferred).
 
 ---
 
@@ -181,23 +181,23 @@ Implemented today (292): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/import-batches/:id/errors/export` | Error log CSV | ✅ |
 | POST | `/api/import-batches/:id/duplicates/resolve` | Skip/import/merge duplicates | ✅ |
 | POST | `/api/transactions/duplicates/merge` | Merge duplicate into existing | ✅ |
-| GET | `/api/shared-groups` | List shared groups | 🧪 |
-| POST | `/api/shared-groups` | Create group (creator = admin) | 🧪 |
-| GET | `/api/shared-groups/:id` | Group detail | 🧪 |
-| PATCH | `/api/shared-groups/:id` | Update group | 🧪 |
-| DELETE | `/api/shared-groups/:id` | Delete group | 🧪 |
-| GET | `/api/shared-groups/:id/members` | List members | 🧪 |
-| POST | `/api/shared-groups/:id/invites` | Invite by email (7-day tokenized link) | 🧪 |
-| GET | `/api/shared-groups/:id/invites` | Pending invites | 🧪 |
-| DELETE | `/api/shared-groups/:id/invites/:inviteId` | Revoke invite | 🧪 |
-| GET | `/api/shared-groups/invites/:token` | Resolve invite token | 🧪 |
-| POST | `/api/shared-groups/invites/:token/accept` | Accept invite (SECURITY DEFINER, read-only) | 🧪 |
-| POST | `/api/shared-groups/invites/:token/decline` | Decline invite | 🧪 |
-| GET | `/api/shared-groups/:id/transactions` | Group transactions | 🧪 |
-| DELETE | `/api/shared-groups/:id/members/:userId` | Remove member (owner only) | 🧪 |
-| POST | `/api/shared-groups/:id/leave` | Leave group | 🧪 |
-| POST | `/api/shared-groups/:id/transfer-ownership` | Transfer ownership | 🧪 |
-| GET | `/api/shared-groups/:id/transactions/export` | Group transactions CSV | 🧪 |
+| GET | `/api/shared-groups` | List shared groups | ✅ |
+| POST | `/api/shared-groups` | Create group (creator = admin) | ✅ |
+| GET | `/api/shared-groups/:id` | Group detail | ✅ |
+| PATCH | `/api/shared-groups/:id` | Update group | ✅ |
+| DELETE | `/api/shared-groups/:id` | Delete group | ✅ |
+| GET | `/api/shared-groups/:id/members` | List members | ✅ |
+| POST | `/api/shared-groups/:id/invites` | Invite by email (7-day tokenized link) | ✅ |
+| GET | `/api/shared-groups/:id/invites` | Pending invites | ✅ |
+| DELETE | `/api/shared-groups/:id/invites/:inviteId` | Revoke invite | ✅ |
+| GET | `/api/shared-groups/invites/:token` | Resolve invite token | ✅ |
+| POST | `/api/shared-groups/invites/:token/accept` | Accept invite (SECURITY DEFINER, read-only) | ✅ |
+| POST | `/api/shared-groups/invites/:token/decline` | Decline invite | ✅ |
+| GET | `/api/shared-groups/:id/transactions` | Group transactions | ✅ |
+| DELETE | `/api/shared-groups/:id/members/:userId` | Remove member (owner only) | ✅ |
+| POST | `/api/shared-groups/:id/leave` | Leave group | ✅ |
+| POST | `/api/shared-groups/:id/transfer-ownership` | Transfer ownership | ✅ |
+| GET | `/api/shared-groups/:id/transactions/export` | Group transactions CSV | ✅ |
 
 ### Module 3 — Budget
 

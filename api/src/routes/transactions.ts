@@ -35,6 +35,7 @@ import {
   updateSplit,
 } from "../queries/splits";
 import { registerImportRoutes } from "./import-routes";
+import { getCallerContext } from "../queries/shared-groups";
 
 const transactions = new Hono();
 
@@ -514,8 +515,14 @@ transactions.patch("/:id", requireAuth, async (c) => {
   const description = String(body.description ?? "").trim() || null;
   const notes = String(body.notes ?? "").trim() || null;
   const version = Number(body.version ?? 1);
+  // Shared-group assignment: explicit key = set/clear; validate membership.
+  const groupId =
+    body.group_id === undefined ? undefined : String(body.group_id ?? "") || null;
 
   const fieldErrors: Record<string, string> = {};
+  if (groupId !== undefined && groupId !== null && !/^[0-9a-f-]{36}$/i.test(groupId)) {
+    fieldErrors.group_id = "Invalid group id.";
+  }
   if (!(TRANSACTION_TYPES as readonly string[]).includes(type) || type === "transfer") {
     fieldErrors.type = "Choose expense or income.";
   }
@@ -535,14 +542,18 @@ transactions.patch("/:id", requireAuth, async (c) => {
 
   try {
     const result = await withUser(user.user_id, async (client) => {
-      const transferGroupId = await getTransactionTransferGroup(user.user_id, id, client);
-      if (transferGroupId === null) {
+      const lookup = await getTransactionTransferGroup(user.user_id, id, client);
+      if (!lookup.found) {
         return { notFound: true as const };
       }
-      if (transferGroupId) {
+      if (lookup.transferGroupId) {
         return { isTransfer: true as const };
       }
 
+      if (groupId !== undefined && groupId !== null) {
+        const ctx = await getCallerContext(user.user_id, groupId, client);
+        if (!ctx) throw new Error("INVALID_GROUP");
+      }
       if (!(await activeAccountExists(accountId, user.user_id, client))) {
         throw new Error("INVALID_ACCOUNT");
       }
@@ -558,6 +569,7 @@ transactions.patch("/:id", requireAuth, async (c) => {
         notes,
         accountId,
         version,
+        groupId,
       });
       if (updated.rowCount === 0) {
         return { conflicted: true as const };
@@ -568,7 +580,7 @@ transactions.patch("/:id", requireAuth, async (c) => {
     if ("notFound" in result) return c.json({ error: "Not found" }, 404);
     if ("isTransfer" in result) {
       return c.json(
-        { error: "Transfer transactions can't be edited here â€” edit the transfer instead." },
+        { error: "Transfer transactions can't be edited here — edit the transfer instead." },
         409
       );
     }
@@ -579,6 +591,12 @@ transactions.patch("/:id", requireAuth, async (c) => {
       );
     }
   } catch (err) {
+    if (err instanceof Error && err.message === "INVALID_GROUP") {
+      return c.json(
+        { fieldErrors: { group_id: "You're not a member of that group." } },
+        403
+      );
+    }
     if (err instanceof Error && err.message === "INVALID_ACCOUNT") {
       return c.json({ error: "The account is no longer active." }, 409);
     }
@@ -597,11 +615,11 @@ transactions.delete("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
 
   const result = await withUser(user.user_id, async (client) => {
-    const transferGroupId = await getTransactionTransferGroup(user.user_id, id, client);
-    if (transferGroupId === null) {
+    const lookup = await getTransactionTransferGroup(user.user_id, id, client);
+    if (!lookup.found) {
       return { notFound: true as const };
     }
-    if (transferGroupId) {
+    if (lookup.transferGroupId) {
       return { isTransfer: true as const };
     }
     await deleteTransactionById(client, user.user_id, id);
