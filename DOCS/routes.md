@@ -118,10 +118,10 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/accounts/:id/history` | Balance history (`?range=1M…All`) | ✅ |
 | GET | `/api/accounts/export` | CSV of accounts | ✅ |
 | GET | `/api/accounts/:id` | Detail with computed balance | 🧪 |
-| GET | `/api/accounts/summary` | Dashboard totals (assets, liabilities, net) | 🧪 |
+| GET | `/api/accounts/summary` | Dashboard totals (assets, liabilities, net) | ✅ |
 | GET | `/api/accounts/:id/balance` | Computed balance (opening + transactions) | 🧪 |
-| POST | `/api/accounts/:id/snapshots` | Record manual balance snapshot | 🧪 |
-| GET | `/api/accounts/:id/credit-utilization` | Credit card utilization metrics | 🧪 |
+| POST | `/api/accounts/:id/snapshots` | Record manual balance snapshot | ✅ |
+| GET | `/api/accounts/:id/credit-utilization` | Credit card utilization metrics | ✅ |
 | GET | `/api/account-types` | Lookup: account types | ✅ |
 | GET | `/api/transfers` | List transfers | ✅ |
 | POST | `/api/transfers` | Create transfer (atomic debit + credit) | ✅ |
@@ -211,22 +211,22 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/budgets/overview` | Dashboard summary (totals, over-budget count) | ✅ |
 | GET | `/api/budgets/:id/utilization` | Spent/remaining/percentage | ✅ |
 | GET | `/api/budgets/:id/breakdown` | Leaf-category breakdown for parent budget | ✅ |
-| GET | `/api/budgets/:id/history` | Month-over-month budget vs actual | 🧪 |
-| PATCH | `/api/budgets/:id/rollover` | Enable/disable rollover | 🧪 |
-| GET | `/api/budgets/rollovers` | Rollover history | 🧪 |
-| GET | `/api/budgets/suggested-amount` | Suggest from 3-month average | 🧪 |
-| GET | `/api/budgets/alerts` | Threshold alerts | 🧪 |
-| POST | `/api/budgets/alerts/:id/dismiss` | Dismiss alert | 🧪 |
-| GET | `/api/budgets/templates` | List templates | 🧪 |
-| POST | `/api/budgets/templates` | Save current budget set as template | 🧪 |
-| GET | `/api/budgets/templates/:id` | Read template with items | 🧪 |
-| PATCH | `/api/budgets/templates/:id` | Update template | 🧪 |
-| DELETE | `/api/budgets/templates/:id` | Delete template | 🧪 |
-| POST | `/api/budgets/templates/:id/apply` | Apply template to current month | 🧪 |
-| POST | `/api/budgets/templates/:id/set-default` | Default template for rollover | 🧪 |
+| GET | `/api/budgets/:id/history` | Month-over-month budget vs actual | ✅ |
+| PATCH | `/api/budgets/:id/rollover` | Enable/disable rollover | ✅ |
+| GET | `/api/budgets/rollovers` | Rollover history | ✅ |
+| GET | `/api/budgets/suggested-amount` | Suggest from 3-month average | ✅ |
+| GET | `/api/budgets/alerts` | Threshold alerts | ✅ |
+| POST | `/api/budgets/alerts/:id/dismiss` | Dismiss alert | ✅ |
+| GET | `/api/budgets/templates` | List templates | ✅ |
+| POST | `/api/budgets/templates` | Save current budget set as template | ✅ |
+| GET | `/api/budgets/templates/:id` | Read template with items | ✅ |
+| PATCH | `/api/budgets/templates/:id` | Update template | ✅ |
+| DELETE | `/api/budgets/templates/:id` | Delete template | ✅ |
+| POST | `/api/budgets/templates/:id/apply` | Apply template to current month | ✅ |
+| POST | `/api/budgets/templates/:id/set-default` | Default template for rollover | ✅ |
 | GET | `/api/budgets/export` | Budget vs actual CSV | ✅ |
-| GET | `/api/budgets/report` | Budget dashboard PDF | 🧪 |
-| GET | `/api/budgets/status/:month/:year` | Month status aggregate | 🧪 |
+| GET | `/api/budgets/report` | Budget dashboard PDF | ✅ |
+| GET | `/api/budgets/status/:month/:year` | Month status aggregate | ✅ |
 
 ### Module 4 — Bills & Subscriptions Tracker
 
@@ -247,14 +247,14 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/bills/calendar` | 30-day rolling due calendar | ✅ |
 | GET | `/api/bills/upcoming` | Due-soon/overdue set | ✅ |
 | GET | `/api/bills/overview` | Dashboard widget (obligation, due this week, overdue) | ✅ |
-| GET | `/api/bills/cashflow-projection` | Monthly projection per account | 🧪 |
-| GET | `/api/bills/cashflow-waterfall` | Balance waterfall for upcoming bills | 🧪 |
-| GET | `/api/bills/:id/reminders` | Reminder configs | 🧪 |
-| POST | `/api/bills/:id/reminders` | Create reminder config | 🧪 |
-| PATCH | `/api/bills/:id/reminders/:reminderId` | Update reminder config | 🧪 |
-| DELETE | `/api/bills/:id/reminders/:reminderId` | Delete reminder config | 🧪 |
+| GET | `/api/bills/cashflow-projection` | Monthly projection per account | ✅ |
+| GET | `/api/bills/cashflow-waterfall` | Balance waterfall for upcoming bills | ✅ |
+| GET | `/api/bills/:id/reminders` | Reminder configs | ✅ |
+| POST | `/api/bills/:id/reminders` | Create reminder config | ✅ |
+| PATCH | `/api/bills/:id/reminders/:reminderId` | Update reminder config | ✅ |
+| DELETE | `/api/bills/:id/reminders/:reminderId` | Delete reminder config | ✅ |
 | GET | `/api/bills/export` | Bills CSV | ✅ |
-| POST | `/api/bills/suggest-recurring` | Suggest recurring debits as bills (90 days) | 🧪 |
+| POST | `/api/bills/suggest-recurring` | Suggest recurring debits as bills (90 days) | ✅ |
 | GET | `/api/subscriptions` | List (status tabs) | ✅ |
 | POST | `/api/subscriptions` | Create subscription | ✅ |
 | GET | `/api/subscriptions/:id` | Detail | ✅ |
@@ -263,7 +263,7 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | POST | `/api/subscriptions/:id/pause` | Pause | ✅ |
 | POST | `/api/subscriptions/:id/resume` | Resume | ✅ |
 | POST | `/api/subscriptions/:id/renew` | Confirm renewal (creates transaction) | ✅ |
-| POST | `/api/subscriptions/:id/snooze` | Snooze due renewal | 🧪 |
+| POST | `/api/subscriptions/:id/snooze` | Snooze due renewal | ✅ |
 | GET | `/api/subscriptions/:id/payments` | Payment history | ✅ |
 | GET | `/api/subscriptions/:id/payments/export` | Payment history CSV | ✅ |
 | GET | `/api/subscriptions/due-renewals` | Renewals in next 7 days | ✅ |
@@ -303,7 +303,7 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/goals/:id/milestones` | 25/50/75/100% milestones | ✅ |
 | GET | `/api/goals/export` | Goals CSV | ✅ |
 | GET | `/api/goals/:id/contributions/export` | Contributions CSV | ✅ |
-| GET | `/api/goals/:id/report` | Progress chart PDF | 🧪 |
+| GET | `/api/goals/:id/report` | Progress chart PDF | ✅ |
 | POST | `/api/goals/distribute` | Windfall distribution suggestion (enhancement) | ✅ |
 
 ### Module 6 — Debt & Loan Manager
@@ -337,7 +337,7 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/debts/health-alerts` | Health flags (high DTI, missed payments) | ✅ |
 | GET | `/api/debts/export` | Debt summary CSV | ✅ |
 | GET | `/api/debts/:id/amortization/export` | Schedule CSV | ✅ |
-| GET | `/api/debts/:id/report` | Prepayment comparison PDF | 🧪 |
+| GET | `/api/debts/:id/report` | Prepayment comparison PDF | ✅ |
 
 ### Module 7 — Tax Planning
 
@@ -370,7 +370,7 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/tax/exports/itr` | ITR checklist CSV | ✅ |
 | POST | `/api/tax/form16/upload` | Upload Form 16 PDF for parsing (enhancement) | 🧪 |
 | POST | `/api/tax/advance-tax/calculate` | Quarterly advance tax (enhancement) | 🧪 |
-| GET | `/api/tax/report` | Regime comparison PDF | 🧪 |
+| GET | `/api/tax/report` | Regime comparison PDF | ✅ |
 
 ### Module 8 — Investment Tracker
 
@@ -459,7 +459,7 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/reports/income-sources` | Income by source category | ✅ |
 | GET | `/api/reports/top-merchants` | Top merchants by spend/frequency | ✅ |
 | GET | `/api/reports/summary` | Combined key metrics | ✅ |
-| POST | `/api/reports/explain` | Explain-This (AI on aggregated snapshot) | 🧪 |
+| POST | `/api/reports/explain` | Explain-This (AI on aggregated snapshot) | ✅ |
 | GET | `/api/report-templates` | List templates (system + user) | ✅ |
 | GET | `/api/report-templates/:id` | Read template | ✅ |
 | POST | `/api/report-templates` | Create user template | ✅ |

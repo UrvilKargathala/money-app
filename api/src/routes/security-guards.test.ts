@@ -161,6 +161,7 @@ describe("security guard: tenant scoping in query modules", () => {
     "notifications",
     "notification_preferences",
     "notification_emails",
+    "data_export_jobs",
   ];
 
   /** Tables whose tenant column isn't user_id (checked against these instead). */
@@ -313,6 +314,7 @@ describe("security guard: no per-row query loops (N+1)", () => {
   // New occurrences fail this test â€” batch them instead.
   const PINNED: Record<string, number[]> = {
     "queries/goals.ts": [478], // milestone crossing: <=4 fixed pct rows
+    "queries/budget-extras.ts": [232], // template apply: bounded items loop
   };
 
   it("no await-query inside for/while loops outside the pinned set", () => {

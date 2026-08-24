@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
@@ -372,7 +372,7 @@ subscriptions.post("/:id/renew", requireAuth, async (c) => {
         userId: user.user_id,
         accountId: payAccountId,
         amount,
-        description: `${sub.service_name} — ${monthName(year, month)}`,
+        description: `${sub.service_name} â€” ${monthName(year, month)}`,
         categoryId: sub.category_id,
       });
 
@@ -451,6 +451,23 @@ subscriptions.get("/:id/payments/export", requireAuth, async (c) => {
       "content-disposition": `attachment; filename="subscription-payments-${id}.csv"`,
     },
   });
+});
+
+subscriptions.post("/:id/snooze", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await readJson(c);
+  const days = Number(body.days ?? 7);
+  if (!Number.isInteger(days) || days < 1 || days > 90) {
+    return c.json({ fieldErrors: { days: "Snooze must be between 1 and 90 days." } }, 400);
+  }
+  const result = await withUser(user.user_id, (client) => {
+    return import("../queries/bill-extras").then((m) =>
+      m.snoozeSubscription(client, { userId: user.user_id, subscriptionId: id, days })
+    );
+  });
+  if (result === null) return c.json({ error: "Not found or not active." }, 404);
+  return c.json({ success: true, next_renewal_date: result });
 });
 
 export { subscriptions };

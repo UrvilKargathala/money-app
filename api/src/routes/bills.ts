@@ -36,6 +36,13 @@ import {
   categoryReferenceExists,
 } from "../queries/references";
 import { insertPaymentHistory } from "../queries/subscriptions";
+import {
+  listBillReminders,
+  insertBillReminder,
+  updateBillReminder,
+  deleteBillReminder,
+  getSuggestedBills,
+} from "../queries/bill-extras";
 
 const bills = new Hono();
 
@@ -693,6 +700,94 @@ bills.get("/:id/payments/export", requireAuth, async (c) => {
       "content-disposition": `attachment; filename="bill-payments-${id}.csv"`,
     },
   });
+});
+
+// ---- M4 extras: reminders, suggest-recurring, cashflow ----
+
+bills.get("/cashflow-projection", requireAuth, async (c) => {
+  const user = c.get("user");
+  const rows = await listActiveBillsForScheduling(user.user_id);
+  const today = startOfToday();
+  const projection: { month: string; total: number }[] = [];
+  for (let m = 1; m <= 3; m++) {
+    const target = new Date(today.getFullYear(), today.getMonth() + m, 1);
+    const label = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}`;
+    let total = 0;
+    for (const row of rows) {
+      if (row.frequency === "one_time") continue;
+      total += monthlyObligation(row.amount, row.estimated_amount, row.frequency) || 0;
+    }
+    projection.push({ month: label, total: Math.round(total * 100) / 100 });
+  }
+  void today;
+  return c.json({ projection });
+});
+
+bills.post("/suggest-recurring", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ suggestions: await getSuggestedBills(user.user_id) });
+});
+
+bills.get("/:id/reminders", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!(await billExists(user.user_id, c.req.param("id")))) {
+    return c.json({ error: "Not found" }, 404);
+  }
+  return c.json({
+    reminders: await listBillReminders(user.user_id, c.req.param("id")),
+  });
+});
+
+bills.post("/:id/reminders", requireAuth, async (c) => {
+  const user = c.get("user");
+  const billId = c.req.param("id");
+  if (!(await billExists(user.user_id, billId))) {
+    return c.json({ error: "Not found" }, 404);
+  }
+  const body = await readJson(c);
+  const daysBefore = Number(body.days_before ?? 3);
+  const channel = String(body.channel ?? "in_app");
+  const isEnabled = body.is_enabled === false ? 0 : 1;
+  try {
+    const reminderId = await withUser(user.user_id, (client) =>
+      insertBillReminder(client, {
+        userId: user.user_id, billId,
+        daysBefore, channel, isEnabled,
+      })
+    );
+    return c.json({ success: true, reminder: { id: reminderId } });
+  } catch (err) {
+    console.error("[api] create reminder failed:", err);
+    return c.json({ error: "Could not save the reminder." }, 500);
+  }
+});
+
+bills.patch("/:id/reminders/:reminderId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+  const daysBefore = Number(body.days_before ?? NaN);
+  if (!Number.isInteger(daysBefore) || daysBefore < 0 || daysBefore > 90) {
+    return c.json({ fieldErrors: { days_before: "Days must be between 0 and 90." } }, 400);
+  }
+  const isEnabled = body.is_enabled === false ? 0 : 1;
+  const result = await withUser(user.user_id, (client) =>
+    updateBillReminder(client, {
+      userId: user.user_id,
+      reminderId: c.req.param("reminderId"),
+      daysBefore, isEnabled,
+    })
+  );
+  if (result.rowCount !== 1) return c.json({ error: "Not found" }, 404);
+  return c.json({ success: true });
+});
+
+bills.delete("/:id/reminders/:reminderId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const result = await withUser(user.user_id, (client) =>
+    deleteBillReminder(client, user.user_id, c.req.param("reminderId"))
+  );
+  if (result.rowCount !== 1) return c.json({ error: "Not found" }, 404);
+  return c.json({ success: true });
 });
 
 export { bills };

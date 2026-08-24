@@ -1,10 +1,25 @@
-import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import type { Context } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, isUniqueViolation } from "./helpers";
 import { categoryReferenceExists } from "../queries/references";
+import {
+  getBudgetHistory,
+  setRolloverEnabled,
+  getRolloverHistory,
+  listBudgetAlerts,
+  dismissBudgetAlert,
+  getSuggestedAmount,
+  getMonthStatus,
+  listBudgetTemplates,
+  getBudgetTemplate,
+  insertBudgetTemplate,
+  updateBudgetTemplate,
+  deleteBudgetTemplate,
+  applyTemplate,
+} from "../queries/budget-extras";
 import {
   createBudget,
   deleteBudget,
@@ -259,6 +274,158 @@ budgets.get("/:id/breakdown", requireAuth, async (c) => {
   }
   const items = await getBreakdown(user.user_id, id, month, year);
   return c.json({ budget_id: id, items });
+});
+
+// ---- M3 extras: history, rollover, alerts, templates, status ----
+
+budgets.get("/history/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ history: await getBudgetHistory(user.user_id, c.req.param("id")) });
+});
+
+budgets.patch("/rollover/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+  const enabled = body.rollover_enabled === true || body.rollover_enabled === 1;
+  const result = await withUser(user.user_id, (client) =>
+    setRolloverEnabled(client, { userId: user.user_id, budgetId: c.req.param("id"), enabled })
+  );
+  if (result.rowCount !== 1) return c.json({ error: "Not found" }, 404);
+  return c.json({ success: true });
+});
+
+budgets.get("/rollovers/history", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { getRolloverHistory } = await import("../queries/budget-extras");
+  return c.json({ rollovers: await getRolloverHistory(user.user_id) });
+});
+
+budgets.get("/alerts", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { listBudgetAlerts } = await import("../queries/budget-extras");
+  return c.json({ alerts: await listBudgetAlerts(user.user_id) });
+});
+
+budgets.post("/alerts/:id/dismiss", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { dismissBudgetAlert } = await import("../queries/budget-extras");
+  await withUser(user.user_id, (client) =>
+    dismissBudgetAlert(client, user.user_id, c.req.param("id"))
+  );
+  return c.json({ success: true });
+});
+
+budgets.get("/suggested-amount", requireAuth, async (c) => {
+  const user = c.get("user");
+  const categoryId = c.req.query("category_id") || "";
+  if (!/^[0-9a-f-]{36}$/i.test(categoryId)) {
+    return c.json({ fieldErrors: { category_id: "Please choose a category." } }, 400);
+  }
+  const suggested = await getSuggestedAmount(user.user_id, categoryId);
+  return c.json({ suggested_amount: suggested });
+});
+
+budgets.get("/status/:month/:year", requireAuth, async (c) => {
+  const user = c.get("user");
+  const month = Number(c.req.param("month"));
+  const year = Number(c.req.param("year"));
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return c.json({ error: "Invalid month." }, 400);
+  }
+  return c.json(await getMonthStatus(user.user_id, month, year));
+});
+
+// ---- Budget templates CRUD + apply ----
+
+budgets.get("/templates", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ templates: await listBudgetTemplates(user.user_id) });
+});
+
+budgets.post("/templates", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+  const name = String(body.name ?? "").trim();
+  if (name.length < 2) return c.json({ fieldErrors: { name: "Name required." } }, 400);
+  const description = String(body.description ?? "").trim() || null;
+  try {
+    const id = await withUser(user.user_id, (client) =>
+      insertBudgetTemplate(client, { userId: user.user_id, name, description })
+    );
+    return c.json({ success: true, template: { id } });
+  } catch (err) {
+    if (isUniqueViolation(err)) return c.json({ error: "Template name already exists." }, 409);
+    throw err;
+  }
+});
+
+budgets.get("/templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const tpl = await getBudgetTemplate(user.user_id, c.req.param("id"));
+  if (!tpl) return c.json({ error: "Not found" }, 404);
+  return c.json({ template: tpl });
+});
+
+budgets.patch("/templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+  const name = body.name === undefined ? null : String(body.name).trim() || null;
+  const description = body.description === undefined ? null : String(body.description ?? "").trim() || null;
+  await withUser(user.user_id, (client) =>
+    updateBudgetTemplate(client, { userId: user.user_id, id: c.req.param("id"), name, description })
+  );
+  return c.json({ success: true });
+});
+
+budgets.delete("/templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  await withUser(user.user_id, (client) =>
+    deleteBudgetTemplate(client, user.user_id, c.req.param("id"))
+  );
+  return c.json({ success: true });
+});
+
+budgets.post("/templates/:id/apply", requireAuth, async (c) => {
+  const user = c.get("user");
+  const now = new Date();
+  const body = await readJson(c);
+  const month = Number(body.month ?? now.getMonth() + 1);
+  const year = Number(body.year ?? now.getFullYear());
+  let applied = 0;
+  await withUser(user.user_id, (client) => {
+    return applyTemplate(client, { userId: user.user_id, templateId: c.req.param("id"), month, year }).then((n) => { applied = n; });
+  }).catch(() => null);
+  return c.json({ success: true, applied });
+});
+
+import { buildReportPdf } from "../utils/pdf";
+
+// Budget dashboard PDF (FR-3.x)
+budgets.get("/report", requireAuth, async (c) => {
+  const user = c.get("user");
+  const now = new Date();
+  const month = Number(c.req.query("month") || now.getMonth() + 1);
+  const year = Number(c.req.query("year") || now.getFullYear());
+  const budgetList = await getBudgets(user.user_id, month, year);
+  const pdf = await buildReportPdf({
+    title: "Budget Report",
+    subtitle: `Period ${month}/${year}`,
+    sections: [{
+      heading: "Budget vs Actual",
+      columns: ["Category", "Budgeted", "Spent", "Remaining", "Utilization %"],
+      rows: budgetList.map((b) => [
+        b.category_name ?? "Overall", b.amount.toFixed(2), b.spent.toFixed(2),
+        b.remaining.toFixed(2), b.utilization_pct.toFixed(1),
+      ]),
+    }],
+    footer: "Generated by MoneyMind.",
+  });
+  return new Response(new Uint8Array(pdf), {
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": `attachment; filename="budget-report-${month}-${year}.pdf"`,
+    },
+  });
 });
 
 export { budgets };
