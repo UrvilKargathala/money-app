@@ -1,11 +1,15 @@
 ﻿import { Hono } from "hono";
-import { withUser } from "../db";import { requireAuth } from "../middleware";
+import { withUser } from "../db";
+import { requireAuth } from "../middleware";
+import { readJson } from "./helpers";
 import { verifyPassword } from "../auth";
 import {
   getUserPasswordHash,
   getVaultInfo,
   setRecoveryCopy,
   upsertVaultWrap,
+  loadVaultNotes,
+  insertImportedNote,
 } from "../queries/vault";
 import { serverEncrypt } from "../utils/server-crypto";
 
@@ -124,6 +128,73 @@ vault.get("/recovery-status", requireAuth, async (c) => {
     has_recovery: info.has_recovery,
     initialized: info.vault_wrapped !== null,
   });
+});
+
+// ---- Vault export/import backup (FR-11.x enhancement) ----
+
+vault.get("/export", requireAuth, async (c) => {
+  const user = c.get("user");
+  const notes = await loadVaultNotes(user.user_id);
+
+  const manifest = {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    note_count: notes.length,
+    format: "moneymind-vault-backup",
+    encryption: "AES-256-GCM client-side",
+  };
+
+  return new Response(
+    JSON.stringify({ manifest, notes }, null, 2),
+    {
+      headers: {
+        "content-type": "application/json",
+        "content-disposition": `attachment; filename="vault-backup-${new Date().toISOString().slice(0, 10)}.json"`,
+      },
+    }
+  );
+});
+
+vault.post("/import", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = (await readJson(c)) as {
+    notes?: unknown;
+    manifest?: { format?: string };
+  };
+
+  if (
+    !body.notes || !Array.isArray(body.notes) ||
+    body.manifest?.format !== "moneymind-vault-backup"
+  ) {
+    return c.json({ error: "Invalid vault backup file." }, 400);
+  }
+
+  let imported = 0;
+  try {
+    await withUser(user.user_id, async (client) => {
+      for (const note of body.notes as Record<string, unknown>[]) {
+        if (
+          typeof note.title !== "string" ||
+          typeof note.data_encrypted !== "string" ||
+          typeof note.data_iv !== "string"
+        ) continue;
+        await insertImportedNote(client, {
+          userId: user.user_id,
+          title: String(note.title ?? "Imported note").slice(0, 200),
+          category: String(note.category ?? "personal"),
+          templateCode: note.template_code ? String(note.template_code) : null,
+          dataEncrypted: note.data_encrypted,
+          dataIv: note.data_iv,
+          isPinned: Number(note.is_pinned ?? 0),
+        });
+        imported += 1;
+      }
+    });
+    return c.json({ success: true, imported });
+  } catch (err) {
+    console.error("[api] vault import failed:", err);
+    return c.json({ error: "Could not import the backup. Please try again." }, 500);
+  }
 });
 
 export { vault };

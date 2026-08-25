@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 import { withUser } from "../db";
 import {
@@ -176,5 +176,8 @@ auth.post("/logout", async (c) => {
 auth.get("/me", requireAuth, async (c) => {
   return c.json(c.get("user"));
 });
+
+import { registerAuthExtras } from './auth-extras';
+registerAuthExtras(auth);
 
 export { auth };

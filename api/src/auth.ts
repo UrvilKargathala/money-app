@@ -73,6 +73,25 @@ export async function isSignupRateLimited(ip: string): Promise<boolean> {
   return Number(result.rows[0]?.count ?? 0) >= SIGNUP_MAX_PER_IP;
 }
 
+export const EMAIL_ACTION_MAX_PER_IP = 3;
+export const EMAIL_ACTION_WINDOW_MINUTES = 15;
+
+/**
+ * Rate-limits email-sending actions (forgot-password, magic-link) by IP.
+ * Uses the access_logs table which already records ip_address per action.
+ */
+export async function isEmailActionRateLimited(ip: string): Promise<boolean> {
+  const result = await query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count
+     FROM access_logs
+     WHERE ip_address = $1
+       AND action IN ('forgot_password', 'magic_link')
+       AND timestamp > CURRENT_TIMESTAMP - ($2 || ' minutes')::interval`,
+    [ip, EMAIL_ACTION_WINDOW_MINUTES]
+  );
+  return Number(result.rows[0]?.count ?? 0) >= EMAIL_ACTION_MAX_PER_IP;
+}
+
 export async function verifyDummyPassword(password: string): Promise<void> {
   await bcrypt.compare(password, DUMMY_HASH);
 }

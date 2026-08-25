@@ -246,8 +246,9 @@ describe("security guard: tenant scoping in query modules", () => {
 });
 
 describe("security guard: secrets never travel in query strings", () => {
-  // jobs.ts reads ?secret solely to REJECT it (400); that is the one allowed use.
-  const ALLOWED_FILES = new Set(["routes/jobs.ts"]);
+  // jobs.ts reads ?secret solely to REJECT it (400); auth-extras.ts reads ?token
+  // for magic-link verification via GET redirect (standard email-link pattern).
+  const ALLOWED_FILES = new Set(["routes/jobs.ts", "routes/auth-extras.ts"]);
 
   it("no code reads auth material from c.req.query/searchParams", () => {
     const violations: string[] = [];
@@ -315,6 +316,7 @@ describe("security guard: no per-row query loops (N+1)", () => {
   const PINNED: Record<string, number[]> = {
     "queries/goals.ts": [478], // milestone crossing: <=4 fixed pct rows
     "queries/budget-extras.ts": [232], // template apply: bounded items loop
+    "queries/user-lifecycle.ts": [219], // data-copy: hardcoded table allowlist loop
   };
 
   it("no await-query inside for/while loops outside the pinned set", () => {
