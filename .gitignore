@@ -4,12 +4,16 @@
 # tree (frontend `src/`, `app/`, docs, Android shell, workspace manifests) is
 # permanently ignored — run `git status` before committing to confirm.
 
-# whitelist: ignore everything at the top level, then re-include the backend
+# whitelist: ignore everything at the top level, then re-include the backend + frontend
 /*
 !/api/
+!/ui/
 !/scripts/
 !/.githooks/
 !/vercel.json
+!/pnpm-workspace.yaml
+!/package.json
+!/pnpm-lock.yaml
 !/README.md
 !/.gitignore
 
@@ -18,6 +22,14 @@ api/node_modules/
 api/dist/
 api/*.tsbuildinfo
 api/.env*
+
+# --- inside ui/ ---
+ui/node_modules/
+ui/.next/
+ui/out/
+ui/dist/
+ui/*.tsbuildinfo
+ui/.env*.local
 
 # --- scripts/: only the canonical Python sources are tracked ---
 scripts/.venv/

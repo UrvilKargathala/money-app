@@ -1,4 +1,6 @@
 {
-  "rootDirectory": "api",
-  "framework": "hono"
+  "rootDirectory": "ui",
+  "framework": "nextjs",
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install"
 }

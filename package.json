@@ -1,0 +1,13 @@
+{
+  "name": "moneymind",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @moneymind/web dev",
+    "build": "pnpm --filter @moneymind/web build",
+    "start": "pnpm --filter @moneymind/web start",
+    "typecheck": "pnpm --filter @moneymind/web typecheck && pnpm --filter @moneymind/api typecheck"
+  },
+  "devDependencies": {}
+}

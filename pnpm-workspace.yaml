@@ -1,0 +1,6 @@
+packages:
+  - "api"
+  - "ui"
+allowBuilds:
+  sharp: true
+  unrs-resolver: true

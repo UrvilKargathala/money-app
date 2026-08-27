@@ -53,13 +53,13 @@ export type TaxDeadline = {
 };
 
 /**
- * Fixed annual tax deadline registry (C1 FR-C1.6). App config, not DB rows —
+ * Fixed annual tax deadline registry (C1 FR-C1.6). App config, not DB rows â€”
  * rendered by the calendar service for the requested year.
  */
 export const CALENDAR_TAX_DEADLINES: readonly TaxDeadline[] = [
   {
     date: "03-15",
-    label: "Advance tax — Q4 (FY final installment)",
+    label: "Advance tax â€” Q4 (FY final installment)",
     description: "Last advance-tax installment for the running financial year.",
   },
   {
@@ -69,7 +69,7 @@ export const CALENDAR_TAX_DEADLINES: readonly TaxDeadline[] = [
   },
   {
     date: "06-15",
-    label: "Advance tax — Q1",
+    label: "Advance tax â€” Q1",
     description: "First advance-tax installment (= ?10,000 liability).",
   },
   {
@@ -79,12 +79,12 @@ export const CALENDAR_TAX_DEADLINES: readonly TaxDeadline[] = [
   },
   {
     date: "09-15",
-    label: "Advance tax — Q2",
+    label: "Advance tax â€” Q2",
     description: "Second advance-tax installment.",
   },
   {
     date: "12-15",
-    label: "Advance tax — Q3",
+    label: "Advance tax â€” Q3",
     description: "Third advance-tax installment.",
   },
 ] as const;
