@@ -178,7 +178,7 @@ TABLES: list[tuple[str, str]] = [
             user_id INTEGER REFERENCES users(user_id),
             ip_address TEXT,
             user_agent TEXT,
-            action TEXT CHECK (action IN ('login','logout','failed_login','forgot_password','magic_link')),
+            action TEXT CHECK (action IN ('login','logout','failed_login','forgot_password','magic_link','signup')),
             timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,
