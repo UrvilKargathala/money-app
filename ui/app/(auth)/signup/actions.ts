@@ -22,7 +22,7 @@ export async function signupAction(prev: ActionState, formData: FormData): Promi
   try {
     const res = await apiFetchRaw("/api/auth/signup", {
       method: "POST",
-      json: { name, email, password },
+      json: { name, email, password, confirm },
     });
     const body = await res.json();
 
