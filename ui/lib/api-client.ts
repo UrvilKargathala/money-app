@@ -25,8 +25,14 @@ async function apiFetch(
     body = JSON.stringify(opts.json);
   }
 
-  // Use relative URL so it hits the bridge route in the same Next.js process
-  const base = process.env.APP_URL || `http://localhost:${process.env.PORT || 3016}`;
+  // Use absolute URL so it hits the bridge route in the same Next.js process.
+  // On Vercel, APP_URL should be https://<your>.vercel.app; fallback to VERCEL_URL if set.
+  const rawBase =
+    process.env.APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    `http://localhost:${process.env.PORT || 3016}`;
+  // Ensure base has no trailing slash duplication
+  const base = rawBase.replace(/\/$/, "");
   const url = path.startsWith("http") ? path : `${base}${path}`;
 
   return fetch(url, {
