@@ -92,16 +92,16 @@ export async function getAccountsWithBalances(
             a.currency, a.color, a.notes, a.is_active, a.sort_order, a.version,
             a.created_at, a.deleted_at,
             at.display_name, at.icon, at.is_asset,
-            ${BALANCE_EXPR} AS balance
+            (a.opening_balance + ${BALANCE_EXPR})::numeric(12,2) AS balance
      FROM accounts a
-     JOIN account_types at ON at.type_code = a.type
-     LEFT JOIN transactions t ON t.account_id = a.id
-     LEFT JOIN account_transfers tf
-       ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
-     WHERE a.user_id = $1
-       ${includeInactive ? "" : "AND a.is_active = 1 AND a.deleted_at IS NULL"}
-     GROUP BY a.id, at.display_name, at.icon, at.is_asset, at.sort_order
-     ORDER BY at.sort_order, balance DESC, a.name`,
+      JOIN account_types at ON at.type_code = a.type
+      LEFT JOIN transactions t ON t.account_id = a.id
+      LEFT JOIN account_transfers tf
+        ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+      WHERE a.user_id = $1
+        ${includeInactive ? "" : "AND a.is_active = 1 AND a.deleted_at IS NULL"}
+      GROUP BY a.id, at.display_name, at.icon, at.is_asset, at.sort_order
+      ORDER BY at.sort_order, balance DESC, a.name`,
     [userId]
   );
   return result.rows.map(toAccount);
@@ -116,14 +116,14 @@ export async function getAccountById(
             a.currency, a.color, a.notes, a.is_active, a.sort_order, a.version,
             a.created_at, a.deleted_at,
             at.display_name, at.icon, at.is_asset,
-            ${BALANCE_EXPR} AS balance
+            (a.opening_balance + ${BALANCE_EXPR})::numeric(12,2) AS balance
      FROM accounts a
-     JOIN account_types at ON at.type_code = a.type
-     LEFT JOIN transactions t ON t.account_id = a.id
-     LEFT JOIN account_transfers tf
-       ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
-     WHERE a.user_id = $1 AND a.id = $2
-     GROUP BY a.id, at.display_name, at.icon, at.is_asset`,
+      JOIN account_types at ON at.type_code = a.type
+      LEFT JOIN transactions t ON t.account_id = a.id
+      LEFT JOIN account_transfers tf
+        ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+      WHERE a.user_id = $1 AND a.id = $2
+      GROUP BY a.id, at.display_name, at.icon, at.is_asset`,
     [userId, accountId]
   );
   return result.rows[0] ? toAccount(result.rows[0]) : null;
@@ -299,15 +299,25 @@ export async function getAccountSummaryTotals(
   account_count: number;
 }> {
   const result = await q.query<{ kind: string; total: string }>(
-    `SELECT CASE WHEN at.is_asset = 1 THEN 'asset' ELSE 'liability' END AS kind,
-            SUM(a.opening_balance + COALESCE(SUM(CASE
-              WHEN t.type='income' THEN t.amount WHEN t.type='expense' THEN -t.amount
-              ELSE 0 END),0))::text AS total
-     FROM accounts a
-     JOIN account_types at ON at.type_code = a.type
-     LEFT JOIN transactions t ON t.account_id = a.id
-     WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
-     GROUP BY at.is_asset`,
+    `WITH per_account AS (
+       SELECT a.id, a.opening_balance, at.is_asset,
+              COALESCE(SUM(CASE
+                WHEN t.type='income' THEN t.amount
+                WHEN t.type='expense' THEN -t.amount
+                WHEN t.type='transfer' AND tf.from_transaction_id = t.id THEN -t.amount
+                WHEN t.type='transfer' AND tf.to_transaction_id = t.id THEN t.amount
+                ELSE 0 END),0) AS txn_sum
+       FROM accounts a
+       JOIN account_types at ON at.type_code = a.type
+       LEFT JOIN transactions t ON t.account_id = a.id
+       LEFT JOIN account_transfers tf
+         ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+       WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
+       GROUP BY a.id, at.is_asset, a.opening_balance
+     )
+     SELECT CASE WHEN is_asset = 1 THEN 'asset' ELSE 'liability' END AS kind,
+            SUM(opening_balance + txn_sum)::text AS total
+     FROM per_account GROUP BY is_asset`,
     [userId]
   );
   let assets = 0; let liabilities = 0;

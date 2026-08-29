@@ -174,7 +174,13 @@ export function AccountsDashboard({ accounts, types }: Props) {
         </div>
       )}
 
-      <AccountFormDialog open={formOpen} onOpenChange={setFormOpen} account={editing} onSuccess={() => router.refresh()} />
+      <AccountFormDialog
+        key={`${editing?.id ?? "create"}-${formOpen ? "open" : "closed"}`}
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        account={editing}
+        onSuccess={() => router.refresh()}
+      />
       <TransferDialog open={transferOpen} onOpenChange={setTransferOpen} accounts={activeAccounts.map((a) => ({ id: a.id, name: a.name }))} onSuccess={() => router.refresh()} />
     </div>
   );

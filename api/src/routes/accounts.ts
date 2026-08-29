@@ -190,8 +190,12 @@ accounts.delete("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const accountId = c.req.param("id");
 
-  const usage = await getAccountUsageSummary(user.user_id, accountId);
-  if (usage.txns > 0 || usage.balance !== 0) {
+  const [usage, acct] = await Promise.all([
+    getAccountUsageSummary(user.user_id, accountId),
+    getAccountById(user.user_id, accountId),
+  ]);
+  const totalBalance = Number(acct?.opening_balance ?? 0) + usage.balance;
+  if (usage.txns > 0 || Math.abs(totalBalance) > 0.01) {
     return c.json(
       {
         error:

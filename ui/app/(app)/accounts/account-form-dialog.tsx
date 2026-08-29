@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { createAccount, updateAccount } from "./actions";
 import { ACCOUNT_TYPES } from "@moneymind/api/constants";
+import type { ActionState } from "@moneymind/api";
 import { toast } from "sonner";
 
 type AccountFormData = {
@@ -36,8 +37,18 @@ export function AccountFormDialog({
   onSuccess?: () => void;
 }) {
   const isEdit = !!account;
+  const isEditRef = useRef(isEdit);
+  useEffect(() => {
+    isEditRef.current = isEdit;
+  }, [isEdit]);
   const [type, setType] = useState(account?.type || "bank_savings");
-  const [state, formAction, isPending] = useActionState(isEdit ? updateAccount : createAccount, null);
+  // Stable dispatcher that reads the latest isEdit via ref — useActionState
+  // binds to the initial function only, so a plain closure would stale.
+  const dispatchAction = async (prev: ActionState | null, fd: FormData): Promise<ActionState> => {
+    if (isEditRef.current) return updateAccount(prev as ActionState, fd);
+    return createAccount(prev as ActionState, fd);
+  };
+  const [state, formAction, isPending] = useActionState(dispatchAction, null);
 
   useEffect(() => {
     if (state?.success) {
@@ -45,7 +56,7 @@ export function AccountFormDialog({
       onOpenChange(false);
       onSuccess?.();
     }
-  }, [state?.success]);
+  }, [state, isEdit, onOpenChange, onSuccess]);
 
   useEffect(() => {
     if (open) setType(account?.type || "bank_savings");
