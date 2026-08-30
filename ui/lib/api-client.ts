@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { app } from "@moneymind/api";
 
 /**
  * Server-only API client. Forwards the session cookie to the Hono backend
@@ -6,10 +7,21 @@ import { cookies } from "next/headers";
  *
  * Usage in server components:
  *   const data = await apiJson<{ accounts: AccountWithBalance[] }>("/api/accounts");
+ *
+ * Uses in-process Hono `app.request` instead of HTTP fetch to avoid
+ * Vercel edge-cache / internal-fetch issues (local works with localhost:3016
+ * but on Vercel a `fetch(https://vercel-url/api/...)` can be cached or miss
+ * the cookie). In-process call is always fresh and has no network hop.
  */
 async function apiFetch(
   path: string,
-  opts?: { method?: string; json?: unknown; headers?: Record<string, string> }
+  opts?: {
+    method?: string;
+    json?: unknown;
+    body?: BodyInit | Uint8Array;
+    headers?: Record<string, string>;
+    contentType?: string;
+  }
 ): Promise<Response> {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
@@ -19,28 +31,24 @@ async function apiFetch(
     ...opts?.headers,
   };
 
-  let body: string | undefined;
-  if (opts?.json !== undefined) {
+  let body: BodyInit | string | undefined;
+  if (opts?.body !== undefined) {
+    body = opts.body as BodyInit;
+    if (opts.contentType) headers["content-type"] = opts.contentType;
+  } else if (opts?.json !== undefined) {
     headers["content-type"] = "application/json";
     body = JSON.stringify(opts.json);
+  } else if (opts?.headers?.["content-type"]) {
+    // keep as-is
   }
 
-  // Use absolute URL so it hits the bridge route in the same Next.js process.
-  // On Vercel, APP_URL should be https://<your>.vercel.app; fallback to VERCEL_URL if set.
-  const rawBase =
-    process.env.APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    `http://localhost:${process.env.PORT || 3016}`;
-  // Ensure base has no trailing slash duplication
-  const base = rawBase.replace(/\/$/, "");
-  const url = path.startsWith("http") ? path : `${base}${path}`;
-
-  return fetch(url, {
+  // In-process Hono request — no HTTP, no APP_URL/VERCEL_URL, no edge cache.
+  const req = new Request(`http://localhost${path}`, {
     method: opts?.method ?? "GET",
     headers,
-    body,
-    cache: "no-store",
+    body: body as BodyInit | undefined,
   });
+  return app.request(req);
 }
 
 export async function apiJson<T>(path: string): Promise<T | null> {
