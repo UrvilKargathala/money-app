@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, Menu, Search, LogOut, User, Wallet } from "lucide-react";
+import { ChevronDown, Menu, Search, LogOut, User, Wallet, Command } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, STANDALONE_NAV_ITEMS, NOTIFICATION_NAV_ITEM } from "@/lib/nav";
 import { NotificationBell } from "./notification-bell";
+import { CommandPalette, useCommandPaletteHotkey } from "@/components/common/command-palette";
+import { triggerHaptic } from "@/lib/haptics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +31,8 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useCommandPaletteHotkey(() => setPaletteOpen(true));
 
   const handleLogout = async () => {
     try {
@@ -189,6 +193,19 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
             <Search className="h-5 w-5" />
           </Button>
 
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              triggerHaptic("light");
+              setPaletteOpen(true);
+            }}
+            className="hidden lg:flex text-neutral-500 hover:text-neutral-900"
+            title="Shortcuts (Cmd+K)"
+          >
+            <Command className="h-5 w-5" />
+          </Button>
+
           <NotificationBell />
 
           <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 ml-1 pl-3">
@@ -220,6 +237,7 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
           </div>
         </div>
       )}
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </header>
   );
 }

@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload } from "lucide-react";
+import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, LayoutGrid, SlidersHorizontal, Zap, Fingerprint } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
+import { CommandPalette } from "@/components/common/command-palette";
 
 const exportModules = [
   { label: "Accounts", href: "/api/accounts/export", icon: "Accounts" },
@@ -47,6 +49,13 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [gdprLoading, setGdprLoading] = useState(false);
 
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [widgetLayout, setWidgetLayout] = useState<unknown[] | null>(null);
+  const [showWidgets, setShowWidgets] = useState(false);
+  const [showControlCenter, setShowControlCenter] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [savingHaptics, setSavingHaptics] = useState(false);
+
   useEffect(() => {
     fetch("/api/notification-preferences")
       .then((r) => r.json())
@@ -66,6 +75,17 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setSessions(d?.sessions ?? null))
       .catch(() => setSessions([]));
+    // personalization settings
+    fetch("/api/users/me/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const s = d?.settings ?? d ?? {};
+        if (s.haptics_enabled !== undefined) setHapticsEnabled(!!Number(s.haptics_enabled));
+        if (s.widget_layout !== undefined) setWidgetLayout(Array.isArray(s.widget_layout) ? s.widget_layout : s.widget_layout ? JSON.parse(String(s.widget_layout)) : []);
+        // initialize haptics cache
+        setHapticsEnabledCache(!!Number(s.haptics_enabled ?? 1));
+      })
+      .catch(() => {});
   }, [user?.full_name]);
 
   async function handleSaveProfile() {
@@ -336,6 +356,147 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <p className="text-sm text-neutral-500">Light theme (default). Dark theme support coming soon. Currency: INR, Date format: DD/MM/YYYY.</p>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">Personalization</CardTitle>
+          <CardDescription>Widgets, control center, shortcuts and haptics — mirrors system settings</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Widgets - Premium */}
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white">
+                <LayoutGrid className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
+                  Widgets <Badge className="bg-teal-900 text-teal-400 border-0 text-xs">Premium</Badge>
+                </p>
+                <p className="text-xs text-neutral-500">Dashboard widgets • drag, hide, Premium unlock</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowWidgets(true); }}>
+              Configure
+            </Button>
+          </div>
+
+          {/* Control Center */}
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
+                <SlidersHorizontal className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold font-heading text-neutral-900">Control center</p>
+                <p className="text-xs text-neutral-500">Quick toggles • dark, notifications, sync</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowControlCenter(true); }}>
+              Open
+            </Button>
+          </div>
+
+          {/* Shortcuts - Recommended */}
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-amber-400">
+                <Zap className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
+                  Shortcuts <Badge className="bg-teal-900 text-teal-400 border-0 text-xs">Recommended</Badge>
+                </p>
+                <p className="text-xs text-neutral-500">Cmd+K palette • 12 actions • OS shortcuts</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowShortcuts(true); }}>
+              View
+            </Button>
+          </div>
+
+          {/* Haptic Feedback */}
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
+                <Fingerprint className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold font-heading text-neutral-900">Haptic feedback</p>
+                <p className="text-xs text-neutral-500">Vibration on tap • success/error pulses</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={hapticsEnabled ? "success" : "default"}>{hapticsEnabled ? "On" : "Off"}</Badge>
+              <Button
+                variant={hapticsEnabled ? "default" : "outline"}
+                size="sm"
+                disabled={savingHaptics}
+                onClick={async () => {
+                  const next = !hapticsEnabled;
+                  setSavingHaptics(true);
+                  try {
+                    const res = await fetch("/api/users/me/settings", {
+                      method: "PATCH",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ haptics_enabled: next ? 1 : 0 }),
+                    });
+                    if (!res.ok) throw new Error("Failed");
+                    setHapticsEnabled(next);
+                    setHapticsEnabledCache(next);
+                    triggerHaptic(next ? "success" : "light");
+                    toast.success(`Haptics ${next ? "enabled" : "disabled"}`);
+                  } catch {
+                    toast.error("Could not update haptics");
+                  } finally {
+                    setSavingHaptics(false);
+                  }
+                }}
+              >
+                {savingHaptics ? "..." : hapticsEnabled ? "Disable" : "Enable"}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => triggerHaptic("medium")} title="Test vibration">
+                Test
+              </Button>
+            </div>
+          </div>
+
+          <p className="text-xs text-neutral-400">Widgets use `widget_layout` in `user_settings` • Control Center edits `theme`/`notifications_enabled` • Shortcuts via `Cmd+K` • Haptics via `navigator.vibrate` / Capacitor</p>
+        </CardContent>
+      </Card>
+
+      {/* Dialogs for Personalization */}
+      {showWidgets && (
+        <Card className="p-6 border-dashed">
+          <h3 className="font-semibold font-heading">Widgets — Premium</h3>
+          <p className="text-sm text-neutral-500 mt-1">Drag to reorder dashboard widgets. Free tier: 2 widgets. Premium unlocks all 5 + OS home-screen widgets.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            {["Net Worth Sparkline", "Bills Due 7d", "Budget Util", "Cashflow Mini", "Top Merchants"].map((w, i) => (
+              <div key={w} className={`rounded-lg border p-3 flex items-center justify-between ${i < 2 ? "bg-white" : "bg-neutral-50 opacity-60"}`}>
+                <span>{w}</span>{i >= 2 && <Badge className="bg-neutral-900 text-white text-[10px]">Premium</Badge>}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" onClick={() => setShowWidgets(false)}>Done</Button>
+            <Button size="sm" variant="outline" onClick={() => toast.info("Premium unlock coming soon — links to /subscriptions")}>Upgrade</Button>
+          </div>
+          <pre className="mt-3 text-xs bg-neutral-50 p-2 rounded overflow-auto">widget_layout: {JSON.stringify(widgetLayout ?? [], null, 2)}</pre>
+        </Card>
+      )}
+      {showControlCenter && (
+        <Card className="p-6 border-dashed">
+          <h3 className="font-semibold font-heading flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" /> Control Center</h3>
+          <p className="text-sm text-neutral-500 mt-1">Quick toggles — same as Appearance & Notifications but in one place.</p>
+          <div className="mt-3 space-y-2 text-sm">
+            <div className="flex items-center justify-between"><span>Dark mode</span><Badge variant="default">Soon</Badge></div>
+            <div className="flex items-center justify-between"><span>Notifications</span><Badge variant="default">Toggle in Notifications</Badge></div>
+            <div className="flex items-center justify-between"><span>Haptics</span><Badge variant={hapticsEnabled ? "success" : "default"}>{hapticsEnabled ? "On" : "Off"}</Badge></div>
+          </div>
+          <Button size="sm" className="mt-3" onClick={() => setShowControlCenter(false)}>Close</Button>
+        </Card>
+      )}
+      <CommandPalette open={showShortcuts} onOpenChange={setShowShortcuts} />
 
       <Card>
         <CardHeader>
