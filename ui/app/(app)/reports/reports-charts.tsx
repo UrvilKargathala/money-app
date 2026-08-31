@@ -118,56 +118,72 @@ export default function ReportsCharts({
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Spending by Category</CardTitle>
             <CardDescription>Expense breakdown — donut</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {spendingByCategory.length === 0 ? (
               <EmptyState message="No spending data for this period." />
             ) : (
-              <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={spendingByCategory}
-                      dataKey="total"
-                      nameKey="category"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={2}
-                    >
-                      {spendingByCategory.map((entry, idx) => (
-                        <Cell key={entry.category_id ?? entry.category} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      // eslint-disable-next-line
-                      formatter={(value: number, _name: string, item: unknown) => {
-                        const payload = (item as { payload?: CategorySlice })?.payload;
-                        const label = payload?.category ?? String(_name);
-                        const pct = payload?.pct != null ? ` (${payload.pct}%)` : "";
-                        return [formatINR(Number(value)) + pct, label];
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="mt-2 space-y-1">
+              <>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                      <Pie
+                        data={spendingByCategory}
+                        dataKey="total"
+                        nameKey="category"
+                        cx="50%"
+                        cy="45%"
+                        innerRadius={62}
+                        outerRadius={96}
+                        paddingAngle={2}
+                      >
+                        {spendingByCategory.map((entry, idx) => (
+                          <Cell key={entry.category_id ?? entry.category} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        // eslint-disable-next-line
+                        formatter={(value: number, _name: string, item: unknown) => {
+                          const payload = (item as { payload?: CategorySlice })?.payload;
+                          const label = payload?.category ?? String(_name);
+                          const pct = payload?.pct != null ? ` (${payload.pct}%)` : "";
+                          return [formatINR(Number(value)) + pct, label];
+                        }}
+                        contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0", backgroundColor: "#FFFFFF" }}
+                        wrapperStyle={{ zIndex: 10, outline: "none" }}
+                      />
+                      <Legend
+                        verticalAlign="bottom"
+                        align="center"
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ fontSize: "11px", lineHeight: "16px", paddingTop: "8px" }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="rounded-xl border border-neutral-100 bg-neutral-50/70 divide-y divide-neutral-100 overflow-hidden">
                   {spendingByCategory.slice(0, 6).map((c, i) => (
-                    <div key={c.category_id ?? c.category} className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                        {c.category} ({c.count})
+                    <div key={c.category_id ?? c.category} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs">
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        <span className="truncate font-medium text-neutral-700">{c.category}</span>
+                        <span className="text-neutral-400">({c.count})</span>
                       </span>
-                      <span className="font-medium">{formatINR(c.total)} · {c.pct}%</span>
+                      <span className="shrink-0 font-semibold text-neutral-900">{formatINR(c.total)} · {c.pct}%</span>
                     </div>
                   ))}
                 </div>
-              </div>
+                {spendingByCategory.length > 6 && (
+                  <p className="text-center text-xs text-neutral-400">
+                    +{spendingByCategory.length - 6} more categories
+                  </p>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -203,7 +219,7 @@ export default function ReportsCharts({
         </Card>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Budget vs Actual — {budgetLabel}</CardTitle>
           <CardDescription>Budgeted vs actual spend per category</CardDescription>
@@ -212,16 +228,25 @@ export default function ReportsCharts({
           {budgetVsActual.length === 0 ? (
             <EmptyState message="No budgets for this month." />
           ) : (
-            <div className="h-[340px] w-full">
+            <div className="h-[360px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={budgetVsActual} margin={{ top: 8, right: 16, left: 8, bottom: 40 }}>
+                <BarChart data={budgetVsActual} margin={{ top: 8, right: 16, left: 8, bottom: 56 }} barCategoryGap="24%" barGap={8}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#64748B" interval={0} angle={-20} textAnchor="end" height={60} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    stroke="#64748B"
+                    interval={0}
+                    angle={-20}
+                    textAnchor="end"
+                    height={60}
+                    tickMargin={8}
+                  />
                   <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
                   <Tooltip formatter={(value: number, name: string) => [formatINR(Number(value)), name]} contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }} />
-                  <Legend />
-                  <Bar dataKey="budgeted" name="Budgeted" fill="#2563EB" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="actual" name="Actual" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+                  <Legend wrapperStyle={{ paddingTop: 8 }} />
+                  <Bar dataKey="budgeted" name="Budgeted" fill="#2563EB" radius={[6, 6, 0, 0]} maxBarSize={56} />
+                  <Bar dataKey="actual" name="Actual" fill="#F59E0B" radius={[6, 6, 0, 0]} maxBarSize={56} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
