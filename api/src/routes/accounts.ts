@@ -257,6 +257,11 @@ accounts.get("/export", requireAuth, async (c) => {
   });
 });
 
+accounts.get("/summary", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ summary: await getAccountSummaryTotals(user.user_id) });
+});
+
 accounts.get("/:id/history", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
@@ -291,11 +296,6 @@ accounts.get("/:id", requireAuth, async (c) => {
     account: { ...account, balance: account.opening_balance + usage.balance },
     txn_count: usage.txns,
   });
-});
-
-accounts.get("/summary", requireAuth, async (c) => {
-  const user = c.get("user");
-  return c.json({ summary: await getAccountSummaryTotals(user.user_id) });
 });
 
 accounts.get("/:id/balance", requireAuth, async (c) => {
