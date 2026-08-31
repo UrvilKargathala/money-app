@@ -3,19 +3,21 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/common/stat-card";
 import { Wallet, TrendingUp, TrendingDown, PiggyBank, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { getAccountsData, getTransactionsData, getTransactionSummary, apiJson } from "@/lib/api-client";
+import { getAccountsData, getTransactionsData, getTransactionSummary, apiJson, getSettings } from "@/lib/api-client";
 import { formatINR } from "@/lib/format";
+import { WidgetsGrid } from "@/components/dashboard/widgets-grid";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [accountsData, txnSummary, recentTxns, budgetOverview] = await Promise.all([
+  const [accountsData, txnSummary, recentTxns, budgetOverview, settingsData] = await Promise.all([
     getAccountsData(),
     getTransactionSummary(),
     getTransactionsData(new URLSearchParams({ page: "1", pageSize: "5" })),
     apiJson<{ overview: { total_budgeted: number; total_spent: number; utilization_pct: number } | null }>(
       `/api/budgets/overview?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`
     ).catch(() => null),
+    getSettings().catch(() => null),
   ]);
 
   const accounts = accountsData?.accounts ?? [];
@@ -28,6 +30,11 @@ export default async function DashboardPage() {
   const expense = txnSummary?.expense ?? 0;
   const net = txnSummary?.net ?? 0;
   const savingsRate = income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
+
+  const rawSettings = (settingsData as { settings?: { widget_layout?: unknown } } | null)?.settings ?? (settingsData as { widget_layout?: unknown } | null) ?? null;
+  const widgetLayout = Array.isArray((rawSettings as { widget_layout?: unknown })?.widget_layout)
+    ? ((rawSettings as { widget_layout?: unknown }).widget_layout as string[])
+    : Array.isArray(rawSettings) ? (rawSettings as unknown as string[]) : undefined;
 
   const recent = (recentTxns?.transactions ?? []) as {
     id: string;
@@ -176,6 +183,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <WidgetsGrid layout={widgetLayout} />
     </div>
   );
 }
