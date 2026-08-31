@@ -111,9 +111,9 @@ export function AccountsDashboard({ accounts, types }: Props) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Total Assets" value={formatINR(totalAssets)} icon={<Wallet className="h-5 w-5" />} />
-        <StatCard label="Total Liabilities" value={formatINR(totalLiabilities)} icon={<CreditCard className="h-5 w-5" />} />
-        <StatCard label="Net Worth" value={formatINR(net)} icon={<Landmark className="h-5 w-5" />} />
+        <StatCard label="Total Assets" value={formatINR(totalAssets)} icon={<Wallet className="h-5 w-5" />} variant="success" />
+        <StatCard label="Total Liabilities" value={formatINR(totalLiabilities)} icon={<CreditCard className="h-5 w-5" />} variant="rose" />
+        <StatCard label="Net Worth" value={formatINR(net)} icon={<Landmark className="h-5 w-5" />} variant="primary" />
       </div>
 
       <Card className="p-4">

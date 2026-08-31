@@ -608,9 +608,9 @@ export function BillsDashboard({
 
       {overview && (
         <div className="grid gap-6 md:grid-cols-3">
-          <StatCard label="Monthly Obligation" value={formatINR(overview.total_monthly_obligation)} icon={<Receipt className="h-5 w-5" />} />
-          <StatCard label="Due This Week" value={String(overview.due_this_week)} icon={<Clock className="h-5 w-5" />} />
-          <StatCard label="Overdue" value={String(overview.overdue_count)} icon={<AlertTriangle className="h-5 w-5" />} />
+          <StatCard label="Monthly Obligation" value={formatINR(overview.total_monthly_obligation)} icon={<Receipt className="h-5 w-5" />} variant="primary" />
+          <StatCard label="Due This Week" value={String(overview.due_this_week)} icon={<Clock className="h-5 w-5" />} variant="amber" />
+          <StatCard label="Overdue" value={String(overview.overdue_count)} icon={<AlertTriangle className="h-5 w-5" />} variant="rose" />
         </div>
       )}
 

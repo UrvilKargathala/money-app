@@ -627,8 +627,8 @@ export function DebtsDashboard({
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Total Outstanding" value={formatINR(totalOutstanding)} icon={<Landmark className="h-5 w-5" />} />
-        <StatCard label="Monthly EMI" value={formatINR(totalEmi)} icon={<Wallet className="h-5 w-5" />} subtext={combinedTimeline?.combined.active_count != null ? `${combinedTimeline.combined.active_count} active` : undefined} />
+        <StatCard label="Total Outstanding" value={formatINR(totalOutstanding)} icon={<Landmark className="h-5 w-5" />} variant="rose" />
+        <StatCard label="Monthly EMI" value={formatINR(totalEmi)} icon={<Wallet className="h-5 w-5" />} subtext={combinedTimeline?.combined.active_count != null ? `${combinedTimeline.combined.active_count} active` : undefined} variant="amber" />
         <DtiCard dti={dti ?? null} />
       </div>
 

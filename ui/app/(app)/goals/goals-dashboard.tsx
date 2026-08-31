@@ -770,9 +770,9 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
 
       {dashboard && (
         <div className="grid gap-6 md:grid-cols-3">
-          <StatCard label="Total Target" value={formatINR(dashboard.total_target)} icon={<Target className="h-5 w-5" />} />
-          <StatCard label="Total Saved" value={formatINR(dashboard.total_saved)} subtext={`${dashboard.completion_pct.toFixed(1)}%`} icon={<Wallet className="h-5 w-5" />} />
-          <StatCard label="Remaining" value={formatINR(dashboard.total_target - dashboard.total_saved)} icon={<TrendingUp className="h-5 w-5" />} />
+          <StatCard label="Total Target" value={formatINR(dashboard.total_target)} icon={<Target className="h-5 w-5" />} variant="primary" />
+          <StatCard label="Total Saved" value={formatINR(dashboard.total_saved)} subtext={`${dashboard.completion_pct.toFixed(1)}%`} icon={<Wallet className="h-5 w-5" />} variant="success" />
+          <StatCard label="Remaining" value={formatINR(dashboard.total_target - dashboard.total_saved)} icon={<TrendingUp className="h-5 w-5" />} variant="amber" />
         </div>
       )}
 

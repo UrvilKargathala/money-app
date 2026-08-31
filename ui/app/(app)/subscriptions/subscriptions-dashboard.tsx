@@ -387,9 +387,9 @@ export function SubscriptionsDashboard({
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Monthly Burn" value={formatINR(monthlyBurn)} subtext="Active subscriptions" icon={<Wallet className="h-5 w-5" />} />
-        <StatCard label="Active" value={String(subscriptions.filter((s) => s.status === "active").length)} icon={<Repeat className="h-5 w-5" />} />
-        <StatCard label="Due Soon" value={String(subscriptions.filter((s) => s.days_until_renewal >= 0 && s.days_until_renewal <= 7 && s.status === "active").length)} subtext="Within 7 days" icon={<Repeat className="h-5 w-5" />} />
+        <StatCard label="Monthly Burn" value={formatINR(monthlyBurn)} subtext="Active subscriptions" icon={<Wallet className="h-5 w-5" />} variant="rose" />
+        <StatCard label="Active" value={String(subscriptions.filter((s) => s.status === "active").length)} icon={<Repeat className="h-5 w-5" />} variant="success" />
+        <StatCard label="Due Soon" value={String(subscriptions.filter((s) => s.days_until_renewal >= 0 && s.days_until_renewal <= 7 && s.status === "active").length)} subtext="Within 7 days" icon={<Repeat className="h-5 w-5" />} variant="amber" />
       </div>
 
       {audits !== undefined && <AuditsPanel audits={audits ?? []} />}

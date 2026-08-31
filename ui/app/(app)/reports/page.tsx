@@ -69,12 +69,13 @@ export default async function ReportsPage() {
 
       {summary && (
         <div className="grid gap-6 md:grid-cols-3">
-          <StatCard label="Income" value={formatINR(summary.income ?? 0)} icon={<Wallet className="h-5 w-5" />} />
-          <StatCard label="Expense" value={formatINR(summary.expense ?? 0)} icon={<TrendingUp className="h-5 w-5" />} />
+          <StatCard label="Income" value={formatINR(summary.income ?? 0)} icon={<Wallet className="h-5 w-5" />} variant="success" />
+          <StatCard label="Expense" value={formatINR(summary.expense ?? 0)} icon={<TrendingUp className="h-5 w-5" />} variant="rose" />
           <StatCard
             label="Savings Rate"
             value={`${typeof summary.savings_rate === "number" ? summary.savings_rate.toFixed(1) : "0.0"}%`}
             icon={<BarChart3 className="h-5 w-5" />}
+            variant="violet"
           />
         </div>
       )}

@@ -377,9 +377,9 @@ export function TaxDashboard({
         <TabsContent value="overview" className="space-y-6 mt-4">
           {summary && (
             <div className="grid gap-6 md:grid-cols-3">
-              <StatCard label="Total Invested" value={formatINR(summary.total_invested)} icon={<Calculator className="h-5 w-5" />} />
-              <StatCard label="Total Deduction" value={formatINR(summary.total_deduction)} icon={<Calculator className="h-5 w-5" />} />
-              <StatCard label="FY" value={summary.financial_year} icon={<Calculator className="h-5 w-5" />} />
+              <StatCard label="Total Invested" value={formatINR(summary.total_invested)} icon={<Calculator className="h-5 w-5" />} variant="success" />
+              <StatCard label="Total Deduction" value={formatINR(summary.total_deduction)} icon={<Calculator className="h-5 w-5" />} variant="primary" />
+              <StatCard label="FY" value={summary.financial_year} icon={<Calculator className="h-5 w-5" />} variant="info" />
             </div>
           )}
 
@@ -553,9 +553,9 @@ export function TaxDashboard({
             <Card className="p-6">
               <h3 className="font-semibold font-heading text-neutral-800 mb-3">Tax Impact of Salary</h3>
               <div className="grid gap-3 md:grid-cols-3">
-                <StatCard label="Old Regime Tax" value={formatINR(compare.old_regime.total_tax)} subtext={`Taxable ${formatINR(compare.old_regime.taxable_income)}`} />
-                <StatCard label="New Regime Tax" value={formatINR(compare.new_regime.total_tax)} subtext={`Taxable ${formatINR(compare.new_regime.taxable_income)}`} />
-                <StatCard label="Recommended" value={compare.recommended_label ?? "—"} subtext={compare.savings != null ? `Save ${formatINR(Math.abs(compare.savings))}` : undefined} />
+                <StatCard label="Old Regime Tax" value={formatINR(compare.old_regime.total_tax)} subtext={`Taxable ${formatINR(compare.old_regime.taxable_income)}`} variant="warning" />
+                <StatCard label="New Regime Tax" value={formatINR(compare.new_regime.total_tax)} subtext={`Taxable ${formatINR(compare.new_regime.taxable_income)}`} variant="teal" />
+                <StatCard label="Recommended" value={compare.recommended_label ?? "—"} subtext={compare.savings != null ? `Save ${formatINR(Math.abs(compare.savings))}` : undefined} variant="violet" />
               </div>
             </Card>
           )}

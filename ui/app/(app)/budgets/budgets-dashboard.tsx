@@ -126,13 +126,14 @@ export function BudgetsDashboard({
 
       {overview && (
         <div className="grid gap-6 md:grid-cols-3">
-          <StatCard label="Total Budgeted" value={formatINR(overview.total_budgeted)} icon={<PiggyBank className="h-5 w-5" />} />
-          <StatCard label="Total Spent" value={formatINR(overview.total_spent)} subtext={`${overview.utilization_pct.toFixed(1)}% used`} icon={<PiggyBank className="h-5 w-5" />} />
+          <StatCard label="Total Budgeted" value={formatINR(overview.total_budgeted)} icon={<PiggyBank className="h-5 w-5" />} variant="primary" />
+          <StatCard label="Total Spent" value={formatINR(overview.total_spent)} subtext={`${overview.utilization_pct.toFixed(1)}% used`} icon={<PiggyBank className="h-5 w-5" />} variant="warning" />
           <StatCard
             label="Over Budget"
             value={String(overview.over_budget_count)}
             subtext={`${overview.budgeted_count} budgets`}
             icon={<AlertTriangle className="h-5 w-5" />}
+            variant="rose"
           />
         </div>
       )}

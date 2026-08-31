@@ -53,15 +53,16 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Net Worth" value={formatINR(netWorth)} subtext={`${accounts.length} accounts`} icon={<Wallet className="h-5 w-5" />} />
-        <StatCard label="Monthly Income" value={formatINR(income)} subtext={`${txnSummary?.count ?? 0} transactions`} icon={<TrendingUp className="h-5 w-5" />} />
-        <StatCard label="Monthly Expenses" value={formatINR(expense)} subtext="Total spent" icon={<TrendingDown className="h-5 w-5" />} />
+        <StatCard label="Net Worth" value={formatINR(netWorth)} subtext={`${accounts.length} accounts`} icon={<Wallet className="h-5 w-5" />} variant="primary" />
+        <StatCard label="Monthly Income" value={formatINR(income)} subtext={`${txnSummary?.count ?? 0} transactions`} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
+        <StatCard label="Monthly Expenses" value={formatINR(expense)} subtext="Total spent" icon={<TrendingDown className="h-5 w-5" />} variant="rose" />
         <StatCard
           label="Savings Rate"
           value={income > 0 ? `${savingsRate}%` : "—"}
           subtext={income > 0 ? (savingsRate >= 20 ? "Healthy" : "Needs attention") : "No income yet"}
           trend={income > 0 ? { value: `${net >= 0 ? "+" : ""}${formatINR(net)}`, positive: net >= 0 } : undefined}
           icon={<PiggyBank className="h-5 w-5" />}
+          variant="violet"
         />
       </div>
 

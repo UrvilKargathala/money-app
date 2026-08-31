@@ -68,9 +68,9 @@ export function NetWorthDashboard({
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Net Worth" value={netWorth != null ? formatINR(netWorth) : "—"} icon={<Scale className="h-5 w-5" />} />
-        <StatCard label="Assets" value={assets != null ? formatINR(assets) : "—"} icon={<Building2 className="h-5 w-5" />} />
-        <StatCard label="Liabilities" value={liabilities != null ? formatINR(liabilities) : "—"} icon={<Scale className="h-5 w-5" />} />
+        <StatCard label="Net Worth" value={netWorth != null ? formatINR(netWorth) : "—"} icon={<Scale className="h-5 w-5" />} variant="primary" />
+        <StatCard label="Assets" value={assets != null ? formatINR(assets) : "—"} icon={<Building2 className="h-5 w-5" />} variant="success" />
+        <StatCard label="Liabilities" value={liabilities != null ? formatINR(liabilities) : "—"} icon={<Scale className="h-5 w-5" />} variant="rose" />
       </div>
 
       {trend.length > 0 && (

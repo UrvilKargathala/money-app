@@ -128,9 +128,9 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Income" value={formatINR(summary.income)} icon={<TrendingUp className="h-5 w-5" />} />
-        <StatCard label="Expenses" value={formatINR(summary.expense)} icon={<TrendingDown className="h-5 w-5" />} />
-        <StatCard label="Net" value={formatINR(summary.net)} subtext={`${filtered.length} shown`} icon={<Wallet className="h-5 w-5" />} />
+        <StatCard label="Income" value={formatINR(summary.income)} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
+        <StatCard label="Expenses" value={formatINR(summary.expense)} icon={<TrendingDown className="h-5 w-5" />} variant="rose" />
+        <StatCard label="Net" value={formatINR(summary.net)} subtext={`${filtered.length} shown`} icon={<Wallet className="h-5 w-5" />} variant="primary" />
       </div>
 
       <Card className="p-4">

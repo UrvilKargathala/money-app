@@ -286,9 +286,9 @@ export function CalendarDashboard({
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Events this month" value={String(totalEvents)} subtext={`${sortedDates.length} days with events`} icon={<Calendar className="h-5 w-5" />} />
-        <StatCard label="Upcoming" value={String(upcomingCount)} subtext={`${upcoming?.window_days ?? upcomingWindow} days • Net ${formatINR(netCashflow)}`} icon={<Clock className="h-5 w-5" />} />
-        <StatCard label="Cashflow accounts" value={String(cashflowProjections.length)} subtext={cashflowProjections.some((p) => p.negative_days.length > 0) ? `${cashflowProjections.filter((p) => p.negative_days.length > 0).length} with negative days` : "All positive"} icon={<Wallet className="h-5 w-5" />} />
+        <StatCard label="Events this month" value={String(totalEvents)} subtext={`${sortedDates.length} days with events`} icon={<Calendar className="h-5 w-5" />} variant="primary" />
+        <StatCard label="Upcoming" value={String(upcomingCount)} subtext={`${upcoming?.window_days ?? upcomingWindow} days • Net ${formatINR(netCashflow)}`} icon={<Clock className="h-5 w-5" />} variant="amber" />
+        <StatCard label="Cashflow accounts" value={String(cashflowProjections.length)} subtext={cashflowProjections.some((p) => p.negative_days.length > 0) ? `${cashflowProjections.filter((p) => p.negative_days.length > 0).length} with negative days` : "All positive"} icon={<Wallet className="h-5 w-5" />} variant="teal" />
       </div>
 
       {/* Legend */}

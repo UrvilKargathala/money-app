@@ -214,13 +214,14 @@ export function InvestmentsDashboard({
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Invested" value={formatINR(totalInvested)} icon={<Wallet className="h-5 w-5" />} />
-        <StatCard label="Current Value" value={formatINR(totalCurrent)} icon={<TrendingUp className="h-5 w-5" />} />
+        <StatCard label="Invested" value={formatINR(totalInvested)} icon={<Wallet className="h-5 w-5" />} variant="primary" />
+        <StatCard label="Current Value" value={formatINR(totalCurrent)} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
         <StatCard
           label="Returns"
           value={`${formatINR(totalReturn)} (${returnPct.toFixed(1)}%)`}
           subtext={portfolioXirr != null ? `XIRR ${portfolioXirr.toFixed(2)}%` : undefined}
           icon={<TrendingUp className="h-5 w-5" />}
+          variant="teal"
         />
       </div>
 
