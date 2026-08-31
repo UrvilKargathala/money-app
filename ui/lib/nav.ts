@@ -93,6 +93,8 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 export const STANDALONE_NAV_ITEMS: NavItem[] = [
-  { label: "Notifications", href: "/notifications", icon: Bell, built: true },
   { label: "Settings", href: "/settings", icon: Settings, built: true },
 ];
+
+// Kept for full-page navigation via bell -> View all
+export const NOTIFICATION_NAV_ITEM: NavItem = { label: "Notifications", href: "/notifications", icon: Bell, built: true };

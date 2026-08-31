@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown, Menu, Search, LogOut, User, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_GROUPS, STANDALONE_NAV_ITEMS } from "@/lib/nav";
+import { NAV_GROUPS, STANDALONE_NAV_ITEMS, NOTIFICATION_NAV_ITEM } from "@/lib/nav";
+import { NotificationBell } from "./notification-bell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,7 +83,7 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
                   </div>
                 ))}
                 <div className="border-t border-neutral-100 pt-4 space-y-1">
-                  {STANDALONE_NAV_ITEMS.map((item) => {
+                  {[NOTIFICATION_NAV_ITEM, ...STANDALONE_NAV_ITEMS].map((item) => {
                     const active = isItemActive(pathname, item.href);
                     const Icon = item.icon;
                     return (
@@ -170,7 +171,7 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
           </div>
         </nav>
 
-        {/* Right: search, user, logout */}
+        {/* Right: search, notifications, user, logout */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Desktop search */}
           <div className="hidden lg:flex items-center">
@@ -187,6 +188,8 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSearchOpen((v) => !v)}>
             <Search className="h-5 w-5" />
           </Button>
+
+          <NotificationBell />
 
           <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 ml-1 pl-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600">
