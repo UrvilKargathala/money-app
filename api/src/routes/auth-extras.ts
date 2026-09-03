@@ -138,8 +138,12 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
     if (userId === null) {
       return c.json({ error: "This login link has expired or was already used." }, 410);
     }
-    const { createSessionRecord } = await import("../session");
+    const { createSessionRecord, hashToken } = await import("../session");
     const session = await createSessionRecord(userId, true);
+    try {
+      const { enforceSingleSessionIfFree } = await import("../queries/entitlements");
+      await enforceSingleSessionIfFree(userId, hashToken(session.token));
+    } catch {}
     return c.json(session);
   });
 

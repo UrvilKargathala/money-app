@@ -3,6 +3,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
+import { getEntitlement } from "../queries/entitlements";
 import {
   createItrDocument,
   createTaxInvestment,
@@ -111,6 +112,9 @@ tax.post("/investments", requireAuth, async (c) => {
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
   }
+
+  const taxInvEnt = await getEntitlement(user.user_id, "tax");
+  if (!taxInvEnt.allowed) return c.json({ error: "plan_limit", feature: "tax", plan: taxInvEnt.plan }, 403);
 
   const investment = await withUser(user.user_id, (tx) =>
     createTaxInvestment(

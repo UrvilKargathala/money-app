@@ -29,7 +29,7 @@ const exportModules = [
 
 type SessionRow = { id: number; token_id?: number; created_at: string; last_active?: string; ip_address?: string | null; user_agent?: string | null; is_current?: boolean };
 
-export function SettingsClient({ user, settings }: { user: { full_name: string | null; email: string } | null; settings: unknown }) {
+export function SettingsClient({ user, settings, billing }: { user: { full_name: string | null; email: string } | null; settings: unknown; billing?: { plan: { code: string; name: string }; status: string; source: string; trial: { active: boolean; daysLeft: number }; price: { amountInr: number; perText: string }; entitlements: Record<string, unknown>; locks: Record<string, unknown> } | null }) {
   const [prefs, setPrefs] = useState<{ type: string; channel: string; enabled: number }[] | null>(null);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string; bio?: string | null; avatar_url?: string | null } | null>(null);
   const [fullName, setFullName] = useState(user?.full_name ?? "");
@@ -356,6 +356,28 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <p className="text-sm text-neutral-500">Light theme (default). Dark theme support coming soon. Currency: INR, Date format: DD/MM/YYYY.</p>
         </CardContent>
       </Card>
+
+      {billing && (
+        <Card className="border-amber-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" /> Billing — {billing.plan.name} ({billing.plan.code})</CardTitle>
+            <CardDescription>
+              Status: {billing.status} • Source: {billing.source} {billing.trial.active ? `• Trial ${billing.trial.daysLeft}d left` : ""} • Price: ₹{billing.price.amountInr} {billing.price.perText}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-neutral-500">Free: 2 accounts, 2 budgets/month, 5 reminders, 3 subs, 1 goal, no investments/debts/tax/reports. Paid unlocks all + batch export, email notifications, sync.</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={async () => { const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan: "monthly" }) }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else toast.error(j.error || "Checkout unavailable"); }}>Monthly ₹300</Button>
+              <Button size="sm" variant="secondary" onClick={async () => { const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan: "annual" }) }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else toast.error(j.error || "Checkout unavailable"); }}>Annual ₹2400</Button>
+              <Button size="sm" variant="outline" onClick={async () => { const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan: "lifetime" }) }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else toast.error(j.error || "Checkout unavailable"); }}>Lifetime ₹3500</Button>
+              <Button size="sm" variant="ghost" onClick={async () => { const r = await fetch("/api/billing/cancel", { method: "POST" }); const j = await r.json().catch(() => ({})); if (r.ok) toast.success("Will cancel at period end."); else toast.error(j.error || "Cancel failed"); }}>Cancel at period end</Button>
+            </div>
+            {billing.source === "free" && !billing.trial.active && <p className="text-xs text-amber-700">Free plan: only 2 newest accounts/budgets are editable, others read-only. Single device at a time.</p>}
+            {billing.trial.active && <p className="text-xs text-teal-700">Trial: full access for {billing.trial.daysLeft} days, then reverts to Free. On downgrade, extra rows become read-only.</p>}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

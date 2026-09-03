@@ -4,6 +4,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
+import { getEntitlement } from "../queries/entitlements";
 import {
   createExportJob,
   deleteExportJob,
@@ -45,6 +46,10 @@ async function generateModuleCsv(
 /** Creates a new export job and synchronously generates the output. */
 exportJobs.post("/jobs", requireAuth, async (c) => {
   const user = c.get("user");
+  const batchEnt = await getEntitlement(user.user_id, "export_batch");
+  if (!batchEnt.allowed || batchEnt.mode === "manual_csv") {
+    return c.json({ error: "plan_limit", feature: "export_batch", plan: batchEnt.plan, mode: batchEnt.mode }, 403);
+  }
   const body = await readJson(c);
 
   const exportType = String(body.export_type ?? "csv");
@@ -260,6 +265,10 @@ exportJobs.delete("/jobs/:id", requireAuth, async (c) => {
 
 exportJobs.post("/full-archive", requireAuth, async (c) => {
   const user = c.get("user");
+  const archEnt = await getEntitlement(user.user_id, "export_batch");
+  if (!archEnt.allowed || archEnt.mode === "manual_csv") {
+    return c.json({ error: "plan_limit", feature: "export_batch", plan: archEnt.plan, mode: archEnt.mode }, 403);
+  }
 
   try {
     const jobId = await withUser(user.user_id, (client) =>

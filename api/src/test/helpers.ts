@@ -72,17 +72,24 @@ export async function patchAs(
  * directly — fast and immune to login rate limiting.
  */
 export async function createUser(email: string): Promise<TestUser> {
-  const result = await pool.query<{ user_id: number }>(
+  // Use ON CONFLICT to handle rare concurrent resetDb interleaving (vitest fileParallelism edge)
+  let result = await pool.query<{ user_id: number }>(
     `INSERT INTO users (email, hashed_password, email_verified_at)
-     VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING user_id`,
+     VALUES ($1, $2, CURRENT_TIMESTAMP)
+     ON CONFLICT (email) DO NOTHING RETURNING user_id`,
     [email, await bcrypt.hash(TEST_PASSWORD, 4)]
   );
+  if (!result.rows[0]) {
+    const existing = await pool.query<{ user_id: number }>(`SELECT user_id FROM users WHERE email = $1`, [email]);
+    if (!existing.rows[0]) throw new Error(`createUser: failed to create or find ${email}`);
+    result = existing;
+  }
   const userId = result.rows[0].user_id;
   await pool.query(
-    `INSERT INTO user_profiles (user_id, full_name) VALUES ($1, $2)`,
+    `INSERT INTO user_profiles (user_id, full_name) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING`,
     [userId, email.split("@")[0]]
   );
-  await pool.query(`INSERT INTO user_settings (user_id) VALUES ($1)`, [userId]);
+  await pool.query(`INSERT INTO user_settings (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, [userId]);
   const token = randomBytes(32).toString("base64url");
   await pool.query(
     `INSERT INTO auth_tokens (user_id, token_hash, token_type, expires_at)
@@ -295,9 +302,16 @@ export async function createCategory(
  * Truncates every user-owned table (system-seeded rows like account_types
  * survive) and re-creates the fixture users.
  */
+let resetChain: Promise<void> = Promise.resolve();
 export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
-  await pool.query(
-    `TRUNCATE TABLE
+  // Serialize concurrent resetDb calls (vitest fileParallelism edge + afterEach/beforeAll overlap)
+  const prev = resetChain;
+  let release!: () => void;
+  resetChain = new Promise<void>((r) => (release = r));
+  await prev;
+  try {
+    await pool.query(
+      `TRUNCATE TABLE
        auth_tokens, user_profiles, user_settings, users,
        accounts, transactions, transaction_splits,
        tags, tags_transactions, categories,
@@ -312,10 +326,15 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        dividend_income, sip_trackers,
        net_worth_snapshots, manual_assets, net_worth_milestones
      RESTART IDENTITY CASCADE`
-  );
-  const alice = await createUser("alice@moneymind.test");
-  const bob = await createUser("bob@moneymind.test");
-  return { alice, bob };
+    );
+    // Also clear billing tables that reference users (CASCADE would handle, but explicit ensures RESTART IDENTITY)
+    await pool.query(`TRUNCATE TABLE user_plan_subscriptions, billing_events, plan_change_history RESTART IDENTITY CASCADE`).catch(() => {});
+    const alice = await createUser("alice@moneymind.test");
+    const bob = await createUser("bob@moneymind.test");
+    return { alice, bob };
+  } finally {
+    release();
+  }
 }
 
 /**

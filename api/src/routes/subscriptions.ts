@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
+import { getEntitlement, checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   SUBSCRIPTION_FREQUENCIES,
   advanceSubscriptionRenewal,
@@ -107,6 +108,10 @@ subscriptions.post("/", requireAuth, async (c) => {
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
   }
+  const subLimit = await checkCountLimit(user.user_id, "tracker_subscriptions");
+  if (subLimit) {
+    return c.json({ error: "plan_limit", feature: "tracker_subscriptions", plan: subLimit.plan, limit: subLimit.limit, used: subLimit.used }, 403);
+  }
   const validAmount = amount as number;
 
   try {
@@ -197,6 +202,8 @@ subscriptions.get("/:id", requireAuth, async (c) => {
 subscriptions.patch("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  const subLock = await isRowLocked(user.user_id, "tracker_subscriptions", id);
+  if (subLock.locked) return c.json({ error: "plan_locked", feature: "tracker_subscriptions", plan: subLock.plan }, 403);
   const body = await readJson(c);
 
   const serviceName = body.service_name === undefined ? undefined : String(body.service_name).trim();
@@ -302,6 +309,8 @@ subscriptions.delete("/:id", requireAuth, async (c) => {
 subscriptions.post("/:id/pause", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  const lockPause = await isRowLocked(user.user_id, "tracker_subscriptions", id);
+  if (lockPause.locked) return c.json({ error: "plan_locked", feature: "tracker_subscriptions", plan: lockPause.plan }, 403);
 
   const result = await withUser(user.user_id, (client) =>
     pauseSubscription(client, user.user_id, id)
@@ -323,6 +332,8 @@ subscriptions.post("/:id/pause", requireAuth, async (c) => {
 subscriptions.post("/:id/resume", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  const lockResume = await isRowLocked(user.user_id, "tracker_subscriptions", id);
+  if (lockResume.locked) return c.json({ error: "plan_locked", feature: "tracker_subscriptions", plan: lockResume.plan }, 403);
 
   const result = await withUser(user.user_id, (client) =>
     resumeSubscription(client, user.user_id, id)
@@ -344,6 +355,8 @@ subscriptions.post("/:id/resume", requireAuth, async (c) => {
 subscriptions.post("/:id/renew", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  const lockRenew = await isRowLocked(user.user_id, "tracker_subscriptions", id);
+  if (lockRenew.locked) return c.json({ error: "plan_locked", feature: "tracker_subscriptions", plan: lockRenew.plan }, 403);
   const body = await readJson(c);
 
   const accountId = String(body.account_id ?? "").trim() || null;
@@ -456,6 +469,8 @@ subscriptions.get("/:id/payments/export", requireAuth, async (c) => {
 subscriptions.post("/:id/snooze", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  const lockSnooze = await isRowLocked(user.user_id, "tracker_subscriptions", id);
+  if (lockSnooze.locked) return c.json({ error: "plan_locked", feature: "tracker_subscriptions", plan: lockSnooze.plan }, 403);
   const body = await readJson(c);
   const days = Number(body.days ?? 7);
   if (!Number.isInteger(days) || days < 1 || days > 90) {

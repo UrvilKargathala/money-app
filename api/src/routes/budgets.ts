@@ -23,12 +23,14 @@ import {
 import {
   createBudget,
   deleteBudget,
+  deleteBudgetByIdForMonth,
   getBreakdown,
   getBudgetById,
   getBudgets,
   getOverview,
   updateBudget,
 } from "../queries/budgets";
+import { checkCountLimit, isRowLocked, listBudgetIdsForMonth } from "../queries/entitlements";
 
 const budgets = new Hono();
 
@@ -85,10 +87,26 @@ budgets.post("/", requireAuth, async (c) => {
     return c.json({ fieldErrors }, 400);
   }
 
+  const replaceId = body.replace_id ? String(body.replace_id) : null;
+  const budgetLimit = await checkCountLimit(user.user_id, "budgets", { month, year });
+  if (budgetLimit && !replaceId) {
+    const replaceable = await listBudgetIdsForMonth(user.user_id, month, year);
+    return c.json({ error: "plan_limit", feature: "budgets", plan: budgetLimit.plan, limit: budgetLimit.limit, used: budgetLimit.used, replaceable }, 403);
+  }
+  if (budgetLimit && replaceId) {
+    if (!/^[0-9a-f-]{36}$/i.test(replaceId)) {
+      return c.json({ fieldErrors: { replace_id: "Invalid budget to replace." } }, 400);
+    }
+  }
+
   try {
     await withUser(user.user_id, async (client) => {
       if (categoryId !== null && !(await categoryReferenceExists(categoryId, user.user_id, client))) {
         throw new Error("INVALID_CATEGORY");
+      }
+      if (replaceId) {
+        const ok = await deleteBudgetByIdForMonth(client, user.user_id, replaceId, month, year);
+        if (!ok) throw new Error("INVALID_REPLACE");
       }
       await createBudget(
         {
@@ -106,6 +124,9 @@ budgets.post("/", requireAuth, async (c) => {
       );
     });
   } catch (err) {
+    if (err instanceof Error && err.message === "INVALID_REPLACE") {
+      return c.json({ error: "Budget to replace not found." }, 404);
+    }
     if (err instanceof Error && err.message === "INVALID_CATEGORY") {
       return c.json(
         { fieldErrors: { category_id: "This category doesn't exist." } },
@@ -176,6 +197,12 @@ budgets.get("/:id", requireAuth, async (c) => {
 budgets.patch("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  // lock check (budgets are per-month, use budget's month/year if found)
+  const existingBudget = await getBudgetById(user.user_id, id);
+  if (existingBudget) {
+    const lock = await isRowLocked(user.user_id, "budgets", id, { month: existingBudget.month, year: existingBudget.year });
+    if (lock.locked) return c.json({ error: "plan_locked", feature: "budgets", plan: lock.plan }, 403);
+  }
   const body = await readJson(c);
 
   const amount = body.amount === undefined ? undefined : parseAmount(body.amount);

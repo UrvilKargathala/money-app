@@ -6,6 +6,7 @@ import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, isUniqueViolation } from "./helpers";
 import { csvEscape } from "../utils/format";
+import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   addContribution,
   createGoal,
@@ -109,6 +110,11 @@ goals.post("/", requireAuth, async (c) => {
 
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
+  }
+
+  const goalLimit = await checkCountLimit(user.user_id, "goals_active");
+  if (goalLimit) {
+    return c.json({ error: "plan_limit", feature: "goals_active", plan: goalLimit.plan, limit: goalLimit.limit, used: goalLimit.used }, 403);
   }
 
   try {
@@ -383,6 +389,8 @@ goals.get("/:id", requireAuth, async (c) => {
 goals.patch("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
+  const gLock = await isRowLocked(user.user_id, "goals_active", id);
+  if (gLock.locked) return c.json({ error: "plan_locked", feature: "goals_active", plan: gLock.plan }, 403);
   const body = await readJson(c);
 
   const name = body.name === undefined ? undefined : String(body.name).trim();
@@ -582,6 +590,8 @@ goals.get("/:id/contributions", requireAuth, async (c) => {
 goals.post("/:id/contributions/with-transfer", requireAuth, async (c) => {
   const user = c.get("user");
   const goalId = c.req.param("id");
+  const lockWT = await isRowLocked(user.user_id, "goals_active", goalId);
+  if (lockWT.locked) return c.json({ error: "plan_locked", feature: "goals_active", plan: lockWT.plan }, 403);
   const body = await readJson(c);
 
   const fromId = String(body.from_account_id ?? "");
@@ -670,6 +680,8 @@ goals.post("/:id/contributions/with-transfer", requireAuth, async (c) => {
 goals.post("/:id/contributions", requireAuth, async (c) => {
   const user = c.get("user");
   const goalId = c.req.param("id");
+  const lockCont = await isRowLocked(user.user_id, "goals_active", goalId);
+  if (lockCont.locked) return c.json({ error: "plan_locked", feature: "goals_active", plan: lockCont.plan }, 403);
   const body = await readJson(c);
 
   const amount = parseAmount(body.amount);

@@ -8,12 +8,14 @@ import {
   getReportsNetWorth,
   getReportsTopMerchants,
   getReportsIncomeSources,
+  getBillingProfile,
 } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { formatINR } from "@/lib/format";
 import { BarChart3, TrendingUp, Wallet } from "lucide-react";
 import ReportsCharts from "./reports-charts";
+import { Paywall, TrialBanner } from "@/components/common/paywall";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,7 @@ export default async function ReportsPage() {
     netWorthData,
     topMerchantsData,
     incomeSourcesData,
+    billing,
   ] = await Promise.all([
     getReportsSummary(),
     getReportsCashflow(),
@@ -42,7 +45,17 @@ export default async function ReportsPage() {
     getReportsNetWorth(),
     getReportsTopMerchants(),
     getReportsIncomeSources(),
+    getBillingProfile(),
   ]);
+
+  if (billing && !billing.entitlements.reports_widgets?.allowed) {
+    return (
+      <div className="space-y-4">
+        {billing.trial.active && <TrialBanner daysLeft={billing.trial.daysLeft} />}
+        <Paywall feature="Advanced Reports & Widgets" plan={billing.plan.code} trialDaysLeft={billing.trial.daysLeft} />
+      </div>
+    );
+  }
 
   const summary = summaryData?.summary;
   const cashflow = cashflowData?.cashflow ?? [];
@@ -62,6 +75,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-6">
+      {billing?.trial.active && <TrialBanner daysLeft={billing.trial.daysLeft} />}
       <div>
         <h1 className="text-3xl font-bold font-heading text-neutral-900">Reports</h1>
         <p className="text-sm text-neutral-500 font-body mt-1">Analytics and insights</p>

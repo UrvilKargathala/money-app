@@ -9,6 +9,7 @@ import {
   NOTIFICATION_TYPES,
   upsertPreference,
 } from "../queries/notifications";
+import { getEntitlement } from "../queries/entitlements";
 
 const notificationPrefs = new Hono();
 
@@ -55,6 +56,13 @@ notificationPrefs.patch("/", requireAuth, async (c) => {
     return c.json({ fieldErrors }, 400);
   }
 
+  // email channel requires paid
+  const needsEmail = valid.some((v) => v.channel === "email" && v.enabled === 1);
+  if (needsEmail) {
+    const emailEnt = await getEntitlement(user.user_id, "notifications_email");
+    if (!emailEnt.allowed || emailEnt.mode !== "in_app_email") return c.json({ error: "plan_locked", feature: "notifications_email", plan: emailEnt.plan }, 403);
+  }
+
   try {
     for (const entry of valid) {
       await withUser(user.user_id, (client) =>
@@ -89,6 +97,11 @@ notificationPrefs.patch("/:type/:channel", requireAuth, async (c) => {
     return c.json({ error: "Channel must be in_app or email." }, 400);
   }
 
+  if (channel === "email") {
+    const emailEnt = await getEntitlement(user.user_id, "notifications_email");
+    if (!emailEnt.allowed || emailEnt.mode !== "in_app_email") return c.json({ error: "plan_locked", feature: "notifications_email", plan: emailEnt.plan }, 403);
+  }
+
   // Toggle: fetch current state then flip.
   const matrix = await getPreferenceMatrix(user.user_id);
   const current = matrix.find(
@@ -97,6 +110,10 @@ notificationPrefs.patch("/:type/:channel", requireAuth, async (c) => {
   if (!current) return c.json({ error: "Not found" }, 404);
 
   const newValue = current.is_enabled ? 0 : 1;
+  if (channel === "email" && newValue === 1) {
+    const emailEnt2 = await getEntitlement(user.user_id, "notifications_email");
+    if (!emailEnt2.allowed || emailEnt2.mode !== "in_app_email") return c.json({ error: "plan_locked", feature: "notifications_email", plan: emailEnt2.plan }, 403);
+  }
   await withUser(user.user_id, (client) =>
     upsertPreference(client, {
       userId: user.user_id,

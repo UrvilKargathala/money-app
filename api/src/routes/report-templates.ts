@@ -10,6 +10,7 @@ import {
   listReportTemplates,
   updateReportTemplate,
 } from "../queries/report-templates";
+import { getEntitlement } from "../queries/entitlements";
 
 const reportTemplates = new Hono();
 
@@ -26,6 +27,8 @@ reportTemplates.get("/", requireAuth, async (c) => {
 
 reportTemplates.post("/", requireAuth, async (c) => {
   const user = c.get("user");
+  const repEnt = await getEntitlement(user.user_id, "reports_widgets");
+  if (!repEnt.allowed) return c.json({ error: "plan_limit", feature: "reports_widgets", plan: repEnt.plan }, 403);
   const body = await readJson(c);
 
   const name = String(body.name ?? "").trim();

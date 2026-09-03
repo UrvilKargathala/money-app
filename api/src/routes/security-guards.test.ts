@@ -46,6 +46,7 @@ describe("security guard: every route requires auth except the public allowlist"
     "POST /api/auth/signup",
     "POST /api/auth/logout",
     "GET /api/jobs/run", // guarded by x-cron-secret header instead
+    "POST /api/billing/webhook", // guarded by stripe-signature header instead
     // Intentionally-unguarded convenience endpoints:
     "GET /api/bills/upcoming",
     "GET /api/goals/templates",
@@ -162,6 +163,9 @@ describe("security guard: tenant scoping in query modules", () => {
     "notification_preferences",
     "notification_emails",
     "data_export_jobs",
+    "user_plan_subscriptions",
+    "billing_events",
+    "plan_change_history",
   ];
 
   /** Tables whose tenant column isn't user_id (checked against these instead). */

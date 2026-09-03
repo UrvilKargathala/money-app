@@ -18,6 +18,7 @@ import { createUserWithDefaults, findActiveUserByEmail } from "../queries/auth";
 import {
   createSessionRecord,
   revokeSessionByToken,
+  hashToken,
 } from "../session";
 import { SESSION_COOKIE } from "../constants";
 import { isUniqueViolation, readJson } from "./helpers";
@@ -89,6 +90,11 @@ auth.post("/login", async (c) => {
   }
 
   const session = await createSessionRecord(user!.user_id, remember);
+  // Free plan: single active session — revoke others (newest wins)
+  try {
+    const { enforceSingleSessionIfFree } = await import("../queries/entitlements");
+    await enforceSingleSessionIfFree(user!.user_id, hashToken(session.token));
+  } catch {}
   return c.json(session);
 });
 
@@ -161,6 +167,10 @@ auth.post("/signup", async (c) => {
   }
 
   const session = await createSessionRecord(userId!, true);
+  try {
+    const { enforceSingleSessionIfFree } = await import("../queries/entitlements");
+    await enforceSingleSessionIfFree(userId!, hashToken(session.token));
+  } catch {}
   return c.json(session);
 });
 

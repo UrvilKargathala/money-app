@@ -33,6 +33,7 @@ import { vault } from "./routes/vault";
 import { registerNoteTemplateRoutes } from "./routes/note-templates";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
+import { billing, billingProfile } from "./routes/billing";
 
 export const app = new Hono();
 
@@ -73,6 +74,8 @@ registerNoteTemplateRoutes(app);
 app.route("/api/users/me/settings", settings);
 app.route("/api/users/me", userLifecycle);
 app.route("/api/jobs", jobs);
+app.route("/api/billing", billing);
+app.route("/api/users/me/subscription", billingProfile);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

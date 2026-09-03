@@ -1582,6 +1582,113 @@ def c3_exports(conn, user_ids: list[int]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# SaaS Plans / Billing (system catalog — same rows as test global-setup)
+# ---------------------------------------------------------------------------
+
+def billing_plans(conn) -> None:
+    """Seed plan tiers, features, entitlements, and current prices.
+
+    Idempotent (ON CONFLICT DO NOTHING) so re-running the seed is safe.
+    Stripe Price IDs come from env (single-change principle); NULL locally
+    means "manual/unwired" and the app must treat checkout as unconfigured.
+    Free limits: accounts 2, budgets 2/month, bill_reminders 5 active,
+    tracker subscriptions 3 + no audits, goals 1 active; paid = unlimited.
+    """
+    stripe_monthly = os.getenv("STRIPE_PRICE_MONTHLY", "").strip() or None
+    stripe_annual = os.getenv("STRIPE_PRICE_ANNUAL", "").strip() or None
+    stripe_lifetime = os.getenv("STRIPE_PRICE_LIFETIME", "").strip() or None
+    with conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO plan_tiers (code, name, is_active, sort_order) "
+            "VALUES (%s, %s, %s, %s) ON CONFLICT (code) DO NOTHING",
+            [
+                ("free", "Free", 1, 1),
+                ("monthly", "Monthly", 1, 2),
+                ("annual", "Annual", 1, 3),
+                ("lifetime", "Lifetime", 1, 4),
+            ],
+        )
+        cur.executemany(
+            "INSERT INTO plan_features (key, kind, description) "
+            "VALUES (%s, %s, %s) ON CONFLICT (key) DO NOTHING",
+            [
+                ("accounts", "count", "Number of accounts"),
+                ("budgets", "count", "Budget rows per calendar month"),
+                ("bill_reminders", "count", "Active bill reminders"),
+                ("tracker_subscriptions", "count", "Tracked subscriptions (bills tracker)"),
+                ("goals_active", "count", "Active goals"),
+                ("investments", "boolean", "Investments incl. SIP/NAV"),
+                ("debts", "boolean", "Debt payoff planner"),
+                ("tax", "boolean", "Tax planner (80C/80D/ELSS)"),
+                ("reports_widgets", "boolean", "Advanced reports & widgets"),
+                ("export_batch", "mode", "Export center batch jobs"),
+                ("notifications_email", "mode", "Email notifications"),
+                ("cross_device_sync", "boolean", "Cross-device sync"),
+                ("subscription_audits", "boolean", "Subscription audits"),
+            ],
+        )
+        free_ents = [
+            ("free", "accounts", 1, 2, None),
+            ("free", "budgets", 1, 2, None),
+            ("free", "bill_reminders", 1, 5, None),
+            ("free", "tracker_subscriptions", 1, 3, None),
+            ("free", "goals_active", 1, 1, None),
+            ("free", "investments", 0, None, None),
+            ("free", "debts", 0, None, None),
+            ("free", "tax", 0, None, None),
+            ("free", "reports_widgets", 0, None, None),
+            ("free", "export_batch", 0, None, "manual_csv"),
+            ("free", "notifications_email", 0, None, "in_app"),
+            ("free", "cross_device_sync", 0, None, None),
+            ("free", "subscription_audits", 0, None, None),
+        ]
+        paid_ents = []
+        for plan in ("monthly", "annual", "lifetime"):
+            paid_ents += [
+                (plan, "accounts", 1, None, None),
+                (plan, "budgets", 1, None, None),
+                (plan, "bill_reminders", 1, None, None),
+                (plan, "tracker_subscriptions", 1, None, None),
+                (plan, "goals_active", 1, None, None),
+                (plan, "investments", 1, None, None),
+                (plan, "debts", 1, None, None),
+                (plan, "tax", 1, None, None),
+                (plan, "reports_widgets", 1, None, None),
+                (plan, "export_batch", 1, None, "full"),
+                (plan, "notifications_email", 1, None, "in_app_email"),
+                (plan, "cross_device_sync", 1, None, None),
+                (plan, "subscription_audits", 1, None, None),
+            ]
+        cur.executemany(
+            "INSERT INTO plan_entitlements (plan_code, feature_key, allowed, limit_value, mode) "
+            "VALUES (%s, %s, %s, %s, %s) ON CONFLICT (plan_code, feature_key) DO NOTHING",
+            free_ents + paid_ents,
+        )
+        # Prices are versioned (one current row per plan, enforced by
+        # ux_pp_plan_current), so plain executemany would duplicate on re-run.
+        # Insert only when the plan has no current price yet; price changes are
+        # done by expiring the old row + inserting a new one, never by reseed.
+        for code, price, per_text, interval, periods, stripe_id in [
+            ("free", 0, "free", "none", None, None),
+            ("monthly", 300, "per month", "monthly", None, stripe_monthly),
+            ("annual", 2400, "Rs 200/mo billed Rs 2400/yr", "annual", 1, stripe_annual),
+            ("lifetime", 3500, "one-time", "lifetime", 1, stripe_lifetime),
+        ]:
+            cur.execute(
+                "INSERT INTO plan_prices (plan_code, price_inr, per_text, interval, "
+                "billing_periods, stripe_price_id, currency, is_current) "
+                "SELECT %s, %s, %s, %s, %s, %s, 'INR', 1 "
+                "WHERE NOT EXISTS (SELECT 1 FROM plan_prices "
+                "WHERE plan_code = %s AND is_current = 1)",
+                (code, price, per_text, interval, periods, stripe_id, code),
+            )
+    rows_total["plan_tiers"] = rows_total.get("plan_tiers", 0) + 4
+    rows_total["plan_features"] = rows_total.get("plan_features", 0) + 13
+    rows_total["plan_entitlements"] = rows_total.get("plan_entitlements", 0) + 52
+    rows_total["plan_prices"] = rows_total.get("plan_prices", 0) + 4
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1591,6 +1698,7 @@ def main() -> int:
     try:
         with conn.pipeline():
             cat_ids = lookup_rows(conn)
+            billing_plans(conn)
             user_ids = auth_rows(conn)
             acct_rows, meta = m1_accounts(user_ids)
             insert(conn, "accounts", ["id", "user_id", "name", "type", "institution", "opening_balance",

@@ -1785,6 +1785,30 @@ export async function getSettings(): Promise<unknown | null> {
   return apiJson("/api/users/me/settings");
 }
 
+export async function getBillingProfile(month?: number, year?: number): Promise<{
+  plan: { code: string; name: string; interval: string };
+  status: string;
+  source: string;
+  trial: { active: boolean; endsAt: string | null; daysLeft: number };
+  price: { amountInr: number; perText: string; stripePriceId: string | null };
+  entitlements: Record<string, { allowed: boolean; limit: number | null; used: number | null; mode: string | null }>;
+  locks: Record<string, { unlocked: string[]; locked: string[] }>;
+  plans: { code: string; name: string; priceInr: number; perText: string; interval: string; stripePriceId: string | null }[];
+} | null> {
+  const qs = month != null && year != null ? `?month=${month}&year=${year}` : "";
+  return apiJson(`/api/users/me/subscription${qs}`);
+}
+
+export async function createBillingCheckout(plan: "monthly" | "annual" | "lifetime"): Promise<{ url: string | null; id: string } | null> {
+  try {
+    const res = await apiFetchRaw("/api/billing/checkout", { method: "POST", json: { plan } });
+    if (!res.ok) return null;
+    return (await res.json()) as { url: string | null; id: string };
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Auth full wiring — forgot/reset, magic-link, verify-email, change-password,
 // profile, sessions, GDPR

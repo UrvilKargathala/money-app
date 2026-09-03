@@ -558,6 +558,19 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | GET | `/api/export/modules` | Exportable modules + column sets | 🧪 |
 | GET | `/api/export/status` | Pipeline health/queue status | 🧪 |
 
+### Billing & Subscription (SaaS — free trial + Stripe)
+
+| Method | Endpoint | Purpose | Status |
+|---|---|---|---|
+| GET | `/api/billing/plans` | List current plan prices + current tier | ✅ |
+| GET | `/api/users/me/subscription` | Batched billing profile (effective plan, trial, price, entitlements with used/limit, all plans) | ✅ |
+| POST | `/api/billing/checkout` | Create Stripe Checkout Session (plan: monthly/annual/lifetime) | ✅ |
+| POST | `/api/billing/cancel` | Cancel at period end (Stripe + local flag) | ✅ |
+| POST | `/api/billing/webhook` | Stripe webhook (`stripe-signature` header, `billing_events` idempotency) | ✅ |
+
+> Plan limits (free: accounts 2, budgets 2/month, reminders 5, tracker subs 3, goals 1; paid: unlimited; blocked writes 403 plan_limit on investments/sips/dividends, debts, tax, reports/templates, export batch; notifications in-app only on free; trial 30d monthly). Trial resolved as `paid row → trial (created_at+30d) → user_settings.plan_code`.
+> Cross-device sync: free = 1 active session (newest login wins, older tokens revoked on login/signup/magic-link; downgrade-to-free trims to newest session in the same txn as the plan flip). Trial/monthly/annual/lifetime = unlimited simultaneous sessions. Enforced via the `cross_device_sync` entitlement flag (data-driven, not plan-code).
+
 ### System
 
 | Method | Endpoint | Purpose | Status |

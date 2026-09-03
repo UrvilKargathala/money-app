@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
+import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   BILL_FREQUENCIES,
   billExists,
@@ -744,6 +745,10 @@ bills.post("/:id/reminders", requireAuth, async (c) => {
   if (!(await billExists(user.user_id, billId))) {
     return c.json({ error: "Not found" }, 404);
   }
+  const limitHit = await checkCountLimit(user.user_id, "bill_reminders");
+  if (limitHit) {
+    return c.json({ error: "plan_limit", feature: "bill_reminders", plan: limitHit.plan, limit: limitHit.limit, used: limitHit.used }, 403);
+  }
   const body = await readJson(c);
   const daysBefore = Number(body.days_before ?? 3);
   const channel = String(body.channel ?? "in_app");
@@ -764,16 +769,21 @@ bills.post("/:id/reminders", requireAuth, async (c) => {
 
 bills.patch("/:id/reminders/:reminderId", requireAuth, async (c) => {
   const user = c.get("user");
+  const reminderId = c.req.param("reminderId");
   const body = await readJson(c);
   const daysBefore = Number(body.days_before ?? NaN);
   if (!Number.isInteger(daysBefore) || daysBefore < 0 || daysBefore > 90) {
     return c.json({ fieldErrors: { days_before: "Days must be between 0 and 90." } }, 400);
   }
   const isEnabled = body.is_enabled === false ? 0 : 1;
+  if (isEnabled === 1) {
+    const lockRem = await isRowLocked(user.user_id, "bill_reminders", reminderId);
+    if (lockRem.locked) return c.json({ error: "plan_locked", feature: "bill_reminders", plan: lockRem.plan }, 403);
+  }
   const result = await withUser(user.user_id, (client) =>
     updateBillReminder(client, {
       userId: user.user_id,
-      reminderId: c.req.param("reminderId"),
+      reminderId,
       daysBefore, isEnabled,
     })
   );

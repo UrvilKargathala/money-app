@@ -3,7 +3,7 @@ MoneyMind — Universal Database Setup Script
 ===========================================
 
 Idempotent bootstrap for the entire MoneyMind schema on PostgreSQL:
-creates the database (if missing), all 67 tables in dependency order,
+creates the database (if missing), all 74 tables in dependency order,
 all indexes, RLS helper functions, and RLS policies.
 
 Usage
@@ -138,6 +138,116 @@ TABLES: list[tuple[str, str]] = [
             updated_by INTEGER REFERENCES users(user_id),
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+    ),
+    # -- SaaS Plans / Billing (monetization) -------------------------------
+    # System lookups (no user_id; seeded by mock_data.py / test global-setup).
+    # plan_tiers holds the stable plan identity; plan_prices holds versioned
+    # money rows (price change = INSERT + flip is_current, never ALTER).
+    (
+        "plan_tiers",
+        """
+        CREATE TABLE plan_tiers (
+            code TEXT PRIMARY KEY CHECK (code IN ('free','monthly','annual','lifetime')),
+            name TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            sort_order INTEGER NOT NULL DEFAULT 0
+        )
+        """,
+    ),
+    (
+        "plan_features",
+        """
+        CREATE TABLE plan_features (
+            key TEXT PRIMARY KEY CHECK (key IN ('accounts','budgets','bill_reminders','tracker_subscriptions','goals_active','investments','debts','tax','reports_widgets','export_batch','notifications_email','cross_device_sync','subscription_audits')),
+            kind TEXT NOT NULL CHECK (kind IN ('count','boolean','mode')),
+            description TEXT NOT NULL
+        )
+        """,
+    ),
+    (
+        "plan_entitlements",
+        """
+        CREATE TABLE plan_entitlements (
+            plan_code TEXT NOT NULL REFERENCES plan_tiers(code),
+            feature_key TEXT NOT NULL REFERENCES plan_features(key),
+            allowed INTEGER NOT NULL DEFAULT 0 CHECK (allowed IN (0,1)),
+            limit_value INTEGER CHECK (limit_value IS NULL OR limit_value >= 0),
+            mode TEXT CHECK (mode IN ('manual_csv','full','in_app','in_app_email')),
+            PRIMARY KEY (plan_code, feature_key)
+        )
+        """,
+    ),
+    (
+        "plan_prices",
+        """
+        CREATE TABLE plan_prices (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            plan_code TEXT NOT NULL REFERENCES plan_tiers(code),
+            price_inr NUMERIC(10,2) NOT NULL CHECK (price_inr >= 0),
+            per_text TEXT NOT NULL,
+            interval TEXT NOT NULL CHECK (interval IN ('none','monthly','annual','lifetime')),
+            billing_periods INTEGER CHECK (billing_periods IS NULL OR billing_periods > 0),
+            stripe_price_id TEXT,
+            currency TEXT NOT NULL DEFAULT 'INR',
+            is_current INTEGER NOT NULL DEFAULT 1 CHECK (is_current IN (0,1)),
+            effective_from TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            effective_to TIMESTAMPTZ
+        )
+        """,
+    ),
+    (
+        "user_plan_subscriptions",
+        """
+        CREATE TABLE user_plan_subscriptions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            plan_code TEXT NOT NULL REFERENCES plan_tiers(code),
+            status TEXT NOT NULL DEFAULT 'active'
+                CHECK (status IN ('active','trialing','past_due','cancelled')),
+            provider TEXT NOT NULL DEFAULT 'manual' CHECK (provider IN ('manual','stripe')),
+            provider_customer_id TEXT,
+            provider_subscription_id TEXT,
+            price_id UUID REFERENCES plan_prices(id),
+            current_period_end TIMESTAMPTZ,
+            cancel_at_period_end INTEGER NOT NULL DEFAULT 0 CHECK (cancel_at_period_end IN (0,1)),
+            canceled_at TIMESTAMPTZ,
+            trial_ends_at TIMESTAMPTZ,
+            version INTEGER NOT NULL DEFAULT 1,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+    ),
+    (
+        "billing_events",
+        """
+        CREATE TABLE billing_events (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            provider TEXT NOT NULL DEFAULT 'stripe',
+            event_id TEXT NOT NULL UNIQUE,
+            type TEXT NOT NULL,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+    ),
+    (
+        "plan_change_history",
+        """
+        CREATE TABLE plan_change_history (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            from_plan TEXT REFERENCES plan_tiers(code),
+            to_plan TEXT NOT NULL REFERENCES plan_tiers(code),
+            from_price_id UUID REFERENCES plan_prices(id),
+            to_price_id UUID REFERENCES plan_prices(id),
+            reason TEXT NOT NULL DEFAULT 'manual'
+                CHECK (reason IN ('trial_start','trial_end','purchase','renewal','cancel','downgrade','upgrade','admin_grant','webhook')),
+            changed_by INTEGER REFERENCES users(user_id),
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,
     ),
@@ -594,7 +704,9 @@ TABLES: list[tuple[str, str]] = [
             notes TEXT,
             current_period_status TEXT DEFAULT 'upcoming' CHECK (current_period_status IN ('upcoming','due_soon','overdue','paid','skipped')),
             is_active INTEGER DEFAULT 1,
-            version INTEGER DEFAULT 1
+            version INTEGER DEFAULT 1,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,
     ),
@@ -612,7 +724,9 @@ TABLES: list[tuple[str, str]] = [
             category_id UUID REFERENCES categories(id),
             status TEXT DEFAULT 'active' CHECK (status IN ('active','paused','cancelled')),
             notes TEXT,
-            version INTEGER DEFAULT 1
+            version INTEGER DEFAULT 1,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,
     ),
@@ -680,7 +794,9 @@ TABLES: list[tuple[str, str]] = [
             notes TEXT,
             template_used TEXT,
             completed_at DATE,
-            version INTEGER DEFAULT 1
+            version INTEGER DEFAULT 1,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,
     ),
@@ -1268,6 +1384,8 @@ INDEX_SQL: list[str] = [
     "CREATE INDEX idx_login_attempts_user ON login_attempts(user_id, timestamp DESC)",
     # Module 1
     "CREATE INDEX idx_accounts_user_id ON accounts(user_id)",
+    "CREATE INDEX idx_accounts_user_created ON accounts(user_id, created_at DESC)",
+    "CREATE INDEX idx_accounts_active_created ON accounts(user_id, created_at DESC) WHERE is_active = 1 AND deleted_at IS NULL",
     "CREATE UNIQUE INDEX idx_abh_account_date ON account_balance_history(user_id, account_id, date)",
     "CREATE INDEX idx_at_from ON account_transfers(from_account_id)",
     "CREATE INDEX idx_at_to ON account_transfers(to_account_id)",
@@ -1305,6 +1423,8 @@ INDEX_SQL: list[str] = [
     "CREATE UNIQUE INDEX idx_bud_category_period ON budgets(user_id, category_id, month, year)",
     "CREATE INDEX idx_bud_month_year ON budgets(user_id, month, year)",
     "CREATE INDEX idx_bud_category_year ON budgets(user_id, category_id, year)",
+    "CREATE INDEX idx_bud_user_created ON budgets(user_id, created_at DESC)",
+    "CREATE INDEX idx_bud_month_created ON budgets(user_id, month, year, created_at DESC)",
     "CREATE UNIQUE INDEX ux_budgets_overall ON budgets(user_id, month, year) WHERE category_id IS NULL",
     "CREATE INDEX idx_ba_budget ON budget_alerts(budget_id)",
     "CREATE INDEX idx_ba_created ON budget_alerts(created_at)",
@@ -1318,20 +1438,26 @@ INDEX_SQL: list[str] = [
     "CREATE INDEX idx_bill_account ON bills(account_id)",
     "CREATE INDEX idx_bill_status_active ON bills(user_id, current_period_status, is_active)",
     "CREATE INDEX idx_bill_due_active ON bills(user_id, due_day, is_active)",
+    "CREATE INDEX idx_bills_user_created ON bills(user_id, created_at DESC)",
     "CREATE INDEX idx_sub_account ON subscriptions(account_id)",
     "CREATE INDEX idx_sub_active_renewal ON subscriptions(user_id, status, next_renewal_date)",
+    "CREATE INDEX idx_sub_user_created ON subscriptions(user_id, created_at DESC)",
+    "CREATE INDEX idx_sub_status_created ON subscriptions(user_id, status, created_at DESC)",
     "CREATE INDEX idx_ph_payable ON payment_history(payable_id, payable_type)",
     "CREATE INDEX idx_ph_payable_period ON payment_history(user_id, payable_id, payable_type, period_year, period_month)",
     "CREATE INDEX idx_ph_period ON payment_history(user_id, payable_type, payable_id, period_year)",
     "CREATE INDEX idx_ph_transaction ON payment_history(transaction_id)",
     "CREATE INDEX idx_ph_created ON payment_history(created_at)",
     "CREATE INDEX idx_br_bill ON bill_reminders(bill_id)",
+    "CREATE INDEX idx_br_user_active_created ON bill_reminders(user_id, created_at DESC) WHERE is_active = 1",
     "CREATE INDEX idx_sal_sub ON subscription_audits(subscription_id)",
     "CREATE INDEX idx_sal_type ON subscription_audits(audit_type)",
     "CREATE INDEX idx_sal_created ON subscription_audits(created_at)",
     # Module 5
     "CREATE INDEX idx_goal_account ON goals(account_id)",
     "CREATE INDEX idx_goal_active_date ON goals(user_id, status, target_date)",
+    "CREATE INDEX idx_goals_user_created ON goals(user_id, created_at DESC)",
+    "CREATE INDEX idx_goals_status_created ON goals(user_id, status, created_at DESC)",
     "CREATE INDEX idx_gc_goal ON goal_contributions(goal_id)",
     "CREATE INDEX idx_gc_goal_date ON goal_contributions(user_id, goal_id, date)",
     "CREATE INDEX idx_gc_transaction ON goal_contributions(transaction_id)",
@@ -1404,6 +1530,23 @@ INDEX_SQL: list[str] = [
     # Component C3
     "CREATE INDEX idx_dej_user ON data_export_jobs(user_id, created_at DESC)",
     "CREATE INDEX idx_dej_status ON data_export_jobs(user_id, status)",
+    # SaaS Plans / Billing — fast-path plan cache on settings (added here
+    # because plan_tiers is created above; same pattern as the transactions
+    # recurring_template_id ALTER in Module 2). Fresh tables at setup time,
+    # so the FK backfill is trivially satisfied once tiers are seeded.
+    "ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS plan_code TEXT NOT NULL DEFAULT 'free' REFERENCES plan_tiers(code)",
+    "CREATE INDEX IF NOT EXISTS idx_us_plan ON user_settings(plan_code)",
+    # One current price per plan (price change = new row + flip, never UPDATE)
+    "CREATE UNIQUE INDEX ux_pp_plan_current ON plan_prices(plan_code) WHERE is_current = 1",
+    "CREATE INDEX idx_price_plan ON plan_prices(plan_code) WHERE is_current = 1",
+    "CREATE INDEX idx_ent_plan ON plan_entitlements(plan_code)",
+    # One open subscription per user; Stripe ids unique when present
+    "CREATE UNIQUE INDEX ux_ups_user_active ON user_plan_subscriptions(user_id) WHERE status IN ('active','trialing','past_due')",
+    "CREATE UNIQUE INDEX ux_ups_provider_sub ON user_plan_subscriptions(provider_subscription_id) WHERE provider_subscription_id IS NOT NULL",
+    "CREATE UNIQUE INDEX ux_ups_provider_cust ON user_plan_subscriptions(provider_customer_id) WHERE provider_customer_id IS NOT NULL",
+    "CREATE INDEX idx_ups_user_status ON user_plan_subscriptions(user_id, status)",
+    "CREATE INDEX idx_be_user ON billing_events(user_id, created_at DESC)",
+    "CREATE INDEX idx_pch_user ON plan_change_history(user_id, created_at DESC)",
 ]
 
 # --------------------------------------------------------------------------
@@ -1489,6 +1632,9 @@ RLS_POLICIES_SQL: list[str] = [
     "CREATE POLICY notification_preferences_user_isolation ON notification_preferences USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY notification_emails_user_isolation ON notification_emails USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY data_export_jobs_user_isolation ON data_export_jobs USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
+    "CREATE POLICY user_plan_subscriptions_user_isolation ON user_plan_subscriptions USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
+    "CREATE POLICY billing_events_user_isolation ON billing_events USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
+    "CREATE POLICY plan_change_history_user_isolation ON plan_change_history USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     # C. System + user scoped tables (user_id nullable; seeded rows visible to all)
     "CREATE POLICY categories_system_isolation ON categories USING (user_id IS NULL OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goal_templates_system_isolation ON goal_templates USING (user_id IS NULL OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
@@ -1564,7 +1710,9 @@ def main() -> int:
         # 5. Enable RLS on every user-owned table
         user_tables = [name for name, _ in TABLES
                        if name not in ("account_types", "debt_types", "tax_sections",
-                                       "tax_regime_slabs", "note_templates")]
+                                       "tax_regime_slabs", "note_templates",
+                                       "plan_tiers", "plan_features",
+                                       "plan_entitlements", "plan_prices")]
         with conn.cursor() as cur:
             for name in user_tables:
                 cur.execute(sql.SQL("ALTER TABLE {} ENABLE ROW LEVEL SECURITY").format(sql.Identifier(name)))
