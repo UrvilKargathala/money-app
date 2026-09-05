@@ -1799,15 +1799,9 @@ export async function getBillingProfile(month?: number, year?: number): Promise<
   return apiJson(`/api/users/me/subscription${qs}`);
 }
 
-export async function createBillingCheckout(plan: "monthly" | "annual" | "lifetime"): Promise<{ url: string | null; id: string } | null> {
-  try {
-    const res = await apiFetchRaw("/api/billing/checkout", { method: "POST", json: { plan } });
-    if (!res.ok) return null;
-    return (await res.json()) as { url: string | null; id: string };
-  } catch {
-    return null;
-  }
-}
+// NOTE: billing checkout for client components lives in `@/lib/billing-client`
+// (plain fetch). Do NOT add it here — api-client.ts is server-only
+// (next/headers) and cannot be imported from "use client" components.
 
 // ---------------------------------------------------------------------------
 // Auth full wiring — forgot/reset, magic-link, verify-email, change-password,

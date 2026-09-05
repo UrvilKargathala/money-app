@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { createBillingCheckout } from "@/lib/api-client";
+import { createBillingCheckout } from "@/lib/billing-client";
 
 export function Paywall({ feature, plan, trialDaysLeft }: { feature: string; plan?: string; trialDaysLeft?: number | null }) {
   const [loading, setLoading] = useState<string | null>(null);
