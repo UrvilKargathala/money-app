@@ -1546,6 +1546,12 @@ def main() -> int:
                 cur.execute(ddl)
                 print(f"  + {name}")
 
+        # Apply additive application migrations to fresh databases as well.
+        from pathlib import Path
+        with conn.cursor() as cur:
+            for migration in sorted((Path(__file__).parent / "migrations").glob("*.sql")):
+                cur.execute(migration.read_text(encoding="utf-8"))
+
         # 3. Create indexes
         print(f"[setup] Creating {len(INDEX_SQL)} indexes...")
         with conn.cursor() as cur:

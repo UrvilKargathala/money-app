@@ -26,6 +26,7 @@ api/.env*
 # --- inside ui/ ---
 ui/node_modules/
 ui/.next/
+ui/.next-dev/
 ui/out/
 ui/dist/
 ui/*.tsbuildinfo

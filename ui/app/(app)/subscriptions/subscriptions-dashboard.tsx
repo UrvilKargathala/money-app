@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMembership, UpgradeCard } from "@/components/membership";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -188,6 +189,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
 // ---------------------------------------------------------------------------
 
 function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
+  const { premium, loading: planLoading } = useMembership();
   const router = useRouter();
   const [audits, setAudits] = useState<Audit[]>(initialAudits ?? []);
   const [filter, setFilter] = useState("all");
@@ -198,13 +200,13 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
 
   // if no initial but we want to fetch client side as fallback
   useEffect(() => {
-    if (initialAudits === null || initialAudits === undefined) {
+    if (premium && (initialAudits === null || initialAudits === undefined)) {
       fetch("/api/subscriptions/audits")
         .then((r) => r.json())
         .then((d) => setAudits(d.audits ?? []))
         .catch(() => {});
     }
-  }, [initialAudits]);
+  }, [initialAudits, premium]);
 
   const filtered = audits.filter((a) => {
     if (a.is_dismissed === 1) return false;
@@ -232,14 +234,16 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
   const totalPotential = audits.filter((a) => !a.is_dismissed).reduce((s, a) => s + (a.potential_savings ?? 0), 0);
   const activeCount = audits.filter((a) => !a.is_dismissed).length;
 
+  if (planLoading) return <p role="status">Loading audits…</p>;
+  if (!premium) return <UpgradeCard feature="Subscription audits" />;
   if (!audits || audits.length === 0) {
     return (
       <Card className="p-6">
         <CardHeader className="p-0 mb-2">
           <CardTitle className="flex items-center gap-2 text-base"><ShieldAlert className="h-5 w-5" /> Audits</CardTitle>
-          <CardDescription>No audits — all subscriptions look healthy.</CardDescription>
+          <CardDescription>No findings from the available data.</CardDescription>
         </CardHeader>
-        <p className="text-sm text-neutral-500">Audits detect price changes, duplicates, unused or overlapping subscriptions. Data from API.</p>
+        <p className="text-sm text-neutral-500">Audits flag recorded price changes, possible duplicates and overlapping categories. Add last-used dates to help identify unused services.</p>
       </Card>
     );
   }

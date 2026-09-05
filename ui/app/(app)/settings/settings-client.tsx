@@ -12,6 +12,9 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
+import { useMembership } from "@/components/membership";
+import { WIDGETS } from "@/lib/widgets";
+import Link from "next/link";
 
 const exportModules = [
   { label: "Accounts", href: "/api/accounts/export", icon: "Accounts" },
@@ -30,6 +33,9 @@ const exportModules = [
 type SessionRow = { id: number; token_id?: number; created_at: string; last_active?: string; ip_address?: string | null; user_agent?: string | null; is_current?: boolean };
 
 export function SettingsClient({ user, settings }: { user: { full_name: string | null; email: string } | null; settings: unknown }) {
+  const { premium, loading: planLoading } = useMembership();
+  const [draggedWidget, setDraggedWidget] = useState<string | null>(null);
+  const [savingWidgets, setSavingWidgets] = useState(false);
   const [prefs, setPrefs] = useState<{ type: string; channel: string; enabled: number }[] | null>(null);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string; bio?: string | null; avatar_url?: string | null } | null>(null);
   const [fullName, setFullName] = useState(user?.full_name ?? "");
@@ -59,7 +65,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
   useEffect(() => {
     fetch("/api/notification-preferences")
       .then((r) => r.json())
-      .then((d) => setPrefs(d.preferences || d || null))
+      .then((d) => setPrefs(Array.isArray(d.preferences) ? d.preferences.map((p: { notification_type: string; channel: string; is_enabled: boolean }) => ({ type: p.notification_type, channel: p.channel, enabled: p.is_enabled ? 1 : 0 })) : null))
       .catch(() => {});
     fetch("/api/users/me/profile")
       .then((r) => (r.ok ? r.json() : null))
@@ -222,8 +228,9 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
+    <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2 [&>div:first-of-type]:lg:col-span-2 [&>div:nth-child(2)]:lg:col-span-2">
+      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40"><CardHeader><CardTitle>Your MoneyMind plan</CardTitle><CardDescription>{planLoading ? "Loading plan…" : premium ? "Premium — all features unlocked" : "Starter — free essentials"}</CardDescription></CardHeader><CardContent><Button asChild className="bg-indigo-600 hover:bg-indigo-700"><Link href="/pricing">View plans and pricing</Link></Button></CardContent></Card>
+      <div className="lg:pb-2">
         <h1 className="text-3xl font-bold font-heading text-neutral-900">Settings</h1>
         <p className="text-sm text-neutral-500 font-body mt-1">Manage your account and preferences</p>
       </div>
@@ -313,7 +320,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <CardTitle className="flex items-center gap-2">
             <Monitor className="h-5 w-5" /> Active sessions
           </CardTitle>
-          <CardDescription>Revoke sessions you don&apos;t recognize</CardDescription>
+          <CardDescription>{premium ? "Multi-device access enabled. Revoke sessions you don’t recognize." : "Starter supports one active session. Signing in again replaces the previous session."}</CardDescription>
         </CardHeader>
         <CardContent>
           {sessions === null ? (
@@ -461,7 +468,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
             </div>
           </div>
 
-          <p className="text-xs text-neutral-400">Widgets use `widget_layout` in `user_settings` • Control Center edits `theme`/`notifications_enabled` • Shortcuts via `Cmd+K` • Haptics via `navigator.vibrate` / Capacitor</p>
+          <p className="text-sm text-neutral-500">Customize your dashboard and everyday controls.</p>
         </CardContent>
       </Card>
 
@@ -469,19 +476,18 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
       {showWidgets && (
         <Card className="p-6 border-dashed">
           <h3 className="font-semibold font-heading">Widgets — Premium</h3>
-          <p className="text-sm text-neutral-500 mt-1">Drag to reorder dashboard widgets. Free tier: 2 widgets. Premium unlocks all 5 + OS home-screen widgets.</p>
+          <p className="text-sm text-neutral-500 mt-1">Premium includes all dashboard widgets and layout customization. Drag to reorder, or use the arrow buttons.</p>
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-            {["Net Worth Sparkline", "Bills Due 7d", "Budget Util", "Cashflow Mini", "Top Merchants"].map((w, i) => (
-              <div key={w} className={`rounded-lg border p-3 flex items-center justify-between ${i < 2 ? "bg-white" : "bg-neutral-50 opacity-60"}`}>
-                <span>{w}</span>{i >= 2 && <Badge className="bg-neutral-900 text-white text-[10px]">Premium</Badge>}
+            {(widgetLayout?.length ? widgetLayout as string[] : WIDGETS.map((w) => w.id)).map((id, i, ids) => (
+              <div key={id} draggable={premium && !savingWidgets} onDragStart={() => setDraggedWidget(id)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (!premium || !draggedWidget) return; const next = ids.filter((w) => w !== draggedWidget); next.splice(i, 0, draggedWidget); setWidgetLayout(next); setDraggedWidget(null); }} className={`rounded-lg border p-3 flex items-center justify-between ${premium ? "bg-white" : "bg-neutral-50 opacity-60"}`}>
+                <span>{WIDGETS.find((w) => w.id === id)?.label}</span><span className="flex gap-1"><Button size="sm" variant="ghost" aria-label={`Move ${id} up`} disabled={!premium || i === 0 || savingWidgets} onClick={() => { const next = [...ids]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; setWidgetLayout(next); }}>↑</Button><Button size="sm" variant="ghost" aria-label={`Move ${id} down`} disabled={!premium || i === ids.length - 1 || savingWidgets} onClick={() => { const next = [...ids]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; setWidgetLayout(next); }}>↓</Button></span>
               </div>
             ))}
           </div>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={() => setShowWidgets(false)}>Done</Button>
-            <Button size="sm" variant="outline" onClick={() => toast.info("Premium unlock coming soon — links to /subscriptions")}>Upgrade</Button>
+            {premium ? <Button size="sm" disabled={savingWidgets} onClick={async () => { setSavingWidgets(true); try { const r = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ widget_layout: widgetLayout?.length ? widgetLayout : WIDGETS.map((w) => w.id) }) }); if (!r.ok) throw new Error(); toast.success("Widget layout saved"); } catch { toast.error("Could not save widget layout"); } finally { setSavingWidgets(false); } }}>{savingWidgets ? "Saving…" : "Save layout"}</Button> : <Button size="sm" variant="outline" asChild><Link href="/pricing">Compare plans</Link></Button>}
           </div>
-          <pre className="mt-3 text-xs bg-neutral-50 p-2 rounded overflow-auto">widget_layout: {JSON.stringify(widgetLayout ?? [], null, 2)}</pre>
         </Card>
       )}
       {showControlCenter && (
@@ -513,7 +519,12 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
                   <span>
                     {p.type} • {p.channel}
                   </span>
-                  <Badge variant={p.enabled ? "success" : "default"}>{p.enabled ? "On" : "Off"}</Badge>
+                  <label className={`flex items-center gap-2 ${p.channel === "email" && !premium ? "text-neutral-400" : ""}`} title={p.channel === "email" && !premium ? "Upgrade to enable email alerts" : undefined}>
+                    <input type="checkbox" aria-label={`${p.type} ${p.channel}`} disabled={planLoading || (p.channel === "email" && !premium)} checked={p.channel === "email" && !premium ? false : !!p.enabled} onChange={async (e) => {
+                      const enabled = e.target.checked;
+                      try { const res = await fetch("/api/notification-preferences", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ preferences: [{ notification_type: p.type, channel: p.channel, is_enabled: enabled }] }) }); if (!res.ok) throw new Error(); setPrefs((current) => current?.map((row) => row.type === p.type && row.channel === p.channel ? { ...row, enabled: enabled ? 1 : 0 } : row) ?? null); } catch { toast.error("Could not save notification preference"); }
+                    }} />{p.channel === "email" && !premium ? "Upgrade to enable email alerts" : p.enabled ? "On" : "Off"}
+                  </label>
                 </div>
               ))}
             </div>
@@ -533,7 +544,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
         <CardContent>
           <div className="mb-3 flex items-center gap-2">
             <Button asChild size="sm">
-              <a href="/export">Open Export Center →</a>
+              <a href={premium ? "/export" : "/pricing"}>{premium ? "Open Export Center →" : "Unlock Export Center →"}</a>
             </Button>
             <span className="text-xs text-neutral-500">Create jobs (CSV/PDF), track progress, download files</span>
           </div>

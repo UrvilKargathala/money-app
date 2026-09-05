@@ -287,6 +287,8 @@ def auth_rows(conn) -> list[int]:
             row,
         ).fetchone()[0]
         user_ids.append(uid)
+        # The large demo dataset exercises premium modules and exceeds Starter caps.
+        conn.execute("UPDATE users SET plan_type = 'premium', billing_cycle = 'annual', premium_expires_at = CURRENT_TIMESTAMP + INTERVAL '1 year' WHERE user_id = %s", (uid,))
 
     profiles = [
         (uid, name, f"https://avatars.example/{name.lower().replace(' ', '')}.png",

@@ -1,8 +1,13 @@
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
+import { capContext } from "./cap-context";
 
 export type { PoolClient } from "pg";
 
-const globalForPg = globalThis as unknown as { mmPool?: Pool };
+const globalForPg = globalThis as unknown as { mmPool?: Pool; mmPoolUrl?: string };
+if (globalForPg.mmPool && globalForPg.mmPoolUrl !== process.env.DATABASE_URL) {
+  void globalForPg.mmPool.end();
+  globalForPg.mmPool = undefined;
+}
 
 export const pool =
   globalForPg.mmPool ??
@@ -11,7 +16,10 @@ export const pool =
     max: 10,
   });
 
-if (process.env.NODE_ENV !== "production") globalForPg.mmPool = pool;
+if (process.env.NODE_ENV !== "production") {
+  globalForPg.mmPool = pool;
+  globalForPg.mmPoolUrl = process.env.DATABASE_URL;
+}
 
 export function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
@@ -44,6 +52,9 @@ export async function withUser<T>(
     return result;
   } catch (err) {
     await client.query("ROLLBACK");
+    const failure = err as { constraint?: string; message?: string };
+    const context = capContext.getStore();
+    if (context && failure.constraint === "starter_plan_limit") context.message = failure.message;
     throw err;
   } finally {
     client.release();

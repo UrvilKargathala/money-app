@@ -73,8 +73,8 @@ export async function patchAs(
  */
 export async function createUser(email: string): Promise<TestUser> {
   const result = await pool.query<{ user_id: number }>(
-    `INSERT INTO users (email, hashed_password, email_verified_at)
-     VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING user_id`,
+    `INSERT INTO users (email, hashed_password, email_verified_at, plan_type, billing_cycle, premium_expires_at)
+     VALUES ($1, $2, CURRENT_TIMESTAMP, 'premium', 'annual', CURRENT_TIMESTAMP + INTERVAL '1 year') RETURNING user_id`,
     [email, await bcrypt.hash(TEST_PASSWORD, 4)]
   );
   const userId = result.rows[0].user_id;

@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { pool } from "./db";
+import { pool, withUser } from "./db";
 import {
   DEFAULT_SESSION_SECONDS,
   REMEMBER_SESSION_SECONDS,
@@ -23,16 +23,22 @@ export async function createSessionRecord(
   const maxAge = remember ? REMEMBER_SESSION_SECONDS : DEFAULT_SESSION_SECONDS;
   const expiresAt = new Date(Date.now() + maxAge * 1000);
 
-  await pool.query(
-    `INSERT INTO auth_tokens (user_id, token_hash, token_type, expires_at)
-     VALUES ($1, $2, 'session', $3)`,
-    [userId, hashToken(token), expiresAt]
-  );
+  await withUser(userId, async (client) => {
+    const result = await client.query("SELECT plan_type FROM users WHERE user_id = $1 FOR UPDATE", [userId]);
+    if (result.rows[0]?.plan_type === "free") {
+      await client.query("UPDATE auth_tokens SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND token_type = 'session' AND revoked_at IS NULL", [userId]);
+    }
+    await client.query(
+      `INSERT INTO auth_tokens (user_id, token_hash, token_type, expires_at)
+       VALUES ($1, $2, 'session', $3)`,
+      [userId, hashToken(token), expiresAt]
+    );
 
-  await pool.query(
-    `UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE user_id = $1`,
-    [userId]
-  );
+    await client.query(
+      `UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE user_id = $1`,
+      [userId]
+    );
+  });
 
   return { token, maxAge };
 }

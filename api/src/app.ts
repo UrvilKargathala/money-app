@@ -33,8 +33,23 @@ import { vault } from "./routes/vault";
 import { registerNoteTemplateRoutes } from "./routes/note-templates";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
+import { requireAuth } from "./middleware";
+import { getPlan, requirePremium, STARTER_LIMITS } from "./entitlements";
+import { membershipGuards } from "./membership-guards";
+import { subscriptionAudits } from "./routes/subscription-audits";
+import { forecast } from "./routes/forecast";
 
 export const app = new Hono();
+
+app.use("/api/*", membershipGuards);
+for (const path of ["investments", "sips", "dividends", "debts", "debt-types", "tax", "report-templates", "report-exports", "export"]) {
+  app.use(`/api/${path}`, requireAuth, requirePremium);
+  app.use(`/api/${path}/*`, requireAuth, requirePremium);
+}
+for (const path of ["reports/spending-by-category", "reports/trends", "reports/heatmap", "reports/net-worth", "reports/debt-payoff", "reports/income-sources", "reports/top-merchants", "reports/export-pdf", "net-worth/trend", "net-worth/chart", "net-worth/report"]) {
+  app.use(`/api/${path}`, requireAuth, requirePremium);
+}
+app.get("/api/users/me/plan", requireAuth, async (c) => c.json({ plan: await getPlan(c.get("user").user_id), limits: STARTER_LIMITS }));
 
 app.route("/api/auth", auth);
 app.route("/api/accounts", accounts);
@@ -54,6 +69,7 @@ app.route("/api/notification-emails", notificationEmailsLog);
 app.route("/api/export", exportJobs);
 app.route("/api/budgets", budgets);
 app.route("/api/bills", bills);
+app.route("/api/subscriptions/audits", subscriptionAudits);
 app.route("/api/subscriptions", subscriptions);
 app.route("/api/goals", goals);
 app.route("/api/debts", debts);
@@ -64,6 +80,7 @@ app.route("/api/sips", sips);
 app.route("/api/dividends", dividends);
 app.route("/api/net-worth", netWorth);
 app.route("/api/manual-assets", manualAssets);
+app.route("/api/reports/forecast", forecast);
 app.route("/api/reports", reports);
 app.route("/api/report-templates", reportTemplates);
 app.route("/api/report-exports", reportExports);

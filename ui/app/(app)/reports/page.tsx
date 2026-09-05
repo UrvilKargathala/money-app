@@ -14,6 +14,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { formatINR } from "@/lib/format";
 import { BarChart3, TrendingUp, Wallet } from "lucide-react";
 import ReportsCharts from "./reports-charts";
+import { PremiumReports } from "@/components/premium-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export default async function ReportsPage() {
         </div>
       )}
 
-      <ReportsCharts
+      <PremiumReports><ReportsCharts
         cashflow={cashflow}
         spendingByCategory={spendingByCategory}
         trends={trends}
@@ -95,7 +96,7 @@ export default async function ReportsPage() {
         topMerchants={topMerchants}
         incomeSources={incomeSources}
         totalIncome={totalIncome}
-      />
+      /></PremiumReports>
 
       <Card>
         <CardHeader>

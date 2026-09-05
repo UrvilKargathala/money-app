@@ -4,9 +4,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { WIDGETS } from "@/lib/widgets";
 import { LayoutGrid } from "lucide-react";
+import { useMembership } from "@/components/membership";
+import { LiveWidget } from "./live-widget";
 
 export function WidgetsGrid({ layout }: { layout?: unknown[] }) {
-  const ids = Array.isArray(layout) && layout.length > 0 ? (layout as string[]) : WIDGETS.slice(0, 2).map((w) => w.id);
+  const { premium, loading } = useMembership();
+  if (loading) return null;
+  const ids = premium ? (Array.isArray(layout) && layout.length > 0 ? (layout as string[]) : WIDGETS.map((w) => w.id)) : ["bills-due"];
   const items = ids.map((id) => WIDGETS.find((w) => w.id === id)).filter(Boolean) as typeof WIDGETS;
 
   if (items.length === 0) return null;
@@ -26,7 +30,7 @@ export function WidgetsGrid({ layout }: { layout?: unknown[] }) {
                 {w.premium && <Badge className="bg-neutral-900 text-white text-[10px]">Premium</Badge>}
               </div>
               <p className="text-xs text-neutral-500 mt-1">{w.description}</p>
-              <div className="mt-3 h-16 rounded-lg bg-neutral-50 border border-dashed flex items-center justify-center text-xs text-neutral-400">Preview</div>
+              <div className="mt-3"><LiveWidget id={w.id} /></div>
             </div>
           ))}
         </div>

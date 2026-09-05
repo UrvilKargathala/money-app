@@ -31,6 +31,15 @@ import {
 
 const subscriptions = new Hono();
 
+subscriptions.patch("/:id/usage", requireAuth, async (c) => {
+  const body = await readJson(c);
+  const date = String(body.last_used_at ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date || date > new Date().toISOString().slice(0, 10)) return c.json({ error: "Choose a valid past or current usage date." }, 400);
+  if (!/^[0-9a-f-]{36}$/i.test(c.req.param("id"))) return c.json({ error: "Invalid subscription ID" }, 400);
+  const result = await withUser(c.get("user").user_id, (client) => client.query("UPDATE subscriptions SET last_used_at = $1 WHERE user_id = $2 AND id = $3", [date, c.get("user").user_id, c.req.param("id")]));
+  return result.rowCount ? c.json({ success: true }) : c.json({ error: "Not found" }, 404);
+});
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",

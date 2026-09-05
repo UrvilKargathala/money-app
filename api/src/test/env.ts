@@ -30,10 +30,14 @@ export function loadEnvLocal(): void {
  * swapped to `moneymind_test` (never touches the dev/seed database).
  */
 export function testDatabaseUrl(): string {
+  if (process.env.TEST_DATABASE_URL) return process.env.TEST_DATABASE_URL;
   const base =
     process.env.DATABASE_URL ??
     "postgresql://postgres:postgres@localhost:5432/moneymind_dev";
   const url = new URL(base);
+  if (!["localhost", "127.0.0.1", "::1"].includes(url.hostname)) {
+    throw new Error("Set an explicit TEST_DATABASE_URL before database tests; never reset the application Neon database.");
+  }
   url.pathname = "/moneymind_test";
   return url.toString();
 }

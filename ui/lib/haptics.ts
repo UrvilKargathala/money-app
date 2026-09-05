@@ -37,28 +37,6 @@ export function setHapticsEnabledCache(v: boolean) {
 export async function haptic(type: HapticType = "light"): Promise<void> {
   if (!(await isEnabled())) return;
 
-  // Try Capacitor Haptics if running natively (optional dep, gracefully skip if not installed)
-  try {
-    // @ts-ignore - optional dependency, may not be installed in web build
-    const mod: unknown = await import("@capacitor/haptics").catch(() => null);
-    const Haptics = (mod as { Haptics?: { impact: (o: unknown) => Promise<void>; selectionChanged: () => Promise<void>; notification: (o: unknown) => Promise<void> } })?.Haptics;
-    if (Haptics) {
-      if (type === "selection") {
-        await Haptics.selectionChanged();
-        return;
-      }
-      if (type === "success" || type === "error") {
-        await Haptics.notification({ type: type === "success" ? "SUCCESS" : "ERROR" });
-        return;
-      }
-      const style = type === "medium" ? "MEDIUM" : "HEAVY";
-      // light vs medium mapping
-      const finalStyle = type === "medium" ? style : "LIGHT";
-      await Haptics.impact({ style: finalStyle });
-      return;
-    }
-  } catch {}
-
   // Web fallback
   try {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {

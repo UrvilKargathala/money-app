@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
+import { getPlan, isPremium } from "../entitlements";
 import {
   getPreferenceMatrix,
   listEmailLog,
@@ -14,7 +15,9 @@ const notificationPrefs = new Hono();
 
 notificationPrefs.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  return c.json({ preferences: await getPreferenceMatrix(user.user_id) });
+  const premium = isPremium(await getPlan(user.user_id));
+  const preferences = (await getPreferenceMatrix(user.user_id)).map((p) => ({ ...p, is_enabled: p.channel === "email" && !premium ? false : p.is_enabled }));
+  return c.json({ preferences });
 });
 
 notificationPrefs.patch("/", requireAuth, async (c) => {

@@ -3,13 +3,31 @@ import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { getSettings, setMonthlyIncome } from "../queries/debts";
 import { readJson } from "./helpers";
+import { withUser } from "../db";
 
 const settings = new Hono();
+
+settings.patch("/", requireAuth, async (c) => {
+  const body = await readJson(c);
+  const ids = ["networth-sparkline", "bills-due", "budget-util", "cashflow-mini", "top-merchants"];
+  if (body.widget_layout !== undefined) {
+    const layout = body.widget_layout;
+    if (!Array.isArray(layout) || layout.length > ids.length || new Set(layout).size !== layout.length || layout.some((id) => !ids.includes(String(id)))) {
+      return c.json({ error: "Choose a unique list of supported widgets." }, 400);
+    }
+    await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET widget_layout = $2::jsonb WHERE user_id = $1", [c.get("user").user_id, JSON.stringify(layout)]));
+  }
+  if (body.haptics_enabled !== undefined) {
+    await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET haptics_enabled = $2 WHERE user_id = $1", [c.get("user").user_id, body.haptics_enabled ? 1 : 0]));
+  }
+  return c.json({ success: true });
+});
 
 settings.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const settings = await getSettings(user.user_id);
-  return c.json({ settings });
+  const extra = await withUser(user.user_id, (client) => client.query("SELECT widget_layout, haptics_enabled FROM user_settings WHERE user_id = $1", [user.user_id]));
+  return c.json({ settings: { ...settings, ...extra.rows[0] } });
 });
 
 settings.patch("/monthly-income", requireAuth, async (c) => {
