@@ -14,14 +14,11 @@ export const membershipGuards = createMiddleware<AppEnv>(async (c, next) => {
         if (!body || typeof body !== "object" || Array.isArray(body)) { c.res = c.json({ error: "Provide a JSON object." }, 400); return; }
         const prefs = Array.isArray(body.preferences) ? body.preferences : [];
         if (prefs.some((p: unknown) => !p || typeof p !== "object" || Array.isArray(p))) { c.res = c.json({ error: "Invalid preference entry." }, 400); return; }
-        const needsPremium = path.includes("/notification-preferences")
-          ? path.endsWith("/email") || prefs.some((p: { channel?: string; is_enabled?: unknown }) => p.channel === "email" && (p.is_enabled === true || p.is_enabled === 1))
-          : body.widget_layout !== undefined || body.theme === "dark";
-        if (needsPremium && !isPremium(await getPlan(c.get("user").user_id))) c.res = c.json(PREMIUM_REQUIRED, 403);
-        else await next();
+        // Feature gating is intentionally disabled until billing is enabled.
+        await next();
       });
       if (authResponse) c.res = authResponse;
     } else await next();
-    if (state.message) c.res = c.json({ error: state.message, code: "STARTER_LIMIT", upgrade_url: "/pricing" }, 403);
+    // Starter caps are paused while plans are being finalized.
   });
 });

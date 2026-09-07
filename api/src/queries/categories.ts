@@ -64,12 +64,14 @@ export async function insertCategory(
     color: string | null;
     icon: string | null;
   }
-): Promise<void> {
-  await q.query(
+): Promise<{ id: string; name: string; parent_id: string | null; color: string | null; icon: string | null }> {
+  const result = await q.query<{ id: string; name: string; parent_id: string | null; color: string | null; icon: string | null }>(
     `INSERT INTO categories (user_id, parent_id, name, is_system, color, icon, sort_order)
-     VALUES ($1, $2, $3, 0, $4, $5, 100)`,
+     VALUES ($1, $2, $3, 0, $4, $5, 100)
+     RETURNING id, name, parent_id, color, icon`,
     [params.userId, params.parentId, params.name, params.color, params.icon]
   );
+  return result.rows[0];
 }
 
 export function updateCategory(

@@ -7,7 +7,8 @@ import type { ActionState } from "@moneymind/api";
 export async function createTransaction(prev: ActionState, formData: FormData): Promise<ActionState> {
   const type = String(formData.get("type") ?? "");
   const account_id = String(formData.get("account_id") ?? "");
-  const category_id = String(formData.get("category_id") ?? "") || null;
+  const rawCategory = String(formData.get("category_id") ?? "");
+  const category_id = rawCategory && rawCategory !== "none" ? rawCategory : null;
   const amount = String(formData.get("amount") ?? "");
   const date = String(formData.get("date") ?? "");
   const description = String(formData.get("description") ?? "").trim() || null;
@@ -29,7 +30,8 @@ export async function updateTransaction(prev: ActionState, formData: FormData): 
   const id = String(formData.get("id") ?? "");
   const type = String(formData.get("type") ?? "");
   const account_id = String(formData.get("account_id") ?? "");
-  const category_id = String(formData.get("category_id") ?? "") || null;
+  const rawCategory = String(formData.get("category_id") ?? "");
+  const category_id = rawCategory && rawCategory !== "none" ? rawCategory : null;
   const amount = String(formData.get("amount") ?? "");
   const date = String(formData.get("date") ?? "");
   const description = String(formData.get("description") ?? "").trim() || null;

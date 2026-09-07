@@ -58,9 +58,10 @@ export function BillCard({
 }) {
   const displayAmount = bill.amount ?? bill.estimated_amount;
   const isActive = bill.is_active === 1;
+  const isPaid = bill.current_period_status === "paid";
 
   return (
-    <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-light/30" : ""}`}>
+    <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-light/30" : isPaid ? "border-success/30 bg-success-light/30" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold font-heading text-neutral-900">{bill.name}</p>
@@ -91,10 +92,10 @@ export function BillCard({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onMarkPaid}>
-                <CheckCircle className="h-4 w-4" /> Mark paid
+              <DropdownMenuItem onClick={onMarkPaid} disabled={isPaid}>
+                <CheckCircle className="h-4 w-4" /> {isPaid ? "Paid this period" : "Mark paid"}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSkip}>
+              <DropdownMenuItem onClick={onSkip} disabled={isPaid}>
                 <SkipForward className="h-4 w-4" /> Skip
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onToggleAutopay}>
@@ -112,10 +113,10 @@ export function BillCard({
         </div>
         {isActive && (
           <div className="flex gap-2">
-            <Button size="sm" onClick={onMarkPaid}>
-              <CheckCircle className="h-4 w-4" /> Pay
+            <Button size="sm" onClick={onMarkPaid} disabled={isPaid} variant={isPaid ? "outline" : "default"}>
+              <CheckCircle className="h-4 w-4" /> {isPaid ? "Paid" : "Pay"}
             </Button>
-            <Button size="sm" variant="outline" onClick={onSkip}>
+            <Button size="sm" variant="outline" onClick={onSkip} disabled={isPaid}>
               Skip
             </Button>
           </div>

@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { createBudget, updateBudget } from "./actions";
 import { toast } from "sonner";
 
@@ -71,20 +71,12 @@ export function BudgetFormDialog({
 
           {!isEdit && (
             <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={categoryId || "overall"} onValueChange={(v) => setCategoryId(v === "overall" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="overall">Overall (all categories)</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CategorySelectWithCreate
+                value={categoryId || "overall"}
+                onValueChange={(value) => setCategoryId(value === "overall" ? "" : value)}
+                categories={categories}
+                emptyOption={{ value: "overall", label: "Overall (all categories)" }}
+              />
               {state?.fieldErrors?.category_id && <p className="text-xs text-error-dark">{state.fieldErrors.category_id}</p>}
             </div>
           )}

@@ -10,7 +10,7 @@ import { LiveWidget } from "./live-widget";
 export function WidgetsGrid({ layout }: { layout?: unknown[] }) {
   const { premium, loading } = useMembership();
   if (loading) return null;
-  const ids = premium ? (Array.isArray(layout) && layout.length > 0 ? (layout as string[]) : WIDGETS.map((w) => w.id)) : ["bills-due"];
+  const ids = Array.isArray(layout) && layout.length > 0 ? (layout as string[]) : WIDGETS.map((w) => w.id);
   const items = ids.map((id) => WIDGETS.find((w) => w.id === id)).filter(Boolean) as typeof WIDGETS;
 
   if (items.length === 0) return null;

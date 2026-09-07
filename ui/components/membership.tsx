@@ -29,9 +29,9 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
     }).catch((e) => { if (e.name !== "AbortError") { setError(true); setLoading(false); } });
     return () => controller.abort();
   }, [pathname]);
-  const premium = plan?.plan_type === "premium";
+  const premium = true; // Plans are informational until billing is enabled.
   const premiumPage = ["/investments", "/debts", "/tax", "/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   return <MembershipContext.Provider value={{ premium, loading, plan }}>
-    {premiumPage && loading ? <p role="status">Checking your plan…</p> : premiumPage && error ? <p role="alert">Could not load your plan. Please refresh to try again.</p> : premiumPage && !premium ? <UpgradeCard feature={pathname.slice(1).split("/")[0].replace(/^./, (s) => s.toUpperCase())} /> : children}
+    {children}
   </MembershipContext.Provider>;
 }

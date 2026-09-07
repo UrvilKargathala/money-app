@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { createTransaction, updateTransaction } from "./actions";
 import { toast } from "sonner";
 
@@ -62,9 +63,6 @@ export function TransactionFormDialog({
       setCategoryId(transaction?.category_id || "");
     }
   }, [open, transaction]);
-
-  const topCategories = categories.filter((c) => !c.parent_id);
-  const subCategories = categories.filter((c) => c.parent_id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,27 +130,12 @@ export function TransactionFormDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No category</SelectItem>
-                {topCategories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-                {subCategories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    — {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CategorySelectWithCreate
+            value={categoryId || "none"}
+            onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
+            categories={categories}
+            placeholder="Select category (optional)"
+          />
 
           <div className="space-y-2">
             <Label htmlFor="txn-desc">Description</Label>
@@ -168,7 +151,7 @@ export function TransactionFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !accountId}>
               {isPending ? "Saving..." : isEdit ? "Save changes" : "Create"}
             </Button>
           </DialogFooter>

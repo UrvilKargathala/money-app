@@ -23,6 +23,6 @@ export async function getPlan(userId: number): Promise<Plan> {
 // Billing metadata never determines feature access. Expiry reconciliation belongs
 // to the future billing lifecycle, once downgrade/retention policy is agreed.
 export const requirePremium = createMiddleware<AppEnv>(async (c, next) => {
-  if (!isPremium(await getPlan(c.get("user").user_id))) return c.json(PREMIUM_REQUIRED, 403);
+  // Plans are informational for now; all features remain available until billing is enabled.
   await next();
 });

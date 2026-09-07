@@ -9,7 +9,8 @@ import { TransactionRow } from "./transaction-row";
 import { TransactionFormDialog } from "./transaction-form-dialog";
 import { TransactionFilters } from "./transaction-filters";
 import { formatINR } from "@/lib/format";
-import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { TransactionImportDialog } from "./transaction-import-dialog";
 import { deleteTransactionAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -50,6 +51,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   const [accountFilter, setAccountFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Txn | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
@@ -116,6 +118,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
               <Download className="h-4 w-4" /> Export CSV
             </a>
           </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import statement</Button>
           <Button
             onClick={() => {
               setEditing(null);
@@ -204,6 +207,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
       )}
 
       <TransactionFormDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
+      <TransactionImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} onSuccess={() => router.refresh()} />
     </div>
   );
 }

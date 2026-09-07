@@ -354,6 +354,53 @@ bills.get("/overview", requireAuth, async (c) => {
   return c.json({ overview });
 });
 
+bills.get("/cashflow-projection", requireAuth, async (c) => {
+  const user = c.get("user");
+  const rows = await listActiveBillsForScheduling(user.user_id);
+  const today = startOfToday();
+  const projection: { month: string; total: number }[] = [];
+  for (let m = 1; m <= 3; m++) {
+    const target = new Date(today.getFullYear(), today.getMonth() + m, 1);
+    const label = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}`;
+    let total = 0;
+    for (const row of rows) {
+      if (row.frequency === "one_time") continue;
+      total += monthlyObligation(row.amount, row.estimated_amount, row.frequency) || 0;
+    }
+    projection.push({ month: label, total: Math.round(total * 100) / 100 });
+  }
+  return c.json({ projection });
+});
+
+bills.get("/cashflow-waterfall", requireAuth, async (c) => {
+  const user = c.get("user");
+  const rows = await listActiveBillsForScheduling(user.user_id);
+  const today = startOfToday();
+  let cumulative = 0;
+  const waterfall: { month: string; total: number; cumulative: number }[] = [];
+  for (let m = 1; m <= 3; m++) {
+    const target = new Date(today.getFullYear(), today.getMonth() + m, 1);
+    const label = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}`;
+    let total = 0;
+    for (const row of rows) {
+      if (row.frequency === "one_time") continue;
+      total += monthlyObligation(row.amount, row.estimated_amount, row.frequency) || 0;
+    }
+    const roundedTotal = Math.round(total * 100) / 100;
+    cumulative = Math.round((cumulative + roundedTotal) * 100) / 100;
+    waterfall.push({ month: label, total: roundedTotal, cumulative });
+  }
+  return c.json({
+    projection: waterfall.map(({ month, total }) => ({ month, total })),
+    waterfall,
+  });
+});
+
+bills.post("/suggest-recurring", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ suggestions: await getSuggestedBills(user.user_id) });
+});
+
 bills.get("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const bill = await getBill(user.user_id, c.req.param("id"));
@@ -702,31 +749,7 @@ bills.get("/:id/payments/export", requireAuth, async (c) => {
   });
 });
 
-// ---- M4 extras: reminders, suggest-recurring, cashflow ----
-
-bills.get("/cashflow-projection", requireAuth, async (c) => {
-  const user = c.get("user");
-  const rows = await listActiveBillsForScheduling(user.user_id);
-  const today = startOfToday();
-  const projection: { month: string; total: number }[] = [];
-  for (let m = 1; m <= 3; m++) {
-    const target = new Date(today.getFullYear(), today.getMonth() + m, 1);
-    const label = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}`;
-    let total = 0;
-    for (const row of rows) {
-      if (row.frequency === "one_time") continue;
-      total += monthlyObligation(row.amount, row.estimated_amount, row.frequency) || 0;
-    }
-    projection.push({ month: label, total: Math.round(total * 100) / 100 });
-  }
-  void today;
-  return c.json({ projection });
-});
-
-bills.post("/suggest-recurring", requireAuth, async (c) => {
-  const user = c.get("user");
-  return c.json({ suggestions: await getSuggestedBills(user.user_id) });
-});
+// ---- M4 extras: reminders ----
 
 bills.get("/:id/reminders", requireAuth, async (c) => {
   const user = c.get("user");

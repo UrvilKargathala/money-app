@@ -33,9 +33,13 @@ categories.post("/", requireAuth, async (c) => {
     fieldErrors.name = "Please enter a category name.";
   }
 
+  let category:
+    | { id: string; name: string; parent_id: string | null; color: string | null; icon: string | null }
+    | null = null;
+
   try {
     if (!fieldErrors.name) {
-      await withUser(user.user_id, async (client) => {
+      category = await withUser(user.user_id, async (client) => {
         if (parentId) {
           const parent = await getCategoryParentId(client, parentId, user.user_id);
           if (!parent) {
@@ -50,7 +54,7 @@ categories.post("/", requireAuth, async (c) => {
           throw new Error("DUPLICATE_NAME");
         }
 
-        await insertCategory(client, {
+        return insertCategory(client, {
           userId: user.user_id,
           parentId,
           name,
@@ -89,7 +93,7 @@ categories.post("/", requireAuth, async (c) => {
     return c.json({ fieldErrors }, 400);
   }
 
-  return c.json({ success: true });
+  return c.json({ success: true, category });
 });
 
 categories.patch("/:id", requireAuth, async (c) => {

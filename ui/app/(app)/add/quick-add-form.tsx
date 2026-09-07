@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { createQuickTransaction } from "./actions";
 import { toast } from "sonner";
 import { Delete, Check } from "lucide-react";
@@ -136,20 +137,12 @@ export function QuickAddForm({
             </Select>
           </div>
 
-          {/* Category chips */}
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-              <Button type="button" variant={categoryId === "" ? "default" : "outline"} size="sm" onClick={() => setCategoryId("")}>
-                No category
-              </Button>
-              {categories.slice(0, 20).map((c) => (
-                <Button key={c.id} type="button" variant={categoryId === c.id ? "default" : "outline"} size="sm" onClick={() => setCategoryId(c.id)}>
-                  {c.name}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <CategorySelectWithCreate
+            value={categoryId || "none"}
+            onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
+            categories={categories}
+            placeholder="Select category (optional)"
+          />
 
           {/* Merchant with suggestions */}
           <div className="space-y-2 relative">

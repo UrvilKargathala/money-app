@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { createSubscription, updateSubscription } from "./actions";
 import { toast } from "sonner";
 
@@ -129,22 +130,11 @@ export function SubscriptionFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <CategorySelectWithCreate
+              value={categoryId || "none"}
+              onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
+              categories={categories}
+            />
           </div>
 
           <div className="space-y-2">
