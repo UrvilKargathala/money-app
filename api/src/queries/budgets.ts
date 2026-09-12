@@ -418,6 +418,11 @@ export async function updateBudget(
   return (result.rowCount ?? 0) > 0;
 }
 
+export async function deleteBudgetByIdForMonth(q: Queryable, userId: number, id: string, month: number, year: number) {
+  const result = await q.query(`DELETE FROM budgets WHERE user_id = $1 AND id = $2::uuid AND month = $3 AND year = $4`, [userId, id, month, year]);
+  return (result.rowCount ?? 0) === 1;
+}
+
 /**
  * FR-3.4: deleting a budget removes it for ALL time periods (same category,
  * or all Overall budgets when the budget is the overall one).

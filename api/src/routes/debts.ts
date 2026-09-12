@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { csvEscape } from "../utils/format";
+import { getEntitlement } from "../queries/entitlements";
 import {
   addMonths,
   applyDebtPaymentState,
@@ -179,6 +180,9 @@ debts.post("/", requireAuth, async (c) => {
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
   }
+
+  const debtEnt = await getEntitlement(user.user_id, "debts");
+  if (!debtEnt.allowed) return c.json({ error: "plan_limit", feature: "debts", plan: debtEnt.plan }, 403);
 
   try {
     const id = await withUser(user.user_id, async (client) => {

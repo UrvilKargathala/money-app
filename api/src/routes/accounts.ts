@@ -21,6 +21,7 @@ import { parseAmount, parseBoolean } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
 import { csvEscape } from "../utils/format";
+import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 
 const accounts = new Hono();
 
@@ -80,6 +81,11 @@ accounts.post("/", requireAuth, async (c) => {
     return c.json({ fieldErrors }, 400);
   }
 
+  const limitHit = await checkCountLimit(user.user_id, "accounts");
+  if (limitHit) {
+    return c.json({ error: "plan_limit", feature: "accounts", plan: limitHit.plan, limit: limitHit.limit, used: limitHit.used }, 403);
+  }
+
   let assignedColor = color;
   if (!assignedColor) {
     assignedColor =
@@ -113,6 +119,8 @@ accounts.post("/", requireAuth, async (c) => {
 accounts.patch("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const accountId = c.req.param("id");
+  const lock = await isRowLocked(user.user_id, "accounts", accountId);
+  if (lock.locked) return c.json({ error: "plan_locked", feature: "accounts", plan: lock.plan }, 403);
   const body = await readJson(c);
 
   const name = String(body.name ?? "").trim();
@@ -178,6 +186,8 @@ accounts.post("/:id/deactivate", requireAuth, async (c) => {
 accounts.post("/:id/reactivate", requireAuth, async (c) => {
   const user = c.get("user");
   const accountId = c.req.param("id");
+  const limitHit = await checkCountLimit(user.user_id, "accounts");
+  if (limitHit) return c.json({ error: "plan_limit", feature: "accounts", plan: limitHit.plan, limit: limitHit.limit, used: limitHit.used }, 403);
 
   await withUser(user.user_id, (client) =>
     reactivateAccount(client, user.user_id, accountId)

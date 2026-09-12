@@ -9,8 +9,10 @@ import {
   getTaxItr,
   getTaxItrCompletion,
   getTaxFinancialYears,
+  getBillingProfile,
 } from "@/lib/api-client";
 import { TaxDashboard } from "./tax-dashboard";
+import { Paywall, TrialBanner } from "@/components/common/paywall";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +37,7 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
     itrData,
     itrCompletionData,
     _financialYearsData,
+    billing,
   ] = await Promise.all([
     getTaxInvestments(fy),
     getTaxUtilization(fy),
@@ -46,7 +49,17 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
     getTaxItr(fy),
     getTaxItrCompletion(fy),
     getTaxFinancialYears(),
+    getBillingProfile(),
   ]);
+
+  if (billing && !billing.entitlements.tax?.allowed) {
+    return (
+      <div className="space-y-4">
+        {billing.trial.active && <TrialBanner daysLeft={billing.trial.daysLeft} />}
+        <Paywall feature="Tax Planner (80C/80D/ELSS)" plan={billing.plan.code} trialDaysLeft={billing.trial.daysLeft} />
+      </div>
+    );
+  }
 
   // Normalize utilization shape: API returns { section, name, max_limit } but UI expects section_code/section_name/limit
   const rawUtil = (utilizationData as unknown as { utilization?: Array<Record<string, unknown>> })?.utilization ?? [];
@@ -83,17 +96,20 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
   }));
 
   return (
-    <TaxDashboard
-      investments={(investmentsData?.investments ?? []) as never}
-      utilization={normalizedUtil as never}
-      summary={normalizedSummary as never}
-      sections={normalizedSections as never}
-      fy={fy}
-      salary={(salaryData?.salary ?? null) as never}
-      compare={(compareData ?? null) as never}
-      suggestions={(suggestionsData?.suggestions ?? []) as never}
-      itrDocuments={(itrData?.documents ?? []) as never}
-      itrCompletion={(itrCompletionData as never) ?? null}
-    />
+    <div className="space-y-4">
+      {billing?.trial.active && <TrialBanner daysLeft={billing.trial.daysLeft} />}
+      <TaxDashboard
+        investments={(investmentsData?.investments ?? []) as never}
+        utilization={normalizedUtil as never}
+        summary={normalizedSummary as never}
+        sections={normalizedSections as never}
+        fy={fy}
+        salary={(salaryData?.salary ?? null) as never}
+        compare={(compareData ?? null) as never}
+        suggestions={(suggestionsData?.suggestions ?? []) as never}
+        itrDocuments={(itrData?.documents ?? []) as never}
+        itrCompletion={(itrCompletionData as never) ?? null}
+      />
+    </div>
   );
 }

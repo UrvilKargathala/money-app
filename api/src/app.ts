@@ -38,6 +38,7 @@ import { getPlan, requirePremium, STARTER_LIMITS } from "./entitlements";
 import { membershipGuards } from "./membership-guards";
 import { subscriptionAudits } from "./routes/subscription-audits";
 import { forecast } from "./routes/forecast";
+import { billing, billingProfile } from "./routes/billing";
 
 export const app = new Hono();
 
@@ -90,6 +91,8 @@ registerNoteTemplateRoutes(app);
 app.route("/api/users/me/settings", settings);
 app.route("/api/users/me", userLifecycle);
 app.route("/api/jobs", jobs);
+app.route("/api/billing", billing);
+app.route("/api/users/me/subscription", billingProfile);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

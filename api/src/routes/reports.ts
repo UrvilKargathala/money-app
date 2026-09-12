@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
 import { csvEscape } from "../utils/format";
 import { round2 } from "../utils/finance";
+import { getEntitlement } from "../queries/entitlements";
 import {
   createExportJob,
   getCashflow,
@@ -241,6 +242,8 @@ reports.get("/export", requireAuth, async (c) => {
 /** Creates a report_exports job; the PDF itself regenerates on download. */
 reports.post("/export-pdf", requireAuth, async (c) => {
   const user = c.get("user");
+  const repEnt = await getEntitlement(user.user_id, "reports_widgets");
+  if (!repEnt.allowed) return c.json({ error: "plan_limit", feature: "reports_widgets", plan: repEnt.plan }, 403);
   const body = await readJson(c);
 
   const templateId = String(body.template_id ?? "") || null;

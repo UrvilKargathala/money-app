@@ -87,6 +87,71 @@ function findRepoRoot(): string {
   throw new Error("Cannot locate the repo root (scripts/db_setup.py not found).");
 }
 
+const PLAN_TIERS = [
+  ["free", "Free", 1, 1],
+  ["monthly", "Monthly", 1, 2],
+  ["annual", "Annual", 1, 3],
+  ["lifetime", "Lifetime", 1, 4],
+];
+
+const PLAN_FEATURES: [string, string, string][] = [
+  ["accounts", "count", "Number of accounts"],
+  ["budgets", "count", "Budget rows per calendar month"],
+  ["bill_reminders", "count", "Active bill reminders"],
+  ["tracker_subscriptions", "count", "Tracked subscriptions (bills tracker)"],
+  ["goals_active", "count", "Active goals"],
+  ["investments", "boolean", "Investments incl. SIP/NAV"],
+  ["debts", "boolean", "Debt payoff planner"],
+  ["tax", "boolean", "Tax planner (80C/80D/ELSS)"],
+  ["reports_widgets", "boolean", "Advanced reports & widgets"],
+  ["export_batch", "mode", "Export center batch jobs"],
+  ["notifications_email", "mode", "Email notifications"],
+  ["cross_device_sync", "boolean", "Cross-device sync"],
+  ["subscription_audits", "boolean", "Subscription audits"],
+];
+
+const FREE_ENTITLEMENTS: [string, string, number, number | null, string | null][] = [
+  ["free", "accounts", 1, 2, null],
+  ["free", "budgets", 1, 2, null],
+  ["free", "bill_reminders", 1, 5, null],
+  ["free", "tracker_subscriptions", 1, 3, null],
+  ["free", "goals_active", 1, 1, null],
+  ["free", "investments", 0, null, null],
+  ["free", "debts", 0, null, null],
+  ["free", "tax", 0, null, null],
+  ["free", "reports_widgets", 0, null, null],
+  ["free", "export_batch", 0, null, "manual_csv"],
+  ["free", "notifications_email", 0, null, "in_app"],
+  ["free", "cross_device_sync", 0, null, null],
+  ["free", "subscription_audits", 0, null, null],
+];
+
+const PAID_ENTITLEMENTS: [string, string, number, number | null, string | null][] = [];
+for (const plan of ["monthly", "annual", "lifetime"]) {
+  PAID_ENTITLEMENTS.push(
+    [plan, "accounts", 1, null, null],
+    [plan, "budgets", 1, null, null],
+    [plan, "bill_reminders", 1, null, null],
+    [plan, "tracker_subscriptions", 1, null, null],
+    [plan, "goals_active", 1, null, null],
+    [plan, "investments", 1, null, null],
+    [plan, "debts", 1, null, null],
+    [plan, "tax", 1, null, null],
+    [plan, "reports_widgets", 1, null, null],
+    [plan, "export_batch", 1, null, "full"],
+    [plan, "notifications_email", 1, null, "in_app_email"],
+    [plan, "cross_device_sync", 1, null, null],
+    [plan, "subscription_audits", 1, null, null],
+  );
+}
+
+const PLAN_PRICES: [string, number, string, string, number | null][] = [
+  ["free", 0, "free", "none", null],
+  ["monthly", 300, "per month", "monthly", null],
+  ["annual", 2400, "Rs 200/mo billed Rs 2400/yr", "annual", 1],
+  ["lifetime", 3500, "one-time", "lifetime", 1],
+];
+
 /**
  * Seeds the system lookups that `db_setup.py` intentionally leaves out
  * (they normally come from `scripts/mock_data.py`): account_types. Test
@@ -145,6 +210,44 @@ async function seedLookups(databaseUrl: string): Promise<void> {
        ON CONFLICT (template_code) DO NOTHING`,
       templateRows.flat()
     );
+    // SaaS plan catalog (tiers, features, entitlements, current prices).
+    const tierPlaceholders = PLAN_TIERS.map(
+      (_, i) => `($${i * 4 + 1},$${i * 4 + 2},$${i * 4 + 3},$${i * 4 + 4})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO plan_tiers (code, name, is_active, sort_order)
+       VALUES ${tierPlaceholders}
+       ON CONFLICT (code) DO NOTHING`,
+      PLAN_TIERS.flat()
+    );
+    const featurePlaceholders = PLAN_FEATURES.map(
+      (_, i) => `($${i * 3 + 1},$${i * 3 + 2},$${i * 3 + 3})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO plan_features (key, kind, description)
+       VALUES ${featurePlaceholders}
+       ON CONFLICT (key) DO NOTHING`,
+      PLAN_FEATURES.flat()
+    );
+    const allEnts = [...FREE_ENTITLEMENTS, ...PAID_ENTITLEMENTS];
+    const entPlaceholders = allEnts.map(
+      (_, i) => `($${i * 5 + 1},$${i * 5 + 2},$${i * 5 + 3},$${i * 5 + 4},$${i * 5 + 5})`
+    ).join(",");
+    await pool.query(
+      `INSERT INTO plan_entitlements (plan_code, feature_key, allowed, limit_value, mode)
+       VALUES ${entPlaceholders}
+       ON CONFLICT (plan_code, feature_key) DO NOTHING`,
+      allEnts.flat()
+    );
+    // Versioned prices: insert only when the plan has no current row yet.
+    for (const [code, price, perText, interval, periods] of PLAN_PRICES) {
+      await pool.query(
+        `INSERT INTO plan_prices (plan_code, price_inr, per_text, interval, billing_periods, currency, is_current)
+         SELECT $1, $2, $3, $4, $5, 'INR', 1
+         WHERE NOT EXISTS (SELECT 1 FROM plan_prices WHERE plan_code = $1 AND is_current = 1)`,
+        [code, price, perText, interval, periods]
+      );
+    }
   } finally {
     await pool.end();
   }

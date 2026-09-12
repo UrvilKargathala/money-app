@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
 import { isoDate } from "../utils/format";
+import { getEntitlement } from "../queries/entitlements";
 import {
   DIVIDEND_TYPES,
   deleteDividend,
@@ -67,6 +68,9 @@ dividends.post("/", requireAuth, async (c) => {
   if (Object.keys(fieldErrors).length > 0) {
     return c.json({ fieldErrors }, 400);
   }
+
+  const divEnt = await getEntitlement(user.user_id, "investments");
+  if (!divEnt.allowed) return c.json({ error: "plan_limit", feature: "investments", plan: divEnt.plan }, 403);
 
   try {
     const id = await withUser(user.user_id, async (client) => {
