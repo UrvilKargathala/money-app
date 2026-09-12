@@ -5,7 +5,7 @@ export type Queryable = { query: typeof query };
 
 const DB: Queryable = { query };
 
-/** Last expense's context — the quick-add auto-fill heuristic. */
+/** Last expense's context - the quick-add auto-fill heuristic. */
 export type QuickAddHeuristic = {
   account_id: string | null;
   category_id: string | null;
@@ -131,7 +131,7 @@ export type DateGroup = {
 };
 
 /**
- * Daily totals across the requested window — one aggregate query.
+ * Daily totals across the requested window - one aggregate query.
  * Items for each day come from the regular list endpoint; this powers chips.
  */
 export async function getDateGroups(

@@ -42,7 +42,8 @@ export function AccountFormDialog({
     isEditRef.current = isEdit;
   }, [isEdit]);
   const [type, setType] = useState(account?.type || "bank_savings");
-  // Stable dispatcher that reads the latest isEdit via ref — useActionState
+  const [color, setColor] = useState(account?.color || "#2563EB");
+  // Stable dispatcher that reads the latest isEdit via ref - useActionState
   // binds to the initial function only, so a plain closure would stale.
   const dispatchAction = async (prev: ActionState | null, fd: FormData): Promise<ActionState> => {
     if (isEditRef.current) return updateAccount(prev as ActionState, fd);
@@ -59,7 +60,10 @@ export function AccountFormDialog({
   }, [state, isEdit, onOpenChange, onSuccess]);
 
   useEffect(() => {
-    if (open) setType(account?.type || "bank_savings");
+    if (open) {
+      setType(account?.type || "bank_savings");
+      setColor(account?.color || "#2563EB");
+    }
   }, [open, account]);
 
   return (
@@ -127,7 +131,31 @@ export function AccountFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="acc-color">Color</Label>
-            <Input id="acc-color" name="color" defaultValue={account?.color || ""} placeholder="#2563EB" />
+            <div className="flex items-center gap-3">
+              <Input
+                id="acc-color-picker"
+                type="color"
+                value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#2563EB"}
+                onChange={(e) => setColor(e.target.value.toUpperCase())}
+                aria-label="Pick account color"
+                className="h-11 w-16 cursor-pointer rounded-xl p-1"
+              />
+              <Input
+                id="acc-color"
+                name="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="#2563EB"
+                className="flex-1"
+              />
+              <div
+                className="h-11 w-11 rounded-xl border border-neutral-200"
+                style={{ backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#2563EB" }}
+                aria-hidden="true"
+              />
+            </div>
+            {state?.fieldErrors?.color && <p className="text-xs text-error-dark">{state.fieldErrors.color}</p>}
+            <p className="text-xs text-neutral-400">Use the picker or enter a hex color code.</p>
           </div>
 
           <div className="space-y-2">

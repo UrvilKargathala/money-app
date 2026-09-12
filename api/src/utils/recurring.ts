@@ -52,7 +52,7 @@ function clampDay(
 /**
  * How many scheduled occurrences exist strictly between `startDate`
  * (exclusive) and `onOrBefore` (inclusive), given the schedule anchored at
- * startDate. Pure arithmetic — no execution history needed. Returns null when
+ * startDate. Pure arithmetic - no execution history needed. Returns null when
  * unbounded (> maxScan occurrences).
  */
 export function countOccurrences(

@@ -197,7 +197,7 @@ export function NotificationsDashboard({
     const res = await bulkAction(Array.from(selected), action);
     if (res?.error) toast.error(res.error);
     else {
-      toast.success(`Bulk ${action} — ${selected.size} affected`);
+      toast.success(`Bulk ${action} - ${selected.size} affected`);
       setSelected(new Set());
       router.refresh();
     }
@@ -283,7 +283,7 @@ export function NotificationsDashboard({
             Notifications {unreadCount > 0 && <Badge variant="error">{unreadCount} unread</Badge>}
             <span className="text-sm font-normal text-neutral-500">{total != null ? `${total} total` : `${notifications.length} in feed`}</span>
           </h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">Alerts, reminders and insights — feed, archive, preferences and delivery log</p>
+          <p className="text-sm text-neutral-500 font-body mt-1">Alerts, reminders and insights - feed, archive, preferences and delivery log</p>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           <SseIndicator />
@@ -588,7 +588,7 @@ export function NotificationsDashboard({
                   <Button type="submit" size="sm" disabled={previewLoading}>
                     {previewLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />} Preview email
                   </Button>
-                  <span className="text-xs text-neutral-500 self-center">POST /api/notifications/email/preview — no send, just render.</span>
+                  <span className="text-xs text-neutral-500 self-center">POST /api/notifications/email/preview - no send, just render.</span>
                 </div>
               </form>
             </div>
@@ -629,7 +629,7 @@ export function NotificationsDashboard({
                         <td className="p-2">
                           <Badge variant={e.status === "sent" ? "success" : e.status === "failed" ? "error" : "default"}>{e.status}</Badge>
                         </td>
-                        <td className="p-2 text-neutral-500">{e.sent_at ? new Date(e.sent_at).toLocaleString("en-IN") : "—"}</td>
+                        <td className="p-2 text-neutral-500">{e.sent_at ? new Date(e.sent_at).toLocaleString("en-IN") : "-"}</td>
                         <td className="p-2 text-neutral-500">{new Date(e.created_at).toLocaleString("en-IN")}</td>
                       </tr>
                     ))}
@@ -644,7 +644,7 @@ export function NotificationsDashboard({
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Email preview — {previewResult?.subject ?? ""}</DialogTitle>
+            <DialogTitle>Email preview - {previewResult?.subject ?? ""}</DialogTitle>
             <DialogDescription>Rendered HTML and text from POST /api/notifications/email/preview</DialogDescription>
           </DialogHeader>
           {previewResult && (

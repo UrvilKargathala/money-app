@@ -78,7 +78,7 @@ export function TaxInvestmentDialog({
               <SelectContent>
                 {sections.map((s) => (
                   <SelectItem key={s.section_code} value={s.section_code}>
-                    {s.section_code} — {s.section_name}
+                    {s.section_code} - {s.section_name}
                   </SelectItem>
                 ))}
               </SelectContent>

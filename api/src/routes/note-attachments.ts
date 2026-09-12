@@ -10,7 +10,7 @@ import {
 import { getNoteById } from "../queries/notes";
 import { getObjectStorage } from "../utils/object-storage";
 
-/** Client-encrypted ciphertext only — 5MB cap on the encrypted blob. */
+/** Client-encrypted ciphertext only - 5MB cap on the encrypted blob. */
 const MAX_BYTES = 5 * 1024 * 1024;
 
 /**
@@ -105,7 +105,7 @@ export function registerNoteAttachmentRoutes(notes: Hono): void {
         c.req.param("attachmentId")
       );
       if (!found) return c.json({ error: "Not found" }, 404);
-      // Ciphertext only — decryption happens client-side (FR-11.16).
+      // Ciphertext only - decryption happens client-side (FR-11.16).
       return new Response(new Uint8Array(found.bytes), {
         headers: {
           "content-type": "application/octet-stream",

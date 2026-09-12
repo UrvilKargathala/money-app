@@ -8,7 +8,7 @@
  *   deployed without a token         → hard error    (misconfiguration guard)
  *
  * `note_attachments.file_path` stores whatever path/url the provider returns
- * — the column abstracts the backend.
+ * - the column abstracts the backend.
  */
 
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -72,7 +72,7 @@ class LocalFileProvider implements ObjectStorage {
   );
 
   #resolve(key: string): string {
-    // Key is server-generated (`notes/<userId>/<noteId>/<uuid>`) — no traversal
+    // Key is server-generated (`notes/<userId>/<noteId>/<uuid>`) - no traversal
     // surface, but normalize anyway.
     const safe = key.replace(/\.\./g, "").replace(/^\/+/, "");
     return join(this.#baseDir, safe);
@@ -115,7 +115,7 @@ class VercelBlobProvider implements ObjectStorage {
       access: "public",
       addRandomSuffix: false,
     });
-    // Persist the full URL — get()/delete() need nothing else.
+    // Persist the full URL - get()/delete() need nothing else.
     return { path: result.url };
   }
 

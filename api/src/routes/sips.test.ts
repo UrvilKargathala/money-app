@@ -201,7 +201,7 @@ describe("sip installments", () => {
       type: "fd",
       category: "debt",
     });
-    // Strip pricing so valuation_mode stays manual — create without prices.
+    // Strip pricing so valuation_mode stays manual - create without prices.
     void manualHolding;
     const res2 = await postAs(db.alice, "/api/investments", {
       name: "Manual PPF",

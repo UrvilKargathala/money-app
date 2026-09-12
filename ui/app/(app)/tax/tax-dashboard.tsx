@@ -74,7 +74,7 @@ function SalaryDialog({ open, onOpenChange, salary, fy, onSuccess }: { open: boo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit salary structure" : "Add salary structure"} — FY {fy}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit salary structure" : "Add salary structure"} - FY {fy}</DialogTitle>
           <DialogDescription>Employment type, gross and deductions drive regime comparison.</DialogDescription>
         </DialogHeader>
         <form action={formAction} className="space-y-4">
@@ -184,7 +184,7 @@ function ItrDialog({ open, onOpenChange, doc, fy, onSuccess }: { open: boolean; 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit document" : "Add ITR document"} — FY {fy}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit document" : "Add ITR document"} - FY {fy}</DialogTitle>
           <DialogDescription>Category and status drive the checklist completion.</DialogDescription>
         </DialogHeader>
         <form action={formAction} className="space-y-4">
@@ -406,8 +406,8 @@ export function TaxDashboard({
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center text-sm">
-                  <Badge variant={compare.savings != null && compare.savings > 0 ? "success" : "default"}>Tax saved: {compare.savings != null ? formatINR(Math.abs(compare.savings)) : "—"}</Badge>
-                  <span className="text-xs text-neutral-500">Recommendation: {compare.recommended_label ?? compare.recommended ?? "—"}</span>
+                  <Badge variant={compare.savings != null && compare.savings > 0 ? "success" : "default"}>Tax saved: {compare.savings != null ? formatINR(Math.abs(compare.savings)) : "-"}</Badge>
+                  <span className="text-xs text-neutral-500">Recommendation: {compare.recommended_label ?? compare.recommended ?? "-"}</span>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" asChild><a href={`/api/tax/exports/utilization?financial_year=${fy}`} download><Download className="h-4 w-4" /> Export Utilization</a></Button>
@@ -419,15 +419,15 @@ export function TaxDashboard({
 
           {/* Suggestions */}
           <Card className="p-6">
-            <h3 className="font-semibold font-heading text-neutral-800 mb-4 flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Suggestions — unused limits</h3>
+            <h3 className="font-semibold font-heading text-neutral-800 mb-4 flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Suggestions - unused limits</h3>
             {suggestions.length === 0 ? (
-              <p className="text-sm text-neutral-500">No suggestions — all limits utilized or no actionable sections for FY {fy}.</p>
+              <p className="text-sm text-neutral-500">No suggestions - all limits utilized or no actionable sections for FY {fy}.</p>
             ) : (
               <div className="space-y-3">
                 {suggestions.map((s) => (
                   <div key={s.section} className="flex justify-between items-start rounded-lg border border-neutral-100 p-3">
                     <div>
-                      <p className="text-sm font-medium font-heading text-neutral-900">{s.section} — {s.name}</p>
+                      <p className="text-sm font-medium font-heading text-neutral-900">{s.section} - {s.name}</p>
                       <p className="text-xs text-neutral-500">{s.reason}</p>
                       <p className="text-xs text-neutral-400 mt-1">Invested {formatINR(s.invested)} / {formatINR(s.max_limit)} • Remaining {formatINR(s.remaining)}</p>
                     </div>
@@ -449,7 +449,7 @@ export function TaxDashboard({
                   <div key={u.section_code} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">
-                        {u.section_code} — {u.section_name}
+                        {u.section_code} - {u.section_name}
                       </span>
                       <span className="text-neutral-500">
                         {formatINR(u.invested)} / {formatINR(u.limit)} • {u.utilization_pct.toFixed(1)}%
@@ -511,7 +511,7 @@ export function TaxDashboard({
           <Card className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Salary Structure — FY {fy}</h3>
+                <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Salary Structure - FY {fy}</h3>
                 <p className="text-sm text-neutral-500 font-body mt-1">Employment type, gross and deductions feed the Old vs New computation.</p>
               </div>
               <Button onClick={() => setSalaryOpen(true)}><Wallet className="h-4 w-4" /> {salary ? "Edit Salary" : "Add Salary"}</Button>
@@ -527,20 +527,20 @@ export function TaxDashboard({
                   <div className="flex items-center gap-2"><span className="text-sm text-neutral-500">Employment type</span><Badge variant="secondary">{salary.employment_type}</Badge></div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Basic (monthly)</p><p className="font-semibold">{formatINR(salary.basic_monthly)}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">HRA (monthly)</p><p className="font-semibold">{salary.hra_monthly != null ? formatINR(salary.hra_monthly) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Special allow. (monthly)</p><p className="font-semibold">{salary.special_allowances != null ? formatINR(salary.special_allowances) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">LTA (annual)</p><p className="font-semibold">{salary.lta_annual != null ? formatINR(salary.lta_annual) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Actual rent (monthly)</p><p className="font-semibold">{salary.actual_rent_monthly != null ? formatINR(salary.actual_rent_monthly) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Gross (derived)</p><p className="font-semibold">{salaryGross != null ? formatINR(salaryGross) : "—"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">HRA (monthly)</p><p className="font-semibold">{salary.hra_monthly != null ? formatINR(salary.hra_monthly) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Special allow. (monthly)</p><p className="font-semibold">{salary.special_allowances != null ? formatINR(salary.special_allowances) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">LTA (annual)</p><p className="font-semibold">{salary.lta_annual != null ? formatINR(salary.lta_annual) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Actual rent (monthly)</p><p className="font-semibold">{salary.actual_rent_monthly != null ? formatINR(salary.actual_rent_monthly) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Gross (derived)</p><p className="font-semibold">{salaryGross != null ? formatINR(salaryGross) : "-"}</p></div>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Other exemptions</p><p className="font-semibold">{salary.other_exemptions != null ? formatINR(salary.other_exemptions) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Employer PF (monthly)</p><p className="font-semibold">{salary.employer_pf != null ? formatINR(salary.employer_pf) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Additional income</p><p className="font-semibold">{salary.additional_income != null ? formatINR(salary.additional_income) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">TDS deducted</p><p className="font-semibold">{salary.tds_deducted != null ? formatINR(salary.tds_deducted) : "—"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Gross annual (non-salaried)</p><p className="font-semibold">{salary.gross_annual_income != null ? formatINR(salary.gross_annual_income) : "—"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Other exemptions</p><p className="font-semibold">{salary.other_exemptions != null ? formatINR(salary.other_exemptions) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Employer PF (monthly)</p><p className="font-semibold">{salary.employer_pf != null ? formatINR(salary.employer_pf) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Additional income</p><p className="font-semibold">{salary.additional_income != null ? formatINR(salary.additional_income) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">TDS deducted</p><p className="font-semibold">{salary.tds_deducted != null ? formatINR(salary.tds_deducted) : "-"}</p></div>
+                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Gross annual (non-salaried)</p><p className="font-semibold">{salary.gross_annual_income != null ? formatINR(salary.gross_annual_income) : "-"}</p></div>
                     <div className="rounded-lg bg-primary-50 p-3"><p className="text-xs text-primary-700">Financial year</p><p className="font-semibold">{salary.financial_year}</p></div>
                   </div>
                   <p className="text-xs text-neutral-400">FY {salary.financial_year} • All amounts in INR, from API salary structure.</p>
@@ -555,7 +555,7 @@ export function TaxDashboard({
               <div className="grid gap-3 md:grid-cols-3">
                 <StatCard label="Old Regime Tax" value={formatINR(compare.old_regime.total_tax)} subtext={`Taxable ${formatINR(compare.old_regime.taxable_income)}`} variant="warning" />
                 <StatCard label="New Regime Tax" value={formatINR(compare.new_regime.total_tax)} subtext={`Taxable ${formatINR(compare.new_regime.taxable_income)}`} variant="teal" />
-                <StatCard label="Recommended" value={compare.recommended_label ?? "—"} subtext={compare.savings != null ? `Save ${formatINR(Math.abs(compare.savings))}` : undefined} variant="violet" />
+                <StatCard label="Recommended" value={compare.recommended_label ?? "-"} subtext={compare.savings != null ? `Save ${formatINR(Math.abs(compare.savings))}` : undefined} variant="violet" />
               </div>
             </Card>
           )}
@@ -565,7 +565,7 @@ export function TaxDashboard({
           <Card className="p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><FileCheck className="h-5 w-5" /> ITR Checklist — FY {fy}</h3>
+                <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><FileCheck className="h-5 w-5" /> ITR Checklist - FY {fy}</h3>
                 <p className="text-sm text-neutral-500">{completionTotal} documents • {completionPct.toFixed(1)}% complete • {pendingCount} pending, {collectedCount} collected, {submittedCount} submitted</p>
                 <div className="mt-3 max-w-sm">
                   <Progress value={Math.min(completionPct, 100)} indicatorClassName={completionPct >= 100 ? "bg-success" : completionPct >= 50 ? "bg-primary-600" : "bg-warning"} />
@@ -621,7 +621,7 @@ export function TaxDashboard({
                         <td className="p-2"><Badge variant="default">{d.category.replace(/_/g," ")}</Badge></td>
                         <td className="p-2 font-medium">{d.document_name}</td>
                         <td className="p-2"><Badge variant={d.status === "submitted" ? "success" : d.status === "collected" ? "info" : "warning"}>{d.status}</Badge></td>
-                        <td className="p-2 text-xs text-neutral-500 max-w-[20ch] truncate">{d.notes ?? "—"}</td>
+                        <td className="p-2 text-xs text-neutral-500 max-w-[20ch] truncate">{d.notes ?? "-"}</td>
                         <td className="p-2 text-right">
                           <div className="flex gap-1 justify-end">
                             <Button variant="ghost" size="icon" onClick={() => { setItrEditing(d); setItrOpen(true); }}><Pencil className="h-4 w-4" /></Button>

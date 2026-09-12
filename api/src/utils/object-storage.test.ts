@@ -23,7 +23,7 @@ function withEnv(overrides: Partial<Record<(typeof ENV_KEYS)[number], string>>):
 }
 
 describe("storage provider selection", () => {
-  it("prefers Vercel Blob whenever the token exists — even in tests", () => {
+  it("prefers Vercel Blob whenever the token exists - even in tests", () => {
     withEnv({ BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_x", NODE_ENV: "test" });
     expect(resolveStorageKind()).toBe("vercel-blob");
   });

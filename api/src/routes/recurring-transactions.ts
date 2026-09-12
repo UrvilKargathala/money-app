@@ -333,7 +333,7 @@ for (const action of ["execute", "skip"] as const) {
         INACTIVE: [409, { error: "This recurring transaction is no longer active." }],
         NOT_DUE: [
           409,
-          { error: "The next occurrence isn't due yet — come back on its due date." },
+          { error: "The next occurrence isn't due yet - come back on its due date." },
         ],
       };
       const entry = reasons[payload.reason];

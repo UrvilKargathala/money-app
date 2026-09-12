@@ -24,7 +24,7 @@ const notifications = new Hono();
 
 const uuidRe = /^[0-9a-f-]{36}$/i;
 
-/** Feed â€” 25/page with filter + type/module facets. */
+/** Feed - 25/page with filter + type/module facets. */
 notifications.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const filterParam = c.req.query("filter") || "all";
@@ -104,7 +104,7 @@ notifications.post("/email/preview", requireAuth, async (c) => {
     preview: {
       subject: `[MoneyMind] ${title}`,
       body_html: `<div style="font-family:sans-serif;padding:16px"><h2>${title}</h2><p>${message}</p><p style="color:#999;font-size:12px">Sent by MoneyMind (${type})</p></div>`,
-      body_text: `${title}\n\n${message}\n\nâ€” MoneyMind (${type})`,
+      body_text: `${title}\n\n${message}\n\n- MoneyMind (${type})`,
     },
   });
 });

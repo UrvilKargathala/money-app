@@ -7,7 +7,7 @@ const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/pricing"];
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Never intercept API routes — the Hono app handles auth itself
+  // Never intercept API routes - the Hono app handles auth itself
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }

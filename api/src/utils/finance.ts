@@ -1,10 +1,10 @@
 /**
  * Pure financial math shared by the Investment Tracker module.
- * No DB access — safe to unit test in isolation and reuse client-side later.
+ * No DB access - safe to unit test in isolation and reuse client-side later.
  */
 
 export type CashFlow = {
-  /** ISO date or Date — when the money moved. */
+  /** ISO date or Date - when the money moved. */
   date: string | Date;
   /** Signed amount: buys negative (outflow), sells/dividends/current value positive. */
   amount: number;
@@ -17,7 +17,7 @@ function toTime(d: string | Date): number {
 }
 
 /**
- * XIRR — annualized return for irregular cash flows (Newton-Raphson).
+ * XIRR - annualized return for irregular cash flows (Newton-Raphson).
  * Requires at least one negative and one positive flow; returns null when
  * unsolvable (single lump-sum without proceeds, all-same-sign flows).
  */
@@ -57,7 +57,7 @@ export function xirr(
     if (!Number.isFinite(next)) break;
     rate = next <= -0.9999 ? (rate - 0.9999) / 2 : next;
   }
-  // Bisection fallback over [-0.9999, 10] — XIRR is monotonic in this domain.
+  // Bisection fallback over [-0.9999, 10] - XIRR is monotonic in this domain.
   let lo = -0.9999;
   let hi = 10;
   let loVal = npv(lo);
@@ -104,7 +104,7 @@ export type SipProjection = {
 /**
  * SIP what-if: installment `amount` every `frequency` period for `years`,
  * compounding at `expectedReturnPct` annual. Contributions at period START
- * (annuity-due) — the standard SIP convention.
+ * (annuity-due) - the standard SIP convention.
  */
 export function sipFutureValue(params: {
   amount: number;

@@ -54,7 +54,7 @@ function isoDateStr(raw: string): string | null {
   return raw;
 }
 
-// â”€â”€ Lookups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Lookups ------------------------------------------------------------------
 tax.get("/sections", requireAuth, async (c) => {
   const sections = await getTaxSections();
   return c.json({ sections });
@@ -71,7 +71,7 @@ tax.get("/regime-slabs", requireAuth, async (c) => {
   return c.json({ financial_year: fy, slabs });
 });
 
-// â”€â”€ Investments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Investments --------------------------------------------------------------
 tax.post("/investments", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -247,7 +247,7 @@ tax.delete("/investments/:id", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// â”€â”€ Utilization / summary / suggestions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Utilization / summary / suggestions --------------------------------------
 tax.get("/utilization", requireAuth, async (c) => {
   const user = c.get("user");
   const { fy, error } = fyParam(c.req.query("financial_year"));
@@ -288,7 +288,7 @@ tax.get("/suggestions", requireAuth, async (c) => {
   return c.json({ financial_year: fy, suggestions });
 });
 
-// â”€â”€ Salary structure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Salary structure ---------------------------------------------------------
 tax.post("/salary", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -419,7 +419,7 @@ tax.patch("/salary", requireAuth, async (c) => {
   return c.json({ salary });
 });
 
-// â”€â”€ ITR documents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- ITR documents ------------------------------------------------------------
 tax.post("/itr/suggest", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -564,7 +564,7 @@ tax.delete("/itr/:id", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// â”€â”€ Financial years / exports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Financial years / exports ------------------------------------------------
 tax.get("/financial-years", requireAuth, async (c) => {
   const user = c.get("user");
   const financialYears = await listFinancialYears(user.user_id);

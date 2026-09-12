@@ -62,7 +62,7 @@ notes.post("/", requireAuth, async (c) => {
     fieldErrors.data_encrypted = "Missing encrypted payload.";
   }
   if (!dataIv) fieldErrors.data_iv = "Missing encryption IV.";
-  // FR-11.2 — template-based XOR freeform.
+  // FR-11.2 - template-based XOR freeform.
   if (templateCode !== null && typeof templateCode !== "string") {
     fieldErrors.template_code = "Invalid template.";
   }
@@ -104,7 +104,7 @@ notes.get("/categories", requireAuth, async (c) => {
   });
 });
 
-/** FR-11.7 — batch rename in ONE statement. */
+/** FR-11.7 - batch rename in ONE statement. */
 notes.patch("/categories", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await readJson(c);
@@ -140,7 +140,7 @@ notes.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
   const rows = await listNotes(user.user_id, {});
 
-  // Headers only — ciphertext never leaves the vault export path.
+  // Headers only - ciphertext never leaves the vault export path.
   const header = ["Title", "Category", "Template", "Pinned", "Updated"];
   const csvRows = rows.map((n) => [
     n.title,
@@ -208,7 +208,7 @@ notes.patch("/:id", requireAuth, async (c) => {
       );
       ok = result.rowCount === 1;
     } else {
-      // Metadata-only path — ciphertext untouched.
+      // Metadata-only path - ciphertext untouched.
       const result = await withUser(user.user_id, (client) =>
         updateNoteMeta(client, {
           userId: user.user_id,

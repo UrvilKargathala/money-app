@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 
 /**
  * Server-side AES-256-GCM for the vault RECOVERY COPY only (FR-11.17).
- * The server never sees plaintext vault keys — this exists solely so the
+ * The server never sees plaintext vault keys - this exists solely so the
  * recovery-wrapped blob can be stored under a server-held data-encryption
  * key without it being readable in the database.
  *
@@ -19,13 +19,13 @@ function dataKey(): Buffer {
       process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
     if (inProduction) {
       throw new Error(
-        "DATA_ENCRYPTION_KEY is not configured — set it in your Vercel environment variables."
+        "DATA_ENCRYPTION_KEY is not configured - set it in your Vercel environment variables."
       );
     }
     if (!warnedDevFallback) {
       warnedDevFallback = true;
       console.warn(
-        "[vault] DATA_ENCRYPTION_KEY not set — using a local dev fallback key. " +
+        "[vault] DATA_ENCRYPTION_KEY not set - using a local dev fallback key. " +
           "Set it before deploying."
       );
     }

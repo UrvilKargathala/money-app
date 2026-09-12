@@ -20,7 +20,7 @@ export type GroupMembership = {
   role: "admin" | "read_only";
 };
 
-/** Groups the user owns or is an active member of â€” one aggregate query. */
+/** Groups the user owns or is an active member of - one aggregate query. */
 export async function listSharedGroups(
   userId: number,
   q: Queryable = DB
@@ -473,7 +473,7 @@ export type GroupTxnRow = {
   added_by_email: string;
 };
 
-/** Group transactions with contributor attribution â€” one query. */
+/** Group transactions with contributor attribution - one query. */
 export async function listGroupTransactions(
   userId: number,
   groupId: string,

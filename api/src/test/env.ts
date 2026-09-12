@@ -26,7 +26,7 @@ export function loadEnvLocal(): void {
 }
 
 /**
- * The test database URL — same credentials as the dev URL, database name
+ * The test database URL - same credentials as the dev URL, database name
  * swapped to `moneymind_test` (never touches the dev/seed database).
  */
 export function testDatabaseUrl(): string {

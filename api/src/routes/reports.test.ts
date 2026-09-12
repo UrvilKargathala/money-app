@@ -36,7 +36,7 @@ async function addTxn(
   );
 }
 
-/** Accounts are wiped by resetDb between tests â€” look one up fresh each time. */
+/** Accounts are wiped by resetDb between tests - look one up fresh each time. */
 async function ensureAccount(): Promise<string> {
   const existing = await pool.query<{ id: string }>(
     `SELECT id FROM accounts WHERE user_id = $1 AND is_active = 1 ORDER BY id LIMIT 1`,
@@ -103,7 +103,7 @@ describe("cashflow and category analytics", () => {
       trend: { cumulative_spend: number }[];
     };
     expect(body.months).toBe(3);
-    // Cumulative last point â‰¥ this month's expense.
+    // Cumulative last point >= this month's expense.
     expect(body.trend.at(-1)!.cumulative_spend).toBeGreaterThanOrEqual(5000);
   });
 

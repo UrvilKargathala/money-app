@@ -123,7 +123,7 @@ describe("notes CRUD and lifecycle", () => {
       headers: { cookie: `mm_session=${db.alice.token}` },
     });
     expect(purge.status).toBe(200);
-    // Gone for good — not even in trash.
+    // Gone for good - not even in trash.
     trash = (await (
       await requestAs(db.alice, "/api/notes/trash")
     ).json()) as typeof trash;
@@ -261,7 +261,7 @@ describe("vault key lifecycle", () => {
     expect(after.kdf.iterations).toBe(310000);
     expect(after.has_recovery).toBe(true);
 
-    // Recovery copy is sealed under the server DEK — never stored verbatim.
+    // Recovery copy is sealed under the server DEK - never stored verbatim.
     const row = await pool.query<{ vault_recovery_wrapped: string }>(
       `SELECT vault_recovery_wrapped FROM user_settings WHERE user_id = $1`,
       [db.alice.userId]
@@ -355,7 +355,7 @@ describe("cross-user isolation", () => {
     expect(bobVault.initialized).toBe(false);
   });
 
-  it("CSV export contains headers only — never ciphertext", async () => {
+  it("CSV export contains headers only - never ciphertext", async () => {
     await createNote(db.alice, { title: "Export Me", payload: "topsecret" });
     const res = await requestAs(db.alice, "/api/notes/export");
     expect(res.status).toBe(200);

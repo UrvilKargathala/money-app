@@ -39,7 +39,7 @@ async function inviteEmail(
 
 async function makeUserWithEmail(email: string) {
   const user = await createUser(email);
-  // SessionUser.email comes from the users row â€” matches the invite target.
+  // SessionUser.email comes from the users row - matches the invite target.
   return user;
 }
 
@@ -76,7 +76,7 @@ describe("group creation and listing", () => {
 });
 
 describe("invite lifecycle", () => {
-  it("resolve â†’ accept grants membership; wrong email 403; expiry 410", async () => {
+  it("resolve -> accept grants membership; wrong email 403; expiry 410", async () => {
     const groupId = await createGroup();
     const token = await inviteEmail(groupId);
 
@@ -219,7 +219,7 @@ describe("membership management", () => {
     const t2 = await inviteEmail(groupId, "m2@moneymind.test");
     await postAs(m2, `/api/shared-groups/invites/${t2}/accept`, {});
 
-    // Owner leave attempt â†’ 409.
+    // Owner leave attempt -> 409.
     expect(
       (
         await postAs(db.alice, `/api/shared-groups/${groupId}/leave`, {})
@@ -289,7 +289,7 @@ describe("membership management", () => {
     });
     expect(patch.status).toBe(403);
 
-    // New owner can rename — version was bumped by transfer (+1).
+    // New owner can rename - version was bumped by transfer (+1).
     const okPatch = await requestAs(successor, `/api/shared-groups/${groupId}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },

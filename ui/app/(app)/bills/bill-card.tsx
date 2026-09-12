@@ -109,7 +109,7 @@ export function BillCard({
       <div className="flex items-end justify-between">
         <div>
           <p className="text-xs text-neutral-500">Amount</p>
-          <p className="text-lg font-bold font-heading text-neutral-900">{displayAmount != null ? formatINR(displayAmount) : "—"}</p>
+          <p className="text-lg font-bold font-heading text-neutral-900">{displayAmount != null ? formatINR(displayAmount) : "-"}</p>
         </div>
         {isActive && (
           <div className="flex gap-2">

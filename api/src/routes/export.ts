@@ -89,7 +89,7 @@ exportJobs.post("/jobs", requireAuth, async (c) => {
       });
     });
 
-    // Synchronous generation — store row_count in the job row.
+    // Synchronous generation - store row_count in the job row.
     let rowCount = 0;
     if (exportType === "csv" && moduleName) {
       const generated = await generateModuleCsv(user.user_id, moduleName, dateFrom, dateTo);

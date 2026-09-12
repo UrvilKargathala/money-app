@@ -37,7 +37,7 @@ export function PriceHistoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Price history — {investmentName}</DialogTitle>
+          <DialogTitle>Price history - {investmentName}</DialogTitle>
           <DialogDescription>Historical price points for this holding</DialogDescription>
         </DialogHeader>
 

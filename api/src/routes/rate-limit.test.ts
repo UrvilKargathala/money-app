@@ -20,7 +20,7 @@ describe("email action rate limiting (forgot-password + magic-link)", () => {
       expect(res.status).toBe(200);
     }
 
-    // 4th request hits the IP-based rate limit â†’ 429.
+    // 4th request hits the IP-based rate limit -> 429.
     const fourth = await rawRequest("/api/auth/forgot-password", {
       method: "POST",
       headers,

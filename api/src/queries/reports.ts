@@ -110,7 +110,7 @@ export function getSpendingByCategory(
   return categoryBreakdown(userId, range, "expense", q);
 }
 
-/** Income sources breakdown — zero-income categories never appear (FR-10.11). */
+/** Income sources breakdown - zero-income categories never appear (FR-10.11). */
 export function getIncomeSources(
   userId: number,
   range: DateRange,

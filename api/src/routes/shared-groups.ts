@@ -72,7 +72,7 @@ sharedGroups.post("/", requireAuth, async (c) => {
   }
 });
 
-// ---- invite token routes (literal prefix wins over :id — register first) ----
+// ---- invite token routes (literal prefix wins over :id - register first) ----
 
 sharedGroups.get("/invites/:token", requireAuth, async (c) => {
   const tokenHash = createHash("sha256").update(c.req.param("token")).digest("hex");
@@ -282,7 +282,7 @@ sharedGroups.post("/:id/invites", requireAuth, async (c) => {
 
     // Console-delivered until the C2 email provider lands (DEV-ENV §7).
     console.log(
-      `[email] To: ${inviteeEmail} | You're invited to a MoneyMind group — accept within ${INVITE_DAYS} days: ${inviteUrlFor(rawToken)}`
+      `[email] To: ${inviteeEmail} | You're invited to a MoneyMind group - accept within ${INVITE_DAYS} days: ${inviteUrlFor(rawToken)}`
     );
 
     return c.json({
@@ -392,7 +392,7 @@ sharedGroups.delete("/:id/members/:userId", requireAuth, async (c) => {
   }
   if (targetUserId === user.user_id) {
     return c.json(
-      { error: "The owner can't be removed — transfer ownership first." },
+      { error: "The owner can't be removed - transfer ownership first." },
       409
     );
   }
@@ -416,7 +416,7 @@ sharedGroups.post("/:id/leave", requireAuth, async (c) => {
   if (!guard.ok) return c.json({ error: "Not found" }, 404);
   if (guard.isOwner) {
     return c.json(
-      { error: "Owners can't leave their own group — delete it or transfer ownership." },
+      { error: "Owners can't leave their own group - delete it or transfer ownership." },
       409
     );
   }

@@ -164,7 +164,7 @@ export async function insertInvestment(
     notes: string | null;
   }
 ): Promise<string> {
-  // invested_value / current_value are GENERATED ALWAYS — never written.
+  // invested_value / current_value are GENERATED ALWAYS - never written.
   const result = await q.query<{ id: string }>(
     `INSERT INTO investments
        (user_id, name, type, category, valuation_mode, units, buy_price,
@@ -487,7 +487,7 @@ export function deleteHoldingTransaction(
 
 /**
  * Re-derives the holding's units and average cost from its full transaction
- * history (single SELECT + pure arithmetic + one UPDATE — never a query loop).
+ * history (single SELECT + pure arithmetic + one UPDATE - never a query loop).
  * Generated columns invested/current value follow automatically.
  */
 export async function recomputeHoldingAggregates(

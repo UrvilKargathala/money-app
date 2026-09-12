@@ -592,7 +592,7 @@ bills.post("/:id/mark-paid", requireAuth, async (c) => {
         userId: user.user_id,
         accountId: payAccountId,
         amount: paidAmount,
-        description: `${bill.name} — ${monthName(year, month)}`,
+        description: `${bill.name} - ${monthName(year, month)}`,
         categoryId: bill.category_id,
         notes,
       });

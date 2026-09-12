@@ -176,7 +176,7 @@ describe("security guard: tenant scoping in query modules", () => {
 
   /** Statements that legitimately read across users via an already-scoped parent. */
   const ALLOWED_STATEMENTS: RegExp[] = [
-    // Summary query delegates scoping to filterClause() â€” contract-tested below.
+    // Summary query delegates scoping to filterClause() - contract-tested below.
     /\$\{where\}/,
   ];
 
@@ -240,7 +240,7 @@ describe("security guard: tenant scoping in query modules", () => {
       }
     }
     // Writes scoped by `WHERE id = $n` inside withUser transactions still must
-    // carry the tenant column â€” none are exempt today.
+    // carry the tenant column - none are exempt today.
     expect(violations, violations.join("\n\n")).toEqual([]);
   });
 });
@@ -291,7 +291,7 @@ describe("security guard: routes contain no SQL", () => {
   it("no .query< / .query( calls in any route module", () => {
     const violations: string[] = [];
     const sqlCall = /\b(client|q|pool|db|DB|tx)\b\s*\.\s*query\s*[<(]/;
-    // SQL is always a template literal in this codebase â€” `query(`SELECTâ€¦`)`.
+    // SQL is always a template literal in this codebase - `query(`SELECT...`)`.
     const bareQuery = /\bquery\s*(<[^>]*>)?\(\s*`/;
     for (const rel of ROUTE_FILES) {
       const src = readSrc(rel);
@@ -312,7 +312,7 @@ describe("security guard: routes contain no SQL", () => {
 
 describe("security guard: no per-row query loops (N+1)", () => {
   // Pinned pre-existing sites that are deliberate (tiny bounded loops).
-  // New occurrences fail this test â€” batch them instead.
+  // New occurrences fail this test - batch them instead.
   const PINNED: Record<string, number[]> = {
     "queries/goals.ts": [478], // milestone crossing: <=4 fixed pct rows
     "queries/budget-extras.ts": [232], // template apply: bounded items loop

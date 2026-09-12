@@ -76,7 +76,7 @@ const BALANCE_EXPR = `
 `;
 
 async function ensureAccountTypesSeeded(): Promise<void> {
-  // Idempotent seed — fixes prod DBs where db_setup was run without mock_data
+  // Idempotent seed - fixes prod DBs where db_setup was run without mock_data
   await query(`
     INSERT INTO account_types (type_code, display_name, icon, is_asset, sort_order) VALUES
       ('bank_savings', 'Savings Account', 'wallet', 1, 1),

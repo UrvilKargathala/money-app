@@ -6,7 +6,7 @@ export type Queryable = { query: typeof query };
 const DB: Queryable = { query };
 
 /**
- * Net worth is COMPUTED ON READ (FR-9.1) â€” never stored incrementally.
+ * Net worth is COMPUTED ON READ (FR-9.1) - never stored incrementally.
  * One aggregate pass over every source table; snapshots only persist what
  * this computes on a given day.
  */

@@ -20,7 +20,7 @@ export type SplitSummary = {
   remaining: number;
 };
 
-/** One SELECT per side — items plus the parent anchor, no loops. */
+/** One SELECT per side - items plus the parent anchor, no loops. */
 export async function listSplits(
   userId: number,
   transactionId: string,

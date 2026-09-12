@@ -60,7 +60,7 @@ export type BudgetOverview = {
   unbudgeted: UnbudgetedCategory[];
 };
 
-/** Tenant clause is baked into the fragment — compositions may only append AND conditions. */
+/** Tenant clause is baked into the fragment - compositions may only append AND conditions. */
 const BUDGET_SELECT = `
   SELECT b.id, b.category_id, c.name AS category_name, c.icon AS category_icon,
          c.color AS category_color, c.parent_id, b.amount, b.period, b.month,

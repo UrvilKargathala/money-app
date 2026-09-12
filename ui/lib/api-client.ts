@@ -42,7 +42,7 @@ async function apiFetch(
     // keep as-is
   }
 
-  // In-process Hono request — no HTTP, no APP_URL/VERCEL_URL, no edge cache.
+  // In-process Hono request - no HTTP, no APP_URL/VERCEL_URL, no edge cache.
   const req = new Request(`http://localhost${path}`, {
     method: opts?.method ?? "GET",
     headers,
@@ -68,7 +68,7 @@ export async function apiFetchRaw(
 }
 
 // ---------------------------------------------------------------------------
-// Typed wrappers — each returns null on non-2xx so callers can handle gracefully
+// Typed wrappers - each returns null on non-2xx so callers can handle gracefully
 // ---------------------------------------------------------------------------
 
 export async function getApiUser(): Promise<{
@@ -304,7 +304,7 @@ export async function getBillsOverview(): Promise<{
 }
 
 // ---------------------------------------------------------------------------
-// Bills — full wiring: payments, YoY, calendar, upcoming, cashflow, reminders,
+// Bills - full wiring: payments, YoY, calendar, upcoming, cashflow, reminders,
 // suggest-recurring + export href helpers
 // ---------------------------------------------------------------------------
 
@@ -364,7 +364,7 @@ export async function getBillsCashflowWaterfall(): Promise<{
     waterfall?: { month: string; total: number; cumulative: number }[];
   }>("/api/bills/cashflow-waterfall");
   if (direct) return direct;
-  // fallback — some builds expose waterfall via projection endpoint
+  // fallback - some builds expose waterfall via projection endpoint
   return apiJson("/api/bills/cashflow-waterfall");
 }
 
@@ -424,7 +424,7 @@ export async function suggestRecurringBillsApi(): Promise<{
 }
 
 // ---------------------------------------------------------------------------
-// Subscriptions — payments, snooze, audits
+// Subscriptions - payments, snooze, audits
 // ---------------------------------------------------------------------------
 
 export async function getSubscriptionPayments(subscriptionId: string): Promise<{
@@ -560,7 +560,7 @@ export async function getGoalsDashboard(): Promise<{
 }
 
 // ---------------------------------------------------------------------------
-// Goals — full wiring: progress, feasibility, projection, contributions,
+// Goals - full wiring: progress, feasibility, projection, contributions,
 // snapshots, milestones, templates, distribute
 // ---------------------------------------------------------------------------
 
@@ -780,7 +780,7 @@ export async function getDebtTypes(): Promise<{ debt_types: { type_code: string;
 }
 
 // ---------------------------------------------------------------------------
-// Debts — full wiring: amortization, cost-breakdown, prepayment, payments, DTI, strategies, health
+// Debts - full wiring: amortization, cost-breakdown, prepayment, payments, DTI, strategies, health
 // ---------------------------------------------------------------------------
 
 export async function getDebtAmortization(
@@ -1078,7 +1078,7 @@ export async function getTaxSections(): Promise<{ sections: { section_code: stri
 }
 
 // ---------------------------------------------------------------------------
-// Tax — full wiring: salary, compare, suggestions, ITR, financial years, slabs
+// Tax - full wiring: salary, compare, suggestions, ITR, financial years, slabs
 // ---------------------------------------------------------------------------
 
 export async function getTaxSalary(fy: string): Promise<{
@@ -1468,7 +1468,7 @@ export async function getNotesData(): Promise<{
 }
 
 // ---------------------------------------------------------------------------
-// Notes — trash, categories, templates, attachments, vault
+// Notes - trash, categories, templates, attachments, vault
 // ---------------------------------------------------------------------------
 
 export async function getNotesTrash(): Promise<{
@@ -1657,7 +1657,7 @@ export async function getCalendarUpcoming(windowDays?: number): Promise<{
   return apiJson("/api/calendar/upcoming");
 }
 
-// Backwards-compat alias — older pages expect { upcoming: ... } shape; map new shape if needed
+// Backwards-compat alias - older pages expect { upcoming: ... } shape; map new shape if needed
 export async function getCalendarUpcomingLegacy(): Promise<{
   upcoming: { date: string; events: { title: string; amount: number | null; type: string }[]; total: number }[];
 } | null> {
@@ -1786,7 +1786,7 @@ export async function getSettings(): Promise<unknown | null> {
 }
 
 // ---------------------------------------------------------------------------
-// Auth full wiring — forgot/reset, magic-link, verify-email, change-password,
+// Auth full wiring - forgot/reset, magic-link, verify-email, change-password,
 // profile, sessions, GDPR
 // ---------------------------------------------------------------------------
 
@@ -1912,7 +1912,7 @@ export const deactivateAccount = deactivateAccountApi;
 export const restoreAccount = restoreAccountApi;
 
 // ---------------------------------------------------------------------------
-// C3 — Data Export Component: jobs, modules, status, full-archive
+// C3 - Data Export Component: jobs, modules, status, full-archive
 // All wrappers return null on non-2xx per project convention.
 // ---------------------------------------------------------------------------
 

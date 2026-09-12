@@ -33,7 +33,7 @@ function mapNote(row: SecureNoteRowRaw): SecureNote {
 }
 
 /**
- * One SELECT for the whole list — ciphertext payloads are included because
+ * One SELECT for the whole list - ciphertext payloads are included because
  * content search/decryption happens client-side (FR-11.11). Filters hit the
  * partial indexes (idx_notes_user / _category / _pinned / trgm on title).
  */
@@ -87,7 +87,7 @@ export async function getNoteById(
   return result.rowCount === 1 ? mapNote(result.rows[0]) : null;
 }
 
-/** Any note regardless of soft-delete state — used by restore/purge guards. */
+/** Any note regardless of soft-delete state - used by restore/purge guards. */
 export async function noteExistsAnyState(
   userId: number,
   id: string,
@@ -229,7 +229,7 @@ export function setNotePinned(
   );
 }
 
-/** FR-11.7 — one statement updates every note carrying the old category. */
+/** FR-11.7 - one statement updates every note carrying the old category. */
 export function renameCategory(
   q: Queryable,
   params: { userId: number; fromCategory: string; toCategory: string }

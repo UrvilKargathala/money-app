@@ -30,7 +30,7 @@ export function query<T extends QueryResultRow = QueryResultRow>(
 
 /**
  * Runs `fn` inside a transaction with `app.current_user_id` set for the
- * duration of the transaction (SET LOCAL — never leaks to other requests on
+ * duration of the transaction (SET LOCAL - never leaks to other requests on
  * the same pooled connection). Row Level Security policies in
  * `scripts/db_setup.py` are written against this setting; when connected as
  * the table owner (local dev) RLS is bypassed and the explicit user_id

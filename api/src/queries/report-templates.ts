@@ -56,7 +56,7 @@ export async function getReportTemplate(
   return result.rowCount === 1 ? mapTemplate(result.rows[0]) : null;
 }
 
-/** Own-template lookup for mutating actions — system rows are never mutable. */
+/** Own-template lookup for mutating actions - system rows are never mutable. */
 async function getOwnedTemplate(
   q: Queryable,
   userId: number,

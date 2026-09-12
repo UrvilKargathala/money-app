@@ -69,7 +69,7 @@ export async function patchAs(
 
 /**
  * Inserts a full fixture user (users + profile + settings + session token)
- * directly — fast and immune to login rate limiting.
+ * directly - fast and immune to login rate limiting.
  */
 export async function createUser(email: string): Promise<TestUser> {
   const result = await pool.query<{ user_id: number }>(

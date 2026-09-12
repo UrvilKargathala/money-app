@@ -87,7 +87,7 @@ function MilestonesDisplay({ milestones, progressPct }: { milestones: Milestone[
           return (
             <div key={pct} className={`rounded-lg border p-3 text-center ${isReached ? "border-success/30 bg-success-light/50" : "border-neutral-100 bg-neutral-50"}`}>
               <p className={`text-lg font-bold font-heading ${isReached ? "text-success-dark" : "text-neutral-400"}`}>{pct}%</p>
-              <p className="text-xs text-neutral-500">{isReached ? m?.reached_date ?? "—" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
+              <p className="text-xs text-neutral-500">{isReached ? m?.reached_date ?? "-" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
               {isReached && <Badge variant="success" className="mt-1 text-[10px]">reached</Badge>}
             </div>
           );
@@ -156,7 +156,7 @@ function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasi
             </div>
             <Badge variant={feasibilityColor(feasibility.status) as never}>{feasibilityLabel(feasibility.status)}</Badge>
           </div>
-          <p className="text-xs text-neutral-400 mt-2">Projected {feasibility.projected_date ?? "—"} • Target {projection?.target_date ?? "—"}</p>
+          <p className="text-xs text-neutral-400 mt-2">Projected {feasibility.projected_date ?? "-"} • Target {projection?.target_date ?? "-"}</p>
         </Card>
       )}
       {projection && (
@@ -166,9 +166,9 @@ function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasi
             <div><p className="text-xs text-neutral-500">Target</p><p className="font-semibold">{formatINR(projection.target_amount)}</p></div>
             <div><p className="text-xs text-neutral-500">Saved</p><p className="font-semibold">{formatINR(projection.current_amount)}</p></div>
             <div><p className="text-xs text-neutral-500">Avg monthly</p><p className="font-semibold">{formatINR(projection.avg_monthly)}</p></div>
-            <div><p className="text-xs text-neutral-500">Months to finish</p><p className="font-semibold">{projection.months_to_finish ?? "—"}</p></div>
+            <div><p className="text-xs text-neutral-500">Months to finish</p><p className="font-semibold">{projection.months_to_finish ?? "-"}</p></div>
           </div>
-          <p className="text-xs text-neutral-400 mt-2">Projected completion {projection.projected_date ?? "—"}</p>
+          <p className="text-xs text-neutral-400 mt-2">Projected completion {projection.projected_date ?? "-"}</p>
         </Card>
       )}
     </div>
@@ -293,7 +293,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Contributions — {goal.name}</DialogTitle>
+          <DialogTitle>Contributions - {goal.name}</DialogTitle>
           <DialogDescription>{contributions.length} contributions • {formatINR(goal.current_amount)} saved of {formatINR(goal.target_amount)}</DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -316,7 +316,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
                     <tr key={c.id} className="border-t text-xs">
                       <td className="p-2">{c.date}</td>
                       <td className="p-2 text-right font-medium">{formatINR(c.amount)}</td>
-                      <td className="p-2 max-w-[20ch] truncate">{c.notes ?? "—"}</td>
+                      <td className="p-2 max-w-[20ch] truncate">{c.notes ?? "-"}</td>
                       <td className="p-2 flex gap-1 justify-center">
                         <Button variant="ghost" size="sm" onClick={() => startEdit(c)}><Edit className="h-3 w-3" /> Edit</Button>
                         <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDelete(c.id)}><Trash2 className="h-3 w-3" /> Delete</Button>
@@ -431,7 +431,7 @@ function GoalDetailDialog({ goal, open, onOpenChange }: { goal: Goal | null; ope
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{goal.name} — Details</DialogTitle>
+          <DialogTitle>{goal.name} - Details</DialogTitle>
           <DialogDescription>{formatINR(goal.current_amount)} / {formatINR(goal.target_amount)} • {goal.progress_pct.toFixed(1)}% • Due {new Date(goal.target_date).toLocaleDateString("en-IN")}</DialogDescription>
         </DialogHeader>
         {loading ? <p className="text-sm text-neutral-400 py-8 text-center">Loading...</p> : (
@@ -567,7 +567,7 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold font-heading">{t.icon ? `${t.icon} ` : ""}{t.name}</p>
-                    <p className="text-xs text-neutral-500">{t.description ?? "—"}</p>
+                    <p className="text-xs text-neutral-500">{t.description ?? "-"}</p>
                   </div>
                   <Badge variant={t.is_system ? "info" : "secondary"}>{t.is_system ? "system" : "custom"}</Badge>
                 </div>

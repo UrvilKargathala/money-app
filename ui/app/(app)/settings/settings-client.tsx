@@ -7,13 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, LayoutGrid, SlidersHorizontal, Zap, Fingerprint } from "lucide-react";
+import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
 import { useMembership } from "@/components/membership";
-import { WIDGETS } from "@/lib/widgets";
 import Link from "next/link";
 
 const exportModules = [
@@ -32,10 +31,8 @@ const exportModules = [
 
 type SessionRow = { id: number; token_id?: number; created_at: string; last_active?: string; ip_address?: string | null; user_agent?: string | null; is_current?: boolean };
 
-export function SettingsClient({ user, settings }: { user: { full_name: string | null; email: string } | null; settings: unknown }) {
+export function SettingsClient({ user }: { user: { full_name: string | null; email: string } | null }) {
   const { premium, loading: planLoading } = useMembership();
-  const [draggedWidget, setDraggedWidget] = useState<string | null>(null);
-  const [savingWidgets, setSavingWidgets] = useState(false);
   const [prefs, setPrefs] = useState<{ type: string; channel: string; enabled: number }[] | null>(null);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string; bio?: string | null; avatar_url?: string | null } | null>(null);
   const [fullName, setFullName] = useState(user?.full_name ?? "");
@@ -56,8 +53,6 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
   const [gdprLoading, setGdprLoading] = useState(false);
 
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [widgetLayout, setWidgetLayout] = useState<unknown[] | null>(null);
-  const [showWidgets, setShowWidgets] = useState(false);
   const [showControlCenter, setShowControlCenter] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [savingHaptics, setSavingHaptics] = useState(false);
@@ -87,7 +82,6 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
       .then((d) => {
         const s = d?.settings ?? d ?? {};
         if (s.haptics_enabled !== undefined) setHapticsEnabled(!!Number(s.haptics_enabled));
-        if (s.widget_layout !== undefined) setWidgetLayout(Array.isArray(s.widget_layout) ? s.widget_layout : s.widget_layout ? JSON.parse(String(s.widget_layout)) : []);
         // initialize haptics cache
         setHapticsEnabledCache(!!Number(s.haptics_enabled ?? 1));
       })
@@ -228,19 +222,39 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
   }
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2 [&>div:first-of-type]:lg:col-span-2 [&>div:nth-child(2)]:lg:col-span-2">
-      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40"><CardHeader><CardTitle>Your MoneyMind plan</CardTitle><CardDescription>{planLoading ? "Loading plan…" : premium ? "Premium — all features unlocked" : "Starter — free essentials"}</CardDescription></CardHeader><CardContent><Button asChild className="bg-indigo-600 hover:bg-indigo-700"><Link href="/pricing">View plans and pricing</Link></Button></CardContent></Card>
-      <div className="lg:pb-2">
-        <h1 className="text-3xl font-bold font-heading text-neutral-900">Settings</h1>
-        <p className="text-sm text-neutral-500 font-body mt-1">Manage your account and preferences</p>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold font-heading text-neutral-900">Settings</h1>
+          <p className="text-sm text-neutral-500 font-body mt-1">Manage your account, security, notifications, and data.</p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href="/pricing">View plans and pricing</Link>
+        </Button>
       </div>
 
-      <Card>
+      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-indigo-700">Your MoneyMind plan</p>
+            <h2 className="mt-1 text-xl font-bold font-heading text-neutral-900">
+              {planLoading ? "Checking plan..." : premium ? "Premium active" : "Starter plan"}
+            </h2>
+            <p className="text-sm text-neutral-500">{planLoading ? "Loading access status" : premium ? "All features are unlocked for now." : "Core money tools are available."}</p>
+          </div>
+          <Button asChild className="w-fit bg-indigo-600 hover:bg-indigo-700">
+            <Link href="/pricing">Manage plan</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" /> Profile
           </CardTitle>
-          <CardDescription>Your account information — edit name/bio and avatar</CardDescription>
+          <CardDescription>Your account information - edit name/bio and avatar</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
@@ -267,7 +281,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-neutral-500">Email</span>
-              <span className="font-medium">{profile?.email ?? user?.email ?? "—"}</span>
+              <span className="font-medium">{profile?.email ?? user?.email ?? "-"}</span>
             </div>
             <Button onClick={handleSaveProfile} disabled={savingProfile} size="sm" className="w-fit">
               {savingProfile ? "Saving..." : "Save profile"}
@@ -320,7 +334,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <CardTitle className="flex items-center gap-2">
             <Monitor className="h-5 w-5" /> Active sessions
           </CardTitle>
-          <CardDescription>{premium ? "Multi-device access enabled. Revoke sessions you don’t recognize." : "Starter supports one active session. Signing in again replaces the previous session."}</CardDescription>
+          <CardDescription>{premium ? "Multi-device access enabled. Revoke sessions you do not recognize." : "Starter supports one active session. Signing in again replaces the previous session."}</CardDescription>
         </CardHeader>
         <CardContent>
           {sessions === null ? (
@@ -367,28 +381,9 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">Personalization</CardTitle>
-          <CardDescription>Widgets, control center, shortcuts and haptics — mirrors system settings</CardDescription>
+          <CardDescription>Control center, shortcuts, and haptic feedback</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Widgets - Premium */}
-          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white">
-                <LayoutGrid className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
-                  Widgets <Badge className="bg-teal-900 text-teal-400 border-0 text-xs">Premium</Badge>
-                </p>
-                <p className="text-xs text-neutral-500">Dashboard widgets • drag, hide, Premium unlock</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowWidgets(true); }}>
-              Configure
-            </Button>
-          </div>
-
-          {/* Control Center */}
           <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
@@ -396,7 +391,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
               </div>
               <div>
                 <p className="text-sm font-semibold font-heading text-neutral-900">Control center</p>
-                <p className="text-xs text-neutral-500">Quick toggles • dark, notifications, sync</p>
+                <p className="text-xs text-neutral-500">Quick toggles for app preferences</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowControlCenter(true); }}>
@@ -404,7 +399,6 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
             </Button>
           </div>
 
-          {/* Shortcuts - Recommended */}
           <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-amber-400">
@@ -414,7 +408,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
                 <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
                   Shortcuts <Badge className="bg-teal-900 text-teal-400 border-0 text-xs">Recommended</Badge>
                 </p>
-                <p className="text-xs text-neutral-500">Cmd+K palette • 12 actions • OS shortcuts</p>
+                <p className="text-xs text-neutral-500">Cmd+K palette with app actions</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowShortcuts(true); }}>
@@ -422,7 +416,6 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
             </Button>
           </div>
 
-          {/* Haptic Feedback */}
           <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
@@ -430,7 +423,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
               </div>
               <div>
                 <p className="text-sm font-semibold font-heading text-neutral-900">Haptic feedback</p>
-                <p className="text-xs text-neutral-500">Vibration on tap • success/error pulses</p>
+                <p className="text-xs text-neutral-500">Tap feedback and success/error pulses</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -468,35 +461,17 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
             </div>
           </div>
 
-          <p className="text-sm text-neutral-500">Customize your dashboard and everyday controls.</p>
+          <p className="text-sm text-neutral-500">Customize everyday controls without exposing developer-only settings.</p>
         </CardContent>
       </Card>
 
-      {/* Dialogs for Personalization */}
-      {showWidgets && (
-        <Card className="p-6 border-dashed">
-          <h3 className="font-semibold font-heading">Widgets — Premium</h3>
-          <p className="text-sm text-neutral-500 mt-1">Premium includes all dashboard widgets and layout customization. Drag to reorder, or use the arrow buttons.</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-            {(widgetLayout?.length ? widgetLayout as string[] : WIDGETS.map((w) => w.id)).map((id, i, ids) => (
-              <div key={id} draggable={premium && !savingWidgets} onDragStart={() => setDraggedWidget(id)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (!premium || !draggedWidget) return; const next = ids.filter((w) => w !== draggedWidget); next.splice(i, 0, draggedWidget); setWidgetLayout(next); setDraggedWidget(null); }} className={`rounded-lg border p-3 flex items-center justify-between ${premium ? "bg-white" : "bg-neutral-50 opacity-60"}`}>
-                <span>{WIDGETS.find((w) => w.id === id)?.label}</span><span className="flex gap-1"><Button size="sm" variant="ghost" aria-label={`Move ${id} up`} disabled={!premium || i === 0 || savingWidgets} onClick={() => { const next = [...ids]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; setWidgetLayout(next); }}>↑</Button><Button size="sm" variant="ghost" aria-label={`Move ${id} down`} disabled={!premium || i === ids.length - 1 || savingWidgets} onClick={() => { const next = [...ids]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; setWidgetLayout(next); }}>↓</Button></span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex gap-2">
-            <Button size="sm" onClick={() => setShowWidgets(false)}>Done</Button>
-            {premium ? <Button size="sm" disabled={savingWidgets} onClick={async () => { setSavingWidgets(true); try { const r = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ widget_layout: widgetLayout?.length ? widgetLayout : WIDGETS.map((w) => w.id) }) }); if (!r.ok) throw new Error(); toast.success("Widget layout saved"); } catch { toast.error("Could not save widget layout"); } finally { setSavingWidgets(false); } }}>{savingWidgets ? "Saving…" : "Save layout"}</Button> : <Button size="sm" variant="outline" asChild><Link href="/pricing">Compare plans</Link></Button>}
-          </div>
-        </Card>
-      )}
       {showControlCenter && (
         <Card className="p-6 border-dashed">
           <h3 className="font-semibold font-heading flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" /> Control Center</h3>
-          <p className="text-sm text-neutral-500 mt-1">Quick toggles — same as Appearance & Notifications but in one place.</p>
+          <p className="text-sm text-neutral-500 mt-1">Quick toggles - same as Appearance & Notifications but in one place.</p>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between"><span>Dark mode</span><Badge variant="default">Soon</Badge></div>
-            <div className="flex items-center justify-between"><span>Notifications</span><Badge variant="default">Toggle in Notifications</Badge></div>
+            <div className="flex items-center justify-between"><span>Notifications</span><Badge variant="default">Use Notification Preferences</Badge></div>
             <div className="flex items-center justify-between"><span>Haptics</span><Badge variant={hapticsEnabled ? "success" : "default"}>{hapticsEnabled ? "On" : "Off"}</Badge></div>
           </div>
           <Button size="sm" className="mt-3" onClick={() => setShowControlCenter(false)}>Close</Button>
@@ -539,12 +514,12 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" /> Data Export
           </CardTitle>
-          <CardDescription>Download your data per module (CSV) — or open the full export center for jobs, archives and pipeline status</CardDescription>
+          <CardDescription>Download module CSV files or open the full export center</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-3 flex items-center gap-2">
             <Button asChild size="sm">
-              <a href={premium ? "/export" : "/pricing"}>{premium ? "Open Export Center →" : "Unlock Export Center →"}</a>
+              <a href={premium ? "/export" : "/pricing"}>{premium ? "Open Export Center" : "Unlock Export Center"}</a>
             </Button>
             <span className="text-xs text-neutral-500">Create jobs (CSV/PDF), track progress, download files</span>
           </div>
@@ -571,7 +546,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" /> Data & Privacy
           </CardTitle>
-          <CardDescription>GDPR — deactivate (30-day grace) and restore</CardDescription>
+          <CardDescription>Deactivate your account or restore it during the grace period</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2 flex-wrap">
@@ -585,15 +560,7 @@ export function SettingsClient({ user, settings }: { user: { full_name: string |
           <p className="text-xs text-neutral-500">Deactivate keeps data 30 days, then purge via DELETE /api/users/me. Restore works only within grace period.</p>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Raw Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs bg-neutral-50 p-4 rounded-lg overflow-auto">{JSON.stringify(settings, null, 2) || "No settings"}</pre>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

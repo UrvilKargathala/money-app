@@ -293,7 +293,7 @@ export function CalendarDashboard({
 
       {/* Legend */}
       <Card className="p-4">
-        <p className="text-xs font-medium text-neutral-500 mb-2">Legend — color coded by type</p>
+        <p className="text-xs font-medium text-neutral-500 mb-2">Legend - color coded by type</p>
         <div className="flex flex-wrap gap-2">
           {[
             { label: "Bill", cls: "bg-red-500" },
@@ -539,7 +539,7 @@ export function CalendarDashboard({
             <div className="space-y-3">
               {legacyUp.slice(0, 5).map((u) => (
                 <div key={u.date} className="border-b last:border-0 pb-3 last:pb-0">
-                  <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} — {formatINR(u.total)}</p>
+                  <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} - {formatINR(u.total)}</p>
                   <div className="space-y-1 mt-1">
                     {u.events.map((ev, i) => (
                       <div key={i} className="flex justify-between text-xs text-neutral-600">

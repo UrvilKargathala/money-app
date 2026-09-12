@@ -437,7 +437,7 @@ export async function deleteContribution(
 
 /**
  * FR-5.20/5.21: milestone rows mirror the derived progress. Called after
- * every contribution mutation â€” rows are inserted the first time a threshold
+ * every contribution mutation - rows are inserted the first time a threshold
  * is crossed (unique per goal + pct, reached_date = crossing date) and
  * removed again if the goal drops below the threshold.
  */

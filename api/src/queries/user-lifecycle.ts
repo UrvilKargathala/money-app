@@ -214,7 +214,7 @@ export async function loadAllUserData(
   userId: number
 ): Promise<Record<string, unknown[]>> {
   const data: Record<string, unknown[]> = {};
-  // Table names are from a hardcoded allowlist above — not user input.
+  // Table names are from a hardcoded allowlist above - not user input.
   for (const table of EXPORT_TABLES) {
     const result = await DB.query(`SELECT * FROM ${table} WHERE user_id = $1`, [userId]);
     data[table] = result.rows;

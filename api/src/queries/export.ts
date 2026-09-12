@@ -128,7 +128,7 @@ export async function deleteExportJob(
 }
 
 // ---------------------------------------------------------------------------
-// Module data loaders — each returns rows for CSV generation
+// Module data loaders - each returns rows for CSV generation
 // ---------------------------------------------------------------------------
 
 export type ExportableModule = {

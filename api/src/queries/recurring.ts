@@ -338,7 +338,7 @@ export async function skipNextOccurrence(
   if (tpl.end_type === "date" && endDateIso2 !== null && nextIso > endDateIso2) {
     completed = true;
   }
-  // Count-based completion only tracks EXECUTED occurrences â€” skipping a slot
+  // Count-based completion only tracks EXECUTED occurrences - skipping a slot
   // advances the schedule but never increments that counter.
 
   if (completed) {

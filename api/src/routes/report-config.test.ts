@@ -53,7 +53,7 @@ describe("report templates CRUD", () => {
     const systemRow = aliceList.templates.find((t) => t.name === "System Cashflow")!;
     expect(systemRow.user_id).toBeNull();
 
-    // Bob sees the system row only — never alice's.
+    // Bob sees the system row only - never alice's.
     const bobList = (await (
       await requestAs(db.bob, "/api/report-templates")
     ).json()) as { templates: { name: string }[] };

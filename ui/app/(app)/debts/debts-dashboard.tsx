@@ -94,7 +94,7 @@ function DtiCard({ dti }: { dti: Dti }) {
           <div className="space-y-1">
             <p className="text-[13px] font-medium font-heading text-neutral-500">Debt-to-Income (DTI)</p>
             <p className="text-[28px] font-bold font-heading leading-none" style={{ color: dti?.dti != null ? levelColor : "#111827" }}>
-              {dti?.dti != null ? `${dti.dti.toFixed(2)}%` : "—"}
+              {dti?.dti != null ? `${dti.dti.toFixed(2)}%` : "-"}
             </p>
             <p className="text-xs text-neutral-500 font-body">
               {dti?.income_missing ? "Set monthly income to calculate DTI" : dti?.level ? `Level: ${dti.level}` : "No active EMI"}
@@ -145,7 +145,7 @@ function HealthAlertsCard({ data }: { data: HealthAlerts }) {
         <CardDescription>{alerts.length} alerts • {data.summary?.critical ?? 0} critical, {data.summary?.warning ?? 0} warning, {data.summary?.info ?? 0} info</CardDescription>
       </CardHeader>
       {alerts.length === 0 ? (
-        <p className="text-sm text-neutral-500">No health alerts — you are on track.</p>
+        <p className="text-sm text-neutral-500">No health alerts - you are on track.</p>
       ) : (
         <div className="space-y-3">
           {alerts.map((a, i) => (
@@ -202,7 +202,7 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Amortization — {debt.name}</DialogTitle>
+          <DialogTitle>Amortization - {debt.name}</DialogTitle>
           <DialogDescription>{rows.length} periods • {formatINR(Number(debt.emi_amount || 0))} EMI at {debt.interest_rate}%</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-2 items-center">
@@ -231,7 +231,7 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
                   <td className="p-2 text-right">{formatINR(r.interest_part)}</td>
                   <td className="p-2 text-right">{formatINR(r.outstanding_after)}</td>
                   <td className="p-2 text-right">{formatINR(r.cumulative_interest)}</td>
-                  <td className="p-2">{r.scheduled_date ?? "—"}</td>
+                  <td className="p-2">{r.scheduled_date ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,7 +282,7 @@ function PrepaymentSimulatorDialog({ debt, open, onOpenChange }: { debt: Debt | 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Prepayment simulator — {debt.name}</DialogTitle>
+          <DialogTitle>Prepayment simulator - {debt.name}</DialogTitle>
           <DialogDescription>Compare reduce EMI vs reduce tenure before applying.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -315,7 +315,7 @@ function PrepaymentSimulatorDialog({ debt, open, onOpenChange }: { debt: Debt | 
                 <div><p className="text-xs text-neutral-500">Original interest</p><p className="font-medium">{formatINR(result.original_interest)}</p></div>
                 <div><p className="text-xs text-neutral-500">New interest</p><p className="font-medium">{formatINR(result.new_interest)}</p></div>
               </div>
-              <p className="text-xs text-neutral-400">Current debt-free {result.current_debt_free_date ?? "—"} → New {result.new_debt_free_date ?? "—"}</p>
+              <p className="text-xs text-neutral-400">Current debt-free {result.current_debt_free_date ?? "-"} → New {result.new_debt_free_date ?? "-"}</p>
               <Button onClick={apply} variant="default" className="w-full mt-2">Apply prepayment</Button>
             </Card>
           )}
@@ -380,7 +380,7 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Payments — {debt.name}</DialogTitle>
+          <DialogTitle>Payments - {debt.name}</DialogTitle>
           <DialogDescription>{payments.length} payments • Outstanding {formatINR(Number(debt.principal_outstanding))}</DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="history" className="w-full">
@@ -458,7 +458,7 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Payment status — {debt.name}</DialogTitle>
+          <DialogTitle>Payment status - {debt.name}</DialogTitle>
           <DialogDescription>12-month timeline • {missed} missed payments</DialogDescription>
         </DialogHeader>
         {loading ? <p className="text-sm text-neutral-400">Loading...</p> : (
@@ -468,7 +468,7 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
                 <div key={m.month} className="rounded-lg border border-neutral-100 p-2 text-center">
                   <p className="font-medium">{m.month}</p>
                   <Badge variant={colorFor(m.status) as never} className="mt-1">{m.status}</Badge>
-                  <p className="text-[11px] text-neutral-400 mt-1">{m.amount != null ? formatINR(m.amount) : "—"} {m.scheduled_emi != null ? `/ ${formatINR(m.scheduled_emi)}` : ""}</p>
+                  <p className="text-[11px] text-neutral-400 mt-1">{m.amount != null ? formatINR(m.amount) : "-"} {m.scheduled_emi != null ? `/ ${formatINR(m.scheduled_emi)}` : ""}</p>
                 </div>
               ))}
             </div>
@@ -534,13 +534,13 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
             <p className="text-xs text-green-700">Avalanche (high rate first)</p>
             <p className="text-sm font-semibold">{data.avalanche.months_to_debt_free} months • Saved {formatINR(data.avalanche.interest_saved)}</p>
             <p className="text-xs text-neutral-500">Interest {formatINR(data.avalanche.total_interest)}</p>
-            <p className="text-xs text-neutral-400 break-all">Order: {data.avalanche.payoff_order.join(" → ") || "—"}</p>
+            <p className="text-xs text-neutral-400 break-all">Order: {data.avalanche.payoff_order.join(" → ") || "-"}</p>
           </div>
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
             <p className="text-xs text-blue-700">Snowball (small balance first)</p>
             <p className="text-sm font-semibold">{data.snowball.months_to_debt_free} months • Saved {formatINR(data.snowball.interest_saved)}</p>
             <p className="text-xs text-neutral-500">Interest {formatINR(data.snowball.total_interest)}</p>
-            <p className="text-xs text-neutral-400 break-all">Order: {data.snowball.payoff_order.join(" → ") || "—"}</p>
+            <p className="text-xs text-neutral-400 break-all">Order: {data.snowball.payoff_order.join(" → ") || "-"}</p>
           </div>
         </div>
       )}
@@ -638,7 +638,7 @@ export function DebtsDashboard({
         <Card className="p-6">
           <CardHeader className="p-0 mb-3">
             <CardTitle className="flex items-center gap-2 text-base"><BarChart3 className="h-5 w-5" /> Combined Timeline</CardTitle>
-            <CardDescription>Total outstanding {formatINR(combinedTimeline.combined.total_outstanding)} • EMI {formatINR(combinedTimeline.combined.total_monthly_emi)} • Debt-free {combinedTimeline.combined.debt_free_date ?? "—"}</CardDescription>
+            <CardDescription>Total outstanding {formatINR(combinedTimeline.combined.total_outstanding)} • EMI {formatINR(combinedTimeline.combined.total_monthly_emi)} • Debt-free {combinedTimeline.combined.debt_free_date ?? "-"}</CardDescription>
           </CardHeader>
           <div className="space-y-2">
             {combinedTimeline.timeline.map((t) => (
@@ -649,7 +649,7 @@ export function DebtsDashboard({
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold">{formatINR(t.outstanding)}</p>
-                  <p className="text-xs text-neutral-500">{t.emi_amount != null ? formatINR(t.emi_amount) : "—"} @ {t.interest_rate}%</p>
+                  <p className="text-xs text-neutral-500">{t.emi_amount != null ? formatINR(t.emi_amount) : "-"} @ {t.interest_rate}%</p>
                 </div>
               </div>
             ))}

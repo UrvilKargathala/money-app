@@ -381,7 +381,7 @@ subscriptions.post("/:id/renew", requireAuth, async (c) => {
         userId: user.user_id,
         accountId: payAccountId,
         amount,
-        description: `${sub.service_name} â€” ${monthName(year, month)}`,
+        description: `${sub.service_name} - ${monthName(year, month)}`,
         categoryId: sub.category_id,
       });
 

@@ -81,7 +81,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Payments — {bill.name}</DialogTitle>
+          <DialogTitle>Payments - {bill.name}</DialogTitle>
           <DialogDescription>{payments.length} payments • {bill.frequency} • Due day {bill.due_day}</DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="history">
@@ -118,7 +118,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                       <td className="p-2">{p.period_label}</td>
                       <td className="p-2">{p.created_at.slice(0,10)}</td>
                       <td className="p-2 text-right font-medium">{formatINR(p.amount)}</td>
-                      <td className="p-2 max-w-[20ch] truncate">{p.notes ?? "—"}</td>
+                      <td className="p-2 max-w-[20ch] truncate">{p.notes ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -139,7 +139,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                 <div className="col-span-2 rounded-lg bg-neutral-50 p-3 text-center">
                   <p className="text-xs text-neutral-500">YoY change</p>
                   <p className="text-sm font-semibold">
-                    {yoy.previous.total === 0 ? "—" : `${(((yoy.current.total - yoy.previous.total) / yoy.previous.total) * 100).toFixed(1)}%`}{" "}
+                    {yoy.previous.total === 0 ? "-" : `${(((yoy.current.total - yoy.previous.total) / yoy.previous.total) * 100).toFixed(1)}%`}{" "}
                     <span className="text-neutral-400">({formatINR(yoy.current.total - yoy.previous.total)})</span>
                   </p>
                 </div>
@@ -256,7 +256,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Reminders — {bill.name}</DialogTitle>
+          <DialogTitle>Reminders - {bill.name}</DialogTitle>
           <DialogDescription>{reminders.length} reminders • Manage days before due and channel</DialogDescription>
         </DialogHeader>
 
@@ -275,7 +275,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
                 {loading ? (
                   <tr><td colSpan={4} className="p-4 text-center text-neutral-400">Loading...</td></tr>
                 ) : reminders.length === 0 ? (
-                  <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No reminders — add one below.</td></tr>
+                  <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No reminders - add one below.</td></tr>
                 ) : reminders.map((r) => (
                   <tr key={r.id} className="border-t text-xs">
                     <td className="p-2">{r.days_before} days</td>
@@ -703,12 +703,12 @@ export function BillsDashboard({
               {expanded.has(b.id) && (
                 <Card className="p-3 bg-neutral-50 space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><p className="text-neutral-500">Amount</p><p className="font-medium">{b.amount != null ? formatINR(b.amount) : b.estimated_amount != null ? `~${formatINR(b.estimated_amount)}` : "—"}</p></div>
+                    <div><p className="text-neutral-500">Amount</p><p className="font-medium">{b.amount != null ? formatINR(b.amount) : b.estimated_amount != null ? `~${formatINR(b.estimated_amount)}` : "-"}</p></div>
                     <div><p className="text-neutral-500">Frequency</p><p className="font-medium">{b.frequency}</p></div>
-                    <div><p className="text-neutral-500">Account</p><p className="font-medium">{b.account_name ?? "—"}</p></div>
-                    <div><p className="text-neutral-500">Category</p><p className="font-medium">{b.category_name ?? "—"}</p></div>
+                    <div><p className="text-neutral-500">Account</p><p className="font-medium">{b.account_name ?? "-"}</p></div>
+                    <div><p className="text-neutral-500">Category</p><p className="font-medium">{b.category_name ?? "-"}</p></div>
                     <div><p className="text-neutral-500">Reminder days</p><p className="font-medium">{b.reminder_days} days • {b.is_autopay ? "Autopay" : "Manual"}</p></div>
-                    <div><p className="text-neutral-500">Last paid</p><p className="font-medium">{b.last_paid_date ? `${b.last_paid_date} • ${b.last_paid_amount != null ? formatINR(b.last_paid_amount) : "—"}` : "—"}</p></div>
+                    <div><p className="text-neutral-500">Last paid</p><p className="font-medium">{b.last_paid_date ? `${b.last_paid_date} • ${b.last_paid_amount != null ? formatINR(b.last_paid_amount) : "-"}` : "-"}</p></div>
                   </div>
                   {b.notes && <p className="text-xs text-neutral-500 border-t pt-2">{b.notes}</p>}
                   <div className="flex gap-2 pt-1">

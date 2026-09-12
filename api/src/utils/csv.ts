@@ -1,6 +1,6 @@
 ﻿/**
- * Minimal RFC-4180 CSV machinery for the import pipeline â€” parser, header
- * alias auto-detection, and rowâ†’draft mapping. No dependencies.
+ * Minimal RFC-4180 CSV machinery for the import pipeline - parser, header
+ * alias auto-detection, and row->draft mapping. No dependencies.
  */
 
 export type ParsedCsv = {
@@ -173,14 +173,14 @@ function parseDateCell(raw: string): string | null {
     if (!m) continue;
     const [, a, b, c] = m;
     const [year, month, day] =
-      p.order === "ymd" ? [a, b, c] : [c, b, a]; // dmy â†’ dd/mm/yyyy (India default)
+      p.order === "ymd" ? [a, b, c] : [c, b, a]; // dmy -> dd/mm/yyyy (India default)
     const dt = new Date(Date.UTC(+year, +month - 1, +day));
     if (
       dt.getUTCFullYear() !== +year ||
       dt.getUTCMonth() !== +month - 1 ||
       dt.getUTCDate() !== +day
     ) {
-      return null; // rolled over â†’ invalid calendar date
+      return null; // rolled over -> invalid calendar date
     }
     return `${+year}-${String(+month).padStart(2, "0")}-${String(+day).padStart(2, "0")}`;
   }
@@ -215,7 +215,7 @@ export function rowToDraft(
   let magnitude: number | null = null;
 
   const parseAmountCell = (raw: string): number => {
-    const cleaned = raw.replace(/[â‚¹,\s]/g, "");
+    const cleaned = raw.replace(/[₹,\s]/g, "");
     if (cleaned.startsWith("(") && cleaned.endsWith(")")) {
       const v = Number(cleaned.slice(1, -1));
       return Number.isFinite(v) ? -v : NaN;
@@ -248,7 +248,7 @@ export function rowToDraft(
           ? "income"
           : typeRaw.startsWith("d") || typeRaw.includes("dr")
             ? "expense"
-            : "income"; // positive with no direction info â†’ income
+            : "income"; // positive with no direction info -> income
     } else {
       return { ok: false, reason: "zero amount" };
     }

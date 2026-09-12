@@ -90,7 +90,7 @@ export default function ReportsCharts({
       <Card>
         <CardHeader>
           <CardTitle>Cashflow</CardTitle>
-          <CardDescription>Monthly income vs expense — net line</CardDescription>
+          <CardDescription>Monthly income vs expense - net line</CardDescription>
         </CardHeader>
         <CardContent>
           {cashflowWithNet.length === 0 ? (
@@ -121,7 +121,7 @@ export default function ReportsCharts({
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Spending by Category</CardTitle>
-            <CardDescription>Expense breakdown — donut</CardDescription>
+            <CardDescription>Expense breakdown - donut</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {spendingByCategory.length === 0 ? (
@@ -190,7 +190,7 @@ export default function ReportsCharts({
 
         <Card>
           <CardHeader>
-            <CardTitle>Trends — last {trendsMonths} months</CardTitle>
+            <CardTitle>Trends - last {trendsMonths} months</CardTitle>
             <CardDescription>Cumulative spend vs monthly spend</CardDescription>
           </CardHeader>
           <CardContent>
@@ -221,7 +221,7 @@ export default function ReportsCharts({
 
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle>Budget vs Actual — {budgetLabel}</CardTitle>
+          <CardTitle>Budget vs Actual - {budgetLabel}</CardTitle>
           <CardDescription>Budgeted vs actual spend per category</CardDescription>
         </CardHeader>
         <CardContent>
@@ -257,7 +257,7 @@ export default function ReportsCharts({
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Spending Heatmap — {monthName}</CardTitle>
+            <CardTitle>Spending Heatmap - {monthName}</CardTitle>
             <CardDescription>Daily expense intensity</CardDescription>
           </CardHeader>
           <CardContent>
@@ -343,7 +343,7 @@ export default function ReportsCharts({
         <Card>
           <CardHeader>
             <CardTitle>Income Sources</CardTitle>
-            <CardDescription>Total {formatINR(totalIncome)} — by category</CardDescription>
+            <CardDescription>Total {formatINR(totalIncome)} - by category</CardDescription>
           </CardHeader>
           <CardContent>
             {incomeSources.length === 0 ? (
@@ -390,7 +390,7 @@ export default function ReportsCharts({
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#64748B" tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
                     <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
                     <Tooltip
-                      formatter={(value: number, name: string) => (name === "net_worth" ? [formatINR(Number(value)), "Net worth"] : [value != null ? `${Number(value).toFixed(2)}%` : "—", "Change"])}
+                      formatter={(value: number, name: string) => (name === "net_worth" ? [formatINR(Number(value)), "Net worth"] : [value != null ? `${Number(value).toFixed(2)}%` : "-", "Change"])}
                       labelFormatter={(label: string) => new Date(label).toLocaleDateString("en-IN")}
                       contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
                     />

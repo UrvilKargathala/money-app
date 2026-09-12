@@ -114,7 +114,7 @@ export function ExportDashboard({
     try {
       const payload: Record<string, unknown> = { format, range };
       if (selectedModule) {
-        // spec says module scope — send as module; backend may accept modules array — send both
+        // spec says module scope - send as module; backend may accept modules array - send both
         payload.module = selectedModule;
         payload.modules = [selectedModule];
       }
@@ -223,7 +223,7 @@ export function ExportDashboard({
           <CardTitle className="flex items-center gap-2 text-base">
             <Activity className="h-5 w-5" /> Pipeline Health & Queue
           </CardTitle>
-          <CardDescription>GET /api/export/status — live pipeline, queue depth and health</CardDescription>
+          <CardDescription>GET /api/export/status - live pipeline, queue depth and health</CardDescription>
         </CardHeader>
         <CardContent>
           {status ? (
@@ -236,10 +236,10 @@ export function ExportDashboard({
               {status.active_jobs != null && <span className="text-neutral-600">Active: {String(status.active_jobs)}</span>}
               {status.pipeline && <span className="text-neutral-600">Pipeline: {String(status.pipeline)}</span>}
               {status.last_run && <span className="text-neutral-500 text-xs">Last run: {new Date(String(status.last_run)).toLocaleString("en-IN")}</span>}
-              <span className="text-xs text-neutral-400 ml-auto">All values from API — no hardcoded counts</span>
+              <span className="text-xs text-neutral-400 ml-auto">All values from API - no hardcoded counts</span>
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">No status available — backend may not have implemented /api/export/status yet.</p>
+            <p className="text-sm text-neutral-500">No status available - backend may not have implemented /api/export/status yet.</p>
           )}
           {status && (
             <pre className="mt-3 text-xs bg-neutral-50 p-3 rounded-lg overflow-auto max-h-32">{JSON.stringify(status, null, 2)}</pre>
@@ -254,7 +254,7 @@ export function ExportDashboard({
             <CardTitle className="flex items-center gap-2 text-base">
               <FileSpreadsheet className="h-5 w-5" /> Exportable Modules
             </CardTitle>
-            <CardDescription>GET /api/export/modules — column sets per module. Choose scope, format and range to create a job.</CardDescription>
+            <CardDescription>GET /api/export/modules - column sets per module. Choose scope, format and range to create a job.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {modules.length === 0 ? (
@@ -289,7 +289,7 @@ export function ExportDashboard({
             )}
 
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/50 p-4 space-y-3">
-              <p className="text-sm font-semibold font-heading">Create export job — POST /api/export/jobs</p>
+              <p className="text-sm font-semibold font-heading">Create export job - POST /api/export/jobs</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Format</Label>
@@ -348,7 +348,7 @@ export function ExportDashboard({
               <Button onClick={handleCreate} disabled={creating || !selectedModule} className="w-full sm:w-auto">
                 {creating ? "Creating..." : `Create ${format.toUpperCase()} job`}
               </Button>
-              <p className="text-xs text-neutral-400">POST /api/export/jobs — {format}, module={selectedModule || "(choose)"}, range={range}. All jobs from API.</p>
+              <p className="text-xs text-neutral-400">POST /api/export/jobs - {format}, module={selectedModule || "(choose)"}, range={range}. All jobs from API.</p>
             </div>
           </CardContent>
         </Card>
@@ -358,7 +358,7 @@ export function ExportDashboard({
             <CardTitle className="flex items-center gap-2 text-base">
               <FileArchive className="h-5 w-5" /> Full Archive
             </CardTitle>
-            <CardDescription>POST /api/export/full-archive — ZIP + manifest of all user data</CardDescription>
+            <CardDescription>POST /api/export/full-archive - ZIP + manifest of all user data</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-neutral-600">One-click full data export. Backend returns a job (or ZIP). Track it in Recent Exports below.</p>
@@ -383,14 +383,14 @@ export function ExportDashboard({
           <CardTitle className="flex items-center gap-2 text-base">
             <Download className="h-5 w-5" /> Recent Exports
           </CardTitle>
-          <CardDescription>GET /api/export/jobs + poll GET /api/export/jobs/:id/progress — download via GET /api/export/jobs/:id/download (24h link)</CardDescription>
+          <CardDescription>GET /api/export/jobs + poll GET /api/export/jobs/:id/progress - download via GET /api/export/jobs/:id/download (24h link)</CardDescription>
         </CardHeader>
         <CardContent>
           {jobs.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <Package className="h-6 w-6 mx-auto text-neutral-400 mb-2" />
               <p className="text-sm font-medium text-neutral-700">No exports yet</p>
-              <p className="text-xs text-neutral-500 mt-1">Create a job above. Every row here comes from GET /api/export/jobs — no hardcoded counts.</p>
+              <p className="text-xs text-neutral-500 mt-1">Create a job above. Every row here comes from GET /api/export/jobs - no hardcoded counts.</p>
             </div>
           ) : (
             <div className="space-y-3">

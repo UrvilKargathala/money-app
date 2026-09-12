@@ -15,7 +15,7 @@ import { serverEncrypt } from "../utils/server-crypto";
 
 const vault = new Hono();
 
-/** The client needs wrap params to derive its KEK â€” never any key material. */
+/** The client needs wrap params to derive its KEK - never any key material. */
 vault.get("/wrapped-key", requireAuth, async (c) => {
   const user = c.get("user");
   const info = await getVaultInfo(user.user_id);

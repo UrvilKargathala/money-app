@@ -34,7 +34,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
           <Search className="h-5 w-5 text-neutral-400" />
           <Input
             autoFocus
-            placeholder="Search commands — try 'new transaction', 'reports', 'bills'…"
+            placeholder="Search commands - try 'new transaction', 'reports', 'bills'…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="border-0 shadow-none focus-visible:ring-0 h-8 px-0"
@@ -116,7 +116,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   );
 }
 
-// Global hotkey hook — call from Topbar or layout
+// Global hotkey hook - call from Topbar or layout
 export function useCommandPaletteHotkey(onOpen: () => void) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

@@ -27,7 +27,7 @@ importBatches.get("/", requireAuth, async (c) => {
   return c.json({ batches: await listImportBatches(user.user_id) });
 });
 
-/** Rows processed vs total â€” derived from the (synchronously finalized) row. */
+/** Rows processed vs total - derived from the (synchronously finalized) row. */
 importBatches.get("/:id/progress", requireAuth, async (c) => {
   const user = c.get("user");
   const batch = await getImportBatch(user.user_id, c.req.param("id"));

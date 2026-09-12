@@ -192,7 +192,7 @@ export async function bulkAction(
   return result.rowCount ?? 0;
 }
 
-/** Searchable archive — includes dismissed items (ILIKE + filters). */
+/** Searchable archive - includes dismissed items (ILIKE + filters). */
 export async function searchArchive(
   userId: number,
   params: {

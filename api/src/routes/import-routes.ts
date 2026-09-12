@@ -47,7 +47,7 @@ export function registerImportRoutes(transactions: import("hono").Hono): void {
   });
 
   /**
-   * Stateless validation with an optional explicit mapping — same pipeline as
+   * Stateless validation with an optional explicit mapping - same pipeline as
    * confirm but nothing is written.
    */
   transactions.post("/import/validate", requireAuth, async (c) => {

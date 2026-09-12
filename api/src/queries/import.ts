@@ -177,7 +177,7 @@ export type PendingTxnInsert = {
 
 /**
  * Single-statement multi-row insert of validated drafts via jsonb_to_recordset
- * â€” no loops regardless of batch size.
+ * - no loops regardless of batch size.
  */
 export async function insertImportedTransactions(
   q: Queryable,
@@ -285,7 +285,7 @@ export function skipDuplicatesAdjust(
   );
 }
 
-/** The batch's stored target account — set at confirm time. */
+/** The batch's stored target account - set at confirm time. */
 export async function getBatchAccount(
   userId: number,
   batchId: string,

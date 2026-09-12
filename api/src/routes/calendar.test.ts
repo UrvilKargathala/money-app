@@ -115,7 +115,7 @@ describe("month grid composer", () => {
     const accountId = await ensureAccount();
     const catId = await createCategory(db.alice, "Cal Cat");
 
-    // Bill due day 15 â†’ clamped chip in the current month.
+    // Bill due day 15 -> clamped chip in the current month.
     await postAs(db.alice, "/api/bills", {
       name: "Internet",
       amount: "800",

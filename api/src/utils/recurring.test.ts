@@ -23,7 +23,7 @@ describe("computeNextOccurrence", () => {
     // ...then Mar 31 (clamp does not stick).
     const mar = computeNextOccurrence(feb, "monthly", 1);
     expect(mar.toISOString().slice(0, 10)).toBe("2026-03-28");
-    // Wait: clamping anchors on the shifted date — Mar step from Feb 28 → Mar 28.
+    // Wait: clamping anchors on the shifted date - Mar step from Feb 28 → Mar 28.
   });
 
   it("yearly clamps Feb 29 to Feb 28 on non-leap years", () => {

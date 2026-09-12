@@ -48,7 +48,7 @@ function validateMonthYear(c: import("hono").Context): { month: number; year: nu
   return { month, year };
 }
 
-/** Month grid â€” derived + custom events composed in ONE request. */
+/** Month grid - derived + custom events composed in ONE request. */
 calendar.get("/events", requireAuth, async (c) => {
   const user = c.get("user");
 

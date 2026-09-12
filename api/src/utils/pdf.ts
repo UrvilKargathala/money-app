@@ -21,7 +21,7 @@ const PAGE_MARGIN = 48;
 const ROW_HEIGHT = 16;
 
 /**
- * Renders a deterministic tabular report PDF. Pure function of its input —
+ * Renders a deterministic tabular report PDF. Pure function of its input -
  * safe to regenerate on download without persisting files (serverless-safe).
  */
 export async function buildReportPdf(input: ReportPdfInput): Promise<Buffer> {

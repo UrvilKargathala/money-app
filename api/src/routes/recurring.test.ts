@@ -38,7 +38,7 @@ async function createTemplate(
   return { res, body };
 }
 
-/** Accounts are wiped by resetDb between tests â€” look one up fresh each time. */
+/** Accounts are wiped by resetDb between tests - look one up fresh each time. */
 async function ensureAccount(): Promise<string> {
   const existing = await pool.query<{ id: string }>(
     `SELECT id FROM accounts WHERE user_id = $1 LIMIT 1`,
@@ -145,7 +145,7 @@ describe("execute advances schedule and creates transactions", () => {
       transactionId: string;
       next_due_date: string;
     };
-    // Daily â†’ advanced exactly one day past the due date.
+    // Daily -> advanced exactly one day past the due date.
     const expectedNext = new Date(Date.parse(`${dueToday}T00:00:00Z`) + 86_400_000)
       .toISOString()
       .slice(0, 10);

@@ -1,5 +1,5 @@
 """
-MoneyMind — Universal Database Setup Script
+MoneyMind - Universal Database Setup Script
 ===========================================
 
 Idempotent bootstrap for the entire MoneyMind schema on PostgreSQL:
@@ -10,7 +10,7 @@ Usage
 -----
     scripts\\.venv\\Scripts\\python scripts\\db_setup.py
 
-Connection config (env vars; no hardcoded paths — machine independent):
+Connection config (env vars; no hardcoded paths - machine independent):
     DATABASE_URL  - optional. If set, it is used verbatim and the
                     create-database step is SKIPPED (see Supabase note).
     PGHOST        - default: localhost
@@ -21,7 +21,7 @@ Connection config (env vars; no hardcoded paths — machine independent):
     PGDATABASE    - default: moneymind_dev  (target database)
     PG_ADMIN_DB   - default: postgres   (maintenance DB used to CREATE DATABASE)
 
-Supabase (this script works there too — no separate file needed)
+Supabase (this script works there too - no separate file needed)
 -----------------------------------------------------------------
 The schema uses only stock PostgreSQL features (gen_random_uuid, RLS,
 current_setting), so it runs unchanged on Supabase. To create the SAME
@@ -30,7 +30,7 @@ database on Supabase:
     python scripts\\db_setup.py
   - The create-database step is skipped automatically (Supabase owns its DBs).
   - Your table owner becomes the `postgres` role from the connection string,
-    exactly like a default local setup — no extra roles needed.
+    exactly like a default local setup - no extra roles needed.
 
 Schema decision
 ---------------
@@ -1504,7 +1504,7 @@ RLS_POLICIES_SQL: list[str] = [
 def ensure_database() -> str:
     """Create the target database if missing. Returns the dbname to connect to."""
     if DATABASE_URL:
-        print("[setup] DATABASE_URL provided — skipping create-database step.")
+        print("[setup] DATABASE_URL provided - skipping create-database step.")
         return PGDATABASE or urlparse(DATABASE_URL).path.lstrip("/") or "postgres"
     try:
         with psycopg.connect(conninfo_for(PG_ADMIN_DB), autocommit=True) as conn:

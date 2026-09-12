@@ -78,7 +78,7 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Payments — {sub.service_name}</DialogTitle>
+          <DialogTitle>Payments - {sub.service_name}</DialogTitle>
           <DialogDescription>{payments.length} payments • {sub.frequency} • Next {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")}</DialogDescription>
         </DialogHeader>
         <div className="flex items-center justify-between">
@@ -98,7 +98,7 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
                   <td className="p-2">{p.period_label}</td>
                   <td className="p-2">{p.created_at.slice(0,10)}</td>
                   <td className="p-2 text-right font-medium">{formatINR(p.amount)}</td>
-                  <td className="p-2 max-w-[18ch] truncate">{p.notes ?? "—"}</td>
+                  <td className="p-2 max-w-[18ch] truncate">{p.notes ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -155,7 +155,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Snooze — {sub.service_name}</DialogTitle>
+          <DialogTitle>Snooze - {sub.service_name}</DialogTitle>
           <DialogDescription>Push next renewal forward. Current: {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")} ({sub.days_until_renewal >=0 ? `${sub.days_until_renewal}d` : "overdue"})</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSnooze} className="space-y-4">
@@ -282,7 +282,7 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
                 <span className="text-xs text-neutral-400">{new Date(a.created_at).toLocaleDateString("en-IN")}</span>
               </div>
               <p className="text-sm font-medium font-heading">{a.finding ?? "Finding not provided"}</p>
-              <p className="text-xs text-neutral-500">{a.recommendation ?? "—"}</p>
+              <p className="text-xs text-neutral-500">{a.recommendation ?? "-"}</p>
               <p className="text-[11px] text-neutral-400">Subscription {a.subscription_id.slice(0,8)}…</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => handleDismiss(a.id)} className="shrink-0"><X className="h-3 w-3" /> Dismiss</Button>
@@ -446,9 +446,9 @@ export function SubscriptionsDashboard({
                     <div><p className="text-neutral-500">Amount</p><p className="font-medium">{formatINR(s.amount)} • {s.frequency}</p></div>
                     <div><p className="text-neutral-500">Monthly eq.</p><p className="font-medium">{formatINR(s.monthly_equivalent)}</p></div>
                     <div><p className="text-neutral-500">Next renewal</p><p className="font-medium">{new Date(s.next_renewal_date).toLocaleDateString("en-IN")} • {s.days_until_renewal >=0 ? `${s.days_until_renewal}d` : "overdue"}</p></div>
-                    <div><p className="text-neutral-500">Account</p><p className="font-medium">{s.account_name ?? "—"}</p></div>
-                    <div><p className="text-neutral-500">Category</p><p className="font-medium">{s.category_name ?? "—"}</p></div>
-                    <div><p className="text-neutral-500">Last paid</p><p className="font-medium">{s.last_paid_date ? `${s.last_paid_date} • ${s.last_paid_amount != null ? formatINR(s.last_paid_amount) : "—"}` : "—"}</p></div>
+                    <div><p className="text-neutral-500">Account</p><p className="font-medium">{s.account_name ?? "-"}</p></div>
+                    <div><p className="text-neutral-500">Category</p><p className="font-medium">{s.category_name ?? "-"}</p></div>
+                    <div><p className="text-neutral-500">Last paid</p><p className="font-medium">{s.last_paid_date ? `${s.last_paid_date} • ${s.last_paid_amount != null ? formatINR(s.last_paid_amount) : "-"}` : "-"}</p></div>
                   </div>
                   {s.notes && <p className="text-xs text-neutral-500 border-t pt-2">{s.notes}</p>}
                   <div className="flex gap-2 pt-1">

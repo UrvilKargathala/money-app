@@ -299,7 +299,7 @@ export function InvestmentsDashboard({
           {sipsDue.length > 0 && (
             <Card className="p-4 border-warning/20 bg-warning-light/30">
               <p className="text-sm font-medium font-heading text-warning-dark flex items-center gap-2">
-                <Calendar className="h-4 w-4" /> Due in next 7 days — {sipsDue.length}
+                <Calendar className="h-4 w-4" /> Due in next 7 days - {sipsDue.length}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {sipsDue.map((d) => (
@@ -523,7 +523,7 @@ export function InvestmentsDashboard({
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-primary-50 p-4 text-center">
                   <p className="text-xs text-primary-700">Portfolio XIRR</p>
-                  <p className="text-2xl font-bold font-heading text-primary-700">{portfolioXirr != null ? `${portfolioXirr.toFixed(2)}%` : "—"}</p>
+                  <p className="text-2xl font-bold font-heading text-primary-700">{portfolioXirr != null ? `${portfolioXirr.toFixed(2)}%` : "-"}</p>
                   <p className="text-xs text-neutral-500 mt-1">Annualized return • {returnPct.toFixed(1)}% absolute</p>
                 </div>
 

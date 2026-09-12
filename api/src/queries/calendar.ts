@@ -18,7 +18,7 @@ export type CalendarEvent = {
     | "custom"
     | "tax_deadline";
   label: string;
-  /** Inflow/outflow/info â€” drives chips + projection sign (info excluded). */
+  /** Inflow/outflow/info - drives chips + projection sign (info excluded). */
   kind: "inflow" | "outflow" | "info";
   amount: number | null;
   color: string;
@@ -52,7 +52,7 @@ export async function getCalendarEvents(
     recurringIncome,
     custom,
   ] = await Promise.all([
-    // 1. Active bills â†’ due day clamped to month length (FR-C1.5), in JS.
+    // 1. Active bills -> due day clamped to month length (FR-C1.5), in JS.
     q.query<{
       id: string;
       name: string;
@@ -485,7 +485,7 @@ type ScheduledFlow = {
   delta: number; // signed
 };
 
-/** Current computed balance per active account â€” one grouped aggregate. */
+/** Current computed balance per active account - one grouped aggregate. */
 async function loadAccountBalances(
   userId: number,
   q: Queryable

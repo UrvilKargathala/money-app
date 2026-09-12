@@ -197,7 +197,7 @@ transactions.post("/quick-add", requireAuth, async (c) => {
           {
             fieldErrors: {
               account_id:
-                "No account to default to â€” add an account or pass account_id.",
+                "No account to default to - add an account or pass account_id.",
             },
           },
           400
@@ -354,7 +354,7 @@ transactions.post("/:id/splits", requireAuth, async (c) => {
         NOT_FOUND: [404, { error: "Not found" }],
         IS_TRANSFER: [
           409,
-          { error: "Transfer transactions can't be split â€” edit the transfer instead." },
+          { error: "Transfer transactions can't be split - edit the transfer instead." },
         ],
         SUM_EXCEEDS_PARENT: [
           400,
@@ -362,7 +362,7 @@ transactions.post("/:id/splits", requireAuth, async (c) => {
         ],
         DUPLICATE_CATEGORY: [
           409,
-          { error: "This transaction already has a split for that category â€” edit it instead." },
+          { error: "This transaction already has a split for that category - edit it instead." },
         ],
       };
       const entry = map[err.message];
@@ -580,7 +580,7 @@ transactions.patch("/:id", requireAuth, async (c) => {
     if ("notFound" in result) return c.json({ error: "Not found" }, 404);
     if ("isTransfer" in result) {
       return c.json(
-        { error: "Transfer transactions can't be edited here — edit the transfer instead." },
+        { error: "Transfer transactions can't be edited here - edit the transfer instead." },
         409
       );
     }
@@ -629,7 +629,7 @@ transactions.delete("/:id", requireAuth, async (c) => {
   if ("notFound" in result) return c.json({ error: "Not found" }, 404);
   if ("isTransfer" in result) {
     return c.json(
-      { error: "Transfer transactions can't be deleted here â€” delete the transfer instead." },
+      { error: "Transfer transactions can't be deleted here - delete the transfer instead." },
       409
     );
   }

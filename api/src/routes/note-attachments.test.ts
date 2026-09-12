@@ -147,7 +147,7 @@ describe("note attachments lifecycle (memory provider)", () => {
 
     await requestAs(db.alice, `/api/notes/${noteId}`, { method: "DELETE" });
     // Note detail is hidden but the trash list still shows it; attachments
-    // listing requires an active note — document current semantics:
+    // listing requires an active note - document current semantics:
     expect((await requestAs(db.alice, `/api/notes/${noteId}`)).status).toBe(404);
     const restored = await postAs(db.alice, `/api/notes/${noteId}/restore`, {});
     expect(restored.status).toBe(200);

@@ -5,7 +5,7 @@ import {
   listNoteTemplates,
 } from "../queries/note-templates";
 
-/** Global lookup (FR-11.8) — authed read-only, no user scoping. */
+/** Global lookup (FR-11.8) - authed read-only, no user scoping. */
 export function registerNoteTemplateRoutes(app: Hono): void {
   app.get("/api/note-templates", requireAuth, async (c) => {
     return c.json({ templates: await listNoteTemplates() });

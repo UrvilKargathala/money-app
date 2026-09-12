@@ -1,5 +1,5 @@
 /**
- * Email delivery seam — Resend in production, console.log locally.
+ * Email delivery seam - Resend in production, console.log locally.
  * When RESEND_API_KEY is absent, emails print to terminal so the
  * developer can copy verification/reset/magic links during development.
  */
@@ -36,7 +36,7 @@ function deliverViaConsole(payload: EmailPayload): void {
   if (!warnedNoKey) {
     warnedNoKey = true;
     console.warn(
-      "[email] RESEND_API_KEY not set — emails are printed to terminal (dev mode)."
+      "[email] RESEND_API_KEY not set - emails are printed to terminal (dev mode)."
     );
   }
   console.log(

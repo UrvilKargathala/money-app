@@ -126,7 +126,7 @@ describe("bulk edit", () => {
     );
     expect(rows.rows.every((r) => r.category_id === newCat)).toBe(true);
 
-    // Foreign id mixed in â€” silently unmatched, no error, no leak.
+    // Foreign id mixed in - silently unmatched, no error, no leak.
     const bobId = await expense({ amount: 1 });
     void bobId;
     const mixed = await postAs(db.alice, "/api/transactions/bulk", {
