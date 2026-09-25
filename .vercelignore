@@ -1,0 +1,15 @@
+.git
+.vercel
+.env*
+node_modules
+**/node_modules
+**/.next
+**/.next-dev
+**/dist
+**/coverage
+**/*.tsbuildinfo
+.DS_Store
+**/.DS_Store
+.data
+scripts/.venv
+scripts/__pycache__

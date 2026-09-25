@@ -16,6 +16,7 @@
 !/pnpm-lock.yaml
 !/README.md
 !/.gitignore
+!/.vercelignore
 
 # --- inside api/ ---
 api/node_modules/
