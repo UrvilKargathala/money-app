@@ -149,7 +149,7 @@ export function NotesDashboard({
     setAttachments([]);
     setFormOpen(true);
   };
-  const useTemplate = (template: Template) => {
+  const applyTemplate = (template: Template) => {
     setEditing(null);
     setNoteTitle(template.title);
     setCategory(template.category || "other");
@@ -318,7 +318,7 @@ export function NotesDashboard({
             ) : (
               <div className="flex flex-wrap gap-2">
                 {templates.map((t) => (
-                  <button key={t.id} onClick={() => useTemplate(t)}><Badge variant="secondary">{t.title} · Use template</Badge></button>
+                  <button key={t.id} onClick={() => applyTemplate(t)}><Badge variant="secondary">{t.title} · Use template</Badge></button>
                 ))}
               </div>
             )}

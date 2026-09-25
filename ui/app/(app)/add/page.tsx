@@ -1,6 +1,7 @@
 import { getAccountsData, getCategories } from "@/lib/api-client";
 import { QuickAddForm } from "./quick-add-form";
 import { apiJson } from "@/lib/api-client";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,9 @@ export default async function QuickAddPage() {
       {accounts.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-sm text-neutral-500">No active accounts. Create an account first.</p>
-          <a href="/accounts" className="text-primary-600 hover:underline text-sm">
+          <Link href="/accounts" className="text-primary-600 hover:underline text-sm">
             Go to Accounts
-          </a>
+          </Link>
         </div>
       ) : (
         <QuickAddForm accounts={accounts} categories={categories} recentMerchants={finalMerchants} />
