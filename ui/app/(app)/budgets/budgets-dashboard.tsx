@@ -44,15 +44,17 @@ export function BudgetsDashboard({
   categories,
   month,
   year,
+  initialCreate = false,
 }: {
   budgets: Budget[];
   overview: Overview | null;
   categories: { id: string; name: string }[];
   month: number;
   year: number;
+  initialCreate?: boolean;
 }) {
   const router = useRouter();
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(initialCreate);
   const [editing, setEditing] = useState<Budget | null>(null);
   const [breakdown, setBreakdown] = useState<{ id: string; items: { name: string; spent: number; share_pct: number }[] } | null>(null);
 

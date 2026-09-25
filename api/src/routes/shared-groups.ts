@@ -6,6 +6,7 @@ import { readJson } from "./helpers";
 import { hashToken } from "../session";
 import { normalizeEmail } from "../auth";
 import { csvEscape } from "../utils/format";
+import { sendLinkEmail } from "../utils/email";
 import {
   acceptInvite,
   createGroupWithOwner,
@@ -23,6 +24,7 @@ import {
   softDeleteGroup,
   transferOwnership,
   updateGroupFields,
+  updateMemberRole,
 } from "../queries/shared-groups";
 
 const sharedGroups = new Hono();
@@ -280,10 +282,14 @@ sharedGroups.post("/:id/invites", requireAuth, async (c) => {
       })
     );
 
-    // Console-delivered until the C2 email provider lands (DEV-ENV §7).
-    console.log(
-      `[email] To: ${inviteeEmail} | You're invited to a MoneyMind group - accept within ${INVITE_DAYS} days: ${inviteUrlFor(rawToken)}`
-    );
+    await sendLinkEmail({
+      to: inviteeEmail,
+      subject: "You were invited to a MoneyMind group",
+      intro: `You were invited to collaborate on shared finances. This invitation expires in ${INVITE_DAYS} days.`,
+      ctaText: "View invitation",
+      url: inviteUrlFor(rawToken),
+      expiresInMinutes: INVITE_DAYS * 24 * 60,
+    });
 
     return c.json({
       success: true,
@@ -405,6 +411,21 @@ sharedGroups.delete("/:id/members/:userId", requireAuth, async (c) => {
     })
   );
   if (result.rowCount !== 1) return c.json({ error: "Not found" }, 404);
+  return c.json({ success: true });
+});
+
+sharedGroups.patch("/:id/members/:userId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const groupId = c.req.param("id");
+  const targetUserId = Number(c.req.param("userId"));
+  const body = await readJson(c);
+  const role = String(body.role ?? "");
+  if (!uuidRe.test(groupId) || !Number.isInteger(targetUserId) || !["admin", "read_only"].includes(role)) return c.json({ error: "Invalid request." }, 400);
+  const guard = await memberGuard(c, user.user_id, groupId);
+  if (!guard.ok) return c.json({ error: "Not found" }, 404);
+  if (!guard.isOwner) return c.json({ error: "Only the owner can change permissions." }, 403);
+  const result = await withUser(user.user_id, client => updateMemberRole(client, { groupId, memberUserId: targetUserId, actingUserId: user.user_id, role: role as "admin" | "read_only" }));
+  if (result.rowCount !== 1) return c.json({ error: "Member not found." }, 404);
   return c.json({ success: true });
 });
 

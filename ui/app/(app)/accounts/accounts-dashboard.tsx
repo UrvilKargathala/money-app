@@ -35,14 +35,15 @@ type Account = {
 type Props = {
   accounts: Account[];
   types: { type_code: string; display_name: string }[];
+  initialCreate?: boolean;
 };
 
-export function AccountsDashboard({ accounts, types }: Props) {
+export function AccountsDashboard({ accounts, types, initialCreate = false }: Props) {
   const router = useRouter();
   const [filterType, setFilterType] = useState<string>("all");
   const [showInactive, setShowInactive] = useState(false);
   const [search, setSearch] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(initialCreate);
   const [editing, setEditing] = useState<Account | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
 

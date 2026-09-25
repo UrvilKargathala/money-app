@@ -21,6 +21,11 @@ import { recordAccessLog } from "../auth";
  * the existing auth router.
  */
 export function registerAuthExtras(auth: import("hono").Hono): void {
+  auth.get("/email-delivery-status", requireAuth, async (c) => c.json({
+    configured: Boolean(process.env.RESEND_API_KEY),
+    mode: process.env.RESEND_API_KEY ? "email" : "development_console",
+    sender_configured: Boolean(process.env.RESEND_FROM_EMAIL),
+  }));
   // ---- forgot-password (public, IP-rate-limited) ----
   auth.post("/forgot-password", async (c) => {
     const ip = getClientIp(c);

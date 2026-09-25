@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
 
 type Bill = {
   id: string;
@@ -59,22 +60,25 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [yoy, setYoy] = useState<YoY | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  const loadPayments = useCallback(() => {
+    if (!bill) return;
+    setLoading(true);
+    setLoadError(false);
+    Promise.all([
+      fetch(`/api/bills/${bill.id}/payments`).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
+      fetch(`/api/bills/${bill.id}/payments/yoy`).then(async (response) => response.ok ? response.json() : null),
+    ]).then(([paymentsResult, yoyResult]) => {
+      setPayments((paymentsResult.payments ?? []).map((payment: { amount: string | number }) => ({ ...payment, amount: Number(payment.amount) })));
+      setYoy(yoyResult?.current ? yoyResult : null);
+    }).catch(() => setLoadError(true)).finally(() => setLoading(false));
+  }, [bill]);
 
   useEffect(() => {
     if (!open || !bill) return;
-    setLoading(true);
-    Promise.all([
-      fetch(`/api/bills/${bill.id}/payments`).then((r) => r.json()).catch(() => ({ payments: [] })),
-      fetch(`/api/bills/${bill.id}/payments/yoy`).then((r) => r.json()).catch(() => null),
-    ])
-      .then(([p, y]) => {
-        const rows = (p.payments ?? []).map((r: { amount: string | number }) => ({ ...r, amount: Number((r as { amount: string | number }).amount) }));
-        setPayments(rows);
-        if (y && y.current) setYoy(y);
-        else setYoy(null);
-      })
-      .finally(() => setLoading(false));
-  }, [open, bill]);
+    loadPayments();
+  }, [open, bill, loadPayments]);
 
   if (!bill) return null;
   return (
@@ -98,7 +102,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                 </a>
               </Button>
             </div>
-            <div className="max-h-[50vh] overflow-auto rounded-lg border">
+            {loadError ? <PanelError message="Could not load bill payments." onRetry={loadPayments} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
                   <tr>
@@ -110,7 +114,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={4} className="p-4 text-center text-neutral-400">Loading...</td></tr>
+                    <TableLoadingRows columns={4} />
                   ) : payments.length === 0 ? (
                     <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No payments yet</td></tr>
                   ) : payments.map((p) => (
@@ -123,7 +127,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                   ))}
                 </tbody>
               </table>
-            </div>
+            </div>}
           </TabsContent>
           <TabsContent value="yoy" className="space-y-3">
             {yoy ? (
@@ -171,6 +175,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
   const router = useRouter();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [daysBefore, setDaysBefore] = useState("3");
   const [channel, setChannel] = useState("in_app");
   const [editing, setEditing] = useState<Reminder | null>(null);
@@ -179,12 +184,14 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
   const load = async () => {
     if (!bill) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const r = await fetch(`/api/bills/${bill.id}/reminders`);
+      if (!r.ok) throw new Error();
       const d = await r.json();
       setReminders(d.reminders ?? []);
     } catch {
-      toast.error("Could not load reminders");
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -261,7 +268,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="max-h-[30vh] overflow-auto rounded-lg border">
+          {loadError ? <PanelError message="Could not load bill reminders." onRetry={() => void load()} /> : <div className="max-h-[30vh] overflow-auto rounded-lg border">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
                 <tr>
@@ -273,7 +280,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={4} className="p-4 text-center text-neutral-400">Loading...</td></tr>
+                  <TableLoadingRows columns={4} />
                 ) : reminders.length === 0 ? (
                   <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No reminders - add one below.</td></tr>
                 ) : reminders.map((r) => (
@@ -293,7 +300,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
                 ))}
               </tbody>
             </table>
-          </div>
+          </div>}
 
           {editing ? (
             <form onSubmit={handleUpdate} className="space-y-3 rounded-lg bg-neutral-50 p-3">
@@ -503,6 +510,7 @@ export function BillsDashboard({
   cashflowProjection,
   cashflowWaterfall,
   suggestions,
+  initialCreate = false,
 }: {
   bills: Bill[];
   overview: Overview | null;
@@ -513,11 +521,12 @@ export function BillsDashboard({
   cashflowProjection?: CashflowProjection;
   cashflowWaterfall?: CashflowWaterfall;
   suggestions?: SuggestionsData;
+  initialCreate?: boolean;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
   const [showInactive, setShowInactive] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(initialCreate);
   const [editing, setEditing] = useState<Bill | null>(null);
   const [paymentsBill, setPaymentsBill] = useState<Bill | null>(null);
   const [remindersBill, setRemindersBill] = useState<Bill | null>(null);

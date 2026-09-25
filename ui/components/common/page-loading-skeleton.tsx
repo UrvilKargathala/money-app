@@ -3,7 +3,8 @@ import { Skeleton } from "@/components/common/loading-skeleton";
 
 export function AppPageSkeleton() {
   return (
-    <div className="space-y-8" aria-label="Loading page">
+    <div className="space-y-8" role="status" aria-live="polite" aria-label="Loading page">
+      <span className="sr-only">Loading page content</span>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
           <Skeleton className="h-9 w-56" />

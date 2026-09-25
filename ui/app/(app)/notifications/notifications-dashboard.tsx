@@ -82,16 +82,13 @@ function SseIndicator() {
     <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs">
       <span className={`h-2 w-2 rounded-full ${status === "live" ? "bg-success animate-pulse" : status === "connecting" ? "bg-warning" : "bg-neutral-300"}`} />
       <span className="font-medium flex items-center gap-1">
-        <Radio className="h-3 w-3" /> SSE {status === "live" ? "live" : status === "connecting" ? "connecting" : "offline"}
+        <Radio className="h-3 w-3" /> {status === "live" ? "Live updates on" : status === "connecting" ? "Connecting" : "Updates paused"}
       </span>
       {latestCount !== null && <span className="text-neutral-500">{latestCount} new since 1m</span>}
       {lastChecked && <span className="hidden sm:inline text-neutral-400">{new Date(lastChecked).toLocaleTimeString("en-IN")}</span>}
       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={poll}>
         Refresh
       </Button>
-      <a href={getNotificationsStreamHref()} target="_blank" rel="noreferrer" className="text-xs text-primary-600 underline underline-offset-2">
-        stream
-      </a>
     </div>
   );
 }

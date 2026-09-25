@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Trash2, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 type Investment = {
   id: string;
@@ -39,11 +40,12 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${investment.name}`}>
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild><Link href={`/investments/${investment.id}`}>View details</Link></DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="h-4 w-4" /> Edit
             </DropdownMenuItem>

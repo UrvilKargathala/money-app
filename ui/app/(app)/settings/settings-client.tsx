@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint } from "lucide-react";
+import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
@@ -30,6 +30,7 @@ const exportModules = [
 ];
 
 type SessionRow = { id: number; token_id?: number; created_at: string; last_active?: string; ip_address?: string | null; user_agent?: string | null; is_current?: boolean };
+type AuditRow = { id: string | number; action: string; ip_address?: string | null; created_at: string };
 
 export function SettingsClient({ user, settings, billing }: { user: { full_name: string | null; email: string } | null; settings?: unknown; billing?: { plan: { code: string; name: string }; status: string; source: string; trial: { active: boolean; daysLeft: number }; price: { amountInr: number; perText: string }; entitlements: Record<string, unknown>; locks: Record<string, unknown> } | null }) {
   const { premium, loading: planLoading } = useMembership();
@@ -56,6 +57,12 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   const [showControlCenter, setShowControlCenter] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [savingHaptics, setSavingHaptics] = useState(false);
+  const initialSettings = (settings ?? {}) as { currency?: string; theme?: string };
+  const [theme, setTheme] = useState(initialSettings.theme ?? "light");
+  const [currency, setCurrency] = useState(initialSettings.currency ?? "INR");
+  const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
+  const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
+  const [emailDelivery, setEmailDelivery] = useState<{ configured: boolean; sender_configured: boolean } | null>(null);
 
   useEffect(() => {
     fetch("/api/notification-preferences")
@@ -76,17 +83,53 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setSessions(d?.sessions ?? null))
       .catch(() => setSessions([]));
+    fetch("/api/users/me/audit-logs?limit=12")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setAuditLogs(d?.logs ?? []))
+      .catch(() => setAuditLogs([]));
+    fetch("/api/auth/email-delivery-status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setEmailDelivery(data))
+      .catch(() => setEmailDelivery(null));
     // personalization settings
     fetch("/api/users/me/settings")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const s = d?.settings ?? d ?? {};
         if (s.haptics_enabled !== undefined) setHapticsEnabled(!!Number(s.haptics_enabled));
+        if (s.currency) setCurrency(s.currency);
+        if (s.theme) setTheme(s.theme);
         // initialize haptics cache
         setHapticsEnabledCache(!!Number(s.haptics_enabled ?? 1));
       })
       .catch(() => {});
   }, [user?.full_name]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("moneymind-date-format");
+    if (stored) setDateFormat(stored);
+  }, []);
+
+  useEffect(() => {
+    const dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", dark);
+  }, [theme]);
+
+  async function saveAppearance(nextTheme = theme, nextCurrency = currency, nextDateFormat = dateFormat) {
+    const res = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: nextTheme, currency: nextCurrency }) });
+    if (!res.ok) return toast.error("Could not save appearance settings.");
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    window.localStorage.setItem("moneymind-date-format", nextDateFormat);
+    toast.success("Display preferences saved.");
+  }
+
+  async function handlePermanentDelete() {
+    if (!confirm("Permanently delete this account now? This is only available after the 30-day deactivation period and cannot be undone.")) return;
+    const res = await fetch("/api/users/me", { method: "DELETE" });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return toast.error(body.error ?? "Permanent deletion is not available yet.");
+    window.location.href = "/login?account=deleted";
+  }
 
   async function handleSaveProfile() {
     setSavingProfile(true);
@@ -373,9 +416,19 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           </CardTitle>
           <CardDescription>Theme and display</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-neutral-500">Light theme (default). Dark theme support coming soon. Currency: INR, Date format: DD/MM/YYYY.</p>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div><Label htmlFor="theme">Theme</Label><select id="theme" className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm" value={theme} onChange={e=>setTheme(e.target.value)}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></div>
+            <div><Label htmlFor="currency">Currency</Label><select id="currency" className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm" value={currency} onChange={e=>setCurrency(e.target.value)}><option value="INR">INR — Indian Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — Pound Sterling</option></select></div>
+            <div><Label htmlFor="date-format">Date format</Label><select id="date-format" className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm" value={dateFormat} onChange={e=>setDateFormat(e.target.value)}><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+          </div>
+          <Button size="sm" onClick={()=>saveAppearance()}>Save display preferences</Button>
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/>Account security history</CardTitle><CardDescription>Recent sign-ins and security actions on your account.</CardDescription></CardHeader>
+        <CardContent className="divide-y">{auditLogs.length===0&&<p className="text-sm text-neutral-500">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-neutral-500">{log.ip_address||"IP unavailable"}</p></div><time className="text-xs text-neutral-500">{new Date(log.created_at).toLocaleString()}</time></div>)}</CardContent>
       </Card>
 
       {billing && (
@@ -492,7 +545,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <h3 className="font-semibold font-heading flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" /> Control Center</h3>
           <p className="text-sm text-neutral-500 mt-1">Quick toggles - same as Appearance & Notifications but in one place.</p>
           <div className="mt-3 space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>Dark mode</span><Badge variant="default">Soon</Badge></div>
+            <div className="flex items-center justify-between"><span>Dark mode</span><Badge variant={theme === "dark" ? "success" : "default"}>{theme === "dark" ? "On" : "Off"}</Badge></div>
             <div className="flex items-center justify-between"><span>Notifications</span><Badge variant="default">Use Notification Preferences</Badge></div>
             <div className="flex items-center justify-between"><span>Haptics</span><Badge variant={hapticsEnabled ? "success" : "default"}>{hapticsEnabled ? "On" : "Off"}</Badge></div>
           </div>
@@ -509,6 +562,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <CardDescription>Toggle per type/channel</CardDescription>
         </CardHeader>
         <CardContent>
+          {emailDelivery && <div className={`mb-4 rounded-xl border p-3 text-sm ${emailDelivery.configured ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}><p className="font-medium">Email delivery {emailDelivery.configured ? "is configured" : "needs production configuration"}</p><p className="mt-1 text-xs">{emailDelivery.configured ? (emailDelivery.sender_configured ? "The API key and sender address are ready." : "Delivery is enabled; add a verified sender address before launch.") : "Local links are written to the server log. Add RESEND_API_KEY and a verified RESEND_FROM_EMAIL before deployment."}</p></div>}
           {prefs ? (
             <div className="space-y-2 max-h-64 overflow-auto">
               {prefs.slice(0, 12).map((p, i) => (
@@ -578,8 +632,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             <Button variant="outline" onClick={handleRestore} disabled={gdprLoading}>
               Restore account
             </Button>
+            <Button variant="destructive" onClick={handlePermanentDelete} disabled={gdprLoading}>Permanently delete</Button>
           </div>
-          <p className="text-xs text-neutral-500">Deactivate keeps data 30 days, then purge via DELETE /api/users/me. Restore works only within grace period.</p>
+          <p className="text-xs text-neutral-500">Deactivate keeps your data recoverable for 30 days. Permanent deletion becomes available after that grace period and cannot be undone.</p>
         </CardContent>
       </Card>
       </div>

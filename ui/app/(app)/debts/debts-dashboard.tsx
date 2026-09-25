@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useActionState } from "react";
+import { useCallback, useEffect, useState, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -166,23 +167,22 @@ function HealthAlertsCard({ data }: { data: HealthAlerts }) {
 function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const [rows, setRows] = useState<ScheduleRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [year, setYear] = useState<string>("");
   const [cost, setCost] = useState<{ principal_paid: number; interest_paid: number; remaining_interest: number; total_cost: number; principal_pct: number; interest_pct: number } | null>(null);
 
-  useEffect(() => {
-    if (!open || !debt) return;
+  const loadSchedule = useCallback(() => {
+    if (!debt) return;
     setLoading(true);
+    setLoadError(false);
     const qs = year ? `?year=${year}` : "";
-    fetch(`/api/debts/${debt.id}/amortization${qs}`)
-      .then((r) => r.json())
-      .then((d) => setRows(d.schedule ?? []))
-      .catch(() => toast.error("Could not load amortization"))
-      .finally(() => setLoading(false));
-    fetch(`/api/debts/${debt.id}/cost-breakdown`)
-      .then((r) => r.json())
-      .then((d) => setCost(d))
-      .catch(() => {});
-  }, [open, debt, year]);
+    Promise.all([
+      fetch(`/api/debts/${debt.id}/amortization${qs}`).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
+      fetch(`/api/debts/${debt.id}/cost-breakdown`).then(async (response) => response.ok ? response.json() : null),
+    ]).then(([schedule, breakdown]) => { setRows(schedule.schedule ?? []); setCost(breakdown); }).catch(() => setLoadError(true)).finally(() => setLoading(false));
+  }, [debt, year]);
+
+  useEffect(() => { if (open) loadSchedule(); }, [open, loadSchedule]);
 
   const handleRegenerate = async () => {
     if (!debt) return;
@@ -217,13 +217,13 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
             <div className="rounded-lg bg-amber-50 p-2"><p className="text-amber-700">Remaining interest</p><p className="font-semibold">{formatINR(cost.remaining_interest)}</p></div>
           </div>
         )}
-        <div className="max-h-[50vh] overflow-auto rounded-lg border">
+        {loadError ? <PanelError message="Could not load the amortization schedule." onRetry={loadSchedule} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
               <tr><th className="p-2 text-left">Period</th><th className="p-2 text-right">EMI</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2 text-right">Cumulative</th><th className="p-2 text-left">Date</th></tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan={7} className="p-4 text-center text-neutral-400">Loading...</td></tr> : rows.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-neutral-400">No schedule (credit card or fully paid)</td></tr> : rows.map((r) => (
+              {loading ? <TableLoadingRows columns={7} /> : rows.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-neutral-500">No schedule (credit card or fully paid)</td></tr> : rows.map((r) => (
                 <tr key={r.period} className="border-t text-xs">
                   <td className="p-2">{r.period}</td>
                   <td className="p-2 text-right">{formatINR(r.emi_amount)}</td>
@@ -236,7 +236,7 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
       </DialogContent>
     </Dialog>
   );
@@ -328,6 +328,7 @@ function PrepaymentSimulatorDialog({ debt, open, onOpenChange }: { debt: Debt | 
 function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0,10));
   const [notes, setNotes] = useState("");
@@ -337,11 +338,13 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
   const load = async () => {
     if (!debt) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const r = await fetch(`/api/debts/${debt.id}/payments`);
+      if (!r.ok) throw new Error();
       const d = await r.json();
       setPayments(d.payments ?? []);
-    } catch { toast.error("Could not load payments"); }
+    } catch { setLoadError(true); }
     finally { setLoading(false); }
   };
   useEffect(() => { if (open) load(); }, [open, debt]);
@@ -389,11 +392,11 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
             <TabsTrigger value="log" className="flex-1">{editing ? "Edit" : "Log"} Payment</TabsTrigger>
           </TabsList>
           <TabsContent value="history" className="space-y-3">
-            <div className="max-h-[50vh] overflow-auto rounded-lg border">
+            {loadError ? <PanelError message="Could not load debt payments." onRetry={() => void load()} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Type</th><th className="p-2 text-right">Amount</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2">Actions</th></tr></thead>
                 <tbody>
-                  {loading ? <tr><td colSpan={7} className="p-4 text-center text-neutral-400">Loading...</td></tr> : payments.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-neutral-400">No payments yet</td></tr> : payments.map((p) => (
+                  {loading ? <TableLoadingRows columns={7} /> : payments.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-neutral-500">No payments yet</td></tr> : payments.map((p) => (
                     <tr key={p.id} className="border-t text-xs">
                       <td className="p-2">{p.date}</td>
                       <td className="p-2"><Badge variant={p.type === "prepayment" ? "warning" : "secondary"}>{p.type}</Badge></td>
@@ -409,7 +412,7 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
                   ))}
                 </tbody>
               </table>
-            </div>
+            </div>}
           </TabsContent>
           <TabsContent value="log">
             <form onSubmit={editing ? handleUpdate : handleLog} className="space-y-4">
@@ -443,15 +446,18 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
   const [entries, setEntries] = useState<PaymentStatusEntry[]>([]);
   const [missed, setMissed] = useState(0);
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (!open || !debt) return;
+  const [loadError, setLoadError] = useState(false);
+  const loadStatus = useCallback(() => {
+    if (!debt) return;
     setLoading(true);
+    setLoadError(false);
     fetch(`/api/debts/${debt.id}/payment-status`)
-      .then((r) => r.json())
+      .then(async (response) => { if (!response.ok) throw new Error(); return response.json(); })
       .then((d) => { setEntries(d.months ?? []); setMissed(d.missed_count ?? 0); })
-      .catch(() => toast.error("Could not load payment status"))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
-  }, [open, debt]);
+  }, [debt]);
+  useEffect(() => { if (open) loadStatus(); }, [open, loadStatus]);
   if (!debt) return null;
   const colorFor = (s: string) => s === "paid" ? "success" : s === "missed" ? "error" : s === "partial" ? "warning" : s === "scheduled" ? "secondary" : "default";
   return (
@@ -461,7 +467,7 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
           <DialogTitle>Payment status - {debt.name}</DialogTitle>
           <DialogDescription>12-month timeline • {missed} missed payments</DialogDescription>
         </DialogHeader>
-        {loading ? <p className="text-sm text-neutral-400">Loading...</p> : (
+        {loading ? <PanelLoading label="Loading payment status" /> : loadError ? <PanelError message="Could not load payment status." onRetry={loadStatus} /> : (
           <div className="space-y-2 max-h-[60vh] overflow-auto">
             <div className="grid grid-cols-4 gap-2 text-xs">
               {entries.map((m) => (

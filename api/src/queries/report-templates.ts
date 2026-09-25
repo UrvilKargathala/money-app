@@ -138,7 +138,7 @@ export async function duplicateReportTemplate(
   userId: number,
   id: string
 ): Promise<string> {
-  const source = await getOwnedTemplate(q, userId, id);
+  const source = await getReportTemplate(userId, id, q);
   if (!source) throw new Error("NOT_FOUND");
 
   const base = `Copy of ${source.name}`;

@@ -51,7 +51,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     fetchData();
-    const id = setInterval(fetchData, 30000);
+    const id = setInterval(fetchData, 10000);
     return () => clearInterval(id);
   }, [fetchData]);
 

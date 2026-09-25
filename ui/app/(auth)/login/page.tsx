@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { loginAction } from "./actions";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
+  const searchParams = useSearchParams();
 
   return (
     <Card>
@@ -19,6 +21,7 @@ export default function LoginPage() {
         <CardDescription>Sign in to your MoneyMind account</CardDescription>
       </CardHeader>
       <CardContent>
+        {searchParams.get("expired") === "1" && <Alert className="mb-4"><AlertDescription>Your session expired. Sign in again to continue.</AlertDescription></Alert>}
         <form action={formAction} className="space-y-5">
           {state?.error && (
             <Alert variant="destructive">

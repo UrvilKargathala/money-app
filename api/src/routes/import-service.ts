@@ -47,9 +47,9 @@ export async function readCsvBody(c: {
 
 /** Parses + maps every data row, classifying structural outcomes. */
 export function classifyRows(
-  parsed: ParsedCsv
+  parsed: ParsedCsv,
+  mapping = resolveEffectiveMappingInternal(parsed.headers)
 ): { drafts: ImportDraftWithRow[]; errors: StructuralError[] } {
-  const mapping = resolveEffectiveMappingInternal(parsed.headers);
   const drafts: ImportDraftWithRow[] = [];
   const errors: StructuralError[] = [];
 
@@ -75,6 +75,7 @@ export async function runConfirmImport(
     filename: string;
     csvText: string;
     accountId: string;
+    mapping?: import("../utils/csv").ColumnMapping;
   }
 ): Promise<
   | { ok: false; status: number; body: Record<string, unknown> }
@@ -100,7 +101,7 @@ export async function runConfirmImport(
     };
   }
 
-  const classified = classifyRows(parsed);
+  const classified = classifyRows(parsed, params.mapping);
   const dates = classified.drafts.map((d) => d.draft.date).sort();
   const minDate = dates[0] ?? null;
   const maxDate = dates[dates.length - 1] ?? null;

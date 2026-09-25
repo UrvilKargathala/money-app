@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useMembership } from "@/components/membership";
+import Link from "next/link";
 
 type Sub = {
   id: string;
@@ -73,11 +74,12 @@ export function SubscriptionCard({
           {statusBadge(sub.status)}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${sub.service_name}`}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild><Link href={`/subscriptions/${sub.id}`}>View details</Link></DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>

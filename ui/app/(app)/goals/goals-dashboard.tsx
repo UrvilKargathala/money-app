@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -20,6 +20,7 @@ import { Target, Plus, Wallet, TrendingUp, History, Calendar, Flag, BarChart3, L
 import { deleteGoalAction, pauseGoalAction, resumeGoalAction, completeGoalAction, addContribution, updateContribution, deleteContributionAction, addContributionWithTransfer, createSnapshot, createTemplate, updateTemplate, deleteTemplateAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
 
 type Goal = {
   id: string;
@@ -183,6 +184,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
   const router = useRouter();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState("history");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -192,19 +194,21 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
   const [fromAccount, setFromAccount] = useState("");
   const [toAccount, setToAccount] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!goal) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await fetch(`/api/goals/${goal.id}/contributions`);
+      if (!res.ok) throw new Error();
       const data = await res.json();
       setContributions((data.contributions ?? []).map((c: { amount: string | number }) => ({ ...c, amount: Number((c as { amount: string | number }).amount) })));
     } catch {
-      toast.error("Could not load contributions");
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, [goal]);
 
   useEffect(() => {
     if (open) {
@@ -216,7 +220,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
       setDate(new Date().toISOString().slice(0, 10));
       setWithTransfer(false);
     }
-  }, [open, goal]);
+  }, [open, goal, load]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,13 +310,13 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
               <p className="text-xs text-neutral-500">{contributions.length} records</p>
               <Button variant="outline" size="sm" asChild><a href={`/api/goals/${goal.id}/contributions/export`} download><Download className="h-3 w-3" /> Export CSV</a></Button>
             </div>
-            <div className="max-h-[50vh] overflow-auto rounded-lg border">
+            {loadError ? <PanelError message="Could not load goal contributions." onRetry={load} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
                   <tr><th className="p-2 text-left">Date</th><th className="p-2 text-right">Amount</th><th className="p-2 text-left">Notes</th><th className="p-2 text-center">Actions</th></tr>
                 </thead>
                 <tbody>
-                  {loading ? <tr><td colSpan={4} className="p-4 text-center text-neutral-400">Loading...</td></tr> : contributions.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No contributions yet</td></tr> : contributions.map((c) => (
+                  {loading ? <TableLoadingRows columns={4} /> : contributions.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-neutral-500">No contributions yet</td></tr> : contributions.map((c) => (
                     <tr key={c.id} className="border-t text-xs">
                       <td className="p-2">{c.date}</td>
                       <td className="p-2 text-right font-medium">{formatINR(c.amount)}</td>
@@ -325,7 +329,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
                   ))}
                 </tbody>
               </table>
-            </div>
+            </div>}
           </TabsContent>
           <TabsContent value="add">
             <form onSubmit={editing ? handleUpdate : handleAdd} className="space-y-4">
@@ -389,16 +393,18 @@ function GoalDetailDialog({ goal, open, onOpenChange }: { goal: Goal | null; ope
   const [projection, setProjection] = useState<Projection | null>(null);
   const [progress, setProgress] = useState<{ progress_pct: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
-    if (!open || !goal) return;
+  const loadDetails = useCallback(() => {
+    if (!goal) return;
     setLoading(true);
+    setLoadError(false);
     Promise.all([
-      fetch(`/api/goals/${goal.id}/snapshots`).then((r) => r.json()).catch(() => ({ snapshots: [] })),
-      fetch(`/api/goals/${goal.id}/milestones`).then((r) => r.json()).catch(() => ({ milestones: [] })),
-      fetch(`/api/goals/${goal.id}/feasibility`).then((r) => r.json()).catch(() => null),
-      fetch(`/api/goals/${goal.id}/projection`).then((r) => r.json()).catch(() => null),
-      fetch(`/api/goals/${goal.id}/progress`).then((r) => r.json()).catch(() => null),
+      fetch(`/api/goals/${goal.id}/snapshots`).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
+      fetch(`/api/goals/${goal.id}/milestones`).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
+      fetch(`/api/goals/${goal.id}/feasibility`).then(async (response) => response.ok ? response.json() : null),
+      fetch(`/api/goals/${goal.id}/projection`).then(async (response) => response.ok ? response.json() : null),
+      fetch(`/api/goals/${goal.id}/progress`).then(async (response) => response.ok ? response.json() : null),
     ])
       .then(([snap, mile, feas, proj, prog]) => {
         setSnapshots((snap.snapshots ?? []).map((s: { current_amount: string | number }) => ({ ...s, current_amount: Number((s as { current_amount: string | number }).current_amount) })));
@@ -407,8 +413,11 @@ function GoalDetailDialog({ goal, open, onOpenChange }: { goal: Goal | null; ope
         setProjection(proj);
         setProgress(prog ? { progress_pct: prog.progress_pct } : null);
       })
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
-  }, [open, goal]);
+  }, [goal]);
+
+  useEffect(() => { if (open) loadDetails(); }, [open, loadDetails]);
 
   const handleCreateSnapshot = async (date: string) => {
     if (!goal) return;
@@ -434,7 +443,7 @@ function GoalDetailDialog({ goal, open, onOpenChange }: { goal: Goal | null; ope
           <DialogTitle>{goal.name} - Details</DialogTitle>
           <DialogDescription>{formatINR(goal.current_amount)} / {formatINR(goal.target_amount)} • {goal.progress_pct.toFixed(1)}% • Due {new Date(goal.target_date).toLocaleDateString("en-IN")}</DialogDescription>
         </DialogHeader>
-        {loading ? <p className="text-sm text-neutral-400 py-8 text-center">Loading...</p> : (
+        {loading ? <PanelLoading label="Loading goal details" /> : loadError ? <PanelError message="Could not load goal details." onRetry={loadDetails} /> : (
           <Tabs defaultValue="overview">
             <TabsList className="w-full">
               <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>

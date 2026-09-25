@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AccountIcon } from "@/components/common/account-icon";
 import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 type Account = {
   id: string;
@@ -102,6 +103,7 @@ export function AccountCard({
           <p className="text-xs text-neutral-400">Limit {formatINR(account.credit_limit)}</p>
         </div>
       )}
+      <Button variant="outline" size="sm" asChild className="mt-auto"><Link href={`/accounts/${account.id}`}>View details and history</Link></Button>
     </Card>
   );
 }

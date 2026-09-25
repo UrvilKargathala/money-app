@@ -423,6 +423,19 @@ export function setMemberRemoved(
   );
 }
 
+export function updateMemberRole(
+  q: Queryable,
+  params: { groupId: string; memberUserId: number; actingUserId: number; role: "admin" | "read_only" }
+) {
+  return q.query(
+    `UPDATE group_members AS gm SET role = $4, updated_by = $3, version = gm.version + 1
+     FROM shared_groups g
+     WHERE g.id = gm.group_id AND gm.group_id = $1::uuid AND gm.user_id = $2
+       AND g.owner_id = $3 AND gm.user_id <> g.owner_id AND gm.status = 'active'`,
+    [params.groupId, params.memberUserId, params.actingUserId, params.role]
+  );
+}
+
 export function leaveGroup(
   q: Queryable,
   params: { userId: number; groupId: string }

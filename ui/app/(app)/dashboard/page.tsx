@@ -96,16 +96,16 @@ export default async function DashboardPage() {
             <Link href="/add"><Plus className="h-4 w-4" /> Add transaction</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/transactions"><FileUp className="h-4 w-4" /> Import statement</Link>
+            <Link href="/transactions?import=1"><FileUp className="h-4 w-4" /> Import statement</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/accounts"><Wallet className="h-4 w-4" /> Add account</Link>
+            <Link href="/accounts?create=1"><Wallet className="h-4 w-4" /> Add account</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/bills"><Receipt className="h-4 w-4" /> Add bill</Link>
+            <Link href="/bills?create=1"><Receipt className="h-4 w-4" /> Add bill</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/budgets"><Target className="h-4 w-4" /> Create budget</Link>
+            <Link href="/budgets?create=1"><Target className="h-4 w-4" /> Create budget</Link>
           </Button>
         </CardContent>
       </Card>

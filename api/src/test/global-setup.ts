@@ -262,8 +262,15 @@ export default async function globalSetup(): Promise<void> {
   loadEnvLocal();
   const root = findRepoRoot();
   const scriptsDir = join(root, "scripts");
-  const venvPython = join(scriptsDir, ".venv", "Scripts", "python.exe");
-  const python = existsSync(venvPython) ? venvPython : "python";
+  const windowsVenvPython = join(scriptsDir, ".venv", "Scripts", "python.exe");
+  const unixVenvPython = join(scriptsDir, ".venv", "bin", "python");
+  const python = existsSync(windowsVenvPython)
+    ? windowsVenvPython
+    : existsSync(unixVenvPython)
+      ? unixVenvPython
+      : process.platform === "win32"
+        ? "python"
+        : "python3";
 
   const env: NodeJS.ProcessEnv = {
     ...process.env,

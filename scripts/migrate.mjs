@@ -11,7 +11,9 @@ const pool = new Pool({ connectionString: process.argv.includes('--neon') ? proc
 const client = await pool.connect();
 try {
   await client.query('BEGIN');
-  await client.query(await readFile(new URL('./migrations/001_membership.sql', import.meta.url), 'utf8'));
+  for (const file of ['./migrations/001_membership.sql', './migrations/002_billing_catalog.sql']) {
+    await client.query(await readFile(new URL(file, import.meta.url), 'utf8'));
+  }
   await client.query('COMMIT');
   console.log('Membership migration applied. Existing records preserved.');
 } catch (e) { await client.query('ROLLBACK'); throw e; }
