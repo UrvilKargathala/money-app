@@ -119,6 +119,8 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     const res = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: nextTheme, currency: nextCurrency }) });
     if (!res.ok) return toast.error("Could not save appearance settings.");
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    window.localStorage.setItem("moneymind-theme", nextTheme);
+    window.localStorage.setItem("moneymind-currency", nextCurrency);
     window.localStorage.setItem("moneymind-date-format", nextDateFormat);
     toast.success("Display preferences saved.");
   }

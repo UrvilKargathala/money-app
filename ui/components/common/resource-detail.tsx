@@ -33,11 +33,16 @@ export function ResourceDetail({ title, subtitle, backHref, record, related }: {
   const status = typeof record.status === "string" ? record.status : null;
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <Button variant="ghost" asChild className="-ml-3"><Link href={backHref}><ArrowLeft className="h-4 w-4" /> Back to {subtitle}</Link></Button>
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-neutral-500">
+        <Link href="/dashboard" className="transition-colors hover:text-primary-600">Overview</Link><span aria-hidden="true">/</span>
+        <Link href={backHref} className="transition-colors hover:text-primary-600">{subtitle}</Link><span aria-hidden="true">/</span>
+        <span className="truncate text-neutral-700" aria-current="page">{title}</span>
+      </nav>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-sm font-medium text-primary-600">{subtitle}</p><h1 className="text-3xl font-bold font-heading text-neutral-900">{title}</h1></div>
         {status ? <Badge variant={status === "active" || status === "paid" || status === "completed" ? "success" : "secondary"}>{status.replaceAll("_", " ")}</Badge> : null}
       </div>
+      <Button variant="ghost" asChild className="-ml-3"><Link href={backHref}><ArrowLeft className="h-4 w-4" /> Back to {subtitle}</Link></Button>
       <Card className="p-6">
         <h2 className="mb-5 text-lg font-semibold">Details</h2>
         <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">

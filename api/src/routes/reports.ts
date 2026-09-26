@@ -24,6 +24,14 @@ import { getDashboard } from "../queries/debts";
 
 const reports = new Hono();
 
+reports.get("/", requireAuth, (c) => c.json({
+  reports: [
+    "summary", "cashflow", "spending-by-category", "trends", "budget-vs-actual",
+    "heatmap", "net-worth", "debt-payoff", "income-sources", "top-merchants", "forecast",
+  ],
+  exports: ["export", "cashflow/export", "export-pdf"],
+}));
+
 const RANGES: Record<string, number | null> = {
   "1M": 1,
   "3M": 3,

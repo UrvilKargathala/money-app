@@ -4,9 +4,10 @@ import { useEffect } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { reportClientError } from "@/lib/error-reporting";
 
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(() => { console.error(error); }, [error]);
+  useEffect(() => { reportClientError(error, { digest: error.digest, boundary: "app" }); }, [error]);
   return (
     <Card role="alert" className="mx-auto max-w-2xl p-8 text-center">
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-error/10 text-error"><AlertTriangle className="h-6 w-6" /></div>

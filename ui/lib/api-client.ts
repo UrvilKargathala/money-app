@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { app } from "@moneymind/api";
+import { reportClientError } from "@/lib/error-reporting";
 
 /**
  * Server-only API client. Forwards the session cookie to the Hono backend
@@ -53,7 +54,7 @@ async function apiFetch(
 
 export async function apiJson<T>(path: string): Promise<T | null> {
   const res = await apiFetch(path);
-  if (!res.ok) return null;
+  if (!res.ok) { if (res.status >= 500) reportClientError(new Error(`API ${res.status}: ${path}`), { path, status: res.status }); return null; }
   return (await res.json()) as T;
 }
 
@@ -62,9 +63,13 @@ export async function apiFetchRaw(
   opts?: { method?: string; json?: unknown; body?: BodyInit | Uint8Array; headers?: Record<string, string>; contentType?: string }
 ): Promise<Response> {
   if (opts?.body !== undefined || opts?.headers !== undefined || opts?.contentType !== undefined) {
-    return apiFetch(path, opts as never);
+    const response = await apiFetch(path, opts as never);
+    if (response.status >= 500) reportClientError(new Error(`API ${response.status}: ${path}`), { path, status: response.status, method: opts?.method });
+    return response;
   }
-  return apiFetch(path, opts);
+  const response = await apiFetch(path, opts);
+  if (response.status >= 500) reportClientError(new Error(`API ${response.status}: ${path}`), { path, status: response.status, method: opts?.method });
+  return response;
 }
 
 // ---------------------------------------------------------------------------
