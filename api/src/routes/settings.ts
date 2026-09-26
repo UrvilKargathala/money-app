@@ -20,13 +20,17 @@ settings.patch("/", requireAuth, async (c) => {
   if (body.haptics_enabled !== undefined) {
     await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET haptics_enabled = $2 WHERE user_id = $1", [c.get("user").user_id, body.haptics_enabled ? 1 : 0]));
   }
+  if (body.report_filters !== undefined) {
+    if (!Array.isArray(body.report_filters) || body.report_filters.length > 20) return c.json({ error: "You can save up to 20 report filters." }, 400);
+    await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET report_filters = $2::jsonb WHERE user_id = $1", [c.get("user").user_id, JSON.stringify(body.report_filters)]));
+  }
   return c.json({ success: true });
 });
 
 settings.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const settings = await getSettings(user.user_id);
-  const extra = await withUser(user.user_id, (client) => client.query("SELECT widget_layout, haptics_enabled FROM user_settings WHERE user_id = $1", [user.user_id]));
+  const extra = await withUser(user.user_id, (client) => client.query("SELECT widget_layout, haptics_enabled, report_filters FROM user_settings WHERE user_id = $1", [user.user_id]));
   return c.json({ settings: { ...settings, ...extra.rows[0] } });
 });
 

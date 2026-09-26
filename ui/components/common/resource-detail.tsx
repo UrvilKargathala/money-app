@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DetailActions } from "@/components/common/detail-actions";
 
 const HIDDEN_KEYS = new Set(["id", "user_id", "version", "created_at", "updated_at"]);
 const MONEY_KEYS = /(amount|balance|price|principal|value|cost|emi|limit|income|expense|interest_earned)/i;
@@ -31,6 +32,8 @@ function displayValue(key: string, value: unknown) {
 export function ResourceDetail({ title, subtitle, backHref, record, related }: { title: string; subtitle: string; backHref: string; record: Record<string, unknown>; related?: { title: string; items: Record<string, unknown>[] }[] }) {
   const fields = Object.entries(record).filter(([key, value]) => !HIDDEN_KEYS.has(key) && !key.endsWith("_id") && typeof value !== "object");
   const status = typeof record.status === "string" ? record.status : null;
+  const id = typeof record.id === "string" ? record.id : "";
+  const collection = backHref.replace(/^\//, "");
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-neutral-500">
@@ -40,7 +43,7 @@ export function ResourceDetail({ title, subtitle, backHref, record, related }: {
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-sm font-medium text-primary-600">{subtitle}</p><h1 className="text-3xl font-bold font-heading text-neutral-900">{title}</h1></div>
-        {status ? <Badge variant={status === "active" || status === "paid" || status === "completed" ? "success" : "secondary"}>{status.replaceAll("_", " ")}</Badge> : null}
+        <div className="flex items-center gap-2">{status ? <Badge variant={status === "active" || status === "paid" || status === "completed" ? "success" : "secondary"}>{status.replaceAll("_", " ")}</Badge> : null}{id ? <DetailActions id={id} collection={collection} /> : null}</div>
       </div>
       <Button variant="ghost" asChild className="-ml-3"><Link href={backHref}><ArrowLeft className="h-4 w-4" /> Back to {subtitle}</Link></Button>
       <Card className="p-6">

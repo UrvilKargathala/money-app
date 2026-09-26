@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
 import { useMembership } from "@/components/membership";
+import { WIDGETS } from "@/lib/widgets";
 import Link from "next/link";
 
 const exportModules = [
@@ -63,6 +64,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
   const [emailDelivery, setEmailDelivery] = useState<{ configured: boolean; sender_configured: boolean } | null>(null);
+  const [widgetLayout, setWidgetLayout] = useState<string[]>(WIDGETS.map((widget) => widget.id));
 
   useEffect(() => {
     fetch("/api/notification-preferences")
@@ -99,6 +101,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         if (s.haptics_enabled !== undefined) setHapticsEnabled(!!Number(s.haptics_enabled));
         if (s.currency) setCurrency(s.currency);
         if (s.theme) setTheme(s.theme);
+        if (Array.isArray(s.widget_layout) && s.widget_layout.length) setWidgetLayout(s.widget_layout.map(String));
         // initialize haptics cache
         setHapticsEnabledCache(!!Number(s.haptics_enabled ?? 1));
       })
@@ -116,7 +119,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   }, [theme]);
 
   async function saveAppearance(nextTheme = theme, nextCurrency = currency, nextDateFormat = dateFormat) {
-    const res = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: nextTheme, currency: nextCurrency }) });
+    const res = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: nextTheme, currency: nextCurrency, widget_layout: widgetLayout }) });
     if (!res.ok) return toast.error("Could not save appearance settings.");
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
     window.localStorage.setItem("moneymind-theme", nextTheme);
@@ -371,6 +374,18 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               {pwLoading ? "Updating..." : "Change password"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Dashboard widgets</CardTitle><CardDescription>Choose the order shown on your dashboard.</CardDescription></CardHeader>
+        <CardContent className="space-y-2">
+          {widgetLayout.map((id, index) => {
+            const widget = WIDGETS.find((item) => item.id === id);
+            if (!widget) return null;
+            return <div key={id} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"><span>{widget.label}</span><div className="flex gap-1"><Button size="sm" variant="ghost" disabled={index === 0} onClick={() => setWidgetLayout((current) => { const next = [...current]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; return next; })} aria-label={`Move ${widget.label} up`}>↑</Button><Button size="sm" variant="ghost" disabled={index === widgetLayout.length - 1} onClick={() => setWidgetLayout((current) => { const next = [...current]; [next[index], next[index + 1]] = [next[index + 1], next[index]]; return next; })} aria-label={`Move ${widget.label} down`}>↓</Button></div></div>;
+          })}
+          <Button size="sm" onClick={() => saveAppearance()}>Save widget order</Button>
         </CardContent>
       </Card>
 

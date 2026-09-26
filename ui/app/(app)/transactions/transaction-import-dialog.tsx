@@ -242,6 +242,19 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
     }
   }
 
+  async function rollbackBatch(batchId: string) {
+    if (!confirm("Roll back this import? Imported transactions and unresolved import rows will be removed.")) return;
+    setHistoryBusy(true);
+    try {
+      const res = await fetch(`/api/import-batches/${batchId}/rollback`, { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Could not roll back import.");
+      toast.success(`Rolled back ${body.deleted ?? 0} imported transactions`);
+      await loadHistory(); onSuccess();
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not roll back import."); }
+    finally { setHistoryBusy(false); }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
@@ -306,7 +319,7 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
           <TabsContent value="history" className="space-y-3">
             {historyBusy && batches.length === 0 ? <div className="flex items-center gap-2 py-8 text-sm text-neutral-500"><Loader2 className="h-4 w-4 animate-spin" />Loading import history…</div> : null}
             {!historyBusy && batches.length === 0 ? <p className="py-8 text-center text-sm text-neutral-500">No statement imports yet.</p> : null}
-            {batches.map((batch) => <div key={batch.id} className="rounded-xl border p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2"><p className="font-semibold">{batch.filename}</p><Badge variant="secondary">{batch.status}</Badge></div><p className="text-xs text-neutral-500">{new Date(batch.created_at).toLocaleString("en-IN")}</p></div><div className="flex gap-3 text-xs"><span>{batch.imported_rows} imported</span><span>{batch.duplicate_rows} duplicates</span><span>{batch.error_rows} errors</span></div></div>{batch.duplicate_rows > 0 || batch.error_rows > 0 ? <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">{batch.duplicate_rows > 0 ? <><Button size="sm" variant="outline" onClick={() => void resolveDuplicates(batch.id, "skip")} disabled={historyBusy}>Skip duplicates</Button><Button size="sm" variant="outline" onClick={() => void resolveDuplicates(batch.id, "import")} disabled={historyBusy}>Import duplicates</Button></> : null}<Button size="sm" variant="ghost" asChild><a href={`/api/import-batches/${batch.id}/errors/export`} download>Download issues</a></Button></div> : null}</div>)}
+            {batches.map((batch) => <div key={batch.id} className="rounded-xl border p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2"><p className="font-semibold">{batch.filename}</p><Badge variant="secondary">{batch.status}</Badge></div><p className="text-xs text-neutral-500">{new Date(batch.created_at).toLocaleString("en-IN")}</p></div><div className="flex gap-3 text-xs"><span>{batch.imported_rows} imported</span><span>{batch.duplicate_rows} duplicates</span><span>{batch.error_rows} errors</span></div></div>{batch.status !== "rolled_back" ? <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">{batch.duplicate_rows > 0 ? <><Button size="sm" variant="outline" onClick={() => void resolveDuplicates(batch.id, "skip")} disabled={historyBusy}>Skip duplicates</Button><Button size="sm" variant="outline" onClick={() => void resolveDuplicates(batch.id, "import")} disabled={historyBusy}>Import duplicates</Button></> : null}<Button size="sm" variant="ghost" asChild><a href={`/api/import-batches/${batch.id}/errors/export`} download>Download issues</a></Button><Button size="sm" variant="destructive" onClick={() => void rollbackBatch(batch.id)} disabled={historyBusy}>Roll back import</Button></div> : null}</div>)}
           </TabsContent>
         </Tabs>
 

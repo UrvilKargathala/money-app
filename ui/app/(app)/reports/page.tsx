@@ -9,6 +9,7 @@ import {
   getReportsTopMerchants,
   getReportsIncomeSources,
   getBillingProfile,
+  getSettings,
   apiJson,
 } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export default async function ReportsPage() {
     billing,
     templateData,
     exportData,
+    settingsData,
   ] = await Promise.all([
     getReportsSummary(),
     getReportsCashflow(),
@@ -53,6 +55,7 @@ export default async function ReportsPage() {
     getBillingProfile(),
     apiJson<{ templates: { id: string; user_id: number | null; name: string; description: string | null; chart_config: unknown; version?: number }[] }>("/api/report-templates"),
     apiJson<{ exports: { id: string; file_type: string; status: string; created_at: string; date_range_start?: string | null; date_range_end?: string | null }[] }>("/api/report-exports"),
+    getSettings(),
   ]);
 
   if (billing && !billing.entitlements.reports_widgets?.allowed) {
@@ -133,7 +136,7 @@ export default async function ReportsPage() {
           </a>
         </CardContent>
       </Card>
-      <ReportsManager templates={templateData?.templates ?? []} exports={exportData?.exports ?? []} />
+      <ReportsManager templates={templateData?.templates ?? []} exports={exportData?.exports ?? []} initialFilters={((settingsData as { report_filters?: unknown[] } | null)?.report_filters ?? []) as never} />
     </div>
   );
 }

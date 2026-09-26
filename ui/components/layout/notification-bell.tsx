@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, Check, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,17 +26,25 @@ export function NotificationBell() {
   const [unread, setUnread] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread" | "upcoming">("all");
+  const lastServerTime = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      const streamUrl = lastServerTime.current ? `/api/notifications/stream?since=${encodeURIComponent(lastServerTime.current)}` : "/api/notifications/stream";
       const [feedRes, countRes] = await Promise.all([
-        fetch("/api/notifications?limit=12", { cache: "no-store", credentials: "include" }),
+        fetch(streamUrl, { cache: "no-store", credentials: "include" }),
         fetch("/api/notifications/unread-count", { cache: "no-store", credentials: "include" }),
       ]);
       if (feedRes.ok) {
         const data = await feedRes.json();
-        setNotifications(data.notifications ?? []);
+        const hadCursor = Boolean(lastServerTime.current);
+        lastServerTime.current = data.latest_server_time ?? new Date().toISOString();
+        if (hadCursor && Array.isArray(data.notifications) && data.notifications.length > 0) {
+          setNotifications((current) => [...data.notifications, ...current.filter((item) => !data.notifications.some((next: Notification) => next.id === item.id))].slice(0, 20));
+        } else if (!hadCursor) {
+          setNotifications(data.notifications ?? []);
+        }
       }
       if (countRes.ok) {
         const data = await countRes.json();
@@ -51,7 +59,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     fetchData();
-    const id = setInterval(fetchData, 10000);
+    const id = setInterval(fetchData, 5000);
     return () => clearInterval(id);
   }, [fetchData]);
 
