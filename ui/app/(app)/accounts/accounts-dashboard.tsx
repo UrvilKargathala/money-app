@@ -35,15 +35,18 @@ type Account = {
 type Props = {
   accounts: Account[];
   types: { type_code: string; display_name: string }[];
+  initialCreate?: boolean;
+  initialEditId?: string;
 };
 
-export function AccountsDashboard({ accounts, types }: Props) {
+export function AccountsDashboard({ accounts, types, initialCreate = false, initialEditId }: Props) {
   const router = useRouter();
   const [filterType, setFilterType] = useState<string>("all");
   const [showInactive, setShowInactive] = useState(false);
   const [search, setSearch] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Account | null>(null);
+  const initialEdit = initialEditId ? accounts.find((account) => account.id === initialEditId) ?? null : null;
+  const [formOpen, setFormOpen] = useState(initialCreate || !!initialEdit);
+  const [editing, setEditing] = useState<Account | null>(initialEdit);
   const [transferOpen, setTransferOpen] = useState(false);
 
   const filtered = accounts.filter((a) => {

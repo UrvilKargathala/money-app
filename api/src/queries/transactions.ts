@@ -35,6 +35,7 @@ export type TransactionRow = {
   account_color: string | null;
   transfer_group_id: string | null;
   source: string;
+  needs_review: number;
   version: number;
   tags: TransactionTag[];
 };
@@ -88,7 +89,7 @@ const ROW_SELECT = `
          t.category_id, c.name AS category_name, c.icon AS category_icon,
          c.color AS category_color, t.date, t.notes,
          a.name AS account_name, a.color AS account_color,
-         t.transfer_group_id, t.source, t.version, ${TAG_AGG}
+         t.transfer_group_id, t.source, t.needs_review, t.version, ${TAG_AGG}
   FROM transactions t
   LEFT JOIN categories c ON c.id = t.category_id
   LEFT JOIN accounts a ON a.id = t.account_id
@@ -188,10 +189,8 @@ export async function getTransactionById(
   userId: number,
   transactionId: string
 ): Promise<TransactionDetail | null> {
-  const result = await query<TransactionRow & { splits: TransactionSplitRow[] }>(
+  const result = await query<TransactionRow>(
     `${ROW_SELECT}
-     LEFT JOIN transaction_splits s ON s.transaction_id = t.id AND s.user_id = t.user_id
-     LEFT JOIN categories sc ON sc.id = s.category_id
      WHERE t.user_id = $1 AND t.id = $2
      GROUP BY t.id, c.name, c.icon, c.color, a.name, a.color
      LIMIT 1`,
@@ -199,9 +198,17 @@ export async function getTransactionById(
   );
   const row = result.rows[0];
   if (!row) return null;
+  const splitResult = await query<TransactionSplitRow>(
+    `SELECT s.id, s.category_id, c.name AS category_name, s.amount, s.notes
+     FROM transaction_splits s
+     LEFT JOIN categories c ON c.id = s.category_id
+     WHERE s.user_id = $1 AND s.transaction_id = $2
+     ORDER BY s.id ASC`,
+    [userId, transactionId]
+  );
   return {
     ...toTransaction(row),
-    splits: row.splits.map((s) => ({ ...s, amount: Number(s.amount) })),
+    splits: splitResult.rows.map((split) => ({ ...split, amount: Number(split.amount) })),
   };
 }
 export type Queryable = { query: typeof query };
@@ -280,7 +287,7 @@ export function updateTransactionFields(
      SET type = $3, amount = $4, description = $5, category_id = $6,
          date = $7::date, notes = $8, account_id = $9,
          group_id = CASE WHEN $11::boolean THEN $10::uuid ELSE group_id END,
-         version = version + 1, updated_by = $1
+         needs_review = 0, version = version + 1, updated_by = $1
      WHERE user_id = $1 AND id = $2::uuid AND version = $12`,
     [
       params.userId,

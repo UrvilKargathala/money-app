@@ -15,6 +15,7 @@ import {
   Calendar,
   Bell,
   Settings,
+  Users,
 } from "lucide-react";
 
 export type NavItem = {
@@ -31,6 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Budgets", href: "/budgets", icon: PiggyBank, built: true },
   { label: "Bills", href: "/bills", icon: Receipt, built: true },
   { label: "Subscriptions", href: "/subscriptions", icon: Repeat, built: true },
+  { label: "Recurring", href: "/recurring", icon: Repeat, built: true },
   { label: "Goals", href: "/goals", icon: Target, built: true },
   { label: "Debts", href: "/debts", icon: Landmark, built: true },
   { label: "Tax", href: "/tax", icon: Calculator, built: true },
@@ -38,6 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Net Worth", href: "/net-worth", icon: Scale, built: true },
   { label: "Reports", href: "/reports", icon: BarChart3, built: true },
   { label: "Notes", href: "/notes", icon: FileText, built: true },
+  { label: "Shared Groups", href: "/shared-groups", icon: Users, built: true },
   { label: "Calendar", href: "/calendar", icon: Calendar, built: true },
   { label: "Notifications", href: "/notifications", icon: Bell, built: true },
   { label: "Settings", href: "/settings", icon: Settings, built: true },
@@ -72,6 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Budgets", href: "/budgets", icon: PiggyBank, built: true },
       { label: "Bills", href: "/bills", icon: Receipt, built: true },
       { label: "Subscriptions", href: "/subscriptions", icon: Repeat, built: true },
+      { label: "Recurring", href: "/recurring", icon: Repeat, built: true },
     ],
   },
   {
@@ -88,6 +92,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Calendar", href: "/calendar", icon: Calendar, built: true },
       { label: "Tax", href: "/tax", icon: Calculator, built: true },
       { label: "Notes", href: "/notes", icon: FileText, built: true },
+      { label: "Shared Groups", href: "/shared-groups", icon: Users, built: true },
     ],
   },
 ];

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Power, PowerOff, CheckCircle, SkipForward, CreditCard, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 type Bill = {
   id: string;
@@ -74,11 +75,12 @@ export function BillCard({
           {statusBadge(bill.current_period_status)}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${bill.name}`}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild><Link href={`/bills/${bill.id}`}>View details</Link></DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>

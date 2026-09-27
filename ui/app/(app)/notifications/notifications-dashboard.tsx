@@ -85,9 +85,6 @@ function SseIndicator() {
       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={poll} disabled={status === "checking"}>
         {status === "checking" ? "Checking…" : "Check for new"}
       </Button>
-      <a href={getNotificationsStreamHref()} target="_blank" rel="noreferrer" className="text-xs text-primary-600 underline underline-offset-2">
-        stream
-      </a>
     </div>
   );
 }
@@ -221,6 +218,17 @@ export function NotificationsDashboard({
     if (mainTab !== "archive") return;
     fetchArchive();
   }, [mainTab, fetchArchive]);
+
+  // Feed-tab auto-refresh: revalidate only while the user is viewing the
+  // notification feed and the browser tab is visible. Any other mainTab
+  // (archive / preferences / emails) or a hidden tab performs zero requests.
+  useEffect(() => {
+    if (mainTab !== "feed") return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, 300000);
+    return () => clearInterval(id);
+  }, [mainTab, router]);
 
   // Keep prefs in sync if initial changes after refresh
   useEffect(() => {

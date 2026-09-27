@@ -3,7 +3,8 @@ import { BillsDashboard } from "./bills-dashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function BillsPage() {
+export default async function BillsPage({ searchParams }: { searchParams: Promise<{ create?: string }> }) {
+  const params = await searchParams;
   const [billsData, overviewData, accountsData, categoriesData, calendarData, upcomingData, cashflowData, waterfallData, suggestionsData] = await Promise.all([
     getBillsData(),
     getBillsOverview(),
@@ -27,6 +28,7 @@ export default async function BillsPage() {
       cashflowProjection={(cashflowData as never) ?? null}
       cashflowWaterfall={(waterfallData as never) ?? null}
       suggestions={(suggestionsData as never) ?? null}
+      initialCreate={params.create === "1"}
     />
   );
 }

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function BudgetsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; create?: string }>;
 }) {
   const params = await searchParams;
   const now = new Date();
@@ -26,6 +26,7 @@ export default async function BudgetsPage({
       categories={(categoriesData?.categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
       month={month}
       year={year}
+      initialCreate={params.create === "1"}
     />
   );
 }

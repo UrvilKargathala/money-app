@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { GlobalSearch } from "@/components/common/global-search";
 
 function isGroupActive(pathname: string, group: { items: { href: string }[] }) {
   return group.items.some((item) => pathname === item.href || pathname.startsWith(item.href + "/"));
@@ -178,15 +179,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0 }: { userName?: 
         {/* Right: search, notifications, user, logout */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Desktop search */}
-          <div className="hidden lg:flex items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-              <input
-                placeholder="Search..."
-                className="h-9 w-[240px] rounded-full border border-neutral-200 bg-neutral-50 pl-9 pr-4 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
-              />
-            </div>
-          </div>
+          <div className="hidden lg:flex items-center"><GlobalSearch /></div>
 
           {/* Mobile search toggle */}
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSearchOpen((v) => !v)}>
@@ -227,14 +220,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0 }: { userName?: 
       {/* Mobile search bar */}
       {searchOpen && (
         <div className="border-t border-neutral-100 px-4 py-3 lg:hidden bg-white">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-            <input
-              autoFocus
-              placeholder="Search transactions, notes, bills..."
-              className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 pl-9 pr-4 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100"
-            />
-          </div>
+          <GlobalSearch mobile onNavigate={() => setSearchOpen(false)} />
         </div>
       )}
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />

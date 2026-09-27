@@ -34,7 +34,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
   }, [initialUnread]);
 
   // Single combined request: feed + unread_count (backend returns both).
-  // Only called on panel open / manual refresh — never on an interval.
+  // Called only when the panel opens or on manual refresh — never in background.
   const fetchFeed = useCallback(async () => {
     try {
       setLoading(true);
@@ -56,39 +56,11 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
     }
   }, []);
 
-  // Lightweight badge-only refresh (1 indexed COUNT(*)). Used on
-  // tab focus / visibility — free browser events, no timers.
-  const refreshBadge = useCallback(async () => {
-    try {
-      const res = await fetch("/api/notifications/unread-count", { cache: "no-store", credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        const next = data.unread_count ?? data.count;
-        if (typeof next === "number") setUnread(next);
-      }
-    } catch {
-      // silent
-    }
-  }, []);
-
   // Fetch feed only when the panel opens (cache reuse on reopen).
+  // Idle browsing performs zero notification requests.
   useEffect(() => {
     if (open && !hasLoaded) fetchFeed();
   }, [open, hasLoaded, fetchFeed]);
-
-  // Badge refresh on returning to the tab — zero cost while idle.
-  useEffect(() => {
-    const onFocus = () => refreshBadge();
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") refreshBadge();
-    };
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [refreshBadge]);
 
   const handleMarkAllRead = async () => {
     const prev = notifications;

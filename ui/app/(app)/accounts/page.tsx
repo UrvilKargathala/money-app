@@ -3,7 +3,8 @@ import { AccountsDashboard } from "./accounts-dashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function AccountsPage() {
+export default async function AccountsPage({ searchParams }: { searchParams: Promise<{ create?: string; edit?: string }> }) {
+  const params = await searchParams;
   const data = await getAccountsData();
 
   if (!data) {
@@ -15,5 +16,5 @@ export default async function AccountsPage() {
     );
   }
 
-  return <AccountsDashboard accounts={data.accounts as never} types={data.types as never} />;
+  return <AccountsDashboard accounts={data.accounts as never} types={data.types as never} initialCreate={params.create === "1"} initialEditId={params.edit} />;
 }

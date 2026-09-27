@@ -39,8 +39,20 @@ import { membershipGuards } from "./membership-guards";
 import { subscriptionAudits } from "./routes/subscription-audits";
 import { forecast } from "./routes/forecast";
 import { billing, billingProfile } from "./routes/billing";
+import { search } from "./routes/search";
+import { analytics } from "./routes/analytics";
 
 export const app = new Hono();
+
+app.use("/api/*", async (c, next) => {
+  const started = Date.now();
+  const requestId = c.req.header("x-vercel-id") ?? crypto.randomUUID();
+  c.header("x-request-id", requestId);
+  await next();
+  const level = c.res.status >= 500 ? "error" : c.res.status >= 400 ? "warn" : "info";
+  const event = JSON.stringify({ level, msg: "api_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms: Date.now() - started });
+  if (level === "error") console.error(event); else console.log(event);
+});
 
 app.use("/api/*", membershipGuards);
 for (const path of ["investments", "sips", "dividends", "debts", "debt-types", "tax", "report-templates", "report-exports", "export"]) {
@@ -93,11 +105,13 @@ app.route("/api/users/me", userLifecycle);
 app.route("/api/jobs", jobs);
 app.route("/api/billing", billing);
 app.route("/api/users/me/subscription", billingProfile);
+app.route("/api/search", search);
+app.route("/api/analytics", analytics);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 
 app.onError((err, c) => {
-  console.error("[api]", err);
+  console.error(JSON.stringify({ level: "error", msg: "api_unhandled_error", route: c.req.path, method: c.req.method, error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined }));
   return c.json({ error: "Something went wrong. Please try again." }, 500);
 });
 

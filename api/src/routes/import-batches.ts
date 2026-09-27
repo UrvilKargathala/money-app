@@ -86,6 +86,19 @@ importBatches.get("/:id/errors/export", requireAuth, async (c) => {
   });
 });
 
+importBatches.post("/:id/rollback", requireAuth, async (c) => {
+  const user = c.get("user");
+  const batchId = c.req.param("id");
+  if (!(await getImportBatch(user.user_id, batchId))) return c.json({ error: "Not found" }, 404);
+  const deleted = await withUser(user.user_id, async (client) => {
+    const result = await client.query("DELETE FROM transactions WHERE user_id = $1 AND import_batch_id = $2::uuid", [user.user_id, batchId]);
+    await client.query("DELETE FROM import_errors WHERE user_id = $1 AND import_batch_id = $2::uuid", [user.user_id, batchId]);
+    await client.query("UPDATE import_batches SET status = 'rolled_back', imported_rows = 0, duplicate_rows = 0, error_rows = 0 WHERE user_id = $1 AND id = $2::uuid", [user.user_id, batchId]);
+    return result.rowCount ?? 0;
+  });
+  return c.json({ success: true, deleted });
+});
+
 function safeParseDraft(raw: string | null): ImportDraft | null {
   if (!raw) return null;
   try {

@@ -9,11 +9,14 @@ import { TransactionRow } from "./transaction-row";
 import { TransactionFormDialog } from "./transaction-form-dialog";
 import { TransactionFilters } from "./transaction-filters";
 import { formatINR } from "@/lib/format";
-import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload, WandSparkles, Tags } from "lucide-react";
 import { TransactionImportDialog } from "./transaction-import-dialog";
 import { deleteTransactionAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { TransactionToolsDialog } from "./transaction-tools-dialog";
+import { MerchantRulesDialog } from "./merchant-rules-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Txn = {
   id: string;
@@ -30,6 +33,8 @@ type Txn = {
   account_name: string;
   account_color: string | null;
   version: number;
+  source: string;
+  needs_review: number;
   tags: { id: string; name: string; color: string | null }[];
 };
 
@@ -41,17 +46,28 @@ type Props = {
   pageSize: number;
   accounts: { id: string; name: string }[];
   categories: { id: string; name: string; parent_id: string | null }[];
+  tags: { id: string; name: string; color: string | null }[];
+  merchantMappings: { id: string; merchant_raw: string; merchant_clean: string | null; category_name: string | null; use_count: number }[];
+  initialImport?: boolean;
+  initialCreate?: boolean;
 };
 
-export function TransactionsDashboard({ transactions, summary, total, page, pageSize, accounts, categories }: Props) {
+export function TransactionsDashboard({ transactions, summary, total, page, pageSize, accounts, categories, tags, merchantMappings, initialImport = false, initialCreate = false }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [accountFilter, setAccountFilter] = useState("all");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(initialCreate);
   const [editing, setEditing] = useState<Txn | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(initialImport);
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [toolsTransaction, setToolsTransaction] = useState<Txn | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [bulkTag, setBulkTag] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
@@ -63,9 +79,10 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
       if (typeFilter !== "all" && t.type !== typeFilter) return false;
       if (categoryFilter !== "all" && t.category_id !== categoryFilter) return false;
       if (accountFilter !== "all" && t.account_id !== accountFilter) return false;
+      if (reviewOnly && !t.needs_review) return false;
       return true;
     });
-  }, [transactions, search, typeFilter, categoryFilter, accountFilter]);
+  }, [transactions, search, typeFilter, categoryFilter, accountFilter, reviewOnly]);
 
   // Group by date
   const groups = useMemo(() => {
@@ -101,9 +118,20 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     setTypeFilter("all");
     setCategoryFilter("all");
     setAccountFilter("all");
+    setReviewOnly(false);
   };
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const bulk = async (action: "categorize" | "tag" | "delete") => {
+    if (action === "delete" && !confirm(`Delete ${selected.size} selected transactions?`)) return;
+    setBulkBusy(true);
+    try { const res = await fetch("/api/transactions/bulk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: Array.from(selected), action, ...(action === "categorize" ? { category_id: bulkCategory } : {}), ...(action === "tag" ? { tag_ids: [bulkTag] } : {}) }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Bulk action failed."); toast.success(`Updated ${body.affected} transactions`); setSelected(new Set()); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Bulk action failed."); } finally { setBulkBusy(false); }
+  };
+  const mergeSelected = async () => {
+    const ids = Array.from(selected); if (ids.length !== 2) return;
+    if (!confirm("Merge the second selected transaction into the first? The second will be removed.")) return;
+    setBulkBusy(true); try { const res = await fetch("/api/transactions/duplicates/merge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ existing_transaction_id: ids[0], duplicate_transaction_id: ids[1] }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || "Could not merge transactions."); toast.success("Duplicate transactions merged"); setSelected(new Set()); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Could not merge transactions."); } finally { setBulkBusy(false); }
+  };
 
   return (
     <div className="space-y-6">
@@ -113,6 +141,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           <p className="text-sm text-neutral-500 font-body mt-1">{summary.count} transactions • Net {formatINR(summary.net)}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setRulesOpen(true)}><WandSparkles className="h-4 w-4" /> Merchant rules</Button>
           <Button variant="outline" asChild>
             <a href="/api/transactions/export" download>
               <Download className="h-4 w-4" /> Export CSV
@@ -150,7 +179,14 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           accounts={accounts}
           onClear={clearFilters}
         />
+        <div className="mt-3 flex justify-end">
+          <Button variant={reviewOnly ? "default" : "outline"} size="sm" onClick={() => setReviewOnly((value) => !value)}>
+            Review imported ({transactions.filter((transaction) => transaction.needs_review).length})
+          </Button>
+        </div>
       </Card>
+
+      {selected.size > 0 ? <Card className="sticky top-20 z-30 flex flex-col gap-3 border-primary-200 bg-primary-50 p-3 shadow-md sm:flex-row sm:items-center"><p className="text-sm font-semibold">{selected.size} selected</p><div className="flex flex-1 flex-wrap gap-2"><Select value={bulkCategory} onValueChange={setBulkCategory}><SelectTrigger className="w-44 bg-white"><SelectValue placeholder="Choose category" /></SelectTrigger><SelectContent>{categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent></Select><Button size="sm" variant="outline" disabled={!bulkCategory || bulkBusy} onClick={() => void bulk("categorize")}>Apply category</Button><Select value={bulkTag} onValueChange={setBulkTag}><SelectTrigger className="w-40 bg-white"><SelectValue placeholder="Choose tag" /></SelectTrigger><SelectContent>{tags.map((tag) => <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>)}</SelectContent></Select><Button size="sm" variant="outline" disabled={!bulkTag || bulkBusy} onClick={() => void bulk("tag")}><Tags className="h-4 w-4" /> Apply tag</Button>{selected.size === 2 ? <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => void mergeSelected()}>Merge duplicates</Button> : null}<Button size="sm" variant="destructive" disabled={bulkBusy} onClick={() => void bulk("delete")}>Delete</Button><Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button></div></Card> : null}
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -182,7 +218,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
               </div>
               <div className="space-y-2">
                 {g.items.map((t) => (
-                  <TransactionRow key={t.id} txn={t} onEdit={() => handleEdit(t)} onDelete={() => handleDelete(t.id)} />
+                  <TransactionRow key={t.id} txn={t} selected={selected.has(t.id)} onSelectedChange={(checked) => setSelected((current) => { const next = new Set(current); if (checked) next.add(t.id); else next.delete(t.id); return next; })} onEdit={() => handleEdit(t)} onDelete={() => handleDelete(t.id)} onOrganize={() => setToolsTransaction(t)} />
                 ))}
               </div>
             </div>
@@ -207,7 +243,9 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
       )}
 
       <TransactionFormDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
-      <TransactionImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} onSuccess={() => router.refresh()} />
+      <TransactionImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
+      <TransactionToolsDialog open={!!toolsTransaction} onOpenChange={(value) => { if (!value) setToolsTransaction(null); }} transaction={toolsTransaction} tags={tags} categories={categories} />
+      <MerchantRulesDialog open={rulesOpen} onOpenChange={setRulesOpen} mappings={merchantMappings} categories={categories} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMembership, UpgradeCard } from "@/components/membership";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
 
 type Sub = {
   id: string;
@@ -59,19 +60,23 @@ type PaymentRow = { id: string; amount: number; period_label: string; period_mon
 function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  const loadPayments = useCallback(() => {
+    if (!sub) return;
+    setLoading(true);
+    setLoadError(false);
+    fetch(`/api/subscriptions/${sub.id}/payments`)
+      .then(async (response) => { if (!response.ok) throw new Error(); return response.json(); })
+      .then((data) => setPayments((data.payments ?? []).map((payment: { amount: string | number }) => ({ ...payment, amount: Number(payment.amount) }))))
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
+  }, [sub]);
 
   useEffect(() => {
     if (!open || !sub) return;
-    setLoading(true);
-    fetch(`/api/subscriptions/${sub.id}/payments`)
-      .then((r) => r.json())
-      .then((d) => {
-        const rows = (d.payments ?? []).map((p: { amount: string | number }) => ({ ...p, amount: Number((p as { amount: string | number }).amount) }));
-        setPayments(rows);
-      })
-      .catch(() => toast.error("Could not load payments"))
-      .finally(() => setLoading(false));
-  }, [open, sub]);
+    loadPayments();
+  }, [open, sub, loadPayments]);
 
   if (!sub) return null;
   return (
@@ -87,13 +92,13 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
             <a href={`/api/subscriptions/${sub.id}/payments/export`} download><Download className="h-3 w-3" /> Export CSV</a>
           </Button>
         </div>
-        <div className="max-h-[50vh] overflow-auto rounded-lg border">
+        {loadError ? <PanelError message="Could not load subscription payments." onRetry={loadPayments} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
               <tr><th className="p-2 text-left">Period</th><th className="p-2 text-left">Date</th><th className="p-2 text-right">Amount</th><th className="p-2 text-left">Notes</th></tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan={4} className="p-4 text-center text-neutral-400">Loading...</td></tr> : payments.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No payments yet</td></tr> : payments.map((p) => (
+              {loading ? <TableLoadingRows columns={4} /> : payments.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-neutral-500">No payments yet</td></tr> : payments.map((p) => (
                 <tr key={p.id} className="border-t text-xs">
                   <td className="p-2">{p.period_label}</td>
                   <td className="p-2">{p.created_at.slice(0,10)}</td>
@@ -103,7 +108,7 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
       </DialogContent>
     </Dialog>
   );

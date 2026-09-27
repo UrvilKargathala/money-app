@@ -11,9 +11,11 @@ import {
   getReportsSpendingByCategory,
   getTransactionsData,
   getTransactionSummary,
+  getSettings,
 } from "@/lib/api-client";
 import { formatINR } from "@/lib/format";
 import { CashflowTrendCard, SpendingBreakdownCard } from "./dashboard-charts";
+import { WidgetsGrid } from "@/components/dashboard/widgets-grid";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +24,7 @@ export default async function DashboardPage() {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
-  const [accountsData, txnSummary, recentTxns, budgetOverview, billsOverview, cashflowData, spendingData] = await Promise.all([
+  const [accountsData, txnSummary, recentTxns, budgetOverview, billsOverview, cashflowData, spendingData, settingsData] = await Promise.all([
     getAccountsData(),
     getTransactionSummary(),
     getTransactionsData(new URLSearchParams({ page: "1", pageSize: "5" })),
@@ -30,6 +32,7 @@ export default async function DashboardPage() {
     getBillsOverview().catch(() => null),
     getReportsCashflow().catch(() => null),
     getReportsSpendingByCategory().catch(() => null),
+    getSettings().catch(() => null),
   ]);
 
   const accounts = accountsData?.accounts ?? [];
@@ -96,16 +99,16 @@ export default async function DashboardPage() {
             <Link href="/add"><Plus className="h-4 w-4" /> Add transaction</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/transactions"><FileUp className="h-4 w-4" /> Import statement</Link>
+            <Link href="/transactions?import=1"><FileUp className="h-4 w-4" /> Import statement</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/accounts"><Wallet className="h-4 w-4" /> Add account</Link>
+            <Link href="/accounts?create=1"><Wallet className="h-4 w-4" /> Add account</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/bills"><Receipt className="h-4 w-4" /> Add bill</Link>
+            <Link href="/bills?create=1"><Receipt className="h-4 w-4" /> Add bill</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/budgets"><Target className="h-4 w-4" /> Create budget</Link>
+            <Link href="/budgets?create=1"><Target className="h-4 w-4" /> Create budget</Link>
           </Button>
         </CardContent>
       </Card>
@@ -140,6 +143,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <WidgetsGrid layout={(settingsData as { widget_layout?: unknown[] } | null)?.widget_layout} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)]">
         <Card>

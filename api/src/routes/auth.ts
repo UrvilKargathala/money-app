@@ -3,6 +3,7 @@ import { getCookie } from "hono/cookie";
 import { withUser } from "../db";
 import {
   getClientIp,
+  LOGIN_WINDOW_MINUTES,
   isRateLimited,
   isSignupRateLimited,
   normalizeEmail,
@@ -55,6 +56,7 @@ auth.post("/login", async (c) => {
   }
 
   if (await isRateLimited(email, getClientIp(c))) {
+    c.header("retry-after", String(LOGIN_WINDOW_MINUTES * 60));
     return c.json(
       { error: "Too many failed attempts. Please try again in 15 minutes." },
       429

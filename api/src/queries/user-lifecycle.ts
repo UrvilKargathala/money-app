@@ -226,9 +226,9 @@ export async function getAuditLogs(
   userId: number, limit: number, offset: number, q: Queryable = DB
 ): Promise<Record<string, unknown>[]> {
   const result = await q.query<Record<string, unknown>>(
-    `SELECT id, action, ip_address, created_at
+    `SELECT timestamp::text AS id, action, ip_address, timestamp AS created_at
      FROM access_logs WHERE user_id = $1
-     ORDER BY created_at DESC LIMIT $2::int OFFSET $3::int`,
+     ORDER BY timestamp DESC LIMIT $2::int OFFSET $3::int`,
     [userId, limit, offset]
   );
   return result.rows;

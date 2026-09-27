@@ -28,7 +28,9 @@ export type Shortcut = {
 
 export const SHORTCUTS: Shortcut[] = [
   { id: "new-transaction", label: "New Transaction", description: "Add income, expense or transfer", icon: Plus, keywords: ["add", "transaction", "expense"], href: "/add", recommended: true },
-  { id: "new-account", label: "New Account", description: "Create a new account", icon: Wallet, keywords: ["account", "create"], href: "/accounts" },
+  { id: "new-account", label: "New Account", description: "Create a new account", icon: Wallet, keywords: ["account", "create"], href: "/accounts?create=1" },
+  { id: "new-budget", label: "New Budget", description: "Create a monthly budget", icon: PiggyBank, keywords: ["budget", "create"], href: "/budgets?create=1" },
+  { id: "new-bill", label: "New Bill", description: "Add a bill and due date", icon: Receipt, keywords: ["bill", "create"], href: "/bills?create=1" },
   { id: "go-dashboard", label: "Go to Dashboard", icon: LayoutDashboard, keywords: ["dashboard", "home"], href: "/dashboard", recommended: true },
   { id: "go-transactions", label: "Go to Transactions", icon: ArrowLeftRight, keywords: ["transactions", "list"], href: "/transactions" },
   { id: "go-budgets", label: "Go to Budgets", icon: PiggyBank, keywords: ["budget", "plan"], href: "/budgets" },
