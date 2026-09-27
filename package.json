@@ -8,7 +8,8 @@
     "build": "pnpm --filter @moneymind/web build",
     "start": "pnpm --filter @moneymind/web start",
     "typecheck": "pnpm --filter @moneymind/web typecheck && pnpm --filter @moneymind/api typecheck",
-    "smoke": "node scripts/smoke-local.mjs"
+    "smoke": "node scripts/smoke-local.mjs",
+    "smoke:pages": "node scripts/smoke-pages.mjs"
   },
   "devDependencies": {}
 }
