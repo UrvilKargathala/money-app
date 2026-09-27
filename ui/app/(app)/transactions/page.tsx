@@ -3,7 +3,7 @@ import { TransactionsDashboard } from "./transactions-dashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function TransactionsPage({ searchParams }: { searchParams: Promise<{ page?: string; pageSize?: string; type?: string; q?: string; import?: string }> }) {
+export default async function TransactionsPage({ searchParams }: { searchParams: Promise<{ page?: string; pageSize?: string; type?: string; q?: string; import?: string; create?: string }> }) {
   const params = await searchParams;
   const page = Number(params.page ?? 1) || 1;
   const pageSize = Number(params.pageSize ?? 50) || 50;
@@ -37,6 +37,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       tags={(tagsData?.tags ?? []) as never}
       merchantMappings={(mappingsData?.mappings ?? []) as never}
       initialImport={params.import === "1"}
+      initialCreate={params.create === "1"}
     />
   );
 }

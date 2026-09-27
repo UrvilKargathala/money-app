@@ -43,7 +43,7 @@ export function ResourceDetail({ title, subtitle, backHref, record, related }: {
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-sm font-medium text-primary-600">{subtitle}</p><h1 className="text-3xl font-bold font-heading text-neutral-900">{title}</h1></div>
-        <div className="flex items-center gap-2">{status ? <Badge variant={status === "active" || status === "paid" || status === "completed" ? "success" : "secondary"}>{status.replaceAll("_", " ")}</Badge> : null}{id ? <DetailActions id={id} collection={collection} /> : null}</div>
+        <div className="flex items-center gap-2">{status ? <Badge variant={status === "active" || status === "paid" || status === "completed" ? "success" : "secondary"}>{status.replaceAll("_", " ")}</Badge> : null}{id ? <DetailActions id={id} collection={collection} editHref={`${backHref}?edit=${encodeURIComponent(id)}`} /> : null}</div>
       </div>
       <Button variant="ghost" asChild className="-ml-3"><Link href={backHref}><ArrowLeft className="h-4 w-4" /> Back to {subtitle}</Link></Button>
       <Card className="p-6">
