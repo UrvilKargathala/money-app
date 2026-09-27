@@ -39,4 +39,16 @@ export const rateLimitConfig = {
     maxRequests: 30,
     windowSeconds: 120,
   },
+  /**
+   * Password-change abuse guard (authenticated endpoint, per user).
+   * `maxRequests` attempts within `windowSeconds` trigger a block lasting
+   * `blockSeconds` (0 = disabled). In-memory per instance, like
+   * notifications — the login burst rule above stays the exact,
+   * DB-backed credential defense.
+   */
+  passwordChange: {
+    maxRequests: 5,
+    windowSeconds: 100,
+    blockSeconds: 600,
+  },
 };

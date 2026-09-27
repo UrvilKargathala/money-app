@@ -1502,7 +1502,9 @@ export async function purgeNoteApi(id: string): Promise<{ success: boolean } | n
   }
 }
 
-export async function getNoteCategories(): Promise<{ categories: { id: string; name: string }[] } | null> {
+export async function getNoteCategories(): Promise<{
+  categories: { name: string; count: number; seeded: boolean }[];
+} | null> {
   return apiJson("/api/notes/categories");
 }
 

@@ -15,6 +15,7 @@ import {
 import { getVaultInfo } from "../queries/vault";
 import { sendLinkEmail } from "../utils/email";
 import { recordAccessLog } from "../auth";
+import { passwordChangeRateLimit } from "../rate-limit";
 
 /**
  * Registers password-reset / email-verification / magic-link endpoints on
@@ -152,35 +153,57 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
     return c.json(session);
   });
 
-  auth.post("/change-password", requireAuth, async (c) => {
-    const user = c.get("user");
-    const body = await readJson(c);
-    const currentPassword = String(body.current_password ?? "");
-    const newPassword = String(body.new_password ?? "");
-    if (!currentPassword) return c.json({ error: "Enter your current password." }, 400);
-    if (!isValidPassword(newPassword)) {
-      return c.json({ fieldErrors: { new_password: passwordPolicyHint } }, 400);
-    }
+  auth.post(
+    "/change-password",
+    requireAuth,
+    passwordChangeRateLimit(),
+    async (c) => {
+      const user = c.get("user");
+      const body = await readJson(c);
+      const currentPassword = String(body.current_password ?? "");
+      const newPassword = String(body.new_password ?? "");
+      if (!currentPassword)
+        return c.json({ error: "Enter your current password." }, 400);
+      if (!isValidPassword(newPassword)) {
+        return c.json({ fieldErrors: { new_password: passwordPolicyHint } }, 400);
+      }
 
-    const storedHash = await getCurrentPasswordHash(user.user_id);
-    if (!storedHash || !(await verifyPassword(currentPassword, storedHash))) {
-      return c.json({ error: "Current password is incorrect." }, 401);
-    }
-    const newHash = await hashPassword(newPassword);
+      const storedHash = await getCurrentPasswordHash(user.user_id);
+      if (!storedHash || !(await verifyPassword(currentPassword, storedHash))) {
+        return c.json({ error: "Current password is incorrect." }, 401);
+      }
+      // Reject no-op rotations after identity is confirmed (no oracle change)
+      // and before the expensive bcrypt re-hash + write transaction.
+      if (currentPassword === newPassword) {
+        return c.json(
+          {
+            fieldErrors: {
+              new_password:
+                "New password must be different from the current password.",
+            },
+          },
+          400
+        );
+      }
+      const newHash = await hashPassword(newPassword);
 
-    try {
-      await withUser(user.user_id, (client) =>
-        changePassword(client, {
-          userId: user.user_id,
-          currentPasswordHashVerified: true,
-          newPasswordHash: newHash,
-          keepSessionTokenId: user.token_id,
-        })
-      );
-    } catch (err) {
-      console.error("[api] change-password failed:", err);
-      return c.json({ error: "Could not change the password. Please try again." }, 500);
+      try {
+        await withUser(user.user_id, (client) =>
+          changePassword(client, {
+            userId: user.user_id,
+            currentPasswordHashVerified: true,
+            newPasswordHash: newHash,
+            keepSessionTokenId: user.token_id,
+          })
+        );
+      } catch (err) {
+        console.error("[api] change-password failed:", err);
+        return c.json(
+          { error: "Could not change the password. Please try again." },
+          500
+        );
+      }
+      return c.json({ success: true });
     }
-    return c.json({ success: true });
-  });
+  );
 }

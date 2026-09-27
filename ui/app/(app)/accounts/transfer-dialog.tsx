@@ -26,6 +26,11 @@ export function TransferDialog({
 }) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [localErrors, setLocalErrors] = useState<{
+    from_account_id?: string;
+    to_account_id?: string;
+    amount?: string;
+  }>({});
   const [state, formAction, isPending] = useActionState(createTransfer, null);
 
   useEffect(() => {
@@ -36,6 +41,30 @@ export function TransferDialog({
     }
   }, [state?.success]);
 
+  // Reset selections + errors whenever the dialog is (re)opened.
+  useEffect(() => {
+    if (open) {
+      setFrom("");
+      setTo("");
+      setLocalErrors({});
+    }
+  }, [open]);
+
+  // Frontend-first: block the POST until every field is valid.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const data = new FormData(e.currentTarget);
+    const amount = String(data.get("amount") ?? "");
+    const next: typeof localErrors = {};
+    if (!from) next.from_account_id = "Select the source account.";
+    if (!to) next.to_account_id = "Select the destination account.";
+    if (from && to && from === to)
+      next.to_account_id = "Choose a different account.";
+    if (!amount || Number(amount) <= 0)
+      next.amount = "Enter a valid amount.";
+    setLocalErrors(next);
+    if (Object.keys(next).length > 0) e.preventDefault();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -44,7 +73,7 @@ export function TransferDialog({
           <DialogDescription>Move money between your own accounts. Not treated as income or expense.</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} onSubmit={handleSubmit} className="space-y-4">
           {state?.error && (
             <Alert variant="destructive">
               <AlertDescription>{state.error}</AlertDescription>
@@ -67,7 +96,7 @@ export function TransferDialog({
                 </SelectContent>
               </Select>
               <input type="hidden" name="from_account_id" value={from} />
-              {state?.fieldErrors?.from_account_id && <p className="text-xs text-error-dark">{state.fieldErrors.from_account_id}</p>}
+              {(localErrors.from_account_id ?? state?.fieldErrors?.from_account_id) && <p className="text-xs text-error-dark">{localErrors.from_account_id ?? state?.fieldErrors?.from_account_id}</p>}
             </div>
             <div className="space-y-2">
               <Label>To *</Label>
@@ -84,14 +113,14 @@ export function TransferDialog({
                 </SelectContent>
               </Select>
               <input type="hidden" name="to_account_id" value={to} />
-              {state?.fieldErrors?.to_account_id && <p className="text-xs text-error-dark">{state.fieldErrors.to_account_id}</p>}
+              {(localErrors.to_account_id ?? state?.fieldErrors?.to_account_id) && <p className="text-xs text-error-dark">{localErrors.to_account_id ?? state?.fieldErrors?.to_account_id}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tr-amount">Amount *</Label>
             <Input id="tr-amount" name="amount" type="number" step="0.01" placeholder="1000" required />
-            {state?.fieldErrors?.amount && <p className="text-xs text-error-dark">{state.fieldErrors.amount}</p>}
+            {(localErrors.amount ?? state?.fieldErrors?.amount) && <p className="text-xs text-error-dark">{localErrors.amount ?? state?.fieldErrors?.amount}</p>}
           </div>
 
           <div className="space-y-2">

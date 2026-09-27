@@ -42,7 +42,27 @@ export function getClientIp(c: Context) {
   return fwd ? fwd.split(",")[0].trim() : "local";
 }
 
+/**
+ * Loopback / test clients never participate in IP-based limiting:
+ * - "local" = no forwarding header (tests, in-process calls)
+ * - "::1", "127.0.0.1", "::ffff:127.0.0.1" = dev browsers hit Next directly,
+ *   which forwards the loopback address. Counting it would pool every local
+ *   user/email into one shared budget and false-positive in dev.
+ * Production (Vercel) always sees real client IPs, so this only affects dev.
+ */
+export function isLoopbackIp(ip: string): boolean {
+  return (
+    ip === "local" ||
+    ip === "::1" ||
+    ip === "127.0.0.1" ||
+    ip === "::ffff:127.0.0.1"
+  );
+}
+
 export async function isRateLimited(email: string, ip: string): Promise<boolean> {
+  // Loopbacks carry no IP signal (see isLoopbackIp): pass NULL so the
+  // by_ip clause matches nothing instead of pooling all dev traffic.
+  const ipKey = isLoopbackIp(ip) ? null : ip;
   const result = await query<{ by_email: string; by_ip: string }>(
     `SELECT
        (SELECT COUNT(*)::text
@@ -51,9 +71,9 @@ export async function isRateLimited(email: string, ip: string): Promise<boolean>
           AND timestamp > CURRENT_TIMESTAMP - ($2 || ' minutes')::interval) AS by_email,
        (SELECT COUNT(*)::text
         FROM login_attempts
-        WHERE ip_address = $3 AND ip_address <> 'local' AND success = 0
+        WHERE $3::text IS NOT NULL AND ip_address = $3 AND success = 0
           AND timestamp > CURRENT_TIMESTAMP - ($2 || ' minutes')::interval) AS by_ip`,
-    [email, LOGIN_WINDOW_MINUTES, ip]
+    [email, LOGIN_WINDOW_MINUTES, ipKey]
   );
   const row = result.rows[0];
   return (
@@ -76,17 +96,20 @@ export async function isLoginBurstLimited(
 ): Promise<boolean> {
   const { maxRequests, windowSeconds, blockSeconds } = rateLimitConfig.login;
   if (maxRequests <= 0 || windowSeconds <= 0 || blockSeconds <= 0) return false;
+  // Loopbacks carry no IP signal (see isLoopbackIp): pass NULL so the IP
+  // clause matches nothing instead of pooling all dev traffic.
+  const ipKey = isLoopbackIp(ip) ? null : ip;
   const result = await query<{ burst: string; sustain: string }>(
     `SELECT
        (SELECT COUNT(*)::text
         FROM login_attempts
-        WHERE (email_attempt = $1 OR (ip_address = $2 AND ip_address <> 'local'))
+        WHERE (email_attempt = $1 OR ($2::text IS NOT NULL AND ip_address = $2))
           AND timestamp > CURRENT_TIMESTAMP - ($3 || ' seconds')::interval) AS burst,
        (SELECT COUNT(*)::text
         FROM login_attempts
-        WHERE (email_attempt = $1 OR (ip_address = $2 AND ip_address <> 'local'))
+        WHERE (email_attempt = $1 OR ($2::text IS NOT NULL AND ip_address = $2))
           AND timestamp > CURRENT_TIMESTAMP - ($4 || ' seconds')::interval) AS sustain`,
-    [email, ip, windowSeconds, blockSeconds]
+    [email, ipKey, windowSeconds, blockSeconds]
   );
   const row = result.rows[0];
   return (

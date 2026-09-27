@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { createVault, decryptVaultBytes, decryptVaultText, encryptVaultBytes, encryptVaultText, unwrapVaultKey } from "@/lib/vault-crypto";
 
 type Note = { id: string; title: string; category: string; data_encrypted: string; data_iv: string; is_pinned: number; version: number; created_at: string; deleted_at?: string | null };
-type Category = { id?: string; name: string };
+type Category = { name: string; count?: number; seeded?: boolean };
 type Template = { id: string; title: string; category: string; content?: string | null };
 type Attachment = { id: string; file_name: string; file_type?: string | null; file_size?: number };
 
@@ -104,7 +104,9 @@ export function NotesDashboard({
     return true;
   });
 
-  const filterCategories = Array.from(new Set(notes.map((n) => n.category)));
+  const filterCategories = Array.from(
+    new Set(notes.map((n) => n.category).filter(Boolean))
+  );
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this note?")) return;
@@ -297,11 +299,13 @@ export function NotesDashboard({
               <p className="text-sm text-neutral-400">No categories</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {categories.map((c) => (
-                  <button key={c.id ?? c.name} onClick={() => void renameCategory(c.name)} className="group">
-                    <Badge variant="default">{c.name}<Pencil className="ml-1 inline h-3 w-3 opacity-0 group-hover:opacity-100" /></Badge>
-                  </button>
-                ))}
+                {categories
+                  .filter((c) => Boolean(c.name))
+                  .map((c) => (
+                    <button key={c.name} onClick={() => void renameCategory(c.name)} className="group">
+                      <Badge variant="default">{c.name}<Pencil className="ml-1 inline h-3 w-3 opacity-0 group-hover:opacity-100" /></Badge>
+                    </button>
+                  ))}
               </div>
             )}
           </CardContent>

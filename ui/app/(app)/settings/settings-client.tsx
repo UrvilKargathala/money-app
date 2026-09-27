@@ -162,12 +162,17 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     e.preventDefault();
     setPwError(null);
     setPwSuccess(false);
-    if (newPw.length < 8) {
-      setPwError("New password must be at least 8 characters.");
+    // Frontend-first: never hit the API until every local constraint passes.
+    if (newPw.length < 8 || !/[a-zA-Z]/.test(newPw) || !/\d/.test(newPw)) {
+      setPwError("At least 8 characters, including a letter and a digit.");
       return;
     }
     if (newPw !== confirmPw) {
       setPwError("Passwords do not match.");
+      return;
+    }
+    if (newPw === currentPw) {
+      setPwError("New password must be different from the current password.");
       return;
     }
     setPwLoading(true);
