@@ -1,6 +1,7 @@
 ﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
+import { notificationsRateLimit } from "../rate-limit";
 import { readJson, isUniqueViolation } from "./helpers";
 import {
   bulkAction,
@@ -25,7 +26,7 @@ const notifications = new Hono();
 const uuidRe = /^[0-9a-f-]{36}$/i;
 
 /** Feed - 25/page with filter + type/module facets. */
-notifications.get("/", requireAuth, async (c) => {
+notifications.get("/", requireAuth, notificationsRateLimit(), async (c) => {
   const user = c.get("user");
   const filterParam = c.req.query("filter") || "all";
   const filter = ["all", "unread", "read"].includes(filterParam)
@@ -56,13 +57,13 @@ notifications.get("/", requireAuth, async (c) => {
   });
 });
 
-notifications.get("/unread-count", requireAuth, async (c) => {
+notifications.get("/unread-count", requireAuth, notificationsRateLimit(), async (c) => {
   const user = c.get("user");
   return c.json({ unread_count: await getUnreadCount(user.user_id) });
 });
 
 /** Simplified poll-based stream: returns latest since a timestamp. */
-notifications.get("/stream", requireAuth, async (c) => {
+notifications.get("/stream", requireAuth, notificationsRateLimit(), async (c) => {
   const user = c.get("user");
   const since = c.req.query("since") || null;
   const validSince =

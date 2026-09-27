@@ -1,10 +1,11 @@
 import type { Context } from "hono";
 import bcrypt from "bcryptjs";
 import { query } from "./db";
+import { rateLimitConfig } from "./rate-limit-config";
 
 export const PASSWORD_MIN_LENGTH = 8;
-export const LOGIN_MAX_ATTEMPTS = 5;
-export const LOGIN_WINDOW_MINUTES = 15;
+export const LOGIN_MAX_ATTEMPTS = rateLimitConfig.loginFailures.maxAttempts;
+export const LOGIN_WINDOW_MINUTES = rateLimitConfig.loginFailures.windowMinutes;
 export const SIGNUP_MAX_PER_IP = 5;
 
 /**
@@ -58,6 +59,39 @@ export async function isRateLimited(email: string, ip: string): Promise<boolean>
   return (
     Number(row?.by_email ?? 0) >= LOGIN_MAX_ATTEMPTS ||
     Number(row?.by_ip ?? 0) >= LOGIN_MAX_ATTEMPTS
+  );
+}
+
+/**
+ * Burst rule (DB-backed, exact across instances): `maxRequests` login POSTs
+ * within `windowSeconds` — per email OR per IP — trigger a block. Rejected
+ * attempts are recorded by the caller, so `blockSeconds` also acts as the
+ * sustain window: the block lifts ~`blockSeconds` after the last attempt.
+ * Counts ALL attempts (not just failures) to stop credential-stuffing volume.
+ * Returns false immediately when disabled via `rate-limit-config.ts`.
+ */
+export async function isLoginBurstLimited(
+  email: string,
+  ip: string
+): Promise<boolean> {
+  const { maxRequests, windowSeconds, blockSeconds } = rateLimitConfig.login;
+  if (maxRequests <= 0 || windowSeconds <= 0 || blockSeconds <= 0) return false;
+  const result = await query<{ burst: string; sustain: string }>(
+    `SELECT
+       (SELECT COUNT(*)::text
+        FROM login_attempts
+        WHERE (email_attempt = $1 OR (ip_address = $2 AND ip_address <> 'local'))
+          AND timestamp > CURRENT_TIMESTAMP - ($3 || ' seconds')::interval) AS burst,
+       (SELECT COUNT(*)::text
+        FROM login_attempts
+        WHERE (email_attempt = $1 OR (ip_address = $2 AND ip_address <> 'local'))
+          AND timestamp > CURRENT_TIMESTAMP - ($4 || ' seconds')::interval) AS sustain`,
+    [email, ip, windowSeconds, blockSeconds]
+  );
+  const row = result.rows[0];
+  return (
+    Number(row?.burst ?? 0) >= maxRequests ||
+    Number(row?.sustain ?? 0) >= maxRequests
   );
 }
 

@@ -4,6 +4,7 @@ import { withUser } from "../db";
 import {
   getClientIp,
   LOGIN_WINDOW_MINUTES,
+  isLoginBurstLimited,
   isRateLimited,
   isSignupRateLimited,
   normalizeEmail,
@@ -24,6 +25,7 @@ import {
 import { SESSION_COOKIE } from "../constants";
 import { isUniqueViolation, readJson } from "./helpers";
 import { requireAuth } from "../middleware";
+import { rateLimitConfig } from "../rate-limit-config";
 
 export type SignupFieldErrors = {
   name?: string;
@@ -53,6 +55,23 @@ auth.post("/login", async (c) => {
   }
   if (!password) {
     return c.json({ error: "Please enter your password." }, 400);
+  }
+
+  if (await isLoginBurstLimited(email, getClientIp(c))) {
+    // Record the rejection so an ongoing attack sustains its own block;
+    // the block lifts ~blockSeconds after the last attempt.
+    await recordLoginAttempt(email, false, null, getClientIp(c));
+    const blockMinutes = Math.max(
+      1,
+      Math.round(rateLimitConfig.login.blockSeconds / 60)
+    );
+    c.header("Retry-After", String(rateLimitConfig.login.blockSeconds));
+    return c.json(
+      {
+        error: `Too many login attempts. Please try again in ${blockMinutes} minutes.`,
+      },
+      429
+    );
   }
 
   if (await isRateLimited(email, getClientIp(c))) {
