@@ -26,7 +26,7 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function Topbar({ userName, userEmail }: { userName?: string | null; userEmail?: string | null }) {
+export function Topbar({ userName, userEmail, initialUnread = 0 }: { userName?: string | null; userEmail?: string | null; initialUnread?: number }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -206,7 +206,7 @@ export function Topbar({ userName, userEmail }: { userName?: string | null; user
             <Command className="h-5 w-5" />
           </Button>
 
-          <NotificationBell />
+          <NotificationBell initialUnread={initialUnread} />
 
           <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 ml-1 pl-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600">

@@ -1679,7 +1679,7 @@ export async function getNotificationsData(): Promise<{
   return apiJson("/api/notifications");
 }
 
-export async function getNotificationsUnreadCount(): Promise<{ count: number } | null> {
+export async function getNotificationsUnreadCount(): Promise<{ unread_count: number; count?: number } | null> {
   return apiJson("/api/notifications/unread-count");
 }
 

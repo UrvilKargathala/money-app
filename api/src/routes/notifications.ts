@@ -36,19 +36,23 @@ notifications.get("/", requireAuth, async (c) => {
   const page = Math.max(1, Number(c.req.query("page") ?? 1) || 1);
   const limit = Math.min(100, Math.max(1, Number(c.req.query("limit") ?? 25) || 25));
 
-  const { items, total } = await listNotifications(user.user_id, {
-    filter,
-    type,
-    module,
-    limit,
-    offset: (page - 1) * limit,
-  });
+  const [{ items, total }, unread_count] = await Promise.all([
+    listNotifications(user.user_id, {
+      filter,
+      type,
+      module,
+      limit,
+      offset: (page - 1) * limit,
+    }),
+    getUnreadCount(user.user_id),
+  ]);
 
   return c.json({
     notifications: items,
     total,
     page,
     limit,
+    unread_count,
   });
 });
 

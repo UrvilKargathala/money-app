@@ -20,64 +20,118 @@ type Notification = {
   deep_link?: string | null;
 };
 
-export function NotificationBell() {
+export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number }) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unread, setUnread] = useState<number>(0);
+  const [unread, setUnread] = useState<number>(initialUnread);
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread" | "upcoming">("all");
 
-  const fetchData = useCallback(async () => {
+  // Keep badge in sync if the server-seeded value changes (e.g. layout revalidates).
+  useEffect(() => {
+    setUnread(initialUnread);
+  }, [initialUnread]);
+
+  // Single combined request: feed + unread_count (backend returns both).
+  // Only called on panel open / manual refresh — never on an interval.
+  const fetchFeed = useCallback(async () => {
     try {
       setLoading(true);
-      const [feedRes, countRes] = await Promise.all([
-        fetch("/api/notifications?limit=12", { cache: "no-store", credentials: "include" }),
-        fetch("/api/notifications/unread-count", { cache: "no-store", credentials: "include" }),
-      ]);
-      if (feedRes.ok) {
-        const data = await feedRes.json();
+      const res = await fetch("/api/notifications?limit=12", { cache: "no-store", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
         setNotifications(data.notifications ?? []);
-      }
-      if (countRes.ok) {
-        const data = await countRes.json();
-        setUnread(data.unread_count ?? data.count ?? 0);
+        if (typeof data.unread_count === "number") {
+          setUnread(data.unread_count);
+        } else if (typeof data.count === "number") {
+          setUnread(data.count);
+        }
+        setHasLoaded(true);
       }
     } catch {
-      // silent
+      // silent — panel shows cached data / empty state
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-    const id = setInterval(fetchData, 30000);
-    return () => clearInterval(id);
-  }, [fetchData]);
+  // Lightweight badge-only refresh (1 indexed COUNT(*)). Used on
+  // tab focus / visibility — free browser events, no timers.
+  const refreshBadge = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications/unread-count", { cache: "no-store", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        const next = data.unread_count ?? data.count;
+        if (typeof next === "number") setUnread(next);
+      }
+    } catch {
+      // silent
+    }
+  }, []);
 
+  // Fetch feed only when the panel opens (cache reuse on reopen).
   useEffect(() => {
-    if (open) fetchData();
-  }, [open, fetchData]);
+    if (open && !hasLoaded) fetchFeed();
+  }, [open, hasLoaded, fetchFeed]);
+
+  // Badge refresh on returning to the tab — zero cost while idle.
+  useEffect(() => {
+    const onFocus = () => refreshBadge();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") refreshBadge();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refreshBadge]);
 
   const handleMarkAllRead = async () => {
+    const prev = notifications;
+    const prevUnread = unread;
+    setNotifications((list) => list.map((n) => ({ ...n, is_read: 1 })));
+    setUnread(0);
     try {
-      await fetch("/api/notifications/read-all", { method: "POST", credentials: "include" });
-      fetchData();
-    } catch {}
+      const res = await fetch("/api/notifications/read-all", { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error("failed");
+    } catch {
+      setNotifications(prev);
+      setUnread(prevUnread);
+    }
   };
 
   const handleMarkRead = async (id: string) => {
+    const prev = notifications;
+    const prevUnread = unread;
+    const target = prev.find((n) => n.id === id);
+    if (target && !target.is_read) setUnread((u) => Math.max(0, u - 1));
+    setNotifications((list) => list.map((n) => (n.id === id ? { ...n, is_read: 1 } : n)));
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: "POST", credentials: "include" });
-      fetchData();
-    } catch {}
+      const res = await fetch(`/api/notifications/${id}/read`, { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error("failed");
+    } catch {
+      setNotifications(prev);
+      setUnread(prevUnread);
+    }
   };
 
   const handleDismiss = async (id: string) => {
+    const prev = notifications;
+    const prevUnread = unread;
+    const target = prev.find((n) => n.id === id);
+    if (target && !target.is_read && !target.is_dismissed) setUnread((u) => Math.max(0, u - 1));
+    setNotifications((list) => list.map((n) => (n.id === id ? { ...n, is_dismissed: 1 } : n)));
     try {
-      await fetch(`/api/notifications/${id}/dismiss`, { method: "POST", credentials: "include" });
-      fetchData();
-    } catch {}
+      const res = await fetch(`/api/notifications/${id}/dismiss`, { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error("failed");
+    } catch {
+      setNotifications(prev);
+      setUnread(prevUnread);
+    }
   };
 
   const filtered = notifications.filter((n) => {
@@ -138,13 +192,13 @@ export function NotificationBell() {
                   {tab}
                 </button>
               ))}
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={fetchData} disabled={loading} title="Refresh">
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={fetchFeed} disabled={loading} title="Refresh">
                 <Loader2 className={cn("h-4 w-4", loading && "animate-spin")} />
               </Button>
             </div>
 
             <div className="max-h-[380px] overflow-y-auto">
-              {loading && notifications.length === 0 ? (
+              {loading && !hasLoaded ? (
                 <div className="flex items-center justify-center py-10 text-sm text-neutral-500 gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                 </div>

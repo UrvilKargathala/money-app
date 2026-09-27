@@ -49,15 +49,17 @@ const NOTIFICATION_TYPES = ["warning", "alert", "reminder", "insight", "summary"
 const CHANNELS = ["in_app", "email"] as const;
 
 function SseIndicator() {
-  const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
+  const [status, setStatus] = useState<"idle" | "checking" | "live" | "offline">("idle");
   const [latestCount, setLatestCount] = useState<number | null>(null);
   const [lastChecked, setLastChecked] = useState<string | null>(null);
 
+  // On-demand only — no interval. Feed mutations use router.refresh();
+  // this is a manual "check for new" probe against the poll-based stream endpoint.
   const poll = useCallback(async () => {
     try {
       const since = new Date(Date.now() - 60_000).toISOString();
       const href = getNotificationsStreamHref(since);
-      setStatus("connecting");
+      setStatus("checking");
       const res = await fetch(href, { cache: "no-store" });
       if (!res.ok) {
         setStatus("offline");
@@ -72,22 +74,16 @@ function SseIndicator() {
     }
   }, []);
 
-  useEffect(() => {
-    poll();
-    const id = setInterval(poll, 15000);
-    return () => clearInterval(id);
-  }, [poll]);
-
   return (
     <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs">
-      <span className={`h-2 w-2 rounded-full ${status === "live" ? "bg-success animate-pulse" : status === "connecting" ? "bg-warning" : "bg-neutral-300"}`} />
+      <span className={`h-2 w-2 rounded-full ${status === "live" ? "bg-success" : status === "checking" ? "bg-warning animate-pulse" : status === "offline" ? "bg-neutral-300" : "bg-neutral-200"}`} />
       <span className="font-medium flex items-center gap-1">
-        <Radio className="h-3 w-3" /> SSE {status === "live" ? "live" : status === "connecting" ? "connecting" : "offline"}
+        <Radio className="h-3 w-3" /> {status === "idle" ? "Not checked" : status === "live" ? "Up to date" : status === "checking" ? "Checking" : "Offline"}
       </span>
       {latestCount !== null && <span className="text-neutral-500">{latestCount} new since 1m</span>}
       {lastChecked && <span className="hidden sm:inline text-neutral-400">{new Date(lastChecked).toLocaleTimeString("en-IN")}</span>}
-      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={poll}>
-        Refresh
+      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={poll} disabled={status === "checking"}>
+        {status === "checking" ? "Checking…" : "Check for new"}
       </Button>
       <a href={getNotificationsStreamHref()} target="_blank" rel="noreferrer" className="text-xs text-primary-600 underline underline-offset-2">
         stream
