@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { pool } from "../db";
-import { createUser, fixtureDb, postAs, requestAs } from "../test/helpers";
+import {
+  createUser,
+  fixtureDb,
+  patchAs,
+  postAs,
+  requestAs,
+} from "../test/helpers";
 
 const db = fixtureDb();
 
@@ -277,6 +283,109 @@ describe("email delivery log", () => {
     const res = await requestAs(db.alice, "/api/notification-emails");
     expect(res.status).toBe(200);
     expect(((await res.json()) as { emails: unknown[] }).emails).toEqual([]);
+  });
+});
+
+describe("email entitlement coherence (display vs enforcement)", () => {
+  async function setPlan(
+    userId: number,
+    plan: "free" | "premium",
+    ageDays: number
+  ): Promise<void> {
+    if (plan === "free") {
+      await pool.query(
+        `UPDATE users SET plan_type = 'free', billing_cycle = NULL,
+           premium_expires_at = NULL, legacy_member_number = NULL,
+           created_at = CURRENT_TIMESTAMP - ($2 || ' days')::interval
+         WHERE user_id = $1`,
+        [userId, ageDays]
+      );
+    } else {
+      await pool.query(
+        `UPDATE users SET plan_type = 'premium', billing_cycle = 'annual',
+           premium_expires_at = CURRENT_TIMESTAMP + INTERVAL '1 year',
+           legacy_member_number = NULL,
+           created_at = CURRENT_TIMESTAMP - ($2 || ' days')::interval
+         WHERE user_id = $1`,
+        [userId, ageDays]
+      );
+    }
+  }
+
+  async function seedEmailPref(userId: number, enabled: number): Promise<void> {
+    await pool.query(
+      `INSERT INTO notification_preferences (user_id, notification_type, channel, is_enabled)
+       VALUES ($1, 'info', 'email', $2)
+       ON CONFLICT (user_id, notification_type, channel)
+       DO UPDATE SET is_enabled = $2, updated_at = CURRENT_TIMESTAMP`,
+      [userId, enabled]
+    );
+  }
+
+  type PrefsBody = {
+    preferences: { notification_type: string; channel: string; is_enabled: boolean }[];
+    emailLocked: boolean;
+  };
+
+  async function emailCell(): Promise<{ on: boolean; locked: boolean }> {
+    const res = await requestAs(db.alice, "/api/notification-preferences");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as PrefsBody;
+    const cell = body.preferences.find(
+      (p) => p.notification_type === "info" && p.channel === "email"
+    );
+    return { on: cell?.is_enabled ?? false, locked: body.emailLocked };
+  }
+
+  it("trial user: email toggle ON persists (no display revert)", async () => {
+    await setPlan(db.alice.userId, "free", 0);
+    const toggle = await patchAs(
+      db.alice,
+      "/api/notification-preferences/info/email",
+      {}
+    );
+    expect(toggle.status).toBe(200);
+    expect(((await toggle.json()) as { is_enabled: boolean }).is_enabled).toBe(
+      true
+    );
+    // The follow-up read must agree with the write (the BUG-115 revert).
+    expect(await emailCell()).toEqual({ on: true, locked: false });
+  });
+
+  it("legacy premium past trial: email toggle ON works", async () => {
+    await setPlan(db.alice.userId, "premium", 40);
+    const toggle = await patchAs(
+      db.alice,
+      "/api/notification-preferences/info/email",
+      {}
+    );
+    expect(toggle.status).toBe(200);
+    expect(await emailCell()).toEqual({ on: true, locked: false });
+  });
+
+  it("free user: stored-ON email can always be turned OFF, never ON", async () => {
+    await setPlan(db.alice.userId, "free", 40);
+    await seedEmailPref(db.alice.userId, 1);
+    const off = await patchAs(
+      db.alice,
+      "/api/notification-preferences/info/email",
+      {}
+    );
+    expect(off.status).toBe(200);
+    expect(((await off.json()) as { is_enabled: boolean }).is_enabled).toBe(false);
+    expect(await emailCell()).toEqual({ on: false, locked: true });
+    const on = await patchAs(
+      db.alice,
+      "/api/notification-preferences/info/email",
+      {}
+    );
+    expect(on.status).toBe(403);
+    expect(((await on.json()) as { error: string }).error).toBe("plan_locked");
+  });
+
+  it("free user with no stored rows: email reads locked-off", async () => {
+    await setPlan(db.alice.userId, "free", 40);
+    expect(await emailCell()).toEqual({ on: false, locked: true });
   });
 });
 

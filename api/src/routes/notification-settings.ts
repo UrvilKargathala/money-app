@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
-import { getPlan, isPremium } from "../entitlements";
 import {
   getPreferenceMatrix,
   listEmailLog,
@@ -10,15 +9,19 @@ import {
   NOTIFICATION_TYPES,
   upsertPreference,
 } from "../queries/notifications";
-import { getEntitlement } from "../queries/entitlements";
+import { getEntitlement, isEmailEntitled } from "../queries/entitlements";
 
 const notificationPrefs = new Hono();
 
 notificationPrefs.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  const premium = isPremium(await getPlan(user.user_id));
-  const preferences = (await getPreferenceMatrix(user.user_id)).map((p) => ({ ...p, is_enabled: p.channel === "email" && !premium ? false : p.is_enabled }));
-  return c.json({ preferences });
+  const emailEntitled = await isEmailEntitled(user.user_id);
+  const preferences = (await getPreferenceMatrix(user.user_id)).map((p) => ({
+    ...p,
+    is_enabled:
+      p.channel === "email" && !emailEntitled ? false : p.is_enabled,
+  }));
+  return c.json({ preferences, emailLocked: !emailEntitled });
 });
 
 notificationPrefs.patch("/", requireAuth, async (c) => {
@@ -100,12 +103,8 @@ notificationPrefs.patch("/:type/:channel", requireAuth, async (c) => {
     return c.json({ error: "Channel must be in_app or email." }, 400);
   }
 
-  if (channel === "email") {
-    const emailEnt = await getEntitlement(user.user_id, "notifications_email");
-    if (!emailEnt.allowed || emailEnt.mode !== "in_app_email") return c.json({ error: "plan_locked", feature: "notifications_email", plan: emailEnt.plan }, 403);
-  }
-
-  // Toggle: fetch current state then flip.
+  // Toggle: fetch current state then flip. Disabling is always allowed
+  // (it can never grant a feature); only enabling requires entitlement.
   const matrix = await getPreferenceMatrix(user.user_id);
   const current = matrix.find(
     (p) => p.notification_type === type && p.channel === channel
@@ -113,9 +112,9 @@ notificationPrefs.patch("/:type/:channel", requireAuth, async (c) => {
   if (!current) return c.json({ error: "Not found" }, 404);
 
   const newValue = current.is_enabled ? 0 : 1;
-  if (channel === "email" && newValue === 1) {
-    const emailEnt2 = await getEntitlement(user.user_id, "notifications_email");
-    if (!emailEnt2.allowed || emailEnt2.mode !== "in_app_email") return c.json({ error: "plan_locked", feature: "notifications_email", plan: emailEnt2.plan }, 403);
+  if (channel === "email" && newValue === 1 && !(await isEmailEntitled(user.user_id))) {
+    const emailEnt = await getEntitlement(user.user_id, "notifications_email");
+    return c.json({ error: "plan_locked", feature: "notifications_email", plan: emailEnt.plan }, 403);
   }
   await withUser(user.user_id, (client) =>
     upsertPreference(client, {

@@ -1692,6 +1692,7 @@ export async function getNotificationsUnreadCount(): Promise<{ unread_count: num
 
 export async function getNotificationPreferences(): Promise<{
   preferences: { notification_type: string; channel: string; is_enabled: boolean }[];
+  emailLocked: boolean;
 } | null> {
   return apiJson("/api/notification-preferences");
 }

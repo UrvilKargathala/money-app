@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/common/empty-state";
-import { Bell, Check, Trash2, RotateCcw, Search, Mail, Settings2, Archive, Radio, Eye, Loader2 } from "lucide-react";
+import { Bell, Check, Trash2, RotateCcw, Search, Mail, Settings2, Archive, Radio, Eye, Loader2, Lock } from "lucide-react";
 import {
   markReadAction,
   markAllReadAction,
@@ -95,12 +95,14 @@ export function NotificationsDashboard({
   archive: initialArchive,
   preferences: initialPrefs,
   emails: initialEmails,
+  emailLocked = false,
 }: {
   notifications: Notification[];
   total?: number;
   archive: Notification[];
   preferences: Preference[];
   emails: EmailRow[];
+  emailLocked?: boolean;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
@@ -510,20 +512,26 @@ export function NotificationsDashboard({
               <CardTitle className="flex items-center gap-2 text-base">
                 <Settings2 className="h-5 w-5" /> Preferences Matrix
               </CardTitle>
-              <CardDescription>Per-type × per-channel toggles (in_app / email). Defaults: in_app enabled, email disabled.</CardDescription>
+              <CardDescription className="flex items-center gap-2 flex-wrap">
+                Per-type × per-channel toggles (in_app / email). Defaults: in_app enabled, email disabled.
+                {emailLocked && <Badge variant="info" className="gap-1"><Lock className="h-3 w-3" /> Email is a paid feature</Badge>}
+              </CardDescription>
             </CardHeader>
 
             <div className="overflow-auto">
               <table className="w-full text-sm border rounded-lg overflow-hidden">
                 <thead className="bg-neutral-50 text-xs text-neutral-500">
-                  <tr>
-                    <th className="p-3 text-left font-medium">Type</th>
-                    {CHANNELS.map((ch) => (
-                      <th key={ch} className="p-3 text-center font-medium">
-                        {ch}
-                      </th>
-                    ))}
-                  </tr>
+                    <tr>
+                      <th className="p-3 text-left font-medium">Type</th>
+                      {CHANNELS.map((ch) => (
+                        <th key={ch} className="p-3 text-center font-medium">
+                          <span className="inline-flex items-center gap-1 justify-center">
+                            {ch}
+                            {ch === "email" && emailLocked && <Lock className="h-3 w-3 text-neutral-400" />}
+                          </span>
+                        </th>
+                      ))}
+                    </tr>
                 </thead>
                 <tbody>
                   {NOTIFICATION_TYPES.map((type) => (
@@ -533,16 +541,21 @@ export function NotificationsDashboard({
                         const enabled = prefLookup(type, ch);
                         const key = `${type}|${ch}`;
                         const saving = prefSaving === key;
+                        // Locked email cells stay visible but non-interactive.
+                        const locked = ch === "email" && emailLocked;
                         return (
                           <td key={ch} className="p-3 text-center">
                             <Button
                               variant={enabled ? "default" : "outline"}
                               size="sm"
-                              disabled={!!prefSaving}
+                              disabled={!!prefSaving || locked}
                               onClick={() => handleTogglePref(type, ch)}
+                              title={locked ? "Email notifications require a paid plan." : undefined}
                               className="min-w-[80px]"
                             >
-                              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null} {enabled ? "On" : "Off"}
+                              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                              {locked && <Lock className="h-3 w-3" />}
+                              {enabled ? "On" : "Off"}
                             </Button>
                           </td>
                         );

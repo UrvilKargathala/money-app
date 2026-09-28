@@ -57,8 +57,12 @@ async function resolveEffectivePlan(userId: number, q: Queryable = DB): Promise<
     ? (q as { query: typeof query }).query.bind(q as { query: typeof query })
     : (q as PoolClient).query.bind(q as PoolClient);
 
-  const userRes = await exec<{ created_at: Date }>(`SELECT created_at FROM users WHERE user_id = $1`, [userId]);
+  const userRes = await exec<{ created_at: Date; plan_type: string | null }>(
+    `SELECT created_at, plan_type FROM users WHERE user_id = $1`,
+    [userId]
+  );
   const createdAt = userRes.rows[0]?.created_at ?? new Date();
+  const legacyPlan = userRes.rows[0]?.plan_type ?? null;
   const subRes = await exec<{ plan_code: string; status: string; current_period_end: Date | null; cancel_at_period_end: number; trial_ends_at: Date | null }>(
     `SELECT plan_code, status, current_period_end, cancel_at_period_end, trial_ends_at FROM user_plan_subscriptions WHERE user_id = $1 AND status IN ('active','trialing','past_due') LIMIT 1`,
     [userId]
@@ -66,6 +70,13 @@ async function resolveEffectivePlan(userId: number, q: Queryable = DB): Promise<
   const sub = subRes.rows[0] ?? null;
   if (sub) {
     return { code: sub.plan_code as PlanCode, source: "paid", subRow: sub, userCreatedAt: createdAt };
+  }
+  // Static-demo grant path (no Stripe): the legacy premium flag predates the
+  // subscription system and seeded demo accounts carry it. Honor it so demo
+  // users are not downgraded to free once their trial lapses. Annual is the
+  // display code; paid-tier entitlements are identical across tiers.
+  if (legacyPlan === "premium") {
+    return { code: "annual", source: "paid", subRow: null, userCreatedAt: createdAt };
   }
   const trialEnds = new Date(createdAt);
   trialEnds.setDate(trialEnds.getDate() + 30);
@@ -97,6 +108,17 @@ export async function getEntitlement(userId: number, feature: FeatureKey, q: Que
     mode: row.mode,
     plan: code,
   };
+}
+
+/**
+ * Single source of truth for email-notification access. Every reader and
+ * writer of notification preferences must go through this — never a legacy
+ * `users.plan_type` check — so the displayed state and the enforced gate
+ * cannot disagree (that disagreement surfaced as toggles that "revert").
+ */
+export async function isEmailEntitled(userId: number, q: Queryable = DB): Promise<boolean> {
+  const ent = await getEntitlement(userId, "notifications_email", q);
+  return ent.allowed && ent.mode === "in_app_email";
 }
 
 export async function requireEntitlement(userId: number, feature: FeatureKey, q: Queryable = DB): Promise<{ plan: PlanCode }> {

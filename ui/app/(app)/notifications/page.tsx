@@ -23,6 +23,7 @@ export default async function NotificationsPage() {
       archive={(archiveRes?.archive ?? []) as never}
       preferences={(prefsRes?.preferences ?? []) as never}
       emails={(emailsRes?.emails ?? []) as never}
+      emailLocked={prefsRes?.emailLocked ?? false}
     />
   );
 }

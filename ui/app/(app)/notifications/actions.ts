@@ -44,12 +44,20 @@ export async function bulkAction(ids: string[], action: "read" | "dismiss"): Pro
   return { success: true };
 }
 
+function preferenceError(body: { error?: string; fieldErrors?: unknown }): string {
+  if (body.error === "plan_locked")
+    return "Email notifications require a paid plan.";
+  if (body.error) return body.error;
+  if (body.fieldErrors) return JSON.stringify(body.fieldErrors);
+  return "Could not update preferences.";
+}
+
 export async function updatePreferencesAction(
   preferences: { notification_type: string; channel: string; is_enabled: boolean | number }[]
 ): Promise<ActionState> {
   const res = await apiFetchRaw("/api/notification-preferences", { method: "PATCH", json: { preferences } });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || body.fieldErrors ? JSON.stringify(body.fieldErrors) : "Could not update preferences." };
+  if (!res.ok) return { error: preferenceError(body) };
   revalidatePath("/notifications");
   return { success: true };
 }
@@ -63,7 +71,7 @@ export async function togglePreferenceAction(
     json: {},
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not toggle preference." };
+  if (!res.ok) return { error: preferenceError(body) };
   revalidatePath("/notifications");
   return { success: true, is_enabled: body.is_enabled };
 }
