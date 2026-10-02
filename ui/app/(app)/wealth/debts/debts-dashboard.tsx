@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { DebtCard } from "./debt-card";
 import { DebtFormDialog } from "./debt-form-dialog";
 import { formatINR } from "@/lib/format";
-import { Landmark, Plus, Wallet, AlertTriangle, TrendingDown, Download, Calendar, Calculator, History, BarChart3, ShieldAlert, ArrowUpDown, RefreshCw } from "lucide-react";
+import { Landmark, Plus, Wallet, AlertTriangle, TrendingDown, Download, Calendar, Calculator, History, BarChart3, ShieldAlert, ArrowUpDown, RefreshCw, Info } from "lucide-react";
 import { deleteDebtAction, closeDebtAction, reopenDebtAction, updateMonthlyIncome, regenerateAmortization } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -531,7 +531,18 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
   return (
     <Card className="p-6">
       <CardHeader className="p-0 mb-3">
-        <CardTitle className="flex items-center gap-2 text-base"><ArrowUpDown className="h-5 w-5" /> Strategies: Avalanche vs Snowball</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base"><ArrowUpDown className="h-5 w-5" /> Strategies: Avalanche vs Snowball
+          <span className="group relative inline-flex">
+            <Info className="h-4 w-4 text-neutral-400 cursor-help" aria-label="About payoff strategies" />
+            <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-lg border border-neutral-200 bg-white p-3 text-xs font-normal normal-case text-neutral-600 shadow-lg group-hover:block group-focus-within:block">
+              <strong className="text-neutral-900">Avalanche</strong> pays the highest-interest debt first — least total interest paid.
+              <br />
+              <strong className="text-neutral-900">Snowball</strong> clears the smallest balance first — fastest first win, keeps momentum.
+              <br />
+              <span className="text-neutral-400">Educational comparison only, not financial advice.</span>
+            </span>
+          </span>
+        </CardTitle>
         <CardDescription>Compare payoff order with extra monthly payment. All data from API.</CardDescription>
       </CardHeader>
       <div className="flex gap-2 items-end">
