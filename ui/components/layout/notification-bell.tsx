@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, Check, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,24 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
     if (open && !hasLoaded) fetchFeed();
   }, [open, hasLoaded, fetchFeed]);
 
+  // Per-item in-flight guard (BUG-117): rapid clicks must not stack
+  // duplicate POSTs. Ref is the synchronous source of truth; state mirrors
+  // it for `disabled`. The "all" key guards mark-all-read.
+  const pendingRef = useRef<Set<string>>(new Set());
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const claimPending = useCallback((id: string): boolean => {
+    if (pendingRef.current.has(id)) return false;
+    pendingRef.current.add(id);
+    setPendingIds(new Set(pendingRef.current));
+    return true;
+  }, []);
+  const releasePending = useCallback((id: string): void => {
+    pendingRef.current.delete(id);
+    setPendingIds(new Set(pendingRef.current));
+  }, []);
+
   const handleMarkAllRead = async () => {
+    if (!claimPending("all")) return;
     const prev = notifications;
     const prevUnread = unread;
     setNotifications((list) => list.map((n) => ({ ...n, is_read: 1 })));
@@ -73,10 +90,13 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
     } catch {
       setNotifications(prev);
       setUnread(prevUnread);
+    } finally {
+      releasePending("all");
     }
   };
 
   const handleMarkRead = async (id: string) => {
+    if (!claimPending(id)) return;
     const prev = notifications;
     const prevUnread = unread;
     const target = prev.find((n) => n.id === id);
@@ -88,10 +108,13 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
     } catch {
       setNotifications(prev);
       setUnread(prevUnread);
+    } finally {
+      releasePending(id);
     }
   };
 
   const handleDismiss = async (id: string) => {
+    if (!claimPending(id)) return;
     const prev = notifications;
     const prevUnread = unread;
     const target = prev.find((n) => n.id === id);
@@ -103,6 +126,8 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
     } catch {
       setNotifications(prev);
       setUnread(prevUnread);
+    } finally {
+      releasePending(id);
     }
   };
 
@@ -145,7 +170,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                 {unread > 0 && <Badge variant="error" className="text-xs">{unread} new</Badge>}
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleMarkAllRead} disabled={unread === 0}>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleMarkAllRead} disabled={unread === 0 || pendingIds.has("all")}>
                   <Check className="h-3 w-3" /> Mark all read
                 </Button>
               </div>
@@ -201,11 +226,11 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                       </div>
                       <div className="flex flex-col gap-1 shrink-0">
                         {!n.is_read && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMarkRead(n.id)} title="Mark read">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMarkRead(n.id)} title="Mark read" disabled={pendingIds.has(n.id)}>
                             <Check className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-400 hover:text-error" onClick={() => handleDismiss(n.id)} title="Dismiss">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-400 hover:text-error" onClick={() => handleDismiss(n.id)} title="Dismiss" disabled={pendingIds.has(n.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>

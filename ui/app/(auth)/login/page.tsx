@@ -22,6 +22,7 @@ export default function LoginPage() {
       </CardHeader>
       <CardContent>
         {searchParams.get("expired") === "1" && <Alert className="mb-4"><AlertDescription>Your session expired. Sign in again to continue.</AlertDescription></Alert>}
+        {searchParams.get("reset") === "1" && <Alert variant="success" className="mb-4"><AlertDescription>Password reset successful. Please sign in with your new password.</AlertDescription></Alert>}
         <form action={formAction} className="space-y-5">
           {state?.error && (
             <Alert variant="destructive">

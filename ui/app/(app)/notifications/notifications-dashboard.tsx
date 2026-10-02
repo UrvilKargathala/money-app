@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,6 +111,22 @@ export function NotificationsDashboard({
   // bulk selection in feed
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // Per-item in-flight guard (BUG-117): rapid clicks on mark-read / dismiss /
+  // restore must not stack duplicate POSTs. The ref is the synchronous source
+  // of truth (no stale-closure window); the state mirror drives `disabled`.
+  const pendingRef = useRef<Set<string>>(new Set());
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const claimPending = useCallback((id: string): boolean => {
+    if (pendingRef.current.has(id)) return false;
+    pendingRef.current.add(id);
+    setPendingIds(new Set(pendingRef.current));
+    return true;
+  }, []);
+  const releasePending = useCallback((id: string): void => {
+    pendingRef.current.delete(id);
+    setPendingIds(new Set(pendingRef.current));
+  }, []);
+
   // archive controls
   const [archive, setArchive] = useState<Notification[]>(initialArchive);
   const [archiveSearch, setArchiveSearch] = useState("");
@@ -143,11 +159,16 @@ export function NotificationsDashboard({
   });
 
   const handleMarkRead = async (id: string) => {
-    const res = await markReadAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Marked read");
-      router.refresh();
+    if (!claimPending(id)) return;
+    try {
+      const res = await markReadAction(id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Marked read");
+        router.refresh();
+      }
+    } finally {
+      releasePending(id);
     }
   };
   const handleMarkAll = async () => {
@@ -159,19 +180,29 @@ export function NotificationsDashboard({
     }
   };
   const handleDismiss = async (id: string) => {
-    const res = await dismissAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Dismissed");
-      router.refresh();
+    if (!claimPending(id)) return;
+    try {
+      const res = await dismissAction(id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Dismissed");
+        router.refresh();
+      }
+    } finally {
+      releasePending(id);
     }
   };
   const handleRestore = async (id: string) => {
-    const res = await restoreAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Restored");
-      router.refresh();
+    if (!claimPending(id)) return;
+    try {
+      const res = await restoreAction(id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Restored");
+        router.refresh();
+      }
+    } finally {
+      releasePending(id);
     }
   };
 
@@ -376,16 +407,16 @@ export function NotificationsDashboard({
                   </div>
                   <div className="flex gap-1 shrink-0">
                     {!n.is_read && !n.is_dismissed && (
-                      <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} title="Mark read">
+                      <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} title="Mark read" disabled={pendingIds.has(n.id)}>
                         <Check className="h-4 w-4" />
                       </Button>
                     )}
                     {!n.is_dismissed ? (
-                      <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} title="Dismiss">
+                      <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} title="Dismiss" disabled={pendingIds.has(n.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     ) : (
-                      <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} title="Restore">
+                      <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} title="Restore" disabled={pendingIds.has(n.id)}>
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     )}
@@ -484,16 +515,16 @@ export function NotificationsDashboard({
                     </div>
                     <div className="flex gap-1 shrink-0">
                       {!n.is_read && !n.is_dismissed && (
-                        <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} disabled={pendingIds.has(n.id)}>
                           <Check className="h-4 w-4" />
                         </Button>
                       )}
                       {!n.is_dismissed ? (
-                        <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} disabled={pendingIds.has(n.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} disabled={pendingIds.has(n.id)}>
                           <RotateCcw className="h-4 w-4" />
                         </Button>
                       )}

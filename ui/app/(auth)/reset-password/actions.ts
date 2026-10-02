@@ -9,7 +9,7 @@ export async function resetAction(prev: ActionState, formData: FormData): Promis
   const confirm = String(formData.get("confirm") ?? "");
 
   if (!token) return { error: "Missing reset token. Please use the link from your email." };
-  if (!new_password || new_password.length < 8) return { fieldErrors: { new_password: "Password must be at least 8 characters." } };
+  if (!new_password || new_password.length < 8 || !/[a-zA-Z]/.test(new_password) || !/\d/.test(new_password)) return { fieldErrors: { new_password: "At least 8 characters, including a letter and a digit." } };
   if (new_password !== confirm) return { fieldErrors: { confirm: "Passwords do not match." } };
 
   try {
