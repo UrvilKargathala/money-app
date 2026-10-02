@@ -68,6 +68,7 @@ export async function listNotifications(
             priority, is_read, created_at
      FROM notifications
      WHERE user_id = $1 AND is_dismissed = 0
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
        AND ($2::text = 'all'
             OR ($2::text = 'unread' AND is_read = 0)
             OR ($2::text = 'read' AND is_read = 1))
@@ -82,6 +83,7 @@ export async function listNotifications(
     `SELECT COUNT(*)::text AS total
      FROM notifications
      WHERE user_id = $1 AND is_dismissed = 0
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
        AND ($2::text = 'all'
             OR ($2::text = 'unread' AND is_read = 0)
             OR ($2::text = 'read' AND is_read = 1))
@@ -99,7 +101,8 @@ export async function listNotifications(
 export async function getUnreadCount(userId: number, q: Queryable = DB): Promise<number> {
   const result = await q.query<{ count: string }>(
     `SELECT COUNT(*)::text AS count FROM notifications
-     WHERE user_id = $1 AND is_read = 0 AND is_dismissed = 0`,
+     WHERE user_id = $1 AND is_read = 0 AND is_dismissed = 0
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)`,
     [userId]
   );
   return Number(result.rows[0]?.count ?? 0);
@@ -121,6 +124,7 @@ export async function listSince(
     `SELECT id, type, title, message, created_at
      FROM notifications
      WHERE user_id = $1 AND is_dismissed = 0
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
        AND ($2::timestamptz IS NULL OR created_at > $2::timestamptz)
      ORDER BY created_at DESC LIMIT 50`,
     [userId, since]
@@ -209,6 +213,7 @@ export async function searchArchive(
             priority, is_read, created_at
      FROM notifications
      WHERE user_id = $1
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
        AND ($2::text IS NULL OR title ILIKE '%' || $2::text || '%' OR message ILIKE '%' || $2::text || '%')
        AND ($3::text IS NULL OR type = $3::text)
        AND ($4::text IS NULL OR module = $4::text)
@@ -341,4 +346,183 @@ export async function listEmailLog(
     sent_at: row.sent_at === null ? null : row.sent_at.toISOString(),
     created_at: row.created_at.toISOString(),
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Producer writes (used by the jobs/run generators, never by UI routes)
+// ---------------------------------------------------------------------------
+
+export type NewNotification = {
+  userId: number;
+  type: string;
+  module: string;
+  title: string;
+  message: string;
+  dataPayload: Record<string, unknown>;
+  deepLink: string | null;
+  priority: "low" | "medium" | "high";
+  expiresAt: string | null;
+};
+
+/** Single insert. Writes carry user_id in the SQL itself (defense-in-depth). */
+export async function createNotification(
+  q: Queryable,
+  params: NewNotification
+): Promise<string> {
+  const result = await q.query<{ id: string }>(
+    `INSERT INTO notifications
+       (user_id, type, module, title, message, data_payload, deep_link,
+        priority, expires_at)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9::timestamptz)
+     RETURNING id::text AS id`,
+    [
+      params.userId,
+      params.type,
+      params.module,
+      params.title,
+      params.message,
+      JSON.stringify(params.dataPayload),
+      params.deepLink,
+      params.priority,
+      params.expiresAt,
+    ]
+  );
+  return result.rows[0].id;
+}
+
+/**
+ * Bulk insert for generator runs: one statement regardless of row count
+ * (no per-row query loops). Returns the inserted count.
+ */
+export async function insertNotifications(
+  q: Queryable,
+  rows: NewNotification[]
+): Promise<number> {
+  if (rows.length === 0) return 0;
+  const result = await q.query<{ id: string }>(
+    `INSERT INTO notifications
+       (user_id, type, module, title, message, data_payload, deep_link,
+        priority, expires_at)
+     SELECT u, t, m, ti, me, p::jsonb, d, pr, e::timestamptz
+     FROM unnest(
+       $1::int[], $2::text[], $3::text[], $4::text[], $5::text[],
+       $6::text[], $7::text[], $8::text[], $9::text[]
+     ) AS v(u, t, m, ti, me, p, d, pr, e)
+     RETURNING id::text AS id`,
+    [
+      rows.map((r) => r.userId),
+      rows.map((r) => r.type),
+      rows.map((r) => r.module),
+      rows.map((r) => r.title),
+      rows.map((r) => r.message),
+      rows.map((r) => JSON.stringify(r.dataPayload)),
+      rows.map((r) => r.deepLink),
+      rows.map((r) => r.priority),
+      rows.map((r) => r.expiresAt),
+    ]
+  );
+  return result.rowCount ?? 0;
+}
+
+/**
+ * Active (unread, non-dismissed, non-expired) alert payloads for one user.
+ * Generator fan-out reads this once per user and matches dedup keys in
+ * memory instead of querying per candidate.
+ */
+export async function listActiveAlertPayloads(
+  userId: number,
+  q: Queryable = DB
+): Promise<Record<string, unknown>[]> {
+  const result = await q.query<{ data_payload: unknown }>(
+    `SELECT data_payload FROM notifications
+     WHERE user_id = $1 AND is_read = 0 AND is_dismissed = 0
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+       AND data_payload IS NOT NULL`,
+    [userId]
+  );
+  const out: Record<string, unknown>[] = [];
+  for (const row of result.rows) {
+    const payload = row.data_payload;
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      out.push(payload as Record<string, unknown>);
+    } else if (typeof payload === "string") {
+      try {
+        const parsed: unknown = JSON.parse(payload);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          out.push(parsed as Record<string, unknown>);
+        }
+      } catch {
+        // ignore malformed payloads
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Cross-user variant for set-based generators: active alert payloads for a
+ * batch of users in one query (no per-user fan-out).
+ */
+export async function listActiveAlertPayloadsForUsers(
+  userIds: number[],
+  module: string,
+  q: Queryable = DB
+): Promise<Map<number, Record<string, unknown>[]>> {
+  const out = new Map<number, Record<string, unknown>[]>();
+  if (userIds.length === 0) return out;
+  const result = await q.query<{ user_id: number; data_payload: unknown }>(
+    `SELECT user_id, data_payload FROM notifications
+     WHERE user_id = ANY($1::int[]) AND module = $2
+       AND is_read = 0 AND is_dismissed = 0
+       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+       AND data_payload IS NOT NULL`,
+    [userIds, module]
+  );
+  for (const row of result.rows) {
+    const payload = row.data_payload;
+    let parsed: Record<string, unknown> | null = null;
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      parsed = payload as Record<string, unknown>;
+    } else if (typeof payload === "string") {
+      try {
+        const p: unknown = JSON.parse(payload);
+        if (p && typeof p === "object" && !Array.isArray(p)) {
+          parsed = p as Record<string, unknown>;
+        }
+      } catch {
+        // ignore malformed payloads
+      }
+    }
+    if (parsed) {
+      const list = out.get(row.user_id) ?? [];
+      list.push(parsed);
+      out.set(row.user_id, list);
+    }
+  }
+  return out;
+}
+
+/**
+ * Retention janitor (runs inside the scheduled job): drops dismissed rows
+ * older than 90 days and long-expired transient alerts. No user scoping
+ * needed — age predicates only, same for every tenant.
+ */
+export async function pruneNotifications(
+  q: Queryable = DB
+): Promise<{ dismissed: number; expired: number }> {
+  const dismissed = await q.query<{ id: string }>(
+    `DELETE FROM notifications
+     WHERE is_dismissed = 1 AND created_at < CURRENT_TIMESTAMP - INTERVAL '90 days'
+     RETURNING id::text AS id`
+  );
+  const expired = await q.query<{ id: string }>(
+    `DELETE FROM notifications
+     WHERE expires_at IS NOT NULL
+       AND expires_at < CURRENT_TIMESTAMP - INTERVAL '30 days'
+     RETURNING id::text AS id`
+  );
+  return {
+    dismissed: dismissed.rowCount ?? 0,
+    expired: expired.rowCount ?? 0,
+  };
 }

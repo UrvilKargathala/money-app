@@ -576,6 +576,7 @@ Implemented today (337): auth login/signup/logout/me · accounts list/create/pat
 | Method | Endpoint | Purpose | Status |
 |---|---|---|---|
 | GET | `/api/jobs/run` | Cron entry point (`x-cron-secret` guard, no cookie auth) | ✅ |
+| GET | `/api/jobs/run?job=` | Dispatch one generator (`all\|bills\|subscriptions\|budgets\|accounts\|goals\|debts`, default `all`); always prunes retention | ✅ |
 
 ---
 
