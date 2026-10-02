@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useActionState } from "react";
+import { useCallback, useEffect, useRef, useState, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
@@ -170,19 +170,32 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
   const [loadError, setLoadError] = useState(false);
   const [year, setYear] = useState<string>("");
   const [cost, setCost] = useState<{ principal_paid: number; interest_paid: number; remaining_interest: number; total_cost: number; principal_pct: number; interest_pct: number } | null>(null);
+  // Debounced filter value: typing never fetches directly (BUG-124).
+  const [debouncedYear, setDebouncedYear] = useState<string>("");
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedYear(year.trim()), 400);
+    return () => clearTimeout(t);
+  }, [year]);
 
   const loadSchedule = useCallback(() => {
     if (!debt) return;
+    // Cancel any in-flight pair so rapid changes can't stack responses.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     setLoadError(false);
-    const qs = year ? `?year=${year}` : "";
+    const qs = debouncedYear ? `?year=${debouncedYear}` : "";
     Promise.all([
-      fetch(`/api/debts/${debt.id}/amortization${qs}`).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
-      fetch(`/api/debts/${debt.id}/cost-breakdown`).then(async (response) => response.ok ? response.json() : null),
-    ]).then(([schedule, breakdown]) => { setRows(schedule.schedule ?? []); setCost(breakdown); }).catch(() => setLoadError(true)).finally(() => setLoading(false));
-  }, [debt, year]);
+      fetch(`/api/debts/${debt.id}/amortization${qs}`, { signal: controller.signal }).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
+      fetch(`/api/debts/${debt.id}/cost-breakdown`, { signal: controller.signal }).then(async (response) => response.ok ? response.json() : null),
+    ]).then(([schedule, breakdown]) => { setRows(schedule.schedule ?? []); setCost(breakdown); }).catch((e) => { if ((e as Error)?.name !== "AbortError") setLoadError(true); }).finally(() => { if (abortRef.current === controller) setLoading(false); });
+  }, [debt, debouncedYear]);
 
   useEffect(() => { if (open) loadSchedule(); }, [open, loadSchedule]);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const handleRegenerate = async () => {
     if (!debt) return;
