@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,8 @@ export function AccountFormDialog({
   const isEdit = !!account;
   const [type, setType] = useState(account?.type || "bank_savings");
   const [color, setColor] = useState(account?.color || "#2563EB");
+  const pickerRef = useRef<HTMLInputElement>(null);
+  const validColor = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#2563EB";
   // Keep the action itself server-side. Passing a client wrapper to a form
   // action prevents React from dispatching the mutation in production.
   const [state, formAction, isPending] = useActionState(isEdit ? updateAccount : createAccount, null);
@@ -123,13 +125,23 @@ export function AccountFormDialog({
           <div className="space-y-2">
             <Label htmlFor="acc-color">Color</Label>
             <div className="flex items-center gap-3">
-              <Input
+              <input
+                ref={pickerRef}
                 id="acc-color-picker"
                 type="color"
-                value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#2563EB"}
+                tabIndex={-1}
+                aria-hidden="true"
+                value={validColor}
                 onChange={(e) => setColor(e.target.value.toUpperCase())}
+                className="sr-only"
+              />
+              <button
+                type="button"
+                onClick={() => pickerRef.current?.click()}
                 aria-label="Pick account color"
-                className="h-11 w-16 cursor-pointer rounded-xl p-1"
+                title="Pick account color"
+                className="h-11 w-11 shrink-0 rounded-xl border border-neutral-200 transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                style={{ backgroundColor: validColor }}
               />
               <Input
                 id="acc-color"
@@ -138,11 +150,6 @@ export function AccountFormDialog({
                 onChange={(e) => setColor(e.target.value)}
                 placeholder="#2563EB"
                 className="flex-1"
-              />
-              <div
-                className="h-11 w-11 rounded-xl border border-neutral-200"
-                style={{ backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#2563EB" }}
-                aria-hidden="true"
               />
             </div>
             {state?.fieldErrors?.color && <p className="text-xs text-error-dark">{state.fieldErrors.color}</p>}
