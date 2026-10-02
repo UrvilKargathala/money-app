@@ -419,6 +419,124 @@ describe("subscriptions burn + renewals + history", () => {
   });
 });
 
+describe("subscription snooze history", () => {
+  type SnoozeRow = {
+    days: number;
+    source: string;
+    previous_renewal_date: string;
+    new_renewal_date: string;
+  };
+
+  async function snoozeRows(subId: string): Promise<SnoozeRow[]> {
+    const res = await pool.query<SnoozeRow>(
+      `SELECT days, source,
+              previous_renewal_date::text AS previous_renewal_date,
+              new_renewal_date::text AS new_renewal_date
+       FROM subscription_snoozes
+       WHERE subscription_id = $1::uuid
+       ORDER BY created_at`,
+      [subId]
+    );
+    return res.rows;
+  }
+
+  async function snooze(
+    user: typeof db.alice,
+    subId: string,
+    body: unknown
+  ): Promise<Response> {
+    return postAs(user, `/api/subscriptions/${subId}/snooze`, body);
+  }
+
+  it("records a preset snooze with before/after dates and returns the record", async () => {
+    const sub = await createSubscription({
+      service_name: "SnoozePreset",
+      amount: "100",
+      frequency: "monthly",
+      next_renewal_date: "2099-01-01",
+    });
+    const res = await snooze(db.alice, sub.id, { days: 7, source: "preset" });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      next_renewal_date: string;
+      snooze: SnoozeRow & { id: string };
+    };
+    expect(body.next_renewal_date).toBe("2099-01-08");
+    expect(body.snooze).toMatchObject({
+      days: 7,
+      source: "preset",
+      previous_renewal_date: "2099-01-01",
+      new_renewal_date: "2099-01-08",
+    });
+    expect(await snoozeRows(sub.id)).toEqual([
+      {
+        days: 7,
+        source: "preset",
+        previous_renewal_date: "2099-01-01",
+        new_renewal_date: "2099-01-08",
+      },
+    ]);
+  });
+
+  it("records a custom snooze and compounds across repeats", async () => {
+    const sub = await createSubscription({
+      service_name: "SnoozeCustom",
+      amount: "100",
+      frequency: "monthly",
+      next_renewal_date: "2099-01-01",
+    });
+    expect(
+      (await snooze(db.alice, sub.id, { days: 45, source: "custom" })).status
+    ).toBe(200);
+    expect(
+      (await snooze(db.alice, sub.id, { days: 10, source: "custom" })).status
+    ).toBe(200);
+    expect(await snoozeRows(sub.id)).toEqual([
+      {
+        days: 45,
+        source: "custom",
+        previous_renewal_date: "2099-01-01",
+        new_renewal_date: "2099-02-15",
+      },
+      {
+        days: 10,
+        source: "custom",
+        previous_renewal_date: "2099-02-15",
+        new_renewal_date: "2099-02-25",
+      },
+    ]);
+  });
+
+  it("rejects invalid source and out-of-range days without writing history", async () => {
+    const sub = await createSubscription({
+      service_name: "SnoozeInvalid",
+      amount: "100",
+      frequency: "monthly",
+      next_renewal_date: "2099-01-01",
+    });
+    expect(
+      (await snooze(db.alice, sub.id, { days: 7, source: "whatever" })).status
+    ).toBe(400);
+    expect(
+      (await snooze(db.alice, sub.id, { days: 0, source: "custom" })).status
+    ).toBe(400);
+    expect(await snoozeRows(sub.id)).toEqual([]);
+  });
+
+  it("cross-user snooze attempts 404 and write nothing", async () => {
+    const sub = await createSubscription({
+      service_name: "SnoozePrivate",
+      amount: "100",
+      frequency: "monthly",
+      next_renewal_date: "2099-01-01",
+    });
+    expect(
+      (await snooze(db.bob, sub.id, { days: 7, source: "preset" })).status
+    ).toBe(404);
+    expect(await snoozeRows(sub.id)).toEqual([]);
+  });
+});
+
 describe("subscriptions RLS isolation", () => {
   it("bob cannot read or mutate alice's subscription", async () => {
     const sub = await createSubscription({

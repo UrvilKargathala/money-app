@@ -78,10 +78,17 @@ export async function renewSubscriptionAction(id: string): Promise<ActionState> 
   return { success: true };
 }
 
-export async function snoozeSubscriptionAction(id: string, days = 7): Promise<ActionState> {
+export type SnoozeSource = "preset" | "custom";
+
+export async function snoozeSubscriptionAction(
+  id: string,
+  days = 7,
+  source: SnoozeSource = "custom"
+): Promise<ActionState> {
   const d = Number(days);
   if (!Number.isInteger(d) || d < 1 || d > 90) return { fieldErrors: { days: "Snooze must be between 1 and 90 days." } };
-  const res = await apiFetchRaw(`/api/subscriptions/${id}/snooze`, { method: "POST", json: { days: d } });
+  if (source !== "preset" && source !== "custom") return { fieldErrors: { source: "Source must be preset or custom." } };
+  const res = await apiFetchRaw(`/api/subscriptions/${id}/snooze`, { method: "POST", json: { days: d, source } });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) return { error: body.error || body.fieldErrors?.days || "Could not snooze.", fieldErrors: body.fieldErrors };
   revalidatePath("/subscriptions");
@@ -106,8 +113,10 @@ export const dismissAudit = dismissAuditAction;
 export async function snoozeSubscriptionForm(prev: ActionState, formData: FormData): Promise<ActionState> {
   const id = String(formData.get("id") ?? formData.get("subscriptionId") ?? "").trim();
   const days = Number(formData.get("days") ?? 7);
+  const rawSource = String(formData.get("source") ?? "custom");
+  const source: SnoozeSource = rawSource === "preset" ? "preset" : "custom";
   if (!id) return { error: "Subscription id required." };
-  return snoozeSubscriptionAction(id, days);
+  return snoozeSubscriptionAction(id, days, source);
 }
 
 export async function dismissAuditForm(prev: ActionState, formData: FormData): Promise<ActionState> {

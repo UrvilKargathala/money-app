@@ -91,18 +91,53 @@ export async function getSuggestedBills(
   }));
 }
 
-/** Subscription snooze: pushes next_renewal_date forward without changing status. */
+export type SnoozeSource = "preset" | "custom";
+
+export type SnoozeResult = {
+  next_date: string;
+  snooze: {
+    id: string;
+    days: number;
+    source: SnoozeSource;
+    previous_renewal_date: string;
+    new_renewal_date: string;
+  };
+};
+
+/** Subscription snooze: pushes next_renewal_date forward without changing
+ * status, and records the event (days + preset/custom source) in
+ * subscription_snoozes. Both statements run in the caller's transaction, so
+ * the date moves if and only if the history row is recorded. */
 export async function snoozeSubscription(
   q: Queryable,
-  params: { userId: number; subscriptionId: string; days: number }
-): Promise<string | null> {
-  const result = await q.query<{ next_date: string }>(
+  params: { userId: number; subscriptionId: string; days: number; source: SnoozeSource }
+): Promise<SnoozeResult | null> {
+  const shifted = await q.query<{ prev_date: string; next_date: string }>(
     `UPDATE subscriptions SET
        next_renewal_date = next_renewal_date + ($3::int * INTERVAL '1 day'),
        version = version + 1
-     WHERE user_id = $1 AND id = $2::uuid AND status = 'active'
-     RETURNING (next_renewal_date)::date::text AS next_date`,
+      WHERE user_id = $1 AND id = $2::uuid AND status = 'active'
+      RETURNING (next_renewal_date - ($3::int * INTERVAL '1 day'))::date::text AS prev_date,
+                (next_renewal_date)::date::text AS next_date`,
     [params.userId, params.subscriptionId, params.days]
   );
-  return result.rows[0]?.next_date ?? null;
+  const row = shifted.rows[0];
+  if (!row) return null;
+  const recorded = await q.query<{ id: string }>(
+    `INSERT INTO subscription_snoozes
+       (user_id, subscription_id, days, source, previous_renewal_date, new_renewal_date)
+     VALUES ($1, $2::uuid, $3::int, $4, $5::date, $6::date)
+     RETURNING id::text AS id`,
+    [params.userId, params.subscriptionId, params.days, params.source, row.prev_date, row.next_date]
+  );
+  return {
+    next_date: row.next_date,
+    snooze: {
+      id: recorded.rows[0].id,
+      days: params.days,
+      source: params.source,
+      previous_renewal_date: row.prev_date,
+      new_renewal_date: row.next_date,
+    },
+  };
 }

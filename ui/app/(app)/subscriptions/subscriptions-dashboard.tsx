@@ -118,14 +118,26 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
 // Snooze dialog
 // ---------------------------------------------------------------------------
 
+const SNOOZE_PRESETS = ["7", "14", "30", "60", "90"] as const;
+
 function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const router = useRouter();
-  const [days, setDays] = useState("7");
+  // Preset and custom entry are independent controls sharing nothing:
+  // switching modes never clobbers the other field's value.
+  const [mode, setMode] = useState<"preset" | "custom">("preset");
+  const [preset, setPreset] = useState<string>("7");
+  const [custom, setCustom] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open) setDays("7");
+    if (open) {
+      setMode("preset");
+      setPreset("7");
+      setCustom("");
+    }
   }, [open]);
+
+  const days = mode === "preset" ? preset : custom;
 
   const handleSnooze = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,10 +150,10 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
     setLoading(true);
     try {
       // try server action first
-      const actionRes = await snoozeSubscriptionAction(sub.id, d);
+      const actionRes = await snoozeSubscriptionAction(sub.id, d, mode);
       if (actionRes?.error) {
         // fallback fetch
-        const res = await fetch(`/api/subscriptions/${sub.id}/snooze`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ days: d }) });
+        const res = await fetch(`/api/subscriptions/${sub.id}/snooze`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ days: d, source: mode }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || data.fieldErrors?.days || "Could not snooze");
       }
@@ -166,22 +178,42 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
         <form onSubmit={handleSnooze} className="space-y-4">
           <div className="space-y-2">
             <Label>Days to snooze</Label>
-            <Select value={days} onValueChange={setDays}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">7 days</SelectItem>
-                <SelectItem value="14">14 days</SelectItem>
-                <SelectItem value="30">30 days</SelectItem>
-                <SelectItem value="60">60 days</SelectItem>
-                <SelectItem value="90">90 days</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-neutral-400">Or enter custom days (1-90) below</p>
-            <Input type="number" min={1} max={90} value={days} onChange={(e) => setDays(e.target.value)} />
+            <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
+              {(["preset", "custom"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
+                >
+                  {m === "preset" ? "Presets" : "Custom"}
+                </button>
+              ))}
+            </div>
+            {mode === "preset" ? (
+              <Select value={preset} onValueChange={setPreset}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SNOOZE_PRESETS.map((p) => (
+                    <SelectItem key={p} value={p}>{p} days</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                type="number"
+                min={1}
+                max={90}
+                autoFocus
+                placeholder="Enter days (1-90)"
+                value={custom}
+                onChange={(e) => setCustom(e.target.value)}
+              />
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}><AlarmClock className="h-4 w-4" /> {loading ? "Snoozing..." : `Snooze ${days} days`}</Button>
+            <Button type="submit" disabled={loading}><AlarmClock className="h-4 w-4" /> {loading ? "Snoozing..." : `Snooze ${days || "?"} days`}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

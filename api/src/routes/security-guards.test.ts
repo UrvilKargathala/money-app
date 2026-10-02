@@ -166,6 +166,7 @@ describe("security guard: tenant scoping in query modules", () => {
     "user_plan_subscriptions",
     "billing_events",
     "plan_change_history",
+    "subscription_snoozes",
   ];
 
   /** Tables whose tenant column isn't user_id (checked against these instead). */

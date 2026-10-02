@@ -777,6 +777,21 @@ TABLES: list[tuple[str, str]] = [
         )
         """,
     ),
+    (
+        "subscription_snoozes",
+        """
+        CREATE TABLE subscription_snoozes (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+            days INTEGER NOT NULL CHECK (days >= 1 AND days <= 90),
+            source TEXT NOT NULL CHECK (source IN ('preset','custom')),
+            previous_renewal_date DATE NOT NULL,
+            new_renewal_date DATE NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+    ),
     # -- Module 5: Savings & Goals ---------------------------------------
     (
         "goals",
@@ -1453,6 +1468,7 @@ INDEX_SQL: list[str] = [
     "CREATE INDEX idx_sal_sub ON subscription_audits(subscription_id)",
     "CREATE INDEX idx_sal_type ON subscription_audits(audit_type)",
     "CREATE INDEX idx_sal_created ON subscription_audits(created_at)",
+    "CREATE INDEX idx_ssn_user_sub_created ON subscription_snoozes(user_id, subscription_id, created_at DESC)",
     # Module 5
     "CREATE INDEX idx_goal_account ON goals(account_id)",
     "CREATE INDEX idx_goal_active_date ON goals(user_id, status, target_date)",
@@ -1604,6 +1620,7 @@ RLS_POLICIES_SQL: list[str] = [
     "CREATE POLICY payment_history_user_isolation ON payment_history USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY bill_reminders_user_isolation ON bill_reminders USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY subscription_audits_user_isolation ON subscription_audits USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
+    "CREATE POLICY subscription_snoozes_user_isolation ON subscription_snoozes USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goals_user_isolation ON goals USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goal_contributions_user_isolation ON goal_contributions USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goal_snapshots_user_isolation ON goal_snapshots USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",

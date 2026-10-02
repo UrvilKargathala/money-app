@@ -451,6 +451,16 @@ Child tables; both get `user_id` + version + audit. Rollover references from_bud
 | is_dismissed | INTEGER | DEFAULT 0 |
 | created_at | TIMESTAMPTZ | |
 
+### subscription_snoozes (snooze history; days are transient input, effect persists as shifted dates)
+| id | UUID | PK |
+| user_id | INTEGER | FK users, NOT NULL |
+| subscription_id | UUID | FK subscriptions ON DELETE CASCADE |
+| days | INTEGER | CHECK 1..90 |
+| source | TEXT | CHECK ('preset','custom') — which UI control supplied the days |
+| previous_renewal_date | DATE | NOT NULL |
+| new_renewal_date | DATE | NOT NULL |
+| created_at | TIMESTAMPTZ | |
+
 ---
 
 ## Module 5 — Savings & Goals
