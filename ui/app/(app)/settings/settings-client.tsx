@@ -617,7 +617,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <CardContent>
           <div className="mb-3 flex items-center gap-2">
             <Button asChild size="sm">
-              <a href={premium ? "/export" : "/pricing"}>{premium ? "Open Export Center" : "Unlock Export Center"}</a>
+              <a href={premium ? "/planning/export" : "/pricing"}>{premium ? "Open Export Center" : "Unlock Export Center"}</a>
             </Button>
             <span className="text-xs text-neutral-500">Create jobs (CSV/PDF), track progress, download files</span>
           </div>

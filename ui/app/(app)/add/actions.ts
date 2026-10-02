@@ -31,8 +31,8 @@ export async function createQuickTransaction(prev: ActionState, formData: FormDa
   }
   if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
 
-  revalidatePath("/transactions");
-  revalidatePath("/dashboard");
-  revalidatePath("/accounts");
+  revalidatePath("/money/transactions");
+  revalidatePath("/overview/dashboard");
+  revalidatePath("/money/accounts");
   return { success: true };
 }

@@ -39,7 +39,7 @@ export default async function MagicLinkVerifyPage({ searchParams }: { searchPara
 
   const result = await verifyToken(token);
   if (result.success) {
-    redirect("/dashboard");
+    redirect("/overview/dashboard");
   }
 
   return (

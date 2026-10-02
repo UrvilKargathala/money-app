@@ -111,7 +111,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0 }: { userName?: 
             </SheetContent>
           </Sheet>
 
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/overview/dashboard" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
               <Wallet className="h-5 w-5" />
             </div>

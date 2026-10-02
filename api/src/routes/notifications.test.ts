@@ -154,7 +154,7 @@ describe("action deep-link", () => {
   it("returns deep_link and marks read on action", async () => {
     const id = await insertNotification(db.alice.userId, {
       title: "Bill due",
-      deep_link: "/bills",
+        deep_link: "/money/bills",
     });
 
     const res = await postAs(db.alice, `/api/notifications/${id}/action`, {});
@@ -163,7 +163,7 @@ describe("action deep-link", () => {
       deep_link: string | null;
       data_payload: Record<string, unknown> | null;
     };
-    expect(body.deep_link).toBe("/bills");
+      expect(body.deep_link).toBe("/money/bills");
     expect(body.data_payload).toEqual({ key: "value" });
 
     // Action marks read.

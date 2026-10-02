@@ -19,7 +19,7 @@ export function PlaceholderPage({ title, description, module }: { title: string;
             This module will be available in the next update. Check back soon or explore the available modules from the sidebar.
           </p>
           <Button asChild className="mt-4">
-            <Link href="/dashboard">Back to Dashboard</Link>
+            <Link href="/overview/dashboard">Back to Dashboard</Link>
           </Button>
         </CardContent>
       </Card>

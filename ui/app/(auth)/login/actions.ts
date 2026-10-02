@@ -32,7 +32,7 @@ export async function loginAction(prev: ActionState, formData: FormData): Promis
       await setSessionCookie(token, maxAge);
     }
 
-    redirect("/dashboard");
+    redirect("/overview/dashboard");
   } catch (err) {
     if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) throw err;
     return { error: "Something went wrong. Please try again." };

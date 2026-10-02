@@ -36,7 +36,7 @@ export default async function QuickAddPage() {
       {accounts.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-sm text-neutral-500">No active accounts. Create an account first.</p>
-          <Link href="/accounts" className="text-primary-600 hover:underline text-sm">
+          <Link href="/money/accounts" className="text-primary-600 hover:underline text-sm">
             Go to Accounts
           </Link>
         </div>

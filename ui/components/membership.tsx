@@ -30,7 +30,7 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
     return () => controller.abort();
   }, [pathname]);
   const premium = true; // Plans are informational until billing is enabled.
-  const premiumPage = ["/investments", "/debts", "/tax", "/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const premiumPage = ["/wealth/investments", "/wealth/debts", "/planning/tax", "/planning/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   return <MembershipContext.Provider value={{ premium, loading, plan }}>
     {children}
   </MembershipContext.Provider>;

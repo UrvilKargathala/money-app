@@ -23,11 +23,11 @@ export async function createInlineCategory(formData: FormData): Promise<Category
   const body = await res.json();
   if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
 
-  revalidatePath("/transactions");
+  revalidatePath("/money/transactions");
   revalidatePath("/add");
-  revalidatePath("/bills");
-  revalidatePath("/budgets");
-  revalidatePath("/subscriptions");
+  revalidatePath("/money/bills");
+  revalidatePath("/money/budgets");
+  revalidatePath("/money/subscriptions");
 
   return { success: true, category: body.category };
 }

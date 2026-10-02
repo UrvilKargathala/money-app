@@ -214,7 +214,7 @@ describe("month grid composer", () => {
 
     // Deep links point at module screens.
     const sub = body.events.find((e) => e.source === "subscription")!;
-    expect(sub.deep_link).toBe("/subscriptions");
+      expect(sub.deep_link).toBe("/money/subscriptions");
 
     // Day-detail mode returns totals.
     const dayRes = await requestAs(

@@ -205,7 +205,7 @@ export async function getCalendarEvents(
         kind: "outflow",
         amount,
         color: "blue",
-        deep_link: `/bills`,
+        deep_link: `/money/bills`,
         status: b.current_period_status,
         account_id: b.account_id,
       });
@@ -220,7 +220,7 @@ export async function getCalendarEvents(
       kind: "outflow",
       amount: Number(s.amount),
       color: "purple",
-      deep_link: "/subscriptions",
+      deep_link: "/money/subscriptions",
       account_id: s.account_id,
     });
   }
@@ -233,7 +233,7 @@ export async function getCalendarEvents(
       kind: "outflow",
       amount: Number(e.emi_amount ?? 0) || null,
       color: "red",
-      deep_link: "/debts",
+      deep_link: "/wealth/debts",
       account_id: e.account_id,
     });
   }
@@ -246,7 +246,7 @@ export async function getCalendarEvents(
       kind: "outflow",
       amount: Number(s.amount),
       color: "teal",
-      deep_link: "/investments",
+      deep_link: "/wealth/investments",
       account_id: s.account_id,
     });
   }
@@ -259,7 +259,7 @@ export async function getCalendarEvents(
       kind: "info",
       amount: m.current_value === null ? null : Number(m.current_value),
       color: "green",
-      deep_link: "/investments",
+      deep_link: "/wealth/investments",
     });
   }
 
@@ -271,7 +271,7 @@ export async function getCalendarEvents(
       kind: "info",
       amount: Number(g.target),
       color: "orange",
-      deep_link: "/goals",
+      deep_link: "/wealth/goals",
     });
   }
 
@@ -283,7 +283,7 @@ export async function getCalendarEvents(
       kind: "inflow",
       amount: Number(r.amount),
       color: "green",
-      deep_link: "/transactions",
+      deep_link: "/money/transactions",
     });
   }
 
@@ -307,7 +307,7 @@ export async function getCalendarEvents(
         kind,
         amount: ev.amount === null ? null : Number(ev.amount),
         color: ev.color ?? "grey",
-        deep_link: "/calendar",
+        deep_link: "/planning/calendar",
         event_id: ev.id,
         account_id: ev.account_id,
       });

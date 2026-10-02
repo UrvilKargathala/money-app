@@ -37,7 +37,7 @@ export function ResourceDetail({ title, subtitle, backHref, record, related }: {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-neutral-500">
-        <Link href="/dashboard" className="transition-colors hover:text-primary-600">Overview</Link><span aria-hidden="true">/</span>
+        <Link href="/overview/dashboard" className="transition-colors hover:text-primary-600">Overview</Link><span aria-hidden="true">/</span>
         <Link href={backHref} className="transition-colors hover:text-primary-600">{subtitle}</Link><span aria-hidden="true">/</span>
         <span className="truncate text-neutral-700" aria-current="page">{title}</span>
       </nav>
