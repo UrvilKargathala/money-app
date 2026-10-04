@@ -79,7 +79,7 @@ export function SubscriptionCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild><Link href={`/subscriptions/${sub.id}`}>View details</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href={`/money/subscriptions/${sub.id}`}>View details</Link></DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>

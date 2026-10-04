@@ -80,7 +80,7 @@ export function BillCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild><Link href={`/bills/${bill.id}`}>View details</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href={`/money/bills/${bill.id}`}>View details</Link></DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>

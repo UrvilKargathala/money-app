@@ -103,7 +103,7 @@ export function AccountCard({
           <p className="text-xs text-neutral-400">Limit {formatINR(account.credit_limit)}</p>
         </div>
       )}
-      <Button variant="outline" size="sm" asChild className="mt-auto"><Link href={`/accounts/${account.id}`}>View details and history</Link></Button>
+      <Button variant="outline" size="sm" asChild className="mt-auto"><Link href={`/money/accounts/${account.id}`}>View details and history</Link></Button>
     </Card>
   );
 }

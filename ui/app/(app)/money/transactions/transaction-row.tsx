@@ -84,7 +84,7 @@ export function TransactionRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild><Link href={`/transactions/${txn.id}`}>View details</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href={`/money/transactions/${txn.id}`}>View details</Link></DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="h-4 w-4" /> Edit
             </DropdownMenuItem>

@@ -55,7 +55,7 @@ export function DebtCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild><Link href={`/debts/${debt.id}`}>View details</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href={`/wealth/debts/${debt.id}`}>View details</Link></DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="h-4 w-4" /> Edit
             </DropdownMenuItem>
