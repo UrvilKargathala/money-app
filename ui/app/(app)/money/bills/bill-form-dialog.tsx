@@ -33,6 +33,10 @@ export function BillFormDialog({
   const [frequency, setFrequency] = useState(bill?.frequency || "monthly");
   const [accountId, setAccountId] = useState(bill?.account_id || "");
   const [categoryId, setCategoryId] = useState(bill?.category_id || "");
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  // Remount the form on every open so uncontrolled inputs can never leak a
+  // previous bill's values into a fresh create.
+  const [formKey, setFormKey] = useState(0);
   const [state, formAction, isPending] = useActionState(isEdit ? updateBill : createBill, null);
 
   useEffect(() => {
@@ -48,8 +52,35 @@ export function BillFormDialog({
       setFrequency(bill?.frequency || "monthly");
       setAccountId(bill?.account_id || "");
       setCategoryId(bill?.category_id || "");
+      setLocalErrors({});
+      setFormKey((k) => k + 1);
     }
   }, [open, bill]);
+
+  // Frontend-first: mirror the API's required-field rules so no invalid
+  // create/update POST leaves the browser. Account stays optional by design.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const data = new FormData(e.currentTarget);
+    const name = String(data.get("name") ?? "").trim();
+    const dueDay = Number(data.get("due_day"));
+    const amount = String(data.get("amount") ?? "").trim();
+    const estimated = String(data.get("estimated_amount") ?? "").trim();
+    const reminder = String(data.get("reminder_days") ?? "").trim();
+    const next: Record<string, string> = {};
+    if (!name) next.name = "Please enter a bill name.";
+    if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31)
+      next.due_day = "Due day must be between 1 and 31.";
+    if (amount !== "" && !(Number(amount) > 0))
+      next.amount = "Please enter an amount greater than zero.";
+    if (estimated !== "" && !(Number(estimated) > 0))
+      next.estimated_amount = "Please enter an amount greater than zero.";
+    if (amount === "" && estimated === "")
+      next.amount = "Enter an amount, or an estimated amount for variable bills.";
+    if (reminder !== "" && (!Number.isInteger(Number(reminder)) || Number(reminder) < 0 || Number(reminder) > 31))
+      next.reminder_days = "Reminder days must be between 0 and 31.";
+    setLocalErrors(next);
+    if (Object.keys(next).length > 0) e.preventDefault();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,7 +90,7 @@ export function BillFormDialog({
           <DialogDescription>{isEdit ? "Update bill details." : "Track a recurring bill with due date and reminders."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={formKey} action={formAction} onSubmit={handleSubmit} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={bill!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(bill!.version)} />}
           <input type="hidden" name="frequency" value={frequency} />
@@ -75,18 +106,19 @@ export function BillFormDialog({
           <div className="space-y-2">
             <Label htmlFor="bill-name">Name *</Label>
             <Input id="bill-name" name="name" defaultValue={bill?.name || ""} placeholder="Rent, Electricity, Gym" required />
-            {state?.fieldErrors?.name && <p className="text-xs text-error-dark">{state.fieldErrors.name}</p>}
+            {(localErrors.name ?? state?.fieldErrors?.name) && <p className="text-xs text-error-dark">{localErrors.name ?? state?.fieldErrors?.name}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="bill-amount">Amount</Label>
               <Input id="bill-amount" name="amount" type="number" step="0.01" defaultValue={bill?.amount ?? ""} placeholder="15000" />
-              {state?.fieldErrors?.amount && <p className="text-xs text-error-dark">{state.fieldErrors.amount}</p>}
+              {(localErrors.amount ?? state?.fieldErrors?.amount) && <p className="text-xs text-error-dark">{localErrors.amount ?? state?.fieldErrors?.amount}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="bill-est">Estimated amount</Label>
               <Input id="bill-est" name="estimated_amount" type="number" step="0.01" defaultValue={bill?.estimated_amount ?? ""} placeholder="For variable bills" />
+              {(localErrors.estimated_amount ?? state?.fieldErrors?.estimated_amount) && <p className="text-xs text-error-dark">{localErrors.estimated_amount ?? state?.fieldErrors?.estimated_amount}</p>}
             </div>
           </div>
 
@@ -94,7 +126,7 @@ export function BillFormDialog({
             <div className="space-y-2">
               <Label htmlFor="bill-due">Due day *</Label>
               <Input id="bill-due" name="due_day" type="number" min={1} max={31} defaultValue={bill?.due_day ?? 1} required />
-              {state?.fieldErrors?.due_day && <p className="text-xs text-error-dark">{state.fieldErrors.due_day}</p>}
+              {(localErrors.due_day ?? state?.fieldErrors?.due_day) && <p className="text-xs text-error-dark">{localErrors.due_day ?? state?.fieldErrors?.due_day}</p>}
             </div>
             <div className="space-y-2">
               <Label>Frequency</Label>
@@ -141,6 +173,7 @@ export function BillFormDialog({
             <div className="space-y-2">
               <Label htmlFor="bill-reminder">Reminder days</Label>
               <Input id="bill-reminder" name="reminder_days" type="number" min={0} max={31} defaultValue={bill?.reminder_days ?? 3} />
+              {(localErrors.reminder_days ?? state?.fieldErrors?.reminder_days) && <p className="text-xs text-error-dark">{localErrors.reminder_days ?? state?.fieldErrors?.reminder_days}</p>}
             </div>
             <div className="flex items-center gap-2 pt-6">
               <input id="bill-autopay" name="is_autopay" type="checkbox" defaultChecked={!!bill?.is_autopay} className="h-4 w-4 rounded border-neutral-300" />

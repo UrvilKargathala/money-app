@@ -136,9 +136,73 @@ function DtiCard({ dti }: { dti: Dti }) {
   );
 }
 
+type MissedDebtsDetails = {
+  debts?: { debt_id?: string; name?: string; missed_months?: string[]; partial_months?: string[] }[];
+};
+type HighDtiDetails = { dti?: number; level?: string | null };
+type NoRecentPaymentDetails = {
+  debts?: { debt_id?: string; name?: string; days_since?: number | null }[];
+};
+
+function shortMonth(value: string): string {
+  const d = new Date(`${value.length === 7 ? `${value}-01` : value}T00:00:00`);
+  return Number.isNaN(d.getTime())
+    ? value
+    : d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+}
+
+function AlertBody({ alert }: { alert: { type: string; details: unknown } }) {
+  const details = (alert.details ?? {}) as MissedDebtsDetails &
+    HighDtiDetails &
+    NoRecentPaymentDetails;
+  if (alert.type === "missed_payments" && Array.isArray(details.debts)) {
+    return (
+      <div className="mt-1.5 space-y-1.5">
+        {details.debts.map((d, j) => (
+          <p key={j} className="text-xs text-neutral-600">
+            <span className="font-medium text-neutral-800">{d.name ?? "Debt"}</span>
+            {" — missed "}
+            {(d.missed_months ?? []).map(shortMonth).join(", ") || "—"}
+            {(d.partial_months?.length ?? 0) > 0 && (
+              <span className="text-neutral-500"> (partial: {(d.partial_months ?? []).map(shortMonth).join(", ")})</span>
+            )}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  if (alert.type === "high_dti" && typeof details.dti === "number") {
+    return (
+      <p className="text-xs text-neutral-600 mt-1.5">
+        Debt-to-income is {details.dti}%{details.level ? ` (${details.level})` : ""} — consider slowing new borrowing.
+      </p>
+    );
+  }
+  if (alert.type === "no_recent_payment") {
+    const stale = (details as NoRecentPaymentDetails).debts ?? [];
+    if (!Array.isArray(stale)) return null;
+    return (
+      <div className="mt-1.5 space-y-1">
+        {stale.map((d, j) => (
+          <p key={j} className="text-xs text-neutral-600">
+            <span className="font-medium text-neutral-800">{d.name ?? "Debt"}</span>
+            {typeof d.days_since === "number" ? ` — no EMI in ${d.days_since} days` : ""}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
 function HealthAlertsCard({ data }: { data: HealthAlerts }) {
   if (!data) return null;
   const alerts = data.alerts ?? [];
+  const titles: Record<string, string> = {
+    missed_payments: "Missed payments",
+    high_dti: "High debt load",
+    no_recent_payment: "Stale payments",
+  };
   return (
     <Card className="p-6">
       <CardHeader className="p-0 mb-3">
@@ -150,10 +214,10 @@ function HealthAlertsCard({ data }: { data: HealthAlerts }) {
       ) : (
         <div className="space-y-3">
           {alerts.map((a, i) => (
-            <div key={i} className="flex items-start justify-between rounded-lg border border-neutral-100 p-3">
-              <div>
-                <p className="text-sm font-medium font-heading text-neutral-800">{a.type.replace(/_/g, " ")}</p>
-                <pre className="text-xs text-neutral-500 whitespace-pre-wrap break-words max-w-[32ch] sm:max-w-none">{JSON.stringify(a.details, null, 2)}</pre>
+            <div key={i} className="flex items-start justify-between gap-3 rounded-lg border border-neutral-100 p-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium font-heading text-neutral-800">{titles[a.type] ?? a.type.replace(/_/g, " ")}</p>
+                <AlertBody alert={a} />
               </div>
               <Badge variant={a.severity === "critical" ? "error" : a.severity === "warning" ? "warning" : "info"}>{a.severity}</Badge>
             </div>
