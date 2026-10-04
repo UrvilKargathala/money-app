@@ -5,11 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatINR } from "@/lib/format";
-import { MoreVertical, Pencil, Trash2, Pause, Play, RefreshCw } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useMembership } from "@/components/membership";
+import { AlarmClock, MoreVertical, Pencil, Trash2, Pause, Play, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 type Sub = {
@@ -22,6 +18,8 @@ type Sub = {
   status: string;
   days_until_renewal: number;
   version: number;
+  last_snooze_days: number | null;
+  last_snooze_date: string | null;
 };
 
 function statusBadge(s: string) {
@@ -54,21 +52,22 @@ export function SubscriptionCard({
 }) {
   const isActive = sub.status === "active";
   const isPaused = sub.status === "paused";
-  const { premium } = useMembership();
-  const [usageDate, setUsageDate] = useState("");
-  const [savingUsage, setSavingUsage] = useState(false);
-  const router = useRouter();
+  const snoozed = sub.last_snooze_days != null && sub.last_snooze_date != null;
 
   return (
     <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-warning-light/30" : ""}`}>
-      {premium && <form className="flex flex-wrap items-center gap-2 text-sm" onSubmit={async (e) => { e.preventDefault(); setSavingUsage(true); try { const r = await fetch(`/api/subscriptions/${sub.id}/usage`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ last_used_at: usageDate }) }); if (!r.ok) throw new Error(); toast.success("Last-used date recorded"); router.refresh(); } catch { toast.error("Could not record usage"); } finally { setSavingUsage(false); } }}><label htmlFor={`usage-${sub.id}`}>Last used</label><input id={`usage-${sub.id}`} type="date" required max={new Date().toISOString().slice(0, 10)} value={usageDate} onChange={(e) => setUsageDate(e.target.value)} className="rounded border p-1" /><Button size="sm" variant="outline" disabled={savingUsage}>Save</Button></form>}
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
           <p className="text-sm font-semibold font-heading text-neutral-900">{sub.service_name}</p>
           <p className="text-xs text-neutral-500">
             {sub.frequency} • {sub.account_name || "No account"} • {sub.days_until_renewal >= 0 ? `Renews in ${sub.days_until_renewal}d` : "Overdue"}
           </p>
           <p className="text-xs text-neutral-400">Next: {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")}</p>
+          {snoozed && (
+            <Badge variant="info" className="mt-1.5 gap-1">
+              <AlarmClock className="h-3 w-3" /> Snoozed {sub.last_snooze_days}d → {new Date(sub.last_snooze_date as string).toLocaleDateString("en-IN")}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {statusBadge(sub.status)}

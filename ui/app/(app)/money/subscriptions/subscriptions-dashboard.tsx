@@ -38,6 +38,9 @@ type Sub = {
   monthly_equivalent: number;
   last_paid_date: string | null;
   last_paid_amount: number | null;
+  last_used_at: string | null;
+  last_snooze_days: number | null;
+  last_snooze_date: string | null;
 };
 
 type Audit = {
@@ -377,6 +380,94 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
   );
 }
 
+// Expanded detail per subscription: populated metadata only (never "-" or
+// duplicated card rows), the last-used control, and no repeated actions —
+// Payments / Snooze live on the card buttons above this panel.
+function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
+  const router = useRouter();
+  const { premium } = useMembership();
+  const [usageDate, setUsageDate] = useState(sub.last_used_at ?? "");
+  const [savingUsage, setSavingUsage] = useState(false);
+
+  const rows: { label: string; value: string }[] = [
+    { label: "Monthly eq.", value: formatINR(sub.monthly_equivalent) },
+  ];
+  if (sub.account_name) rows.push({ label: "Account", value: sub.account_name });
+  if (sub.category_name) rows.push({ label: "Category", value: sub.category_name });
+  if (sub.last_paid_date) {
+    rows.push({
+      label: "Last paid",
+      value: sub.last_paid_amount != null
+        ? `${sub.last_paid_date} • ${formatINR(sub.last_paid_amount)}`
+        : sub.last_paid_date,
+    });
+  }
+  if (sub.last_snooze_days != null && sub.last_snooze_date) {
+    rows.push({
+      label: "Last snooze",
+      value: `${sub.last_snooze_days}d → ${new Date(sub.last_snooze_date).toLocaleDateString("en-IN")}`,
+    });
+  }
+  if (sub.last_used_at && !premium) {
+    rows.push({ label: "Last used", value: new Date(sub.last_used_at).toLocaleDateString("en-IN") });
+  }
+
+  const saveUsage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingUsage(true);
+    try {
+      const res = await fetch(`/api/subscriptions/${sub.id}/usage`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ last_used_at: usageDate }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Last-used date recorded");
+      router.refresh();
+    } catch {
+      toast.error("Could not record usage");
+    } finally {
+      setSavingUsage(false);
+    }
+  };
+
+  return (
+    <Card className="p-4 bg-neutral-50 space-y-3">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-3 text-xs">
+        {rows.map((r) => (
+          <div key={r.label}>
+            <p className="text-neutral-500">{r.label}</p>
+            <p className="font-medium text-neutral-800">{r.value}</p>
+          </div>
+        ))}
+      </div>
+      {sub.notes && <p className="text-xs text-neutral-500 border-t border-neutral-200 pt-2">{sub.notes}</p>}
+      {premium && (
+        <form onSubmit={saveUsage} className="space-y-1.5 border-t border-neutral-200 pt-3">
+          <Label htmlFor={`usage-${sub.id}`}>Last used</Label>
+          <div className="flex gap-2">
+            <Input
+              id={`usage-${sub.id}`}
+              type="date"
+              required
+              max={new Date().toISOString().slice(0, 10)}
+              value={usageDate}
+              onChange={(e) => setUsageDate(e.target.value)}
+              className="h-9 text-xs"
+            />
+            <Button size="sm" disabled={savingUsage}>Save</Button>
+          </div>
+          <p className="text-[11px] text-neutral-400">
+            {sub.last_used_at
+              ? `Recorded ${new Date(sub.last_used_at).toLocaleDateString("en-IN")}`
+              : "Never recorded"}
+          </p>
+        </form>
+      )}
+    </Card>
+  );
+}
+
 export function SubscriptionsDashboard({
   subscriptions,
   monthlyBurn,
@@ -523,24 +614,7 @@ export function SubscriptionsDashboard({
                 <Button variant="outline" size="sm" onClick={() => setSnoozeSub(s)} disabled={s.status !== "active"}><AlarmClock className="h-3 w-3" /> Snooze</Button>
                 <Button variant="outline" size="sm" onClick={() => toggleExpand(s.id)}><Clock className="h-3 w-3" /> {expanded.has(s.id) ? "Hide" : "Detail"}</Button>
               </div>
-              {expanded.has(s.id) && (
-                <Card className="p-3 bg-neutral-50 space-y-2">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><p className="text-neutral-500">Amount</p><p className="font-medium">{formatINR(s.amount)} • {s.frequency}</p></div>
-                    <div><p className="text-neutral-500">Monthly eq.</p><p className="font-medium">{formatINR(s.monthly_equivalent)}</p></div>
-                    <div><p className="text-neutral-500">Next renewal</p><p className="font-medium">{new Date(s.next_renewal_date).toLocaleDateString("en-IN")} • {s.days_until_renewal >=0 ? `${s.days_until_renewal}d` : "overdue"}</p></div>
-                    <div><p className="text-neutral-500">Account</p><p className="font-medium">{s.account_name ?? "-"}</p></div>
-                    <div><p className="text-neutral-500">Category</p><p className="font-medium">{s.category_name ?? "-"}</p></div>
-                    <div><p className="text-neutral-500">Last paid</p><p className="font-medium">{s.last_paid_date ? `${s.last_paid_date} • ${s.last_paid_amount != null ? formatINR(s.last_paid_amount) : "-"}` : "-"}</p></div>
-                  </div>
-                  {s.notes && <p className="text-xs text-neutral-500 border-t pt-2">{s.notes}</p>}
-                  <div className="flex gap-2 pt-1">
-                    <Button variant="ghost" size="sm" asChild><a href={`/api/subscriptions/${s.id}/payments/export`} download>Export</a></Button>
-                    <Button variant="ghost" size="sm" onClick={() => setPaymentsSub(s)}>History</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setSnoozeSub(s)} disabled={s.status !== "active"}>Snooze 7d</Button>
-                  </div>
-                </Card>
-              )}
+              {expanded.has(s.id) && <SubscriptionDetailPanel sub={s} />}
             </div>
           ))}
         </div>

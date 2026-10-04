@@ -22,6 +22,9 @@ export type SubscriptionRow = {
   version: number;
   last_paid_date: Date | null;
   last_paid_amount: string | null;
+  last_used_at: Date | string | null;
+  last_snooze_days: number | null;
+  last_snooze_date: Date | string | null;
 };
 
 export type Subscription = {
@@ -41,22 +44,32 @@ export type Subscription = {
   days_until_renewal: number;
   last_paid_date: string | null;
   last_paid_amount: number | null;
+  last_used_at: string | null;
+  last_snooze_days: number | null;
+  last_snooze_date: string | null;
 };
 
 const SUB_SELECT = `
   SELECT s.id, s.service_name, s.amount, s.frequency, s.next_renewal_date,
          s.account_id, a.name AS account_name,
          s.category_id, cat.name AS category_name,
-         s.status, s.notes, s.version,
-         ph.created_at AS last_paid_date, ph.amount AS last_paid_amount
-  FROM subscriptions s
-  LEFT JOIN accounts a ON a.id = s.account_id
-  LEFT JOIN categories cat ON cat.id = s.category_id
-  LEFT JOIN LATERAL (
-    SELECT created_at, amount FROM payment_history
-    WHERE user_id = s.user_id AND payable_type = 'subscription' AND payable_id = s.id
-    ORDER BY created_at DESC LIMIT 1
-  ) ph ON true
+          s.status, s.notes, s.version,
+          ph.created_at AS last_paid_date, ph.amount AS last_paid_amount,
+          s.last_used_at,
+          sn.days AS last_snooze_days, sn.new_renewal_date AS last_snooze_date
+   FROM subscriptions s
+   LEFT JOIN accounts a ON a.id = s.account_id
+   LEFT JOIN categories cat ON cat.id = s.category_id
+   LEFT JOIN LATERAL (
+     SELECT created_at, amount FROM payment_history
+     WHERE user_id = s.user_id AND payable_type = 'subscription' AND payable_id = s.id
+     ORDER BY created_at DESC LIMIT 1
+   ) ph ON true
+   LEFT JOIN LATERAL (
+     SELECT days, new_renewal_date FROM subscription_snoozes
+     WHERE user_id = s.user_id AND subscription_id = s.id
+     ORDER BY created_at DESC LIMIT 1
+   ) sn ON true
 `;
 
 function startOfToday(): Date {
@@ -78,6 +91,15 @@ export function monthlyEquivalent(amount: number, frequency: string): number {
   return amount * (multiplier[frequency] ?? 1);
 }
 
+// Local-calendar formatting (same as isoDate): DATE columns arrive as
+// midnight-local Dates, and toISOString() would shift them back a day in
+// positive-offset zones.
+function toISODate(value: Date | string | null): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return isoDate(value);
+  return String(value).slice(0, 10);
+}
+
 export function toSubscription(row: SubscriptionRow): Subscription {
   const amount = Number(row.amount);
   return {
@@ -90,6 +112,9 @@ export function toSubscription(row: SubscriptionRow): Subscription {
       row.last_paid_date === null ? null : row.last_paid_date.toISOString().slice(0, 10),
     last_paid_amount:
       row.last_paid_amount === null ? null : Number(row.last_paid_amount),
+    last_used_at: toISODate(row.last_used_at),
+    last_snooze_days: row.last_snooze_days,
+    last_snooze_date: toISODate(row.last_snooze_date),
   };
 }
 
