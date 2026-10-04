@@ -264,7 +264,11 @@ describe("notification preferences matrix", () => {
     const toggle = await requestAs(
       db.alice,
       "/api/notification-preferences/info/in_app",
-      { method: "PATCH" }
+      {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      }
     );
     expect(toggle.status).toBe(200);
     expect(((await toggle.json()) as { is_enabled: boolean }).is_enabled).toBe(false);
@@ -272,7 +276,11 @@ describe("notification preferences matrix", () => {
     const toggleBack = await requestAs(
       db.alice,
       "/api/notification-preferences/info/in_app",
-      { method: "PATCH" }
+      {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      }
     );
     expect(((await toggleBack.json()) as { is_enabled: boolean }).is_enabled).toBe(true);
   });
@@ -322,6 +330,35 @@ describe("email entitlement coherence (display vs enforcement)", () => {
     );
   }
 
+  /**
+   * The seeded catalog grants email to every tier (002's deliberate
+   * pre-launch open door), so locked-branch tests must restrict the free row
+   * explicitly and restore it afterwards. Do NOT "fix" this by changing the
+   * seed: flipping the catalog enables all paywalls everywhere.
+   */
+  async function restrictFreeEmail(): Promise<() => Promise<void>> {
+    const prev = await pool.query<{
+      allowed: number;
+      limit_value: string | null;
+      mode: string | null;
+    }>(
+      `SELECT allowed, limit_value::text AS limit_value, mode
+       FROM plan_entitlements WHERE plan_code = 'free' AND feature_key = 'notifications_email'`
+    );
+    await pool.query(
+      `UPDATE plan_entitlements SET allowed = 0, limit_value = NULL, mode = 'in_app'
+       WHERE plan_code = 'free' AND feature_key = 'notifications_email'`
+    );
+    const row = prev.rows[0];
+    return async () => {
+      await pool.query(
+        `UPDATE plan_entitlements SET allowed = $1, limit_value = $2::int, mode = $3
+         WHERE plan_code = 'free' AND feature_key = 'notifications_email'`,
+        [row.allowed, row.limit_value, row.mode]
+      );
+    };
+  }
+
   type PrefsBody = {
     preferences: { notification_type: string; channel: string; is_enabled: boolean }[];
     emailLocked: boolean;
@@ -365,27 +402,37 @@ describe("email entitlement coherence (display vs enforcement)", () => {
 
   it("free user: stored-ON email can always be turned OFF, never ON", async () => {
     await setPlan(db.alice.userId, "free", 40);
-    await seedEmailPref(db.alice.userId, 1);
-    const off = await patchAs(
-      db.alice,
-      "/api/notification-preferences/info/email",
-      {}
-    );
-    expect(off.status).toBe(200);
-    expect(((await off.json()) as { is_enabled: boolean }).is_enabled).toBe(false);
-    expect(await emailCell()).toEqual({ on: false, locked: true });
-    const on = await patchAs(
-      db.alice,
-      "/api/notification-preferences/info/email",
-      {}
-    );
-    expect(on.status).toBe(403);
-    expect(((await on.json()) as { error: string }).error).toBe("plan_locked");
+    const restoreCatalog = await restrictFreeEmail();
+    try {
+      await seedEmailPref(db.alice.userId, 1);
+      const off = await patchAs(
+        db.alice,
+        "/api/notification-preferences/info/email",
+        {}
+      );
+      expect(off.status).toBe(200);
+      expect(((await off.json()) as { is_enabled: boolean }).is_enabled).toBe(false);
+      expect(await emailCell()).toEqual({ on: false, locked: true });
+      const on = await patchAs(
+        db.alice,
+        "/api/notification-preferences/info/email",
+        {}
+      );
+      expect(on.status).toBe(403);
+      expect(((await on.json()) as { error: string }).error).toBe("plan_locked");
+    } finally {
+      await restoreCatalog();
+    }
   });
 
   it("free user with no stored rows: email reads locked-off", async () => {
     await setPlan(db.alice.userId, "free", 40);
-    expect(await emailCell()).toEqual({ on: false, locked: true });
+    const restoreCatalog = await restrictFreeEmail();
+    try {
+      expect(await emailCell()).toEqual({ on: false, locked: true });
+    } finally {
+      await restoreCatalog();
+    }
   });
 });
 

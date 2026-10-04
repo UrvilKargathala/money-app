@@ -30,6 +30,16 @@ async function backdateUser(userId: number, days: number): Promise<void> {
   ]);
 }
 
+/** Force effective-free: legacy premium flags otherwise resolve paid (Thread A). */
+async function forceFreePlan(userId: number): Promise<void> {
+  await pool.query(
+    `UPDATE users SET plan_type = 'free', billing_cycle = NULL,
+       premium_expires_at = NULL, legacy_member_number = NULL
+     WHERE user_id = $1`,
+    [userId]
+  );
+}
+
 async function grantPaidPlan(userId: number, planCode = "monthly"): Promise<void> {
   await withUser(userId, async (client) => {
     const price = await client.query<{ id: string }>(
@@ -67,6 +77,7 @@ describe("cross-device sync", () => {
 
   it("free plan: second login kicks the first session", async () => {
     await backdateUser(db.alice.userId, 40); // past trial → free
+    await forceFreePlan(db.alice.userId); // fixture users are legacy-premium
     const first = await login(db.alice.email);
     const second = await login(db.alice.email);
 
