@@ -489,9 +489,11 @@ subscriptions.post("/:id/snooze", requireAuth, async (c) => {
   if (source !== "preset" && source !== "custom") {
     return c.json({ fieldErrors: { source: "Source must be preset or custom." } }, 400);
   }
+  const attempt = String(body.attempt ?? "");
+  const attemptId = attempt.length > 0 && attempt.length <= 64 ? attempt : null;
   const result = await withUser(user.user_id, (client) => {
     return import("../queries/bill-extras").then((m) =>
-      m.snoozeSubscription(client, { userId: user.user_id, subscriptionId: id, days, source })
+      m.snoozeSubscription(client, { userId: user.user_id, subscriptionId: id, days, source, attemptId })
     );
   });
   if (result === null) return c.json({ error: "Not found or not active." }, 404);

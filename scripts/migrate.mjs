@@ -11,7 +11,7 @@ const pool = new Pool({ connectionString: process.argv.includes('--neon') ? proc
 const client = await pool.connect();
 try {
   await client.query('BEGIN');
-  for (const file of ['./migrations/001_membership.sql', './migrations/002_billing_catalog.sql', './migrations/004_subscription_snoozes.sql', './migrations/005_investments_updated_at.sql']) {
+  for (const file of ['./migrations/001_membership.sql', './migrations/002_billing_catalog.sql', './migrations/004_subscription_snoozes.sql', './migrations/005_investments_updated_at.sql', './migrations/006_snooze_attempt_id.sql']) {
     await client.query(await readFile(new URL(file, import.meta.url), 'utf8'));
   }
   await client.query('COMMIT');

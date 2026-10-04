@@ -788,6 +788,7 @@ TABLES: list[tuple[str, str]] = [
             source TEXT NOT NULL CHECK (source IN ('preset','custom')),
             previous_renewal_date DATE NOT NULL,
             new_renewal_date DATE NOT NULL,
+            attempt_id TEXT,
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,

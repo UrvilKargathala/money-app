@@ -459,6 +459,7 @@ Child tables; both get `user_id` + version + audit. Rollover references from_bud
 | source | TEXT | CHECK ('preset','custom') — which UI control supplied the days |
 | previous_renewal_date | DATE | NOT NULL |
 | new_renewal_date | DATE | NOT NULL |
+| attempt_id | TEXT | NULL, idempotency key; partial unique (user, sub, attempt) |
 | created_at | TIMESTAMPTZ | |
 
 ---

@@ -104,14 +104,64 @@ export type SnoozeResult = {
   };
 };
 
+/** Row shape for idempotent replay (same attempt resubmitted). */
+type PriorSnooze = {
+  id: string;
+  days: number;
+  source: string;
+  previous_renewal_date: string;
+  new_renewal_date: string;
+};
+
+function toSnoozeResult(row: PriorSnooze): SnoozeResult {
+  return {
+    next_date: row.new_renewal_date,
+    snooze: {
+      id: row.id,
+      days: row.days,
+      source: row.source as SnoozeSource,
+      previous_renewal_date: row.previous_renewal_date,
+      new_renewal_date: row.new_renewal_date,
+    },
+  };
+}
+
+function asAttemptId(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 && value.length <= 64
+    ? value
+    : null;
+}
+
 /** Subscription snooze: pushes next_renewal_date forward without changing
  * status, and records the event (days + preset/custom source) in
  * subscription_snoozes. Both statements run in the caller's transaction, so
- * the date moves if and only if the history row is recorded. */
+ * the date moves if and only if the history row is recorded.
+ *
+ * Idempotency: a caller-supplied `attemptId` (stable per dialog open) makes
+ * lost-response retries and double submits resolve to the already-recorded
+ * outcome instead of shifting the date twice. Matching requires the same
+ * days — changed days are a new intent and proceed. A partial unique index
+ * backs the check for any residual race (conflict replays the winner). */
 export async function snoozeSubscription(
   q: Queryable,
-  params: { userId: number; subscriptionId: string; days: number; source: SnoozeSource }
+  params: { userId: number; subscriptionId: string; days: number; source: SnoozeSource; attemptId?: string | null }
 ): Promise<SnoozeResult | null> {
+  const attemptId = asAttemptId(params.attemptId);
+  const priorSelect = `SELECT id::text AS id, days, source,
+              previous_renewal_date::text AS previous_renewal_date,
+              new_renewal_date::text AS new_renewal_date
+       FROM subscription_snoozes
+       WHERE user_id = $1 AND subscription_id = $2::uuid
+         AND days = $3::int AND attempt_id = $4`;
+  if (attemptId) {
+    const prior = await q.query<PriorSnooze>(priorSelect, [
+      params.userId,
+      params.subscriptionId,
+      params.days,
+      attemptId,
+    ]);
+    if (prior.rows[0]) return toSnoozeResult(prior.rows[0]);
+  }
   const shifted = await q.query<{ prev_date: string; next_date: string }>(
     `UPDATE subscriptions SET
        next_renewal_date = next_renewal_date + ($3::int * INTERVAL '1 day'),
@@ -123,21 +173,35 @@ export async function snoozeSubscription(
   );
   const row = shifted.rows[0];
   if (!row) return null;
-  const recorded = await q.query<{ id: string }>(
-    `INSERT INTO subscription_snoozes
-       (user_id, subscription_id, days, source, previous_renewal_date, new_renewal_date)
-     VALUES ($1, $2::uuid, $3::int, $4, $5::date, $6::date)
-     RETURNING id::text AS id`,
-    [params.userId, params.subscriptionId, params.days, params.source, row.prev_date, row.next_date]
-  );
-  return {
-    next_date: row.next_date,
-    snooze: {
-      id: recorded.rows[0].id,
-      days: params.days,
-      source: params.source,
-      previous_renewal_date: row.prev_date,
-      new_renewal_date: row.next_date,
-    },
-  };
+  try {
+    const recorded = await q.query<{ id: string }>(
+      `INSERT INTO subscription_snoozes
+         (user_id, subscription_id, days, source, previous_renewal_date, new_renewal_date, attempt_id)
+       VALUES ($1, $2::uuid, $3::int, $4, $5::date, $6::date, $7)
+       RETURNING id::text AS id`,
+      [params.userId, params.subscriptionId, params.days, params.source, row.prev_date, row.next_date, attemptId]
+    );
+    return {
+      next_date: row.next_date,
+      snooze: {
+        id: recorded.rows[0].id,
+        days: params.days,
+        source: params.source,
+        previous_renewal_date: row.prev_date,
+        new_renewal_date: row.next_date,
+      },
+    };
+  } catch (err) {
+    // Lost race against a concurrent same-attempt insert: replay the winner.
+    if ((err as { code?: string } | null)?.code === "23505" && attemptId) {
+      const winner = await q.query<PriorSnooze>(priorSelect, [
+        params.userId,
+        params.subscriptionId,
+        params.days,
+        attemptId,
+      ]);
+      if (winner.rows[0]) return toSnoozeResult(winner.rows[0]);
+    }
+    throw err;
+  }
 }

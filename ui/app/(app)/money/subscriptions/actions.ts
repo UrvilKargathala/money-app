@@ -83,12 +83,13 @@ export type SnoozeSource = "preset" | "custom";
 export async function snoozeSubscriptionAction(
   id: string,
   days = 7,
-  source: SnoozeSource = "custom"
+  source: SnoozeSource = "custom",
+  attemptId?: string
 ): Promise<ActionState> {
   const d = Number(days);
   if (!Number.isInteger(d) || d < 1 || d > 90) return { fieldErrors: { days: "Snooze must be between 1 and 90 days." } };
   if (source !== "preset" && source !== "custom") return { fieldErrors: { source: "Source must be preset or custom." } };
-  const res = await apiFetchRaw(`/api/subscriptions/${id}/snooze`, { method: "POST", json: { days: d, source } });
+  const res = await apiFetchRaw(`/api/subscriptions/${id}/snooze`, { method: "POST", json: { days: d, source, ...(attemptId ? { attempt: attemptId } : {}) } });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) return { error: body.error || body.fieldErrors?.days || "Could not snooze.", fieldErrors: body.fieldErrors };
   revalidatePath("/money/subscriptions");
@@ -115,8 +116,9 @@ export async function snoozeSubscriptionForm(prev: ActionState, formData: FormDa
   const days = Number(formData.get("days") ?? 7);
   const rawSource = String(formData.get("source") ?? "custom");
   const source: SnoozeSource = rawSource === "preset" ? "preset" : "custom";
+  const attempt = String(formData.get("attempt") ?? "").trim() || undefined;
   if (!id) return { error: "Subscription id required." };
-  return snoozeSubscriptionAction(id, days, source);
+  return snoozeSubscriptionAction(id, days, source, attempt);
 }
 
 export async function dismissAuditForm(prev: ActionState, formData: FormData): Promise<ActionState> {

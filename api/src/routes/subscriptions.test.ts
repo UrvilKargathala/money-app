@@ -507,6 +507,40 @@ describe("subscription snooze history", () => {
     ]);
   });
 
+  it("same attempt twice shifts once and replays the record", async () => {
+    const sub = await createSubscription({
+      service_name: "SnoozeIdem",
+      amount: "100",
+      frequency: "monthly",
+      next_renewal_date: "2099-01-01",
+    });
+    const first = await snooze(db.alice, sub.id, { days: 7, source: "preset", attempt: "idem-1" });
+    expect(first.status).toBe(200);
+    const firstBody = (await first.json()) as { next_renewal_date: string; snooze: { id: string } };
+    expect(firstBody.next_renewal_date).toBe("2099-01-08");
+    const second = await snooze(db.alice, sub.id, { days: 7, source: "preset", attempt: "idem-1" });
+    expect(second.status).toBe(200);
+    const secondBody = (await second.json()) as { next_renewal_date: string; snooze: { id: string } };
+    expect(secondBody.next_renewal_date).toBe("2099-01-08");
+    expect(secondBody.snooze.id).toBe(firstBody.snooze.id);
+    expect(await snoozeRows(sub.id)).toHaveLength(1);
+  });
+
+  it("same attempt with changed days proceeds as a new intent", async () => {
+    const sub = await createSubscription({
+      service_name: "SnoozeIdem2",
+      amount: "100",
+      frequency: "monthly",
+      next_renewal_date: "2099-01-01",
+    });
+    expect((await snooze(db.alice, sub.id, { days: 7, source: "preset", attempt: "idem-2" })).status).toBe(200);
+    const res = await snooze(db.alice, sub.id, { days: 10, source: "custom", attempt: "idem-2" });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { next_renewal_date: string };
+    expect(body.next_renewal_date).toBe("2099-01-18");
+    expect(await snoozeRows(sub.id)).toHaveLength(2);
+  });
+
   it("rejects invalid source and out-of-range days without writing history", async () => {
     const sub = await createSubscription({
       service_name: "SnoozeInvalid",
