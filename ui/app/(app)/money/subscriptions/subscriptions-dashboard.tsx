@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMembership, UpgradeCard } from "@/components/membership";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -128,6 +128,19 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
   const [preset, setPreset] = useState<string>("7");
   const [custom, setCustom] = useState("");
   const [loading, setLoading] = useState(false);
+  // Stable idempotency key per subscription: retries (action error followed
+  // by the fallback fetch, or an explicit resubmit) resolve server-side to the
+  // already-recorded outcome instead of shifting the date twice.
+  const attemptRef = useRef<Record<string, string>>({});
+  const attemptIdFor = (subscriptionId: string): string => {
+    const existing = attemptRef.current[subscriptionId];
+    if (existing) return existing;
+    const fresh = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    attemptRef.current[subscriptionId] = fresh;
+    return fresh;
+  };
 
   useEffect(() => {
     if (open) {
@@ -149,11 +162,14 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
     }
     setLoading(true);
     try {
+      // Both paths share one attempt id, so the fallback can only replay the
+      // already-recorded outcome, never shift the date a second time.
+      const attempt = attemptIdFor(sub.id);
       // try server action first
-      const actionRes = await snoozeSubscriptionAction(sub.id, d, mode);
+      const actionRes = await snoozeSubscriptionAction(sub.id, d, mode, attempt);
       if (actionRes?.error) {
         // fallback fetch
-        const res = await fetch(`/api/subscriptions/${sub.id}/snooze`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ days: d, source: mode }) });
+        const res = await fetch(`/api/subscriptions/${sub.id}/snooze`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ days: d, source: mode, attempt }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || data.fieldErrors?.days || "Could not snooze");
       }
