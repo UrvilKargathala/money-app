@@ -16,6 +16,7 @@ type Investment = {
   units: string;
   buy_price: string;
   current_price: string;
+  updated_at?: string | null;
   purchase_date: string;
   version: number;
 };
@@ -25,6 +26,17 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
   const current = Number(investment.units) * Number(investment.current_price);
   const pnl = current - invested;
   const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+  const updatedDaysAgo = investment.updated_at
+    ? Math.floor((Date.now() - new Date(investment.updated_at).getTime()) / 86_400_000)
+    : null;
+  const staleLabel =
+    updatedDaysAgo === null
+      ? null
+      : updatedDaysAgo <= 0
+        ? "updated today"
+        : updatedDaysAgo === 1
+          ? "updated yesterday"
+          : `updated ${updatedDaysAgo}d ago${updatedDaysAgo > 30 ? " • consider refreshing" : ""}`;
 
   return (
     <Card className="p-4 space-y-3">
@@ -45,7 +57,7 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild><Link href={`/investments/${investment.id}`}>View details</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href={`/wealth/investments/${investment.id}`}>View details</Link></DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="h-4 w-4" /> Edit
             </DropdownMenuItem>
@@ -75,7 +87,7 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
           {pnl >= 0 ? "+" : ""}
           {formatINR(pnl)} ({pnlPct.toFixed(1)}%)
         </span>
-        <span className="text-neutral-400">Buy {formatINR(Number(investment.buy_price))} • Now {formatINR(Number(investment.current_price))}</span>
+        <span className="text-neutral-400">Buy {formatINR(Number(investment.buy_price))} • Now {formatINR(Number(investment.current_price))}{staleLabel ? ` • ${staleLabel}` : ""}</span>
       </div>
     </Card>
   );

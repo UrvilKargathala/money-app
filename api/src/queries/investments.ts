@@ -58,6 +58,7 @@ export type InvestmentRowRaw = {
   is_active: number;
   notes: string | null;
   closed_date: string | null;
+  updated_at: string | null;
   version: number;
 };
 
@@ -71,7 +72,8 @@ const INVESTMENT_SELECT = `
          i.purchase_date::text AS purchase_date,
          i.maturity_date::text AS maturity_date,
          i.account_id, a.name AS account_name,
-         i.is_active, i.notes, i.closed_date::text AS closed_date, i.version
+         i.is_active, i.notes, i.closed_date::text AS closed_date,
+         i.updated_at::text AS updated_at, i.version
   FROM investments i
   LEFT JOIN accounts a ON a.id = i.account_id
   WHERE i.user_id = $1
@@ -201,7 +203,8 @@ export function updateInvestmentFields(
        maturity_date = COALESCE($5::date, maturity_date),
        account_id = COALESCE($6::uuid, account_id),
        notes = COALESCE($7, notes),
-       version = version + 1
+       version = version + 1,
+       updated_at = CURRENT_TIMESTAMP
      WHERE user_id = $1 AND id = $2 AND version = $8
      RETURNING id`,
     [
@@ -560,7 +563,7 @@ export async function recordPriceUpdate(
   );
   await q.query(
     `UPDATE investments
-     SET current_price = $3, version = version + 1
+     SET current_price = $3, version = version + 1, updated_at = CURRENT_TIMESTAMP
      WHERE user_id = $1 AND id = $2`,
     [params.userId, params.investmentId, params.price]
   );
@@ -607,7 +610,7 @@ export async function bulkPriceUpdates(
 
   await q.query(
     `UPDATE investments i
-     SET current_price = x.price, version = version + 1
+     SET current_price = x.price, version = version + 1, updated_at = CURRENT_TIMESTAMP
      FROM unnest($2::uuid[], $3::numeric(12,4)[]) AS x(id, price)
      WHERE i.user_id = $1 AND i.id = x.id`,
     [userId, applied.map((u) => u.id), applied.map((u) => u.price)]

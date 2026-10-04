@@ -651,6 +651,7 @@ System reference. financial_year, regime, slab_from, slab_to, rate, cess_rate.
 | is_active | INTEGER | DEFAULT 1 |
 | notes / closed_date | TEXT / DATE | |
 | version | INTEGER | DEFAULT 1 |
+| updated_at | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP, maintained on price/edit writes (price freshness signal) |
 
 > Unit-based holdings derive `invested_value`/`current_value` from `units × price` (GENERATED columns — no drift, no double-entry). Manual (non-unit) instruments set the values directly; schema should add `valuation_mode` or keep NULL prices to signal manual mode.
 

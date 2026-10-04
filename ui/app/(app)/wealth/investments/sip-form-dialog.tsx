@@ -17,6 +17,7 @@ type Sip = {
   amount: string | number;
   frequency: string;
   next_date: string;
+  end_date?: string | null;
   account_id: string | null;
   status: string;
 };
@@ -120,8 +121,9 @@ export function SipFormDialog({
               {state?.fieldErrors?.next_date && <p className="text-xs text-error">{state.fieldErrors.next_date}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sip-end">End date</Label>
-              <Input id="sip-end" name="end_date" type="date" defaultValue="" />
+              <Label htmlFor="sip-end">End date <span className="font-normal text-neutral-400">(optional)</span></Label>
+              <Input id="sip-end" name="end_date" type="date" defaultValue={sip?.end_date ?? ""} />
+              <p className="text-xs text-neutral-400">Leave empty for an ongoing SIP with no end date.</p>
             </div>
           </div>
 

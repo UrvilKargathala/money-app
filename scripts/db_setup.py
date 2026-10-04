@@ -1060,7 +1060,8 @@ TABLES: list[tuple[str, str]] = [
             is_active INTEGER DEFAULT 1,
             notes TEXT,
             closed_date DATE,
-            version INTEGER DEFAULT 1
+            version INTEGER DEFAULT 1,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
         """,
     ),

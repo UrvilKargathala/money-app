@@ -42,6 +42,7 @@ type Sip = {
   amount: string | number;
   frequency: string;
   next_date: string;
+  end_date?: string | null;
   account_id: string | null;
   account_name: string | null;
   status: string;
@@ -334,7 +335,7 @@ export function InvestmentsDashboard({
                     <div>
                       <p className="text-sm font-semibold font-heading text-neutral-900">{sip.investment_name}</p>
                       <p className="text-xs text-neutral-500">
-                        {sip.frequency} • {formatINR(Number(sip.amount))} • next {formatDate(sip.next_date)}
+                        {sip.frequency} • {formatINR(Number(sip.amount))} • next {formatDate(sip.next_date)} • {sip.end_date ? `ends ${formatDate(sip.end_date)}` : "Ongoing"}
                       </p>
                     </div>
                     <Badge variant={sip.status === "active" ? "success" : sip.status === "paused" ? "warning" : "default"}>{sip.status}</Badge>
