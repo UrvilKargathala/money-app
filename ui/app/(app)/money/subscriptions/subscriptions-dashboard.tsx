@@ -142,15 +142,40 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
     return fresh;
   };
 
+  // Last-used snooze controls per subscription: reopening the dialog restores
+  // what the user picked instead of resetting to 7 days. Ephemeral intent
+  // only - in-memory, dies with the page, nothing persisted to storage.
+  const snoozeStateRef = useRef<Record<string, { mode: "preset" | "custom"; preset: string; custom: string }>>({});
+  const persistSnoozeState = (next: { mode: "preset" | "custom"; preset: string; custom: string }) => {
+    if (sub) snoozeStateRef.current[sub.id] = next;
+  };
+
   useEffect(() => {
-    if (open) {
-      setMode("preset");
-      setPreset("7");
-      setCustom("");
+    if (open && sub) {
+      const stored = snoozeStateRef.current[sub.id];
+      if (stored) {
+        setMode(stored.mode);
+        setPreset(stored.preset);
+        setCustom(stored.custom);
+      } else {
+        setMode("preset");
+        setPreset("7");
+        setCustom("");
+      }
     }
-  }, [open]);
+  }, [open, sub]);
 
   const days = mode === "preset" ? preset : custom;
+
+  // Display-only preview of the resulting renewal date, using the same
+  // shift arithmetic as the server (next_renewal_date + days).
+  const shiftRenewal = (iso: string, d: number): string => {
+    const dt = new Date(iso);
+    dt.setDate(dt.getDate() + d);
+    return dt.toLocaleDateString("en-IN");
+  };
+  const parsedDays = Number(days);
+  const validDays = Number.isInteger(parsedDays) && parsedDays >= 1 && parsedDays <= 90;
 
   const handleSnooze = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +198,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || data.fieldErrors?.days || "Could not snooze");
       }
-      toast.success(`Snoozed ${d} days`);
+      toast.success(`Snoozed ${d} days → renews ${shiftRenewal(sub.next_renewal_date, d)}`);
       onOpenChange(false);
       router.refresh();
     } catch (err) {
@@ -199,7 +224,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
                 <button
                   key={m}
                   type="button"
-                  onClick={() => setMode(m)}
+                  onClick={() => { setMode(m); persistSnoozeState({ mode: m, preset, custom }); }}
                   className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
                 >
                   {m === "preset" ? "Presets" : "Custom"}
@@ -207,7 +232,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
               ))}
             </div>
             {mode === "preset" ? (
-              <Select value={preset} onValueChange={setPreset}>
+              <Select value={preset} onValueChange={(v) => { setPreset(v); persistSnoozeState({ mode, preset: v, custom }); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {SNOOZE_PRESETS.map((p) => (
@@ -223,9 +248,14 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
                 autoFocus
                 placeholder="Enter days (1-90)"
                 value={custom}
-                onChange={(e) => setCustom(e.target.value)}
+                onChange={(e) => { setCustom(e.target.value); persistSnoozeState({ mode, preset, custom: e.target.value }); }}
               />
             )}
+            {validDays && sub ? (
+              <p className="text-xs text-neutral-500">
+                Renews {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")} → {shiftRenewal(sub.next_renewal_date, parsedDays)} ({parsedDays} days)
+              </p>
+            ) : null}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
