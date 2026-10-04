@@ -30,7 +30,8 @@ export type FeatureKey =
   | "export_batch"
   | "notifications_email"
   | "cross_device_sync"
-  | "subscription_audits";
+  | "subscription_audits"
+  | "scan_jobs";
 
 type EntitlementRow = {
   plan_code: string;

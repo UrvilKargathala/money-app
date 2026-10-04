@@ -41,6 +41,7 @@ import { forecast } from "./routes/forecast";
 import { billing, billingProfile } from "./routes/billing";
 import { search } from "./routes/search";
 import { analytics } from "./routes/analytics";
+import { scan } from "./routes/scan";
 
 export const app = new Hono();
 
@@ -107,6 +108,7 @@ app.route("/api/billing", billing);
 app.route("/api/users/me/subscription", billingProfile);
 app.route("/api/search", search);
 app.route("/api/analytics", analytics);
+app.route("/api/scan", scan);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

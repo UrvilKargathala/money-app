@@ -1627,6 +1627,7 @@ def billing_plans(conn) -> None:
                 ("notifications_email", "mode", "Email notifications"),
                 ("cross_device_sync", "boolean", "Cross-device sync"),
                 ("subscription_audits", "boolean", "Subscription audits"),
+                ("scan_jobs", "count", "Receipt scans per calendar month"),
             ],
         )
         free_ents = [
@@ -1643,6 +1644,7 @@ def billing_plans(conn) -> None:
             ("free", "notifications_email", 0, None, "in_app"),
             ("free", "cross_device_sync", 0, None, None),
             ("free", "subscription_audits", 0, None, None),
+            ("free", "scan_jobs", 1, 5, None),
         ]
         paid_ents = []
         for plan in ("monthly", "annual", "lifetime"):
@@ -1660,6 +1662,7 @@ def billing_plans(conn) -> None:
                 (plan, "notifications_email", 1, None, "in_app_email"),
                 (plan, "cross_device_sync", 1, None, None),
                 (plan, "subscription_audits", 1, None, None),
+                (plan, "scan_jobs", 1, None, None),
             ]
         cur.executemany(
             "INSERT INTO plan_entitlements (plan_code, feature_key, allowed, limit_value, mode) "
@@ -1685,8 +1688,8 @@ def billing_plans(conn) -> None:
                 (code, price, per_text, interval, periods, stripe_id, code),
             )
     rows_total["plan_tiers"] = rows_total.get("plan_tiers", 0) + 4
-    rows_total["plan_features"] = rows_total.get("plan_features", 0) + 13
-    rows_total["plan_entitlements"] = rows_total.get("plan_entitlements", 0) + 52
+    rows_total["plan_features"] = rows_total.get("plan_features", 0) + 14
+    rows_total["plan_entitlements"] = rows_total.get("plan_entitlements", 0) + 56
     rows_total["plan_prices"] = rows_total.get("plan_prices", 0) + 4
 
 

@@ -108,6 +108,7 @@ const PLAN_FEATURES: [string, string, string][] = [
   ["notifications_email", "mode", "Email notifications"],
   ["cross_device_sync", "boolean", "Cross-device sync"],
   ["subscription_audits", "boolean", "Subscription audits"],
+  ["scan_jobs", "count", "Receipt scans per calendar month"],
 ];
 
 const FREE_ENTITLEMENTS: [string, string, number, number | null, string | null][] = [
@@ -124,6 +125,7 @@ const FREE_ENTITLEMENTS: [string, string, number, number | null, string | null][
   ["free", "notifications_email", 0, null, "in_app"],
   ["free", "cross_device_sync", 0, null, null],
   ["free", "subscription_audits", 0, null, null],
+  ["free", "scan_jobs", 1, 5, null],
 ];
 
 const PAID_ENTITLEMENTS: [string, string, number, number | null, string | null][] = [];
@@ -142,6 +144,7 @@ for (const plan of ["monthly", "annual", "lifetime"]) {
     [plan, "notifications_email", 1, null, "in_app_email"],
     [plan, "cross_device_sync", 1, null, null],
     [plan, "subscription_audits", 1, null, null],
+    [plan, "scan_jobs", 1, null, null],
   );
 }
 

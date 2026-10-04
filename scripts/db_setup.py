@@ -160,7 +160,7 @@ TABLES: list[tuple[str, str]] = [
         "plan_features",
         """
         CREATE TABLE plan_features (
-            key TEXT PRIMARY KEY CHECK (key IN ('accounts','budgets','bill_reminders','tracker_subscriptions','goals_active','investments','debts','tax','reports_widgets','export_batch','notifications_email','cross_device_sync','subscription_audits')),
+            key TEXT PRIMARY KEY CHECK (key IN ('accounts','budgets','bill_reminders','tracker_subscriptions','goals_active','investments','debts','tax','reports_widgets','export_batch','notifications_email','cross_device_sync','subscription_audits','scan_jobs')),
             kind TEXT NOT NULL CHECK (kind IN ('count','boolean','mode')),
             description TEXT NOT NULL
         )
@@ -1387,6 +1387,50 @@ TABLES: list[tuple[str, str]] = [
         )
         """,
     ),
+    # -- Receipt scans (OCR; images never persisted, only extracted JSON) --
+    (
+        "scan_jobs",
+        """
+        CREATE TABLE scan_jobs (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            filename TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'review'
+                CHECK (status IN ('review','confirmed','partial','discarded')),
+            total_cards INTEGER NOT NULL DEFAULT 0,
+            confirmed_count INTEGER NOT NULL DEFAULT 0,
+            account_id UUID REFERENCES accounts(id) ON DELETE SET NULL,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+    ),
+    (
+        "scan_cards",
+        """
+        CREATE TABLE scan_cards (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            job_id UUID NOT NULL REFERENCES scan_jobs(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            status TEXT NOT NULL DEFAULT 'review'
+                CHECK (status IN ('review','ready','confirmed','discarded')),
+            merchant TEXT,
+            date DATE,
+            amount NUMERIC(12,2),
+            currency TEXT NOT NULL DEFAULT 'INR',
+            category_guess TEXT,
+            category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+            tax_amount NUMERIC(12,2),
+            utr TEXT,
+            gstin TEXT,
+            confidence NUMERIC(5,2),
+            source_lines JSONB NOT NULL DEFAULT '[]'::jsonb,
+            flags JSONB NOT NULL DEFAULT '[]'::jsonb,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+    ),
 ]
 
 # --------------------------------------------------------------------------
@@ -1470,7 +1514,7 @@ INDEX_SQL: list[str] = [
     "CREATE INDEX idx_sal_sub ON subscription_audits(subscription_id)",
     "CREATE INDEX idx_sal_type ON subscription_audits(audit_type)",
     "CREATE INDEX idx_sal_created ON subscription_audits(created_at)",
-    "CREATE INDEX idx_ssn_user_sub_created ON subscription_snoozes(user_id, subscription_id, created_at DESC)",
+
     # Module 5
     "CREATE INDEX idx_goal_account ON goals(account_id)",
     "CREATE INDEX idx_goal_active_date ON goals(user_id, status, target_date)",
@@ -1548,6 +1592,11 @@ INDEX_SQL: list[str] = [
     # Component C3
     "CREATE INDEX idx_dej_user ON data_export_jobs(user_id, created_at DESC)",
     "CREATE INDEX idx_dej_status ON data_export_jobs(user_id, status)",
+    # Receipt scans
+    "CREATE INDEX idx_scan_jobs_user ON scan_jobs(user_id, created_at DESC)",
+    "CREATE INDEX idx_scan_jobs_status ON scan_jobs(user_id, status)",
+    "CREATE INDEX idx_scan_cards_job ON scan_cards(job_id)",
+    "CREATE INDEX idx_scan_cards_user_status ON scan_cards(user_id, status)",
     # SaaS Plans / Billing — fast-path plan cache on settings (added here
     # because plan_tiers is created above; same pattern as the transactions
     # recurring_template_id ALTER in Module 2). Fresh tables at setup time,
@@ -1559,9 +1608,9 @@ INDEX_SQL: list[str] = [
     "CREATE INDEX idx_price_plan ON plan_prices(plan_code) WHERE is_current = 1",
     "CREATE INDEX idx_ent_plan ON plan_entitlements(plan_code)",
     # One open subscription per user; Stripe ids unique when present
-    "CREATE UNIQUE INDEX ux_ups_user_active ON user_plan_subscriptions(user_id) WHERE status IN ('active','trialing','past_due')",
-    "CREATE UNIQUE INDEX ux_ups_provider_sub ON user_plan_subscriptions(provider_subscription_id) WHERE provider_subscription_id IS NOT NULL",
-    "CREATE UNIQUE INDEX ux_ups_provider_cust ON user_plan_subscriptions(provider_customer_id) WHERE provider_customer_id IS NOT NULL",
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_ups_user_active ON user_plan_subscriptions(user_id) WHERE status IN ('active','trialing','past_due')",
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_ups_provider_sub ON user_plan_subscriptions(provider_subscription_id) WHERE provider_subscription_id IS NOT NULL",
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_ups_provider_cust ON user_plan_subscriptions(provider_customer_id) WHERE provider_customer_id IS NOT NULL",
     "CREATE INDEX idx_ups_user_status ON user_plan_subscriptions(user_id, status)",
     "CREATE INDEX idx_be_user ON billing_events(user_id, created_at DESC)",
     "CREATE INDEX idx_pch_user ON plan_change_history(user_id, created_at DESC)",
@@ -1622,7 +1671,6 @@ RLS_POLICIES_SQL: list[str] = [
     "CREATE POLICY payment_history_user_isolation ON payment_history USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY bill_reminders_user_isolation ON bill_reminders USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY subscription_audits_user_isolation ON subscription_audits USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
-    "CREATE POLICY subscription_snoozes_user_isolation ON subscription_snoozes USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goals_user_isolation ON goals USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goal_contributions_user_isolation ON goal_contributions USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY goal_snapshots_user_isolation ON goal_snapshots USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
@@ -1651,6 +1699,8 @@ RLS_POLICIES_SQL: list[str] = [
     "CREATE POLICY notification_preferences_user_isolation ON notification_preferences USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY notification_emails_user_isolation ON notification_emails USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY data_export_jobs_user_isolation ON data_export_jobs USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
+    "CREATE POLICY scan_jobs_user_isolation ON scan_jobs USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
+    "CREATE POLICY scan_cards_user_isolation ON scan_cards USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY user_plan_subscriptions_user_isolation ON user_plan_subscriptions USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY billing_events_user_isolation ON billing_events USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",
     "CREATE POLICY plan_change_history_user_isolation ON plan_change_history USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int) WITH CHECK (user_id = NULLIF(current_setting('app.current_user_id', true), '')::int)",

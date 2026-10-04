@@ -3,4 +3,5 @@ packages:
   - "ui"
 allowBuilds:
   sharp: true
+  tesseract.js: true
   unrs-resolver: true

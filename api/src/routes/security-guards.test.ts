@@ -166,6 +166,8 @@ describe("security guard: tenant scoping in query modules", () => {
     "user_plan_subscriptions",
     "billing_events",
     "plan_change_history",
+    "scan_jobs",
+    "scan_cards",
     "subscription_snoozes",
   ];
 

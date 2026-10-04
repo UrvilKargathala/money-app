@@ -329,8 +329,8 @@ export async function resetDb(): Promise<{ alice: TestUser; bob: TestUser }> {
        net_worth_snapshots, manual_assets, net_worth_milestones
      RESTART IDENTITY CASCADE`
     );
-    // Also clear billing tables that reference users (CASCADE would handle, but explicit ensures RESTART IDENTITY)
-    await pool.query(`TRUNCATE TABLE user_plan_subscriptions, billing_events, plan_change_history RESTART IDENTITY CASCADE`).catch(() => {});
+    // Also clear billing + scan tables that reference users (CASCADE would handle, but explicit ensures RESTART IDENTITY)
+    await pool.query(`TRUNCATE TABLE user_plan_subscriptions, billing_events, plan_change_history, scan_jobs, scan_cards RESTART IDENTITY CASCADE`).catch(() => {});
     const alice = await createUser("alice@moneymind.test");
     const bob = await createUser("bob@moneymind.test");
     return { alice, bob };
