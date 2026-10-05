@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
-import { FileText, Plus, Pin, Trash2, Search, RotateCcw, Tag, LayoutTemplate, LockKeyhole, ShieldCheck, Paperclip, Download, Eye, Pencil } from "lucide-react";
+import { FileText, Plus, Pin, Trash2, Search, RotateCcw, Tag, LayoutTemplate, LockKeyhole, ShieldCheck, Paperclip, Download, Eye, Pencil, Check, X } from "lucide-react";
 import { deleteNoteAction, pinNoteAction, unpinNoteAction, restoreNoteAction, purgeNoteAction } from "./actions";
 import { createNoteUserTemplate, deleteNoteUserTemplate, updateNoteUserTemplate, type NoteUserTemplate } from "@/lib/note-user-templates";
 import { useEffect } from "react";
@@ -307,21 +307,21 @@ export function NotesDashboard({
     else toast.error("Could not remove attachment.");
   }
 
-  const [renameFrom, setRenameFrom] = useState<string | null>(null);
-  const [renameTo, setRenameTo] = useState("");
+  // Inline category rename: one chip editable at a time, Enter/check saves,
+  // Esc/X cancels. No modal, no prompt().
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [categoryDraft, setCategoryDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
 
-  async function submitRenameCategory(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!renameFrom) return;
-    const to = renameTo.trim();
-    if (!to || to === renameFrom) { setRenameFrom(null); return; }
+  async function commitRenameCategory(from: string, to: string) {
+    const clean = to.trim();
+    if (!clean || clean === from) { setEditingCategory(null); return; }
     setRenaming(true);
     try {
-      const res = await fetch("/api/notes/categories", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ from_category: renameFrom, to_category: to }) });
+      const res = await fetch("/api/notes/categories", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ from_category: from, to_category: clean }) });
       if (!res.ok) throw new Error();
       toast.success("Category renamed.");
-      setRenameFrom(null);
+      setEditingCategory(null);
       router.refresh();
     } catch {
       toast.error("Could not rename category.");
@@ -394,11 +394,16 @@ export function NotesDashboard({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader>
+        <Card className="space-y-4">
+          <CardHeader className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base">
               <Tag className="h-4 w-4" /> Categories
             </CardTitle>
+            <p className="text-xs text-neutral-400">
+              {notes.length === 0
+                ? "No notes yet — counts appear as you add notes."
+                : `${notes.length} note${notes.length === 1 ? "" : "s"} across ${categories.filter((c) => Boolean(c.name)).length} categories · tap to filter · pencil to rename`}
+            </p>
           </CardHeader>
           <CardContent>
             {categories.length === 0 ? (
@@ -409,19 +414,64 @@ export function NotesDashboard({
                   .filter((c) => Boolean(c.name))
                   .map((c) => {
                     const count = notes.filter((n) => n.category === c.name).length;
+                    const active = filterCategory === c.name;
+                    if (editingCategory === c.name) {
+                      return (
+                        <span key={c.name} className="inline-flex items-center gap-1 rounded-md border border-primary-300 bg-white px-1.5 py-0.5">
+                          <Input
+                            autoFocus
+                            value={categoryDraft}
+                            onChange={(event) => setCategoryDraft(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") { event.preventDefault(); void commitRenameCategory(c.name, categoryDraft); }
+                              else if (event.key === "Escape") setEditingCategory(null);
+                            }}
+                            aria-label={`Rename category ${c.name}`}
+                            className="h-6 w-32 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
+                          />
+                          <button
+                            type="button"
+                            aria-label="Save rename"
+                            disabled={renaming}
+                            onClick={() => void commitRenameCategory(c.name, categoryDraft)}
+                            className="rounded p-0.5 text-success-dark hover:bg-success-light"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Cancel rename"
+                            onClick={() => setEditingCategory(null)}
+                            className="rounded p-0.5 text-neutral-400 hover:bg-neutral-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      );
+                    }
                     return (
-                      <button
-                        key={c.name}
-                        type="button"
-                        title={`Rename ${c.name}`}
-                        aria-label={`Rename category ${c.name}`}
-                        onClick={() => { setRenameFrom(c.name); setRenameTo(c.name); }}
-                      >
-                        <Badge variant="default" className="gap-1">
-                          {c.name} · {count}
-                          <Pencil className="h-3 w-3 text-neutral-400" />
-                        </Badge>
-                      </button>
+                      <span key={c.name} className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          title={`Filter by ${c.name}`}
+                          aria-label={`Filter by ${c.name}`}
+                          aria-pressed={active}
+                          onClick={() => setFilterCategory(active ? "all" : c.name)}
+                        >
+                          <Badge variant={active ? "secondary" : "default"} className="gap-1">
+                            {c.name} · {count}
+                          </Badge>
+                        </button>
+                        <button
+                          type="button"
+                          title={`Rename ${c.name}`}
+                          aria-label={`Rename category ${c.name}`}
+                          onClick={() => { setEditingCategory(c.name); setCategoryDraft(c.name); }}
+                          className="rounded-md p-1 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-700"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      </span>
                     );
                   })}
               </div>
@@ -616,34 +666,6 @@ export function NotesDashboard({
                   {isPending ? "Saving..." : editing ? "Save" : "Create"}
                 </Button>
               </div>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={renameFrom !== null} onOpenChange={(v) => { if (!v) setRenameFrom(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename category</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={submitRenameCategory} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="category-name">Name</Label>
-              <Input
-                id="category-name"
-                value={renameTo}
-                onChange={(event) => setRenameTo(event.target.value)}
-                placeholder="Category name"
-                required
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setRenameFrom(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={renaming}>
-                {renaming ? "Renaming..." : "Rename"}
-              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
