@@ -371,18 +371,18 @@ export function NotesDashboard({
                 .sort((a, b) => b.is_pinned - a.is_pinned)
                 .map((n) => (
                   <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-primary-50/50" : ""}`}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
-                          {n.is_pinned ? <Pin className="h-3 w-3 text-primary-600" /> : null}
-                          {n.title}
-                          {legacyIds.has(n.id) ? <Badge variant="warning">Needs encryption upgrade</Badge> : null}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
+                          {n.is_pinned ? <Pin className="h-3 w-3 shrink-0 text-primary-600" /> : null}
+                          <span className="truncate">{n.title}</span>
                         </p>
-                        <Badge variant="default" className="mt-1">
-                          {n.category}
-                        </Badge>
+                        <span className="shrink-0 text-xs text-neutral-400">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
                       </div>
-                      <span className="text-xs text-neutral-400">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="default">{n.category}</Badge>
+                        {legacyIds.has(n.id) ? <Badge variant="warning">Needs encryption upgrade</Badge> : null}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => void openEdit(n)}>
