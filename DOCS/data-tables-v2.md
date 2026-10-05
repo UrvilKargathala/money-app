@@ -437,7 +437,9 @@ Child tables; both get `user_id` + version + audit. Rollover references from_bud
 | user_id | INTEGER | FK users, NOT NULL |
 | bill_id | UUID | FK bills ON DELETE CASCADE |
 | days_before | INTEGER | CHECK >= 0 |
-| is_active | INTEGER | DEFAULT 1 |
+| channel | TEXT | NOT NULL DEFAULT 'in_app' (008; code-read) |
+| is_enabled | INTEGER | NOT NULL DEFAULT 1 (008; code-read) |
+| is_active | INTEGER | DEFAULT 1 | Legacy, unused by code |
 | created_at | TIMESTAMPTZ | |
 
 ### subscription_audits (canonical; was `subscription_audit_log`)

@@ -756,6 +756,8 @@ TABLES: list[tuple[str, str]] = [
             user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
             bill_id UUID NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
             days_before INTEGER CHECK (days_before >= 0),
+            channel TEXT NOT NULL DEFAULT 'in_app',
+            is_enabled INTEGER NOT NULL DEFAULT 1,
             is_active INTEGER DEFAULT 1,
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )

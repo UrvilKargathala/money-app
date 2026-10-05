@@ -27,15 +27,16 @@ export async function listBillReminders(
   return result.rows;
 }
 
-export function insertBillReminder(
+export async function insertBillReminder(
   q: Queryable,
   params: { userId: number; billId: string; daysBefore: number; channel: string; isEnabled: number }
-) {
-  return q.query<{ id: string }>(
+): Promise<string> {
+  const result = await q.query<{ id: string }>(
     `INSERT INTO bill_reminders (user_id, bill_id, days_before, channel, is_enabled)
      VALUES ($1, $2::uuid, $3, $4, $5) RETURNING id`,
     [params.userId, params.billId, params.daysBefore, params.channel, params.isEnabled]
   );
+  return result.rows[0].id;
 }
 
 export function updateBillReminder(
