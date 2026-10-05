@@ -13,7 +13,8 @@ import { SipFormDialog } from "./sip-form-dialog";
 import { DividendFormDialog } from "./dividend-form-dialog";
 import { PriceHistoryDialog } from "./price-history-dialog";
 import { formatINR, formatDate } from "@/lib/format";
-import { TrendingUp, Plus, Wallet, Calendar, Coins, PieChart, AlertTriangle, LineChartIcon, History } from "lucide-react";
+import { TrendingUp, Plus, Wallet, Calendar, Coins, PieChart, AlertTriangle, LineChartIcon, History, MoreVertical, Pencil, Trash2, Pause, Play } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { deleteInvestmentAction, deleteSipAction, pauseSip, resumeSip, logInstallment, deleteDividendAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -331,26 +332,53 @@ export function InvestmentsDashboard({
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {sips.map((sip) => (
                 <Card key={sip.id} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-semibold font-heading text-neutral-900">{sip.investment_name}</p>
-                      <p className="text-xs text-neutral-500">
-                        {sip.frequency} • {formatINR(Number(sip.amount))} • next {formatDate(sip.next_date)} • {sip.end_date ? `ends ${formatDate(sip.end_date)}` : "Ongoing"}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 space-y-1.5">
+                      <p className="truncate text-sm font-semibold font-heading text-neutral-900">{sip.investment_name}</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="default">{sip.frequency}</Badge>
+                        <Badge variant="default">{formatINR(Number(sip.amount))}</Badge>
+                        <Badge variant="default">{sip.end_date ? `ends ${formatDate(sip.end_date)}` : "Ongoing"}</Badge>
+                      </div>
+                      <p className={`text-xs ${sip.days_until_next != null && sip.days_until_next < 0 ? "text-error-dark font-medium" : sip.days_until_next != null && sip.days_until_next <= 7 ? "text-warning-dark font-medium" : "text-neutral-400"}`}>
+                        Next: {formatDate(sip.next_date)}
+                        {sip.days_until_next != null && (sip.days_until_next === 0 ? " • Due today" : sip.days_until_next > 0 ? ` • Due in ${sip.days_until_next} days` : ` • Overdue ${Math.abs(sip.days_until_next)} days`)}
                       </p>
                     </div>
-                    <Badge variant={sip.status === "active" ? "success" : sip.status === "paused" ? "warning" : "default"}>{sip.status}</Badge>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge variant={sip.status === "active" ? "success" : sip.status === "paused" ? "warning" : "default"}>{sip.status}</Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${sip.investment_name}`}>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {sip.status === "active" && (
+                            <DropdownMenuItem onClick={() => handlePause(sip.id)}>
+                              <Pause className="h-4 w-4" /> Pause
+                            </DropdownMenuItem>
+                          )}
+                          {sip.status === "paused" && (
+                            <DropdownMenuItem onClick={() => handleResume(sip.id)}>
+                              <Play className="h-4 w-4" /> Resume
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => {
+                            setEditingSip(sip);
+                            setSipOpen(true);
+                          }}>
+                            <Pencil className="h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleDeleteSip(sip.id)} className="text-error">
+                            <Trash2 className="h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {sip.status === "active" && (
-                      <Button variant="outline" size="sm" onClick={() => handlePause(sip.id)}>
-                        Pause
-                      </Button>
-                    )}
-                    {sip.status === "paused" && (
-                      <Button variant="outline" size="sm" onClick={() => handleResume(sip.id)}>
-                        Resume
-                      </Button>
-                    )}
+                  <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -362,25 +390,7 @@ export function InvestmentsDashboard({
                     >
                       Log installment
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingSip(sip);
-                        setSipOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDeleteSip(sip.id)}>
-                      Delete
-                    </Button>
                   </div>
-                  {sip.days_until_next != null && (
-                    <p className="text-xs text-neutral-400">
-                      {sip.days_until_next === 0 ? "Due today" : sip.days_until_next > 0 ? `Due in ${sip.days_until_next} days` : `Overdue ${Math.abs(sip.days_until_next)} days`}
-                    </p>
-                  )}
                 </Card>
               ))}
             </div>

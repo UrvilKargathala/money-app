@@ -40,15 +40,14 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
 
   return (
     <Card className="p-4 space-y-3">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-semibold font-heading text-neutral-900">{investment.name}</p>
-          <p className="text-xs text-neutral-500">
-            {investment.type} • {investment.category} • {Number(investment.units)} units
-          </p>
-          <Badge variant="info" className="mt-1">
-            {investment.type}
-          </Badge>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 space-y-1.5">
+          <p className="truncate text-sm font-semibold font-heading text-neutral-900">{investment.name}</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="default">{investment.type}</Badge>
+            <Badge variant="default">{investment.category}</Badge>
+            <Badge variant="default">{Number(investment.units)} units</Badge>
+          </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -72,13 +71,13 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-center">
-        <div className="rounded-lg bg-neutral-50 p-3">
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
           <p className="text-xs text-neutral-500">Invested</p>
-          <p className="text-sm font-bold font-heading">{formatINR(invested)}</p>
+          <p className="text-base font-bold font-heading text-neutral-900">{formatINR(invested)}</p>
         </div>
-        <div className="rounded-lg bg-primary-50 p-3">
+        <div className="rounded-lg border border-primary-200 bg-primary-50 p-3">
           <p className="text-xs text-primary-700">Current</p>
-          <p className="text-sm font-bold font-heading text-primary-700">{formatINR(current)}</p>
+          <p className="text-base font-bold font-heading text-primary-700">{formatINR(current)}</p>
         </div>
       </div>
 
