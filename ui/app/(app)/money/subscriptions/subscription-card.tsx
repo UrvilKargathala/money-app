@@ -90,11 +90,10 @@ export function SubscriptionCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {statusBadge(sub.status)}
-          <p className="text-xs text-neutral-500">
-            {sub.frequency} • {sub.account_name || "No account"}
-          </p>
+          <Badge variant="default">{sub.frequency}</Badge>
+          <Badge variant="default">{sub.account_name || "No account"}</Badge>
         </div>
         <p className="text-xs text-neutral-400">
           Next: {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")} • {sub.days_until_renewal >= 0 ? `Renews in ${sub.days_until_renewal}d` : "Overdue"}
