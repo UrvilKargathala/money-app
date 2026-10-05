@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { toast } from "sonner";
 
 type Account = { id: string; name: string };
@@ -242,20 +243,29 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
     }
   }
 
-  async function rollbackBatch(batchId: string) {
-    if (!confirm("Roll back this import? Imported transactions and unresolved import rows will be removed.")) return;
-    setHistoryBusy(true);
-    try {
-      const res = await fetch(`/api/import-batches/${batchId}/rollback`, { method: "POST" });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Could not roll back import.");
-      toast.success(`Rolled back ${body.deleted ?? 0} imported transactions`);
-      await loadHistory(); onSuccess();
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not roll back import."); }
-    finally { setHistoryBusy(false); }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  function rollbackBatch(batchId: string) {
+    askConfirm({
+      title: "Roll back this import?",
+      description: "Imported transactions and unresolved import rows will be removed. This cannot be undone.",
+      confirmLabel: "Roll back",
+      onConfirm: async () => {
+        setHistoryBusy(true);
+        try {
+          const res = await fetch(`/api/import-batches/${batchId}/rollback`, { method: "POST" });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(body.error || "Could not roll back import.");
+          toast.success(`Rolled back ${body.deleted ?? 0} imported transactions`);
+          await loadHistory(); onSuccess();
+        } catch (error) { toast.error(error instanceof Error ? error.message : "Could not roll back import."); }
+        finally { setHistoryBusy(false); }
+      },
+    });
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
@@ -326,5 +336,7 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
         <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button></DialogFooter>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+    </>
   );
 }

@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
 type Sub = {
   id: string;
@@ -508,14 +509,22 @@ export function SubscriptionsDashboard({
     });
   };
 
-  const handleCancel = async (id: string) => {
-    if (!confirm("Cancel this subscription?")) return;
-    const res = await cancelSubscriptionAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Subscription cancelled");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleCancel = (id: string) => {
+    askConfirm({
+      title: "Cancel this subscription?",
+      description: "Renewal tracking stops. You can re-add it later.",
+      confirmLabel: "Cancel subscription",
+      onConfirm: async () => {
+        const res = await cancelSubscriptionAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Subscription cancelled");
+          router.refresh();
+        }
+      },
+    });
   };
   const handlePause = async (id: string) => {
     const res = await pauseSubscriptionAction(id);
@@ -625,6 +634,7 @@ export function SubscriptionsDashboard({
       <SubscriptionFormDialog open={formOpen} onOpenChange={setFormOpen} subscription={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
       <SubscriptionPaymentsDialog sub={paymentsSub} open={!!paymentsSub} onOpenChange={(v) => !v && setPaymentsSub(null)} />
       <SnoozeDialog sub={snoozeSub} open={!!snoozeSub} onOpenChange={(v) => !v && setSnoozeSub(null)} />
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }

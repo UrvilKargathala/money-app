@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
 type Bill = {
   id: string;
@@ -237,29 +238,33 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
     }
   };
 
-  const handleDelete = async (reminderId: string) => {
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (reminderId: string) => {
     if (!bill) return;
-    if (!confirm("Delete reminder?")) return;
-    // try direct fetch first, fallback to server action
-    let res = await fetch(`/api/bills/${bill.id}/reminders/${reminderId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const actionRes = await deleteReminderAction(bill.id, reminderId);
-      if (actionRes?.error) {
-        toast.error(actionRes.error);
-        return;
-      }
-      toast.success("Reminder deleted");
-      load();
-      router.refresh();
-      return;
-    }
-    toast.success("Reminder deleted");
-    load();
-    router.refresh();
+    askConfirm({
+      title: "Delete reminder?",
+      description: "This reminder will stop firing. This cannot be undone.",
+      onConfirm: async () => {
+        // try direct fetch first, fallback to server action
+        const res = await fetch(`/api/bills/${bill.id}/reminders/${reminderId}`, { method: "DELETE" });
+        if (!res.ok) {
+          const actionRes = await deleteReminderAction(bill.id, reminderId);
+          if (actionRes?.error) {
+            toast.error(actionRes.error);
+            return;
+          }
+        }
+        toast.success("Reminder deleted");
+        load();
+        router.refresh();
+      },
+    });
   };
 
   if (!bill) return null;
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -346,6 +351,8 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
         </div>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+    </>
   );
 }
 

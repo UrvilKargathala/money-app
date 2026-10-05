@@ -11,6 +11,7 @@ import { TransactionFilters } from "./transaction-filters";
 import { formatINR } from "@/lib/format";
 import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload, WandSparkles, Tags } from "lucide-react";
 import { TransactionImportDialog } from "./transaction-import-dialog";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { deleteTransactionAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -103,14 +104,21 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     setFormOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this transaction?")) return;
-    const res = await deleteTransactionAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Transaction deleted");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete this transaction?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteTransactionAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Transaction deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
   const clearFilters = () => {
@@ -122,15 +130,30 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   };
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const bulk = async (action: "categorize" | "tag" | "delete") => {
-    if (action === "delete" && !confirm(`Delete ${selected.size} selected transactions?`)) return;
+  const runBulk = async (action: "categorize" | "tag" | "delete") => {
     setBulkBusy(true);
     try { const res = await fetch("/api/transactions/bulk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: Array.from(selected), action, ...(action === "categorize" ? { category_id: bulkCategory } : {}), ...(action === "tag" ? { tag_ids: [bulkTag] } : {}) }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Bulk action failed."); toast.success(`Updated ${body.affected} transactions`); setSelected(new Set()); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Bulk action failed."); } finally { setBulkBusy(false); }
   };
-  const mergeSelected = async () => {
+  const bulk = (action: "categorize" | "tag" | "delete") => {
+    if (action !== "delete") { void runBulk(action); return; }
+    askConfirm({
+      title: `Delete ${selected.size} selected transactions?`,
+      description: "This cannot be undone.",
+      onConfirm: () => runBulk("delete"),
+    });
+  };
+  const runMergeSelected = async () => {
     const ids = Array.from(selected); if (ids.length !== 2) return;
-    if (!confirm("Merge the second selected transaction into the first? The second will be removed.")) return;
     setBulkBusy(true); try { const res = await fetch("/api/transactions/duplicates/merge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ existing_transaction_id: ids[0], duplicate_transaction_id: ids[1] }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || "Could not merge transactions."); toast.success("Duplicate transactions merged"); setSelected(new Set()); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Could not merge transactions."); } finally { setBulkBusy(false); }
+  };
+  const mergeSelected = () => {
+    const ids = Array.from(selected); if (ids.length !== 2) return;
+    askConfirm({
+      title: "Merge these transactions?",
+      description: "The second selected transaction will be merged into the first and removed.",
+      confirmLabel: "Merge",
+      onConfirm: runMergeSelected,
+    });
   };
 
   return (
@@ -246,6 +269,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
       <TransactionImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
       <TransactionToolsDialog open={!!toolsTransaction} onOpenChange={(value) => { if (!value) setToolsTransaction(null); }} transaction={toolsTransaction} tags={tags} categories={categories} />
       <MerchantRulesDialog open={rulesOpen} onOpenChange={setRulesOpen} mappings={merchantMappings} categories={categories} />
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }
