@@ -1524,39 +1524,14 @@ export async function getNoteTemplates(): Promise<{
   return apiJson("/api/note-templates");
 }
 
+// Server-only user-template read (used by the notes page). Mutations live in
+// "@/lib/note-user-templates", which is client-safe. NOTE: this module must
+// stay server-only (next/headers + API app imports) - no "use client" module
+// may import it, or the browser bundle breaks at runtime.
 export type NoteUserTemplate = { id: string; title: string; category: string; content: string; version: number };
 
 export async function getNoteUserTemplates(): Promise<{ templates: NoteUserTemplate[] } | null> {
   return apiJson("/api/notes/templates");
-}
-
-export async function createNoteUserTemplate(payload: { title: string; category: string; content: string }): Promise<{ success: boolean; template: { id: string } } | null> {
-  try {
-    const res = await apiFetchRaw("/api/notes/templates", { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; template: { id: string } };
-  } catch {
-    return null;
-  }
-}
-
-export async function updateNoteUserTemplate(id: string, payload: { title?: string; category?: string; content?: string; version: number }): Promise<boolean> {
-  try {
-    const res = await apiFetchRaw(`/api/notes/templates/${id}`, { method: "PATCH", json: payload });
-    if (!res.ok) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function deleteNoteUserTemplate(id: string): Promise<boolean> {
-  try {
-    const res = await apiFetchRaw(`/api/notes/templates/${id}`, { method: "DELETE" });
-    return res.ok;
-  } catch {
-    return false;
-  }
 }
 
 export async function getNoteAttachments(noteId: string): Promise<{

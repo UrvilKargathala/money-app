@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
 import { FileText, Plus, Pin, Trash2, Search, RotateCcw, Tag, LayoutTemplate, LockKeyhole, ShieldCheck, Paperclip, Download, Eye, Pencil } from "lucide-react";
 import { deleteNoteAction, pinNoteAction, unpinNoteAction, restoreNoteAction, purgeNoteAction } from "./actions";
-import { createNoteUserTemplate, deleteNoteUserTemplate, updateNoteUserTemplate, type NoteUserTemplate } from "@/lib/api-client";
+import { createNoteUserTemplate, deleteNoteUserTemplate, updateNoteUserTemplate, type NoteUserTemplate } from "@/lib/note-user-templates";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
