@@ -69,7 +69,6 @@ export function ExportDashboard({
   const [dateTo, setDateTo] = useState("");
   const [creating, setCreating] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(false);
-  const [progressMap, setProgressMap] = useState<Record<string, { progress: number; size_estimate?: number | null }>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Sync when server data changes
@@ -85,29 +84,10 @@ export function ExportDashboard({
     } catch {}
   }, []);
 
-  // Poll progress for non-terminal jobs
-  const activeIds = jobs.filter((j) => ["queued", "processing", "pending", "running"].includes((j.status || "").toLowerCase())).map((j) => j.id);
-  useEffect(() => {
-    if (activeIds.length === 0) return;
-    let cancelled = false;
-    const tick = async () => {
-      for (const id of activeIds) {
-        try {
-          const res = await fetch(`/api/export/jobs/${encodeURIComponent(id)}/progress`, { cache: "no-store" });
-          if (!res.ok) continue;
-          const d = (await res.json()) as { progress?: number; progress_pct?: number; bytes?: number; size_estimate?: number | null };
-          const pct = typeof d.progress_pct === "number" ? d.progress_pct : typeof d.progress === "number" ? (d.progress > 1 ? d.progress : d.progress * 100) : 0;
-          if (!cancelled) setProgressMap((m) => ({ ...m, [id]: { progress: pct, size_estimate: d.size_estimate ?? null } }));
-        } catch {}
-      }
-    };
-    tick();
-    const iv = setInterval(tick, 3000);
-    return () => {
-      cancelled = true;
-      clearInterval(iv);
-    };
-  }, [activeIds.join(",")]);
+  // Note: no progress polling here by design. Export jobs are generated
+  // synchronously and stored as completed, and downloads regenerate on
+  // demand. The list refreshes via refreshJobs() after every user action,
+  // which is the only freshness signal needed.
 
   async function handleCreate() {
     setCreating(true);
@@ -394,11 +374,11 @@ export function ExportDashboard({
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-500">{jobs.length} jobs • progress polled every 3s for queued/processing • actions: download / retry / delete</p>
+              <p className="text-xs text-neutral-500">{jobs.length} jobs • status reflects completed exports • actions: download / retry / delete</p>
               <div className="space-y-3 max-h-[560px] overflow-auto pr-1">
                 {jobs.map((j) => {
-                  const pct = progressMap[j.id]?.progress ?? formatProgress(j);
-                  const est = progressMap[j.id]?.size_estimate ?? j.file_size ?? null;
+                  const pct = formatProgress(j);
+                  const est = j.file_size ?? null;
                   const s = (j.status || "unknown").toLowerCase();
                   const canDownload = ["completed", "done", "success", "ready"].includes(s);
                   const canRetry = ["failed", "error"].includes(s);
@@ -441,9 +421,6 @@ export function ExportDashboard({
                           <span>{Math.round(pct)}%</span>
                         </div>
                         <Progress value={pct} />
-                        <p className="text-[11px] text-neutral-400">
-                          GET /api/export/jobs/{j.id}/progress → {Math.round(pct)}%{est != null ? `, est ${est} bytes` : ""} • status {j.status}
-                        </p>
                       </div>
                     </div>
                   );
