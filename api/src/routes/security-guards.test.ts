@@ -154,6 +154,7 @@ describe("security guard: tenant scoping in query modules", () => {
     "report_templates",
     "secure_notes",
     "note_attachments",
+    "note_user_templates",
     "merchant_mappings",
     "recurring_transaction_templates",
     "import_batches",

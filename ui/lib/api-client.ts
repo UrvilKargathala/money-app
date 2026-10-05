@@ -1519,9 +1519,44 @@ export async function patchNoteCategories(payload: { categories: { id?: string; 
 }
 
 export async function getNoteTemplates(): Promise<{
-  templates: { id: string; title: string; category: string; content?: string | null }[];
+  templates: { template_code: string; name: string; description: string | null; fields: { fields?: { key: string; label: string }[] } | null }[];
 } | null> {
   return apiJson("/api/note-templates");
+}
+
+export type NoteUserTemplate = { id: string; title: string; category: string; content: string; version: number };
+
+export async function getNoteUserTemplates(): Promise<{ templates: NoteUserTemplate[] } | null> {
+  return apiJson("/api/notes/templates");
+}
+
+export async function createNoteUserTemplate(payload: { title: string; category: string; content: string }): Promise<{ success: boolean; template: { id: string } } | null> {
+  try {
+    const res = await apiFetchRaw("/api/notes/templates", { method: "POST", json: payload });
+    if (!res.ok) return null;
+    return (await res.json()) as { success: boolean; template: { id: string } };
+  } catch {
+    return null;
+  }
+}
+
+export async function updateNoteUserTemplate(id: string, payload: { title?: string; category?: string; content?: string; version: number }): Promise<boolean> {
+  try {
+    const res = await apiFetchRaw(`/api/notes/templates/${id}`, { method: "PATCH", json: payload });
+    if (!res.ok) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteNoteUserTemplate(id: string): Promise<boolean> {
+  try {
+    const res = await apiFetchRaw(`/api/notes/templates/${id}`, { method: "DELETE" });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function getNoteAttachments(noteId: string): Promise<{

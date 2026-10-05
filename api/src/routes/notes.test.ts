@@ -228,6 +228,89 @@ describe("note templates lookup", () => {
   });
 });
 
+describe("user note templates CRUD", () => {
+  type Tpl = { id: string; title: string; category: string; content: string; version: number };
+
+  it("creates, lists, updates (version-guarded) and deletes with isolation", async () => {
+    const created = await postAs(db.alice, "/api/notes/templates", {
+      title: "Bank Login",
+      category: "financial",
+      content: "URL: \nUsername: \n",
+    });
+    expect(created.status).toBe(200);
+    const templateId = ((await created.json()) as { template: { id: string } }).template.id;
+
+    const list = (await (
+      await requestAs(db.alice, "/api/notes/templates")
+    ).json()) as { templates: Tpl[] };
+    expect(list.templates.map((t) => t.title)).toContain("Bank Login");
+
+    // Duplicate title for the same user -> 409.
+    const dup = await postAs(db.alice, "/api/notes/templates", {
+      title: "Bank Login",
+      category: "financial",
+      content: "",
+    });
+    expect(dup.status).toBe(409);
+
+    // Bob cannot see or touch alice's template.
+    const bobList = (await (
+      await requestAs(db.bob, "/api/notes/templates")
+    ).json()) as { templates: Tpl[] };
+    expect(bobList.templates.find((t) => t.id === templateId)).toBeUndefined();
+    expect((await requestAs(db.bob, `/api/notes/templates/${templateId}`)).status).toBe(404);
+    expect(
+      (
+        await requestAs(db.bob, `/api/notes/templates/${templateId}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ title: "Hijacked", version: 1 }),
+        })
+      ).status
+    ).toBe(404);
+    expect(
+      (await requestAs(db.bob, `/api/notes/templates/${templateId}`, { method: "DELETE" })).status
+    ).toBe(404);
+
+    // Stale version -> 409; fresh version proceeds.
+    const stale = await requestAs(db.alice, `/api/notes/templates/${templateId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ content: "stale", version: 999 }),
+    });
+    expect(stale.status).toBe(409);
+    const patched = await requestAs(db.alice, `/api/notes/templates/${templateId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ content: "URL: \nUsername: \nPassword: \n", version: 1 }),
+    });
+    expect(patched.status).toBe(200);
+
+    const single = (await (
+      await requestAs(db.alice, `/api/notes/templates/${templateId}`)
+    ).json()) as { template: Tpl };
+    expect(single.template.content).toContain("Password");
+    expect(single.template.version).toBe(2);
+
+    const del = await requestAs(db.alice, `/api/notes/templates/${templateId}`, { method: "DELETE" });
+    expect(del.status).toBe(200);
+    expect((await requestAs(db.alice, `/api/notes/templates/${templateId}`)).status).toBe(404);
+  });
+
+  it("validates the title on create and update", async () => {
+    const res = await postAs(db.alice, "/api/notes/templates", { title: "  ", content: "x" });
+    expect(res.status).toBe(400);
+    const created = await postAs(db.alice, "/api/notes/templates", { title: "T", content: "" });
+    const templateId = ((await created.json()) as { template: { id: string } }).template.id;
+    const bad = await requestAs(db.alice, `/api/notes/templates/${templateId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: "", version: 1 }),
+    });
+    expect(bad.status).toBe(400);
+  });
+});
+
 describe("vault key lifecycle", () => {
   it("wrapped-key starts uninitialized; rewrap stores params + sealed recovery copy", async () => {
     const before = (await (

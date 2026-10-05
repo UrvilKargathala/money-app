@@ -807,6 +807,17 @@ System lookup defining the structured note templates. Seeded rows: `password_log
 | icon | TEXT | |
 | sort_order | INTEGER | DEFAULT 0 |
 
+### note_user_templates
+User-created note starters. Stored as **plaintext presets** (title/category/content skeleton) — content is encrypted only once instantiated into a secure note. Unique per (user, title); version-guarded updates.
+
+| id | UUID | PK |
+| user_id | INTEGER | FK users, NOT NULL, CASCADE |
+| title | TEXT | NOT NULL, unique per user |
+| category | TEXT | NOT NULL DEFAULT 'other' |
+| content | TEXT | NOT NULL DEFAULT '' | Skeleton text, plaintext |
+| version | INTEGER | NOT NULL DEFAULT 1 | Optimistic guard |
+| created_at / updated_at | TIMESTAMPTZ | |
+
 ### note_attachments
 File attachments on notes (policy PDFs, card photos). Files are encrypted at rest; the row stores the storage path. Log-style table (no version).
 

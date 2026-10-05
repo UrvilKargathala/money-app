@@ -1,7 +1,14 @@
 import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { isUniqueViolation, readJson } from "./helpers";
+import {
+  createNoteUserTemplate,
+  deleteNoteUserTemplate,
+  getNoteUserTemplateById,
+  listNoteUserTemplates,
+  updateNoteUserTemplate,
+} from "../queries/note-user-templates";
 import { registerNoteAttachmentRoutes } from "./note-attachments";
 import { csvEscape, isoDate } from "../utils/format";
 import { NOTE_CATEGORIES } from "../constants";
@@ -159,6 +166,126 @@ notes.get("/export", requireAuth, async (c) => {
       "content-disposition": `attachment; filename="secure-notes-${isoDate(new Date())}.csv"`,
     },
   });
+});
+
+// ---- User templates (plaintext starters; encryption applies on note creation) ----
+// NOTE: static /templates routes must stay ABOVE /:id - otherwise "templates"
+// binds to the :id param and the uuid cast throws a 500.
+
+notes.get("/templates", requireAuth, async (c) => {
+  const user = c.get("user");
+  return c.json({ templates: await listNoteUserTemplates(user.user_id) });
+});
+
+notes.post("/templates", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+
+  const title = String(body.title ?? "").trim();
+  const category = String(body.category ?? "").trim() || "other";
+  const content = body.content === undefined || body.content === null ? "" : String(body.content);
+
+  const fieldErrors: Record<string, string> = {};
+  if (!title) {
+    fieldErrors.title = "Please enter a template name.";
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    return c.json({ fieldErrors }, 400);
+  }
+
+  try {
+    const id = await createNoteUserTemplate({
+      userId: user.user_id,
+      title,
+      category,
+      content,
+    });
+    return c.json({ success: true, template: { id } });
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return c.json(
+        { error: "You already have a template with this name." },
+        409
+      );
+    }
+    console.error("[api] create note template failed:", err);
+    return c.json(
+      { error: "Could not create the template. Please try again." },
+      500
+    );
+  }
+});
+
+notes.get("/templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const template = await getNoteUserTemplateById(user.user_id, c.req.param("id"));
+  if (!template) {
+    return c.json({ error: "Not found" }, 404);
+  }
+  return c.json({ template });
+});
+
+notes.patch("/templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await readJson(c);
+
+  const title = body.title === undefined ? undefined : String(body.title).trim();
+  const category = body.category === undefined ? undefined : String(body.category).trim() || "other";
+  const content = body.content === undefined || body.content === null ? undefined : String(body.content);
+  const version = Number(body.version ?? 1);
+
+  const fieldErrors: Record<string, string> = {};
+  if (title !== undefined && !title) {
+    fieldErrors.title = "Please enter a template name.";
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    return c.json({ fieldErrors }, 400);
+  }
+
+  try {
+    const existing = await getNoteUserTemplateById(user.user_id, id);
+    if (!existing) {
+      return c.json({ error: "Not found" }, 404);
+    }
+    const ok = await updateNoteUserTemplate({
+      userId: user.user_id,
+      id,
+      title,
+      category,
+      content,
+      version,
+    });
+    if (!ok) {
+      return c.json(
+        { error: "This template was modified elsewhere. Refresh and try again." },
+        409
+      );
+    }
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return c.json(
+        { error: "You already have a template with this name." },
+        409
+      );
+    }
+    console.error("[api] update note template failed:", err);
+    return c.json(
+      { error: "Could not update the template. Please try again." },
+      500
+    );
+  }
+
+  return c.json({ success: true });
+});
+
+notes.delete("/templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const ok = await deleteNoteUserTemplate(user.user_id, c.req.param("id"));
+  if (!ok) {
+    return c.json({ error: "Not found" }, 404);
+  }
+  return c.json({ success: true });
 });
 
 notes.get("/:id", requireAuth, async (c) => {

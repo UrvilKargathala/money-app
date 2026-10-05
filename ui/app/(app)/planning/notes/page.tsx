@@ -1,14 +1,15 @@
-import { getNotesData, getNotesTrash, getNoteCategories, getNoteTemplates } from "@/lib/api-client";
+import { getNotesData, getNotesTrash, getNoteCategories, getNoteTemplates, getNoteUserTemplates } from "@/lib/api-client";
 import { NotesDashboard } from "./notes-dashboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function NotesPage() {
-  const [data, trashData, categoriesData, templatesData] = await Promise.all([
+  const [data, trashData, categoriesData, templatesData, userTemplatesData] = await Promise.all([
     getNotesData(),
     getNotesTrash(),
     getNoteCategories(),
     getNoteTemplates(),
+    getNoteUserTemplates(),
   ]);
   return (
     <NotesDashboard
@@ -16,6 +17,7 @@ export default async function NotesPage() {
       trash={(trashData?.notes ?? []) as never}
       categories={(categoriesData?.categories ?? []) as never}
       templates={(templatesData?.templates ?? []) as never}
+      userTemplates={(userTemplatesData?.templates ?? []) as never}
     />
   );
 }

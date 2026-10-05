@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
 import { FileText, Plus, Pin, Trash2, Search, RotateCcw, Tag, LayoutTemplate, LockKeyhole, ShieldCheck, Paperclip, Download, Eye, Pencil } from "lucide-react";
 import { deleteNoteAction, pinNoteAction, unpinNoteAction, restoreNoteAction, purgeNoteAction } from "./actions";
+import { createNoteUserTemplate, deleteNoteUserTemplate, updateNoteUserTemplate, type NoteUserTemplate } from "@/lib/api-client";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -29,11 +30,13 @@ export function NotesDashboard({
   trash,
   categories,
   templates,
+  userTemplates,
 }: {
   notes: Note[];
   trash: Note[];
   categories: Category[];
   templates: Template[];
+  userTemplates: NoteUserTemplate[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -172,6 +175,80 @@ export function NotesDashboard({
     setContent(fields.map((f) => `${f.label}: `).join("\n"));
     setAttachments([]);
     setFormOpen(true);
+  };
+
+  // ---- User templates (plaintext starters) ----
+  const [tplOpen, setTplOpen] = useState(false);
+  const [tplEditing, setTplEditing] = useState<NoteUserTemplate | null>(null);
+  const [tplTitle, setTplTitle] = useState("");
+  const [tplCategory, setTplCategory] = useState("other");
+  const [tplContent, setTplContent] = useState("");
+  const [tplSaving, setTplSaving] = useState(false);
+
+  const applyUserTemplate = (t: NoteUserTemplate) => {
+    setEditing(null);
+    setNoteTitle(t.title);
+    setCategory(t.category || "other");
+    setContent(t.content || "");
+    setAttachments([]);
+    setFormOpen(true);
+  };
+
+  const openTemplateEditor = (t: NoteUserTemplate | null) => {
+    setTplEditing(t);
+    setTplTitle(t?.title ?? "");
+    setTplCategory(t?.category ?? "other");
+    setTplContent(t?.content ?? "");
+    setTplOpen(true);
+  };
+
+  const saveTemplate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const title = tplTitle.trim();
+    if (!title) return;
+    setTplSaving(true);
+    try {
+      if (tplEditing) {
+        const ok = await updateNoteUserTemplate(tplEditing.id, {
+          title,
+          category: tplCategory.trim() || "other",
+          content: tplContent,
+          version: tplEditing.version,
+        });
+        if (!ok) throw new Error("This template was modified elsewhere. Refresh and try again.");
+        toast.success("Template updated");
+      } else {
+        const res = await createNoteUserTemplate({
+          title,
+          category: tplCategory.trim() || "other",
+          content: tplContent,
+        });
+        if (!res) throw new Error("Could not create the template. Please try again.");
+        toast.success("Template created");
+      }
+      setTplOpen(false);
+      setTplEditing(null);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save the template.");
+    } finally {
+      setTplSaving(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string, title: string) => {
+    if (!confirm(`Delete template "${title}"?`)) return;
+    const ok = await deleteNoteUserTemplate(id);
+    if (ok) { toast.success("Template deleted"); router.refresh(); }
+    else toast.error("Could not delete the template.");
+  };
+
+  const saveNoteAsTemplate = async () => {
+    const title = noteTitle.trim();
+    if (!title) { toast.error("Give the note a title first."); return; }
+    const res = await createNoteUserTemplate({ title, category: category || "other", content });
+    if (res) { toast.success("Saved as template"); router.refresh(); }
+    else toast.error("Could not save the template. A template with this name may already exist.");
   };
   const openEdit = async (n: Note) => {
     if (!vaultKey) return;
@@ -357,15 +434,35 @@ export function NotesDashboard({
               <LayoutTemplate className="h-4 w-4" /> Templates
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {templates.length === 0 ? (
-              <p className="text-sm text-neutral-400">No templates</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {templates.map((t) => (
-                  <button key={t.template_code} type="button" title={t.description ?? t.name} onClick={() => applyTemplate(t)}><Badge variant="secondary">{t.name} · Use template</Badge></button>
-                ))}
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {userTemplates.map((t) => (
+                <span key={t.id} className="inline-flex items-center gap-1">
+                  <button type="button" title={`Use ${t.title}`} onClick={() => applyUserTemplate(t)}><Badge variant="secondary">{t.title} · Use template</Badge></button>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" aria-label={`Edit template ${t.title}`} onClick={() => openTemplateEditor(t)}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-error" aria-label={`Delete template ${t.title}`} onClick={() => void handleDeleteTemplate(t.id, t.title)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </span>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => openTemplateEditor(null)}>
+                <Plus className="h-3 w-3" /> New template
+              </Button>
+            </div>
+            {templates.length > 0 && (
+              <div className="space-y-1.5 border-t border-neutral-100 pt-3">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">Starters</p>
+                <div className="flex flex-wrap gap-2">
+                  {templates.map((t) => (
+                    <button key={t.template_code} type="button" title={t.description ?? t.name} onClick={() => applyTemplate(t)}><Badge variant="default">{t.name}</Badge></button>
+                  ))}
+                </div>
               </div>
+            )}
+            {userTemplates.length === 0 && templates.length === 0 && (
+              <p className="text-sm text-neutral-400">No templates</p>
             )}
           </CardContent>
         </Card>
@@ -507,13 +604,18 @@ export function NotesDashboard({
               <div className="space-y-2">{attachments.map(item => <div key={item.id} className="flex items-center justify-between rounded-lg border p-2 text-sm"><span className="truncate">{item.file_name}</span><div className="flex gap-1"><Button type="button" size="sm" variant="ghost" onClick={() => void openAttachment(item, true)}><Eye className="h-4 w-4" /><span className="sr-only">Preview</span></Button><Button type="button" size="sm" variant="ghost" onClick={() => void openAttachment(item, false)}><Download className="h-4 w-4" /><span className="sr-only">Download</span></Button><Button type="button" size="sm" variant="ghost" onClick={() => void removeAttachment(item)}><Trash2 className="h-4 w-4" /><span className="sr-only">Delete</span></Button></div></div>)}</div>
               <p className="text-xs text-neutral-400">Files are encrypted in this browser. Save a new note first, then edit it to add attachments.</p>
             </div>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
+            <DialogFooter className="sm:justify-between">
+              <Button type="button" variant="ghost" onClick={() => void saveNoteAsTemplate()}>
+                <LayoutTemplate className="h-4 w-4" /> Save as template
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : editing ? "Save" : "Create"}
-              </Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Saving..." : editing ? "Save" : "Create"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -541,6 +643,54 @@ export function NotesDashboard({
               </Button>
               <Button type="submit" disabled={renaming}>
                 {renaming ? "Renaming..." : "Rename"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tplEditing ? "Edit template" : "New template"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={saveTemplate} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tpl-title">Title *</Label>
+              <Input
+                id="tpl-title"
+                value={tplTitle}
+                onChange={(event) => setTplTitle(event.target.value)}
+                placeholder="Bank login, Passport"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tpl-category">Category</Label>
+              <Input
+                id="tpl-category"
+                value={tplCategory}
+                onChange={(event) => setTplCategory(event.target.value)}
+                placeholder="other"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tpl-content">Content skeleton</Label>
+              <Textarea
+                id="tpl-content"
+                value={tplContent}
+                onChange={(event) => setTplContent(event.target.value)}
+                placeholder={"Username: \nPassword: "}
+                className="min-h-[120px]"
+              />
+              <p className="text-xs text-neutral-400">Stored as a plaintext starter; encrypted once used in a note.</p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setTplOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={tplSaving}>
+                {tplSaving ? "Saving..." : tplEditing ? "Save" : "Create"}
               </Button>
             </DialogFooter>
           </form>

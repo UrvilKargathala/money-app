@@ -1272,6 +1272,22 @@ TABLES: list[tuple[str, str]] = [
         """,
     ),
     (
+        "note_user_templates",
+        """
+        CREATE TABLE note_user_templates (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            title TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'other',
+            content TEXT NOT NULL DEFAULT '',
+            version INTEGER NOT NULL DEFAULT 1,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT ux_note_user_templates_user_title UNIQUE (user_id, title)
+        )
+        """,
+    ),
+    (
         "note_attachments",
         """
         CREATE TABLE note_attachments (
