@@ -69,7 +69,6 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
             aria-label="Search commands"
             className="border-0 shadow-none focus-visible:ring-0 h-8 px-0"
           />
-          <span className="hidden sm:inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">ESC</span>
         </div>
 
         <div className="max-h-[380px] overflow-y-auto p-2">
@@ -143,7 +142,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
 
         <div className="border-t border-neutral-100 bg-neutral-50 px-4 py-2.5 flex items-center justify-between text-xs text-neutral-500">
-          <span>Press <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">↵</kbd> to select • <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">↑↓</kbd> navigate</span>
+          <span>Press <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">↵</kbd> to select • <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">↑↓</kbd> navigate • <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">ESC</kbd> to close</span>
           <span className="hidden sm:inline">{results.length} shortcuts</span>
         </div>
       </DialogContent>
