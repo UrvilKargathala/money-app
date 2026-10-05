@@ -19,6 +19,9 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Once per session: plan tier never changes mid-click, so refetching on
+  // every navigation only multiplied /users/me/plan traffic. Billing flows
+  // remount the provider tree on success, which re-runs this fetch.
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -28,7 +31,8 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
       setPlan(data.plan); setError(false); setLoading(false);
     }).catch((e) => { if (e.name !== "AbortError") { setError(true); setLoading(false); } });
     return () => controller.abort();
-  }, [pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const premium = true; // Plans are informational until billing is enabled.
   const premiumPage = ["/wealth/investments", "/wealth/debts", "/planning/tax", "/planning/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   return <MembershipContext.Provider value={{ premium, loading, plan }}>
