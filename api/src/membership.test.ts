@@ -12,9 +12,12 @@ describe("entitlements", () => {
   const app = new Hono();
   app.get("/premium", requireAuth, requirePremium, (c) => c.json({ success: true }));
   it("requires authentication", async () => { mocks.session.mockResolvedValue(null); expect((await app.request("/premium")).status).toBe(401); });
-  it("denies Starter", async () => { expect((await app.request("/premium")).status).toBe(403); });
+  // Feature gating is intentionally disabled until billing is enabled (002
+  // pre-launch open door; see requirePremium + membershipGuards). These tests
+  // pin the OPEN contract - flip them back to 403 with the billing launch.
+  it("admits Starter while gating is disabled", async () => { expect((await app.request("/premium")).status).toBe(200); });
   it.each(["monthly", "annual", "lifetime"])("gives %s the identical premium access", async (billing_cycle) => { mocks.query.mockResolvedValue({ rows: [{ plan_type: "premium", billing_cycle }] }); expect((await app.request("/premium")).status).toBe(200); });
-  it("does not use billing metadata to grant free users access", async () => { mocks.query.mockResolvedValue({ rows: [{ plan_type: "free", billing_cycle: "lifetime" }] }); expect((await app.request("/premium")).status).toBe(403); });
+  it("does not use billing metadata to grant free users access", async () => { mocks.query.mockResolvedValue({ rows: [{ plan_type: "free", billing_cycle: "lifetime" }] }); expect((await app.request("/premium")).status).toBe(200); });
 });
 describe("field-level guards", () => {
   const app = new Hono(); app.use("/api/*", membershipGuards);
@@ -22,10 +25,10 @@ describe("field-level guards", () => {
   app.get("/api/users/me/data-copy", (c) => c.json({ success: true }));
   const patch = (path: string, body: unknown) => app.request(path, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   it("allows in-app preferences", async () => expect((await patch("/api/notification-preferences", { preferences: [{ channel: "in_app", is_enabled: true }] })).status).toBe(200));
-  it("blocks mixed batches with email enabled", async () => expect((await patch("/api/notification-preferences", { preferences: [{ channel: "in_app", is_enabled: true }, { channel: "email", is_enabled: 1 }] })).status).toBe(403));
-  it("blocks direct email toggles", async () => expect((await patch("/api/notification-preferences/bill_reminder/email", {})).status).toBe(403));
+  it("admits mixed batches with email enabled while gating is disabled", async () => expect((await patch("/api/notification-preferences", { preferences: [{ channel: "in_app", is_enabled: true }, { channel: "email", is_enabled: 1 }] })).status).toBe(200));
+  it("admits direct email toggles while gating is disabled", async () => expect((await patch("/api/notification-preferences/bill_reminder/email", {})).status).toBe(200));
   it("allows disabling email", async () => expect((await patch("/api/notification-preferences", { preferences: [{ channel: "email", is_enabled: false }] })).status).toBe(200));
-  it("blocks widget edits", async () => expect((await patch("/api/users/me/settings", { widget_layout: [] })).status).toBe(403));
+  it("admits widget edits while gating is disabled", async () => expect((await patch("/api/users/me/settings", { widget_layout: [] })).status).toBe(200));
   it("preserves privacy export access", async () => expect((await app.request("/api/users/me/data-copy")).status).toBe(200));
   it("preserves authentication status", async () => { mocks.session.mockResolvedValue(null); expect((await patch("/api/users/me/settings", {})).status).toBe(401); });
   it("rejects malformed preference entries", async () => expect((await patch("/api/notification-preferences", { preferences: [null] })).status).toBe(400));
