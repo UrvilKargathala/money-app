@@ -15,7 +15,8 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { formatINR } from "@/lib/format";
-import { BarChart3, TrendingUp, Wallet } from "lucide-react";
+import { BarChart3, Download, TrendingUp, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ReportsCharts from "./reports-charts";
 import { PremiumReports } from "@/components/premium-reports";
 import { Paywall, TrialBanner } from "@/components/common/paywall";
@@ -126,14 +127,17 @@ export default async function ReportsPage() {
           <CardTitle>Export</CardTitle>
           <CardDescription>Download reports</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <a href="/api/reports/export" download className="text-sm text-primary-600 hover:underline">
-            Download CSV
-          </a>
-          <br />
-          <a href="/api/reports/cashflow/export" download className="text-sm text-primary-600 hover:underline">
-            Download Cashflow CSV
-          </a>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button variant="secondary" asChild>
+            <a href="/api/reports/export" download>
+              <Download className="h-4 w-4" /> Download CSV
+            </a>
+          </Button>
+          <Button variant="secondary" asChild>
+            <a href="/api/reports/cashflow/export" download>
+              <Download className="h-4 w-4" /> Download Cashflow CSV
+            </a>
+          </Button>
         </CardContent>
       </Card>
       <ReportsManager templates={templateData?.templates ?? []} exports={exportData?.exports ?? []} initialFilters={((settingsData as { report_filters?: unknown[] } | null)?.report_filters ?? []) as never} />
