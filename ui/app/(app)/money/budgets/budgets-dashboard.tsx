@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { BudgetCard } from "./budget-card";
 import { BudgetFormDialog } from "./budget-form-dialog";
 import { formatINR } from "@/lib/format";
@@ -58,14 +59,21 @@ export function BudgetsDashboard({
   const [editing, setEditing] = useState<Budget | null>(null);
   const [breakdown, setBreakdown] = useState<{ id: string; items: { name: string; spent: number; share_pct: number }[] } | null>(null);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this budget?")) return;
-    const res = await deleteBudgetAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Budget deleted");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete this budget?",
+      description: "Rollovers and alerts for this budget go with it. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteBudgetAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Budget deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
   const handleBreakdown = async (id: string) => {
@@ -203,6 +211,7 @@ export function BudgetsDashboard({
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }
