@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileArchive, RefreshCw, Trash2, RotateCcw, Package, Activity, FileSpreadsheet } from "lucide-react";
+import { StatCard } from "@/components/common/stat-card";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { toast } from "sonner";
 
@@ -18,19 +19,17 @@ type ModuleInfo = { name: string; label: string; columns?: ModuleColumn[]; descr
 type Job = {
   id: string;
   status: string;
-  format?: string;
-  module?: string | null;
-  modules?: string[] | null;
-  range?: string | null;
+  export_type?: string | null;
+  scope?: string | null;
+  module_name?: string | null;
+  file_size?: number | null;
   progress?: number | null;
   progress_pct?: number | null;
-  download_url?: string | null;
-  file_size?: number | null;
   created_at?: string;
   updated_at?: string;
   error?: string | null;
 };
-type StatusInfo = { health: string; queue_depth?: number; queue?: number; active_jobs?: number; last_run?: string | null; pipeline?: string | null; [k: string]: unknown };
+type StatusInfo = { total_jobs: number; completed: number; failed: number; processing: number; [k: string]: unknown };
 
 function statusVariant(s: string): "success" | "warning" | "error" | "default" | "info" {
   const v = s.toLowerCase();
@@ -218,28 +217,20 @@ export function ExportDashboard({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Activity className="h-5 w-5" /> Pipeline Health & Queue
+            <Activity className="h-5 w-5" /> Export Activity
           </CardTitle>
-          <CardDescription>GET /api/export/status - live pipeline, queue depth and health</CardDescription>
+          <CardDescription>Live counts across your export jobs</CardDescription>
         </CardHeader>
         <CardContent>
           {status ? (
-            <div className="flex flex-wrap gap-3 items-center text-sm">
-              <Badge variant={status.health?.toLowerCase() === "healthy" || status.health?.toLowerCase() === "ok" ? "success" : status.health ? "warning" : "default"}>
-                {status.health ?? "unknown"}
-              </Badge>
-              {status.queue_depth != null && <span className="text-neutral-600">Queue: {String(status.queue_depth)}</span>}
-              {status.queue != null && status.queue_depth == null && <span className="text-neutral-600">Queue: {String(status.queue)}</span>}
-              {status.active_jobs != null && <span className="text-neutral-600">Active: {String(status.active_jobs)}</span>}
-              {status.pipeline && <span className="text-neutral-600">Pipeline: {String(status.pipeline)}</span>}
-              {status.last_run && <span className="text-neutral-500 text-xs">Last run: {new Date(String(status.last_run)).toLocaleString("en-IN")}</span>}
-              <span className="text-xs text-neutral-400 ml-auto">All values from API - no hardcoded counts</span>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total jobs" value={String(status.total_jobs ?? 0)} icon={<Package className="h-5 w-5" />} variant="primary" />
+              <StatCard label="Completed" value={String(status.completed ?? 0)} icon={<Download className="h-5 w-5" />} variant="success" />
+              <StatCard label="Failed" value={String(status.failed ?? 0)} icon={<RotateCcw className="h-5 w-5" />} variant="rose" />
+              <StatCard label="Processing" value={String(status.processing ?? 0)} icon={<RefreshCw className="h-5 w-5" />} variant="amber" />
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">No status available - backend may not have implemented /api/export/status yet.</p>
-          )}
-          {status && (
-            <pre className="mt-3 text-xs bg-neutral-50 p-3 rounded-lg overflow-auto max-h-32">{JSON.stringify(status, null, 2)}</pre>
+            <p className="text-sm text-neutral-500">Status unavailable right now.</p>
           )}
         </CardContent>
       </Card>
@@ -251,7 +242,7 @@ export function ExportDashboard({
             <CardTitle className="flex items-center gap-2 text-base">
               <FileSpreadsheet className="h-5 w-5" /> Exportable Modules
             </CardTitle>
-            <CardDescription>GET /api/export/modules - column sets per module. Choose scope, format and range to create a job.</CardDescription>
+            <CardDescription>Pick a module to see its columns, then create an export job below.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {modules.length === 0 ? (
@@ -341,7 +332,7 @@ export function ExportDashboard({
               <Button onClick={handleCreate} disabled={creating || !selectedModule} className="w-full sm:w-auto">
                 {creating ? "Creating..." : `Create ${format.toUpperCase()} job`}
               </Button>
-              <p className="text-xs text-neutral-400">POST /api/export/jobs - {format}, module={selectedModule || "(choose)"}, range={range}. All jobs from API.</p>
+              <p className="text-xs text-neutral-400">Jobs generate instantly and appear under Recent Exports with a download link.</p>
             </div>
           </CardContent>
         </Card>
@@ -351,21 +342,13 @@ export function ExportDashboard({
             <CardTitle className="flex items-center gap-2 text-base">
               <FileArchive className="h-5 w-5" /> Full Archive
             </CardTitle>
-            <CardDescription>POST /api/export/full-archive - ZIP + manifest of all user data</CardDescription>
+            <CardDescription>ZIP with one CSV per module plus a manifest</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-neutral-600">One-click full data export. Backend returns a job (or ZIP). Track it in Recent Exports below.</p>
+            <p className="text-sm text-neutral-600">One-click full data export. The archive downloads right away and is also tracked below.</p>
             <Button onClick={handleFullArchive} disabled={archiveLoading} className="w-full">
               <FileArchive className="h-4 w-4" /> {archiveLoading ? "Creating archive..." : "Create full archive"}
             </Button>
-            <p className="text-xs text-neutral-400">Requires same auth cookie as other export routes. 24h expiring download link after completion.</p>
-            <div className="rounded-lg bg-neutral-50 p-3 text-xs text-neutral-500">
-              <p className="font-medium text-neutral-700">Tip</p>
-              <p>Quick CSVs still available in Settings → Data Export. Batched jobs and the ZIP live here.</p>
-              <Button variant="link" size="sm" asChild className="px-0 h-auto text-xs">
-                <a href="/settings">Go to Settings →</a>
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -376,14 +359,14 @@ export function ExportDashboard({
           <CardTitle className="flex items-center gap-2 text-base">
             <Download className="h-5 w-5" /> Recent Exports
           </CardTitle>
-          <CardDescription>GET /api/export/jobs + poll GET /api/export/jobs/:id/progress - download via GET /api/export/jobs/:id/download (24h link)</CardDescription>
+          <CardDescription>Every export you create, ready to download</CardDescription>
         </CardHeader>
         <CardContent>
           {jobs.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <Package className="h-6 w-6 mx-auto text-neutral-400 mb-2" />
               <p className="text-sm font-medium text-neutral-700">No exports yet</p>
-              <p className="text-xs text-neutral-500 mt-1">Create a job above. Every row here comes from GET /api/export/jobs - no hardcoded counts.</p>
+              <p className="text-xs text-neutral-500 mt-1">Create a job above and it shows up here with its download link.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -400,10 +383,10 @@ export function ExportDashboard({
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold font-heading flex items-center gap-2 flex-wrap">
-                            <span className="truncate">{j.module ?? j.modules?.join(", ") ?? j.id.slice(0, 8)}</span>
+                            <span className="truncate">{j.module_name ?? j.id.slice(0, 8)}</span>
                             <Badge variant={statusVariant(j.status)} className="shrink-0">{j.status}</Badge>
-                            {j.format && <Badge variant="outline" className="text-[10px]">{String(j.format).toUpperCase()}</Badge>}
-                            {j.range && <Badge variant="outline" className="text-[10px]">{j.range}</Badge>}
+                            {j.export_type && <Badge variant="outline" className="text-[10px]">{String(j.export_type).toUpperCase()}</Badge>}
+                            {j.scope && <Badge variant="outline" className="text-[10px]">{j.scope}</Badge>}
                           </p>
                           <p className="text-xs text-neutral-500 mt-1">
                             {j.created_at ? new Date(j.created_at).toLocaleString("en-IN") : ""}{est != null ? ` • ~${Number(est).toLocaleString("en-IN")} bytes` : ""}
