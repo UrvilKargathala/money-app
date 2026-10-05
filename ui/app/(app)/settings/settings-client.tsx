@@ -313,11 +313,11 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40">
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <Badge variant={planLoading ? "default" : premium ? "success" : "default"} className="font-bold">
+            <div className="space-y-1">
+              <h2 className={`text-xl font-bold font-heading ${planLoading ? "text-neutral-400" : premium ? "text-success-dark" : "text-neutral-900"}`}>
                 {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
-              </Badge>
-              <p className="text-base text-neutral-600">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
+              </h2>
+              <p className="text-sm text-neutral-500">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
             </div>
             <Button asChild className="w-fit shrink-0 bg-indigo-600 hover:bg-indigo-700">
               <Link href="/pricing">Manage plan</Link>
