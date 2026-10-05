@@ -314,9 +314,11 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <h2 className={`text-xl font-bold font-heading ${planLoading ? "text-neutral-400" : premium ? "text-success-dark" : "text-neutral-900"}`}>
-                {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
-              </h2>
+              <p>
+                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading ${planLoading ? "bg-neutral-100 text-neutral-400" : premium ? "bg-success-light text-success-dark" : "bg-neutral-100 text-neutral-900"}`}>
+                  {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
+                </span>
+              </p>
               <p className="text-sm text-neutral-500">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
             </div>
             <Button asChild className="w-fit shrink-0 bg-indigo-600 hover:bg-indigo-700">
@@ -334,8 +336,8 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                 { icon: TrendingUp, label: "Investments + SIPs" },
                 { icon: PieChart, label: "Advanced reports" },
               ].map((f) => (
-                <Badge key={f.label} variant="secondary" className="gap-1">
-                  <f.icon className="h-3 w-3" /> {f.label}
+                <Badge key={f.label} variant="secondary" className="gap-1.5 px-3 py-1.5 text-[13px]">
+                  <f.icon className="h-3.5 w-3.5" /> {f.label}
                 </Badge>
               ))}
             </div>
