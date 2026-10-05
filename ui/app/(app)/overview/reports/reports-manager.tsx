@@ -6,6 +6,8 @@ import { Copy, Download, FileBarChart, Plus, Trash2, Pencil } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trackFeature } from "@/lib/analytics";
 
 type Template = { id: string; user_id: number | null; name: string; description: string | null; chart_config: unknown; version?: number };
@@ -22,14 +24,33 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
   const [message, setMessage] = useState("");
   const [savedFilters, setSavedFilters] = useState<{ name: string; start: string; end: string }[]>(initialFilters);
 
+  // Name dialog backing both prompt() replacements: saving a filter and
+  // renaming a template. target === null means filter-save mode.
+  const [nameOpen, setNameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameTarget, setNameTarget] = useState<Template | null>(null);
+
   function saveFilter() {
     if (!start && !end) return setMessage("Choose a date range before saving a filter.");
-    const name = prompt("Name this report filter", `${start || "Any"} to ${end || "Any"}`)?.trim();
+    setNameTarget(null);
+    setNameDraft(`${start || "Any"} to ${end || "Any"}`);
+    setNameOpen(true);
+  }
+
+  async function submitName(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = nameDraft.trim();
     if (!name) return;
-    const next = [...savedFilters.filter((item) => item.name !== name), { name, start, end }];
-    setSavedFilters(next);
-    void fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ report_filters: next }) });
-    setMessage("Filter saved.");
+    if (nameTarget === null) {
+      const next = [...savedFilters.filter((item) => item.name !== name), { name, start, end }];
+      setSavedFilters(next);
+      void fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ report_filters: next }) });
+      setMessage("Filter saved.");
+    } else {
+      if (name === nameTarget.name) { setNameOpen(false); return; }
+      await mutate(`/api/report-templates/${nameTarget.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, version: nameTarget.version ?? 1 }) });
+    }
+    setNameOpen(false);
   }
 
   async function mutate(path: string, init: RequestInit) {
@@ -52,10 +73,10 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
     if (ok) { trackFeature("report_generated", { template: templateId || "standard" }); setMessage("Report generated and added to history."); }
   }
 
-  async function renameTemplate(template: Template) {
-    const next = prompt("Template name", template.name)?.trim();
-    if (!next || next === template.name) return;
-    await mutate(`/api/report-templates/${template.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: next, version: template.version ?? 1 }) });
+  function renameTemplate(template: Template) {
+    setNameTarget(template);
+    setNameDraft(template.name);
+    setNameOpen(true);
   }
 
   return <div className="grid gap-6 xl:grid-cols-2">
@@ -75,5 +96,22 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
       {message && <p role="status" className="text-sm text-neutral-600">{message}</p>}
       <div className="divide-y rounded-xl border">{jobs.length === 0 && <p className="p-4 text-sm text-neutral-500">Generated reports will appear here.</p>}{jobs.map(j=><div key={j.id} className="flex items-center justify-between p-4"><div><p className="text-sm font-medium">PDF report</p><p className="text-xs text-neutral-500">{new Date(j.created_at).toLocaleString()} · {j.status}</p></div><Button asChild size="sm" variant="outline"><a href={`/api/report-exports/${j.id}/download`}><Download className="mr-2 h-4 w-4"/>Download</a></Button></div>)}</div>
     </CardContent></Card>
+    <Dialog open={nameOpen} onOpenChange={setNameOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{nameTarget === null ? "Name this report filter" : "Rename template"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submitName} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="report-name">Name</Label>
+            <Input id="report-name" value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} placeholder="Name" required />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setNameOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={busy}>Save</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   </div>;
 }
