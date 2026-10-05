@@ -417,7 +417,7 @@ export function NotesDashboard({
                     const active = filterCategory === c.name;
                     if (editingCategory === c.name) {
                       return (
-                        <span key={c.name} className="inline-flex items-center gap-1 rounded-md border border-primary-300 bg-white px-1.5 py-0.5">
+                        <span key={c.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 bg-white ring-1 ring-primary-200">
                           <Input
                             autoFocus
                             value={categoryDraft}
@@ -427,47 +427,51 @@ export function NotesDashboard({
                               else if (event.key === "Escape") setEditingCategory(null);
                             }}
                             aria-label={`Rename category ${c.name}`}
-                            className="h-6 w-32 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
+                            className="h-7 w-32 border-0 px-2 py-0 text-xs shadow-none focus-visible:ring-0"
                           />
-                          <button
-                            type="button"
-                            aria-label="Save rename"
-                            disabled={renaming}
-                            onClick={() => void commitRenameCategory(c.name, categoryDraft)}
-                            className="rounded p-0.5 text-success-dark hover:bg-success-light"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Cancel rename"
-                            onClick={() => setEditingCategory(null)}
-                            className="rounded p-0.5 text-neutral-400 hover:bg-neutral-100"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                          <span className="flex items-center border-l border-neutral-200">
+                            <button
+                              type="button"
+                              aria-label="Save rename"
+                              disabled={renaming}
+                              onClick={() => void commitRenameCategory(c.name, categoryDraft)}
+                              className="p-1.5 text-success-dark hover:bg-success-light"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Cancel rename"
+                              onClick={() => setEditingCategory(null)}
+                              className="p-1.5 text-neutral-400 hover:bg-neutral-100"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
                         </span>
                       );
                     }
                     return (
-                      <span key={c.name} className="inline-flex items-center gap-1">
+                      <span
+                        key={c.name}
+                        className={`inline-flex items-stretch overflow-hidden rounded-lg border bg-white ${active ? "border-primary-300 bg-primary-50" : "border-neutral-200"}`}
+                      >
                         <button
                           type="button"
                           title={`Filter by ${c.name}`}
                           aria-label={`Filter by ${c.name}`}
                           aria-pressed={active}
                           onClick={() => setFilterCategory(active ? "all" : c.name)}
+                          className={`px-2.5 py-1 text-xs font-medium hover:bg-neutral-50 ${active ? "text-primary-700" : "text-neutral-600"}`}
                         >
-                          <Badge variant={active ? "secondary" : "default"} className="gap-1">
-                            {c.name} · {count}
-                          </Badge>
+                          {c.name} · {count}
                         </button>
                         <button
                           type="button"
                           title={`Rename ${c.name}`}
                           aria-label={`Rename category ${c.name}`}
                           onClick={() => { setEditingCategory(c.name); setCategoryDraft(c.name); }}
-                          className="rounded-md p-1 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-700"
+                          className="border-l border-neutral-200 px-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
                         >
                           <Pencil className="h-3 w-3" />
                         </button>
