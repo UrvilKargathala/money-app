@@ -216,12 +216,27 @@ export function NotesDashboard({
     else toast.error("Could not remove attachment.");
   }
 
-  async function renameCategory(from: string) {
-    const to = prompt("Rename category", from)?.trim();
-    if (!to || to === from) return;
-    const res = await fetch("/api/notes/categories", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ from_category: from, to_category: to }) });
-    if (res.ok) { toast.success("Category renamed."); router.refresh(); }
-    else toast.error("Could not rename category.");
+  const [renameFrom, setRenameFrom] = useState<string | null>(null);
+  const [renameTo, setRenameTo] = useState("");
+  const [renaming, setRenaming] = useState(false);
+
+  async function submitRenameCategory(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!renameFrom) return;
+    const to = renameTo.trim();
+    if (!to || to === renameFrom) { setRenameFrom(null); return; }
+    setRenaming(true);
+    try {
+      const res = await fetch("/api/notes/categories", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ from_category: renameFrom, to_category: to }) });
+      if (!res.ok) throw new Error();
+      toast.success("Category renamed.");
+      setRenameFrom(null);
+      router.refresh();
+    } catch {
+      toast.error("Could not rename category.");
+    } finally {
+      setRenaming(false);
+    }
   }
 
   const saveNote = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -301,11 +316,23 @@ export function NotesDashboard({
               <div className="flex flex-wrap gap-2">
                 {categories
                   .filter((c) => Boolean(c.name))
-                  .map((c) => (
-                    <button key={c.name} onClick={() => void renameCategory(c.name)} className="group">
-                      <Badge variant="default">{c.name}<Pencil className="ml-1 inline h-3 w-3 opacity-0 group-hover:opacity-100" /></Badge>
-                    </button>
-                  ))}
+                  .map((c) => {
+                    const count = notes.filter((n) => n.category === c.name).length;
+                    return (
+                      <button
+                        key={c.name}
+                        type="button"
+                        title={`Rename ${c.name}`}
+                        aria-label={`Rename category ${c.name}`}
+                        onClick={() => { setRenameFrom(c.name); setRenameTo(c.name); }}
+                      >
+                        <Badge variant="default" className="gap-1">
+                          {c.name} · {count}
+                          <Pencil className="h-3 w-3 text-neutral-400" />
+                        </Badge>
+                      </button>
+                    );
+                  })}
               </div>
             )}
           </CardContent>
@@ -472,6 +499,34 @@ export function NotesDashboard({
               </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saving..." : editing ? "Save" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={renameFrom !== null} onOpenChange={(v) => { if (!v) setRenameFrom(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename category</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitRenameCategory} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="category-name">Name</Label>
+              <Input
+                id="category-name"
+                value={renameTo}
+                onChange={(event) => setRenameTo(event.target.value)}
+                placeholder="Category name"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setRenameFrom(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={renaming}>
+                {renaming ? "Renaming..." : "Rename"}
               </Button>
             </DialogFooter>
           </form>
