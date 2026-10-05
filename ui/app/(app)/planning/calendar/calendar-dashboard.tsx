@@ -436,7 +436,7 @@ export function CalendarDashboard({
                               </Button>
                             )}
                             {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete">
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
@@ -481,7 +481,7 @@ export function CalendarDashboard({
                               </Button>
                             )}
                             {ev.source === "custom" && ev.event_id ? (
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)}>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             ) : (
