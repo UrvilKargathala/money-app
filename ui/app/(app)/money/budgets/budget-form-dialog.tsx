@@ -56,7 +56,7 @@ export function BudgetFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={budget?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={budget!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(budget!.version)} />}
           {!isEdit && <input type="hidden" name="category_id" value={categoryId === "overall" ? "" : categoryId} />}

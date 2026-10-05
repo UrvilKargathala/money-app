@@ -53,7 +53,7 @@ export function DebtFormDialog({
           <DialogDescription>{isEdit ? "Update debt details." : "Track a loan or debt with EMI schedule."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={debt?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={debt!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(debt!.version)} />}
           <input type="hidden" name="type" value={type} />

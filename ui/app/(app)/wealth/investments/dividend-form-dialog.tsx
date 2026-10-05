@@ -62,7 +62,7 @@ export function DividendFormDialog({
           <DialogTitle>{isEdit ? "Edit payout" : "Add dividend / interest"}</DialogTitle>
           <DialogDescription>{isEdit ? "Update payout record." : "Record dividend, interest or maturity proceeds."}</DialogDescription>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form key={dividend?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={dividend!.id} />}
           <input type="hidden" name="type" value={type} />
           {!isEdit && <input type="hidden" name="investment_id" value={investmentId} />}

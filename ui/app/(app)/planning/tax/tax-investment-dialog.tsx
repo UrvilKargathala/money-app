@@ -56,7 +56,7 @@ export function TaxInvestmentDialog({
           <DialogDescription>Record an 80C/80D investment for FY {fy}.</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={investment?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={investment!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(investment!.version)} />}
           {!isEdit && <input type="hidden" name="financial_year" value={fy} />}

@@ -59,7 +59,7 @@ export function SubscriptionFormDialog({
           <DialogDescription>{isEdit ? "Update subscription details." : "Track a recurring subscription."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={subscription?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={subscription!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(subscription!.version)} />}
           <input type="hidden" name="frequency" value={frequency} />

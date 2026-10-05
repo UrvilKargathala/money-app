@@ -64,7 +64,7 @@ export function SipFormDialog({
           <DialogTitle>{isEdit ? "Edit SIP" : "Add SIP"}</DialogTitle>
           <DialogDescription>{isEdit ? "Update SIP installment." : "Schedule a systematic investment plan."}</DialogDescription>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form key={sip?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={sip!.id} />}
           <input type="hidden" name="frequency" value={frequency} />
           {!isEdit && <input type="hidden" name="investment_id" value={investmentId} />}

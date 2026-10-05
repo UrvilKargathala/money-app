@@ -67,7 +67,7 @@ export function AccountFormDialog({
           <DialogDescription>{isEdit ? "Update the account details below." : "Create a new account to track balances and transactions."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={account?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={account!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(account!.version)} />}
           <input type="hidden" name="type" value={type} />

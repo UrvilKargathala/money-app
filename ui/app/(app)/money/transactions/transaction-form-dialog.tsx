@@ -72,7 +72,7 @@ export function TransactionFormDialog({
           <DialogDescription>{isEdit ? "Update the transaction details." : "Record a new income or expense."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={transaction?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={transaction!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(transaction!.version)} />}
           <input type="hidden" name="type" value={type} />

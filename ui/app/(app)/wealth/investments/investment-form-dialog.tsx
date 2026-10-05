@@ -51,7 +51,7 @@ export function InvestmentFormDialog({
           <DialogDescription>{isEdit ? "Update current price." : "Add a new holding."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={investment?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={investment!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(investment!.version)} />}
           {!isEdit && <input type="hidden" name="type" value={type} />}

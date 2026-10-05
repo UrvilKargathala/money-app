@@ -54,7 +54,7 @@ export function GoalFormDialog({
           <DialogDescription>{isEdit ? "Update goal details." : "Set a savings goal with target amount and date."}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form key={goal?.id ?? "new"} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={goal!.id} />}
           {isEdit && <input type="hidden" name="version" value={String(goal!.version)} />}
           <input type="hidden" name="priority" value={priority} />
