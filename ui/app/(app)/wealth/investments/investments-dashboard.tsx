@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InvestmentCard } from "./investment-card";
 import { InvestmentFormDialog } from "./investment-form-dialog";
@@ -112,24 +113,36 @@ export function InvestmentsDashboard({
 
   const investmentOpts = investments.map((i) => ({ id: i.id, name: i.name }));
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this holding?")) return;
-    const res = await deleteInvestmentAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Deleted");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete this holding?",
+      description: "Its price history and payouts stay in reports. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteInvestmentAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
-  const handleDeleteSip = async (id: string) => {
-    if (!confirm("Delete this SIP?")) return;
-    const res = await deleteSipAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("SIP deleted");
-      router.refresh();
-    }
+  const handleDeleteSip = (id: string) => {
+    askConfirm({
+      title: "Delete this SIP?",
+      description: "Scheduled installments stop. Past installments are kept. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteSipAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("SIP deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
   const handlePause = async (id: string) => {
@@ -166,14 +179,19 @@ export function InvestmentsDashboard({
     }
   };
 
-  const handleDeleteDividend = async (id: string) => {
-    if (!confirm("Delete this payout?")) return;
-    const res = await deleteDividendAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Payout deleted");
-      router.refresh();
-    }
+  const handleDeleteDividend = (id: string) => {
+    askConfirm({
+      title: "Delete this payout?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteDividendAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Payout deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
   const fetchPriceHistory = async (id: string) => {
@@ -636,6 +654,7 @@ export function InvestmentsDashboard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }

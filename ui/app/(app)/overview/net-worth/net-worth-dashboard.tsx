@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { formatINR } from "@/lib/format";
 import { Scale, Plus, Trash2, Building2 } from "lucide-react";
 import { createManualAsset, deleteManualAssetAction } from "./actions";
@@ -45,14 +46,21 @@ export function NetWorthDashboard({
     if (state?.error) toast.error(state.error);
   }, [state]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this asset?")) return;
-    const res = await deleteManualAssetAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Deleted");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete this asset?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteManualAssetAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
   return (
@@ -161,6 +169,7 @@ export function NetWorthDashboard({
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }

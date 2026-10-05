@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -447,16 +448,24 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
     else { toast.success("Payment updated"); setEditing(null); setAmount(""); setNotes(""); load(); router.refresh(); }
   };
 
-  const handleDelete = async (pid: string) => {
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (pid: string) => {
     if (!debt) return;
-    if (!confirm("Delete payment?")) return;
-    const res = await fetch(`/api/debts/${debt.id}/payments/${pid}`, { method: "DELETE" });
-    if (!res.ok) toast.error("Could not delete");
-    else { toast.success("Payment deleted"); load(); router.refresh(); }
+    askConfirm({
+      title: "Delete payment?",
+      description: "Outstanding balances recompute without it. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await fetch(`/api/debts/${debt.id}/payments/${pid}`, { method: "DELETE" });
+        if (!res.ok) toast.error("Could not delete");
+        else { toast.success("Payment deleted"); load(); router.refresh(); }
+      },
+    });
   };
 
   if (!debt) return null;
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
@@ -516,6 +525,8 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
         </Tabs>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+    </>
   );
 }
 
@@ -670,14 +681,21 @@ export function DebtsDashboard({
   const totalEmi = dashboard?.total_emi ?? dashboard?.total_monthly_emi ?? combinedTimeline?.combined.total_monthly_emi ?? debts.reduce((s, d) => s + Number(d.emi_amount || 0), 0);
   const debtFreeDate = dashboard?.debt_free_date ?? combinedTimeline?.combined.debt_free_date ?? null;
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this debt? Only if no EMI recorded.")) return;
-    const res = await deleteDebtAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Debt deleted");
-      router.refresh();
-    }
+  const [debtConfirmState, askDebtConfirm, closeDebtConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askDebtConfirm({
+      title: "Delete this debt?",
+      description: "Only allowed when no EMI is recorded. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteDebtAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Debt deleted");
+          router.refresh();
+        }
+      },
+    });
   };
   const handleClose = async (id: string) => {
     const res = await closeDebtAction(id);
@@ -795,6 +813,7 @@ export function DebtsDashboard({
       <PrepaymentSimulatorDialog debt={prepayDebt} open={!!prepayDebt} onOpenChange={(v) => !v && setPrepayDebt(null)} />
       <PaymentsHistoryDialog debt={historyDebt} open={!!historyDebt} onOpenChange={(v) => !v && setHistoryDebt(null)} />
       <PaymentStatusDialog debt={statusDebt} open={!!statusDebt} onOpenChange={(v) => !v && setStatusDebt(null)} />
+      <ConfirmDialog state={debtConfirmState} onOpenChange={closeDebtConfirm} />
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { deleteGoalAction, pauseGoalAction, resumeGoalAction, completeGoalAction
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
 type Goal = {
   id: string;
@@ -276,12 +277,19 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
     if (!goal) return;
-    if (!confirm("Delete contribution?")) return;
-    const res = await deleteContributionAction(goal.id, id);
-    if (res?.error) toast.error(res.error);
-    else { toast.success("Deleted"); load(); router.refresh(); }
+    askConfirm({
+      title: "Delete contribution?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteContributionAction(goal.id, id);
+        if (res?.error) toast.error(res.error);
+        else { toast.success("Deleted"); load(); router.refresh(); }
+      },
+    });
   };
 
   const startEdit = (c: Contribution) => {
@@ -294,6 +302,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
 
   if (!goal) return null;
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
@@ -378,6 +387,8 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
         </Tabs>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+    </>
   );
 }
 
@@ -526,11 +537,18 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete template?")) return;
-    const res = await deleteTemplateAction(id);
-    if (res?.error) toast.error(res.error);
-    else { toast.success("Deleted"); router.refresh(); }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete template?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteTemplateAction(id);
+        if (res?.error) toast.error(res.error);
+        else { toast.success("Deleted"); router.refresh(); }
+      },
+    });
   };
 
   const handleApply = (t: Template) => {
@@ -645,6 +663,7 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
           onSuccess={() => { router.refresh(); setDraftTemplate(null); }}
         />
       )}
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </>
   );
 }
@@ -723,14 +742,21 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
     return true;
   });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this goal?")) return;
-    const res = await deleteGoalAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Goal deleted");
-      router.refresh();
-    }
+  const [goalConfirmState, askGoalConfirm, closeGoalConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askGoalConfirm({
+      title: "Delete this goal?",
+      description: "Contributions, milestones and snapshots go with it. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteGoalAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Goal deleted");
+          router.refresh();
+        }
+      },
+    });
   };
   const handlePause = async (id: string) => {
     const res = await pauseGoalAction(id);
@@ -839,6 +865,7 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
       <GoalFormDialog open={formOpen} onOpenChange={setFormOpen} goal={editing} accounts={accounts} onSuccess={() => router.refresh()} />
       <ContributionsDialog goal={contribGoal} accounts={accounts} open={!!contribGoal} onOpenChange={(v) => !v && setContribGoal(null)} />
       <GoalDetailDialog goal={detailGoal} open={!!detailGoal} onOpenChange={(v) => !v && setDetailGoal(null)} />
+      <ConfirmDialog state={goalConfirmState} onOpenChange={closeGoalConfirm} />
     </div>
   );
 }
