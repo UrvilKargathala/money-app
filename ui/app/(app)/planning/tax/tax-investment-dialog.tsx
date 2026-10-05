@@ -68,6 +68,11 @@ export function TaxInvestmentDialog({
               <AlertDescription>{state.error}</AlertDescription>
             </Alert>
           )}
+          {state?.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
+            <Alert variant="destructive">
+              <AlertDescription>{Object.values(state.fieldErrors).join(" ")}</AlertDescription>
+            </Alert>
+          )}
 
           <div className="space-y-2">
             <Label>Section *</Label>
