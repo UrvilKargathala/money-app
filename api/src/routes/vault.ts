@@ -1,7 +1,7 @@
 ﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { verifyPassword } from "../auth";
 import {
   getUserPasswordHash,
@@ -193,7 +193,7 @@ vault.post("/import", requireAuth, async (c) => {
     return c.json({ success: true, imported });
   } catch (err) {
     console.error("[api] vault import failed:", err);
-    return c.json({ error: "Could not import the backup. Please try again." }, 500);
+    return serverError(c, "vault_import_backup_failed", "Could not import the backup. Please try again.");
   }
 });
 

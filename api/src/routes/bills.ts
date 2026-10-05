@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
@@ -206,7 +206,7 @@ bills.post("/", requireAuth, async (c) => {
       );
     }
     console.error("[api] create bill failed:", err);
-    return c.json({ error: "Could not create the bill. Please try again." }, 500);
+    return serverError(c, "bills_create_bill_failed", "Could not create the bill. Please try again.");
   }
 
   return c.json({ success: true });
@@ -502,7 +502,7 @@ bills.patch("/:id", requireAuth, async (c) => {
       );
     }
     console.error("[api] update bill failed:", err);
-    return c.json({ error: "Could not update the bill. Please try again." }, 500);
+    return serverError(c, "bills_update_bill_failed", "Could not update the bill. Please try again.");
   }
 
   return c.json({ success: true });
@@ -628,7 +628,7 @@ bills.post("/:id/mark-paid", requireAuth, async (c) => {
       }
     }
     console.error("[api] mark bill paid failed:", err);
-    return c.json({ error: "Could not record the payment. Please try again." }, 500);
+    return serverError(c, "bills_record_payment_failed", "Could not record the payment. Please try again.");
   }
 
   return c.json({ success: true });
@@ -669,7 +669,7 @@ bills.post("/:id/skip", requireAuth, async (c) => {
       }
     }
     console.error("[api] skip bill failed:", err);
-    return c.json({ error: "Could not skip the bill. Please try again." }, 500);
+    return serverError(c, "bills_skip_bill_failed", "Could not skip the bill. Please try again.");
   }
 
   return c.json({ success: true });
@@ -786,7 +786,7 @@ bills.post("/:id/reminders", requireAuth, async (c) => {
     return c.json({ success: true, reminder: { id: reminderId } });
   } catch (err) {
     console.error("[api] create reminder failed:", err);
-    return c.json({ error: "Could not save the reminder." }, 500);
+    return serverError(c, "bills_save_reminder_failed", "Could not save the reminder.");
   }
 });
 

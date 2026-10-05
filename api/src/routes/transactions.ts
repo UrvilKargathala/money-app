@@ -1,7 +1,7 @@
 ﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { requireAuth } from "../middleware";
 import { csvEscape, isoDate } from "../utils/format";
 import {
@@ -369,7 +369,7 @@ transactions.post("/:id/splits", requireAuth, async (c) => {
       if (entry) return c.json(entry[1], entry[0] as 400 | 404 | 409);
     }
     console.error("[api] add split failed:", err);
-    return c.json({ error: "Could not add the split. Please try again." }, 500);
+    return serverError(c, "transactions_add_split_failed", "Could not add the split. Please try again.");
   }
 });
 
@@ -417,7 +417,7 @@ transactions.patch("/:id/splits/:splitId", requireAuth, async (c) => {
       if (entry) return c.json(entry[1], entry[0] as 400 | 404 | 409);
     }
     console.error("[api] update split failed:", err);
-    return c.json({ error: "Could not update the split. Please try again." }, 500);
+    return serverError(c, "transactions_update_split_failed", "Could not update the split. Please try again.");
   }
 
   return c.json({ success: true });
@@ -671,7 +671,7 @@ transactions.post("/:id/tags", requireAuth, async (c) => {
       return c.json({ error: "This tag doesn't exist." }, 409);
     }
     console.error("[api] attach tag failed:", err);
-    return c.json({ error: "Could not add the tag. Please try again." }, 500);
+    return serverError(c, "transactions_add_tag_failed", "Could not add the tag. Please try again.");
   }
 
   return c.json({ success: true });

@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { csvEscape } from "../utils/format";
 import { getEntitlement } from "../queries/entitlements";
 import {
@@ -238,7 +238,7 @@ debts.post("/", requireAuth, async (c) => {
       );
     }
     console.error("[api] create debt failed:", err);
-    return c.json({ error: "Could not create the debt. Please try again." }, 500);
+    return serverError(c, "debts_create_debt_failed", "Could not create the debt. Please try again.");
   }
 });
 
@@ -584,7 +584,7 @@ debts.patch("/:id", requireAuth, async (c) => {
       );
     }
     console.error("[api] update debt failed:", err);
-    return c.json({ error: "Could not update the debt. Please try again." }, 500);
+    return serverError(c, "debts_update_debt_failed", "Could not update the debt. Please try again.");
   }
 
   return c.json({ success: true });
@@ -618,7 +618,7 @@ debts.delete("/:id", requireAuth, async (c) => {
       );
     }
     console.error("[api] delete debt failed:", err);
-    return c.json({ error: "Could not delete the debt. Please try again." }, 500);
+    return serverError(c, "debts_delete_debt_failed", "Could not delete the debt. Please try again.");
   }
   return c.json({ success: true });
 });
@@ -651,7 +651,7 @@ debts.post("/:id/close", requireAuth, async (c) => {
       );
     }
     console.error("[api] close debt failed:", err);
-    return c.json({ error: "Could not close the debt. Please try again." }, 500);
+    return serverError(c, "debts_close_debt_failed", "Could not close the debt. Please try again.");
   }
   return c.json({ success: true });
 });

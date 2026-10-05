@@ -1,7 +1,7 @@
 ﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import {
   listActiveSessions,
   revokeSession,
@@ -97,7 +97,7 @@ userLifecycle.post("/avatar", requireAuth, async (c) => {
     return c.json({ success: true, avatar_url: stored.path });
   } catch (err) {
     console.error("[api] avatar upload failed:", err);
-    return c.json({ error: "Could not upload the avatar. Please try again." }, 500);
+    return serverError(c, "user_lifecycle_upload_avatar_failed", "Could not upload the avatar. Please try again.");
   }
 });
 

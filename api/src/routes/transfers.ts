@@ -13,7 +13,7 @@ import {
   updateTransferLeg,
 } from "../queries/transfers";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { requireAuth } from "../middleware";
 
 const transfers = new Hono();
@@ -72,7 +72,7 @@ transfers.post("/", requireAuth, async (c) => {
       return c.json({ error: "One of the accounts is no longer active." }, 409);
     }
     console.error("[api] transfer failed:", err);
-    return c.json({ error: "Could not complete the transfer. Please try again." }, 500);
+    return serverError(c, "transfers_complete_transfer_failed", "Could not complete the transfer. Please try again.");
   }
 
   return c.json({ success: true });
@@ -144,7 +144,7 @@ transfers.delete("/:id", requireAuth, async (c) => {
       return c.json({ error: "Not found" }, 404);
     }
     console.error("[api] delete transfer failed:", err);
-    return c.json({ error: "Could not delete the transfer. Please try again." }, 500);
+    return serverError(c, "transfers_delete_transfer_failed", "Could not delete the transfer. Please try again.");
   }
 });
 

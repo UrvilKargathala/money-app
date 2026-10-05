@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { hashToken } from "../session";
 import { normalizeEmail } from "../auth";
 import { csvEscape } from "../utils/format";
@@ -113,7 +113,7 @@ sharedGroups.post("/invites/:token/accept", requireAuth, async (c) => {
       };
       const entry = map[result.reason];
       if (entry) return c.json(entry[1], entry[0] as 403 | 404 | 409 | 410);
-      return c.json({ error: "Could not accept the invitation." }, 500);
+      return serverError(c, "shared_groups_accept_invitation_failed", "Could not accept the invitation.");
     }
 
     return c.json({

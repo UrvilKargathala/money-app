@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
 import { getEntitlement } from "../queries/entitlements";
 import { sipFutureValue, type SipFrequency } from "../utils/finance";
@@ -536,7 +536,7 @@ investments.post("/:id/price", requireAuth, async (c) => {
       return c.json({ error: "Closed holdings can't be repriced." }, 409);
     }
     console.error("[api] price update failed:", err);
-    return c.json({ error: "Could not update the price. Please try again." }, 500);
+    return serverError(c, "investments_update_price_failed", "Could not update the price. Please try again.");
   }
 
   return c.json({ success: true });

@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
 import { getEntitlement } from "../queries/entitlements";
 import {
@@ -134,7 +134,7 @@ sips.post("/", requireAuth, async (c) => {
       );
     }
     console.error("[api] create sip failed:", err);
-    return c.json({ error: "Could not create the SIP. Please try again." }, 500);
+    return serverError(c, "sips_create_sip_failed", "Could not create the SIP. Please try again.");
   }
 });
 

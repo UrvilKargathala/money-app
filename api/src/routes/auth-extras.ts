@@ -1,7 +1,7 @@
 ﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { normalizeEmail, isValidPassword, passwordPolicyHint, hashPassword, verifyPassword, isEmailActionRateLimited, EMAIL_ACTION_WINDOW_MINUTES, getClientIp } from "../auth";
 import { findActiveUserByEmail } from "../queries/auth";
 import { createAuthToken } from "../queries/user-tokens";
@@ -79,7 +79,7 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
       return c.json({ success: true, has_vault: vaultInfo?.vault_wrapped !== null });
     } catch (err) {
       console.error("[api] reset-password failed:", err);
-      return c.json({ error: "Could not reset the password. Please try again." }, 500);
+      return serverError(c, "auth_extras_reset_password_failed", "Could not reset the password. Please try again.");
     }
   });
 

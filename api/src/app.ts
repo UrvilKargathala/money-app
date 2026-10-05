@@ -34,7 +34,7 @@ import { vault } from "./routes/vault";
 import { registerNoteTemplateRoutes } from "./routes/note-templates";
 import { settings } from "./routes/settings";
 import { jobs } from "./routes/jobs";
-import { requireAuth } from "./middleware";
+import { requireAuth, type AppEnv } from "./middleware";
 import { getPlan, requirePremium, STARTER_LIMITS } from "./entitlements";
 import { membershipGuards } from "./membership-guards";
 import { subscriptionAudits } from "./routes/subscription-audits";
@@ -44,16 +44,23 @@ import { search } from "./routes/search";
 import { analytics } from "./routes/analytics";
 import { scan } from "./routes/scan";
 
-export const app = new Hono();
+export const app = new Hono<AppEnv>();
+
+const SLOW_REQUEST_MS = 1000;
 
 app.use("/api/*", async (c, next) => {
   const started = Date.now();
   const requestId = c.req.header("x-vercel-id") ?? crypto.randomUUID();
+  c.set("requestId", requestId);
   c.header("x-request-id", requestId);
   await next();
+  const ms = Date.now() - started;
   const level = c.res.status >= 500 ? "error" : c.res.status >= 400 ? "warn" : "info";
-  const event = JSON.stringify({ level, msg: "api_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms: Date.now() - started });
+  const event = JSON.stringify({ level, msg: "api_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms });
   if (level === "error") console.error(event); else console.log(event);
+  if (ms > SLOW_REQUEST_MS && c.res.status < 500) {
+    console.warn(JSON.stringify({ level: "warn", msg: "slow_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms }));
+  }
 });
 
 app.use("/api/*", membershipGuards);
@@ -67,6 +74,7 @@ for (const path of ["reports/spending-by-category", "reports/trends", "reports/h
 app.get("/api/users/me/plan", requireAuth, async (c) => c.json({ plan: await getPlan(c.get("user").user_id), limits: STARTER_LIMITS }));
 
 app.route("/api/health", health);
+
 app.route("/api/auth", auth);
 app.route("/api/accounts", accounts);
 app.route("/api/account-types", accountTypes);
@@ -115,8 +123,9 @@ app.route("/api/scan", scan);
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 
 app.onError((err, c) => {
-  console.error(JSON.stringify({ level: "error", msg: "api_unhandled_error", route: c.req.path, method: c.req.method, error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined }));
-  return c.json({ error: "Something went wrong. Please try again." }, 500);
+  const requestId = c.get("requestId") ?? "unknown";
+  console.error(JSON.stringify({ level: "error", msg: "api_unhandled_error", requestId, route: c.req.path, method: c.req.method, error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined }));
+  return c.json({ error: `Unexpected server error. Reference ${requestId}.`, code: "internal_error", requestId }, 500);
 });
 
 export default app;

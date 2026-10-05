@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson, isUniqueViolation } from "./helpers";
+import { readJson, isUniqueViolation, serverError } from "./helpers";
 import { deleteTag, insertTag, listTags, updateTag } from "../queries/tags";
 
 const tags = new Hono();
@@ -31,7 +31,7 @@ tags.post("/", requireAuth, async (c) => {
       return c.json({ error: "You already have a tag with this name." }, 409);
     }
     console.error("[api] create tag failed:", err);
-    return c.json({ error: "Could not create the tag. Please try again." }, 500);
+    return serverError(c, "tags_create_tag_failed", "Could not create the tag. Please try again.");
   }
 
   return c.json({ success: true });
@@ -65,7 +65,7 @@ tags.patch("/:id", requireAuth, async (c) => {
       return c.json({ error: "You already have a tag with this name." }, 409);
     }
     console.error("[api] update tag failed:", err);
-    return c.json({ error: "Could not update the tag. Please try again." }, 500);
+    return serverError(c, "tags_update_tag_failed", "Could not update the tag. Please try again.");
   }
 
   return c.json({ success: true });

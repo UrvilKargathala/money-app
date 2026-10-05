@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
 import { getEntitlement } from "../queries/entitlements";
 import {
@@ -109,7 +109,7 @@ exportJobs.post("/jobs", requireAuth, async (c) => {
     return c.json({ success: true, job: { id: jobId }, row_count: rowCount });
   } catch (err) {
     console.error("[api] create export job failed:", err);
-    return c.json({ error: "Could not create the export job. Please try again." }, 500);
+    return serverError(c, "export_create_export_job_failed", "Could not create the export job. Please try again.");
   }
 });
 
@@ -223,7 +223,7 @@ exportJobs.get("/jobs/:id/download", requireAuth, async (c) => {
     });
   } catch (err) {
     console.error("[api] export download failed:", err);
-    return c.json({ error: "Could not generate the export. Please try again." }, 500);
+    return serverError(c, "export_generate_export_failed", "Could not generate the export. Please try again.");
   }
 });
 

@@ -23,7 +23,7 @@ import {
   hashToken,
 } from "../session";
 import { SESSION_COOKIE } from "../constants";
-import { isUniqueViolation, readJson } from "./helpers";
+import { isUniqueViolation, readJson, serverError } from "./helpers";
 import { requireAuth } from "../middleware";
 import { rateLimitConfig } from "../rate-limit-config";
 
@@ -185,7 +185,7 @@ auth.post("/signup", async (c) => {
       );
     }
     console.error("[api] signup failed:", err);
-    return c.json({ error: "Something went wrong. Please try again." }, 500);
+    return serverError(c, "auth_signup_failed", "Something went wrong. Please try again.");
   }
 
   // Feed the signup limiter: without this row the per-IP budget never fills.

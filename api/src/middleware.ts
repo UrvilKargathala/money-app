@@ -7,6 +7,7 @@ import type { SessionUser } from "./types";
 export type AppEnv = {
   Variables: {
     user: SessionUser;
+    requestId: string;
   };
 };
 

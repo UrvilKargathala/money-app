@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { parseAmount } from "../validation";
 import { activeAccountExists } from "../queries/references";
 import { sniffImageKind, preprocessImage } from "../ocr/preprocess";
@@ -92,7 +92,7 @@ scan.post("/preview", requireAuth, async (c) => {
       return c.json({ error: "Scan timed out. Try a smaller or clearer image." }, 504);
     }
     console.error("[api] scan preview failed:", err);
-    return c.json({ error: "Could not read the file. Please try again." }, 500);
+    return serverError(c, "scan_read_file_failed", "Could not read the file. Please try again.");
   }
 });
 
@@ -134,7 +134,7 @@ scan.post("/", requireAuth, async (c) => {
       return c.json({ error: "Scan timed out. Try a smaller or clearer image." }, 504);
     }
     console.error("[api] scan failed:", err);
-    return c.json({ error: "Could not read the file. Please try again." }, 500);
+    return serverError(c, "scan_read_file_failed", "Could not read the file. Please try again.");
   }
   if (outcome.candidates.length === 0) {
     return c.json({ error: "No readable data found. Try a clearer image." }, 422);
@@ -166,7 +166,7 @@ scan.post("/", requireAuth, async (c) => {
     return c.json({ success: true, job: { id: result.jobId }, cards });
   } catch (err) {
     console.error("[api] create scan job failed:", err);
-    return c.json({ error: "Could not save the scan. Please try again." }, 500);
+    return serverError(c, "scan_save_scan_failed", "Could not save the scan. Please try again.");
   }
 });
 
@@ -269,7 +269,7 @@ scan.post("/:id/confirm", requireAuth, async (c) => {
     return c.json({ success: true, ...result });
   } catch (err) {
     console.error("[api] confirm scan failed:", err);
-    return c.json({ error: "Could not confirm the scan. Please try again." }, 500);
+    return serverError(c, "scan_confirm_scan_failed", "Could not confirm the scan. Please try again.");
   }
 });
 

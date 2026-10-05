@@ -9,6 +9,7 @@ import {
 } from "../queries/note-attachments";
 import { getNoteById } from "../queries/notes";
 import { getObjectStorage } from "../utils/object-storage";
+import { serverError } from "./helpers";
 
 /** Client-encrypted ciphertext only - 5MB cap on the encrypted blob. */
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -114,7 +115,7 @@ export function registerNoteAttachmentRoutes(notes: Hono): void {
       });
     } catch (err) {
       console.error("[api] attachment download failed:", err);
-      return c.json({ error: "Could not fetch the attachment." }, 500);
+      return serverError(c, "note_attachments_fetch_attachment_failed", "Could not fetch the attachment.");
     }
   });
 
@@ -138,7 +139,7 @@ export function registerNoteAttachmentRoutes(notes: Hono): void {
         });
       } catch (err) {
         console.error("[api] attachment preview failed:", err);
-        return c.json({ error: "Could not fetch the attachment." }, 500);
+        return serverError(c, "note_attachments_fetch_attachment_failed", "Could not fetch the attachment.");
       }
     }
   );
