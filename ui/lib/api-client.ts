@@ -98,6 +98,13 @@ export async function getApiUser(): Promise<{
   }
 }
 
+// Server-only profile read for the app shell (avatar source of truth).
+export async function getMyProfile(): Promise<{
+  profile: { full_name: string | null; email: string; bio?: string | null; avatar_url?: string | null };
+} | null> {
+  return apiJson("/api/users/me/profile");
+}
+
 export async function getAccountsData(): Promise<{
   accounts: {
     id: string;

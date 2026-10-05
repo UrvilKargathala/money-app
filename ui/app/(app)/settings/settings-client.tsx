@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
+import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { useMembership } from "@/components/membership";
 import { WIDGETS } from "@/lib/widgets";
@@ -223,11 +224,19 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     }
   }
 
+  const [avatarBust, setAvatarBust] = useState(0);
+
   async function handleAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files are accepted.");
+      e.target.value = "";
+      return;
+    }
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Avatar must be 2MB or smaller.");
+      e.target.value = "";
       return;
     }
     setAvatarUploading(true);
@@ -243,7 +252,12 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         return;
       }
       toast.success("Avatar updated.");
-      setProfile((p) => (p ? { ...p, avatar_url: j.avatar_url ?? p.avatar_url } : p));
+      // Same source of truth as the navbar: bust caches, mark the profile,
+      // and broadcast so the topbar swaps without a reload.
+      const bust = Date.now();
+      setAvatarBust(bust);
+      setProfile((p) => (p ? { ...p, avatar_url: "set" } : p));
+      window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT));
     } catch {
       toast.error("Could not upload avatar.");
     } finally {
@@ -327,7 +341,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="Avatar" /> : null}
+              {profile?.avatar_url ? <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt="Profile photo" /> : null}
               <AvatarFallback>{(profile?.full_name ?? user?.full_name ?? user?.email ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
@@ -335,7 +349,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                 <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload avatar (max 2MB)"}
               </Label>
               <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatar} disabled={avatarUploading} />
-              <p className="text-xs text-neutral-400">PNG/JPG, stored at /api/users/me/avatar</p>
+              <p className="text-xs text-neutral-400">PNG/JPG/WebP up to 2MB. Re-uploading replaces the previous photo.</p>
             </div>
           </div>
           <div className="grid gap-3">

@@ -17,7 +17,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GlobalSearch } from "@/components/common/global-search";
+import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
+import { useEffect } from "react";
 
 function isGroupActive(pathname: string, group: { items: { href: string }[] }) {
   return group.items.some((item) => pathname === item.href || pathname.startsWith(item.href + "/"));
@@ -27,12 +30,27 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function Topbar({ userName, userEmail, initialUnread = 0 }: { userName?: string | null; userEmail?: string | null; initialUnread?: number }) {
+export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = false }: { userName?: string | null; userEmail?: string | null; initialUnread?: number; hasAvatar?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // Single avatar source of truth: layout seeds hasAvatar; settings uploads
+  // broadcast AVATAR_UPDATED_EVENT so both surfaces swap without a reload.
+  const [showAvatar, setShowAvatar] = useState(hasAvatar);
+  const [avatarBust, setAvatarBust] = useState(0);
+  useEffect(() => {
+    setShowAvatar(hasAvatar);
+  }, [hasAvatar]);
+  useEffect(() => {
+    const onAvatar = () => {
+      setShowAvatar(true);
+      setAvatarBust(Date.now());
+    };
+    window.addEventListener(AVATAR_UPDATED_EVENT, onAvatar);
+    return () => window.removeEventListener(AVATAR_UPDATED_EVENT, onAvatar);
+  }, []);
   useCommandPaletteHotkey(() => setPaletteOpen(true));
 
   const handleLogout = async () => {
@@ -202,9 +220,18 @@ export function Topbar({ userName, userEmail, initialUnread = 0 }: { userName?: 
           <NotificationBell initialUnread={initialUnread} />
 
           <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 ml-1 pl-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-              <User className="h-4 w-4" />
-            </div>
+            {showAvatar ? (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} />
+                <AvatarFallback className="bg-primary-100 text-primary-600 text-xs">
+                  {(userName ?? "U").trim().slice(0, 1).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                <User className="h-4 w-4" />
+              </div>
+            )}
             <div className="hidden lg:flex flex-col">
               <span className="text-sm font-medium font-heading text-neutral-800 leading-none">{userName || "User"}</span>
               <span className="text-xs text-neutral-500 leading-none mt-0.5">{userEmail || ""}</span>

@@ -74,6 +74,28 @@ userLifecycle.patch("/settings", requireAuth, async (c) => {
   return c.json({ success: true });
 });
 
+function avatarContentType(path: string): string {
+  if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+  if (path.endsWith(".webp")) return "image/webp";
+  return "image/png";
+}
+
+// Streams the caller's own avatar bytes. 404 when none is set, so the UI
+// always has a clean fallback (initials) instead of a broken image.
+userLifecycle.get("/avatar", requireAuth, async (c) => {
+  const user = c.get("user");
+  const profile = await getProfile(user.user_id);
+  if (!profile?.avatar_url) return c.json({ error: "Not found" }, 404);
+  try {
+    const bytes = await getObjectStorage().get(profile.avatar_url);
+    return new Response(bytes.slice().buffer as ArrayBuffer, {
+      headers: { "content-type": avatarContentType(profile.avatar_url), "cache-control": "private, max-age=3600" },
+    });
+  } catch {
+    return c.json({ error: "Not found" }, 404);
+  }
+});
+
 userLifecycle.post("/avatar", requireAuth, async (c) => {
   const user = c.get("user");
   const bytes = new Uint8Array(await c.req.arrayBuffer());
@@ -88,13 +110,20 @@ userLifecycle.post("/avatar", requireAuth, async (c) => {
 
   try {
     const storage = getObjectStorage();
-    const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
-    const stored = await storage.put(`avatars/${user.user_id}/${Date.now()}.${ext}`, bytes);
+    // Stable per-user key: re-uploads replace instead of accumulating
+    // timestamped orphans. Previous blob (different key) is deleted.
+    const ext = contentType.includes("webp") ? "webp" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
+    const key = `avatars/${user.user_id}/avatar.${ext}`;
+    const previous = (await getProfile(user.user_id))?.avatar_url ?? null;
+    const stored = await storage.put(key, bytes);
     await withUser(user.user_id, (client) => {
       setAvatarUrl(client, user.user_id, stored.path);
       return Promise.resolve();
     });
-    return c.json({ success: true, avatar_url: stored.path });
+    if (previous && previous !== stored.path) {
+      await storage.delete(previous).catch(() => {});
+    }
+    return c.json({ success: true, avatar_url: "/api/users/me/avatar" });
   } catch (err) {
     console.error("[api] avatar upload failed:", err);
     return serverError(c, "user_lifecycle_upload_avatar_failed", "Could not upload the avatar. Please try again.");
