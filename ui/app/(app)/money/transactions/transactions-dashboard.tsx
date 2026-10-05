@@ -262,10 +262,10 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           }
         />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {groups.map((g) => (
             <div key={g.date}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-1.5">
                 <h3 className="text-sm font-semibold font-heading text-neutral-700">
                   {new Date(g.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}
                 </h3>

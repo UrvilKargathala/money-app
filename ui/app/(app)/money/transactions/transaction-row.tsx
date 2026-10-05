@@ -42,10 +42,10 @@ export function TransactionRow({
   const isExpense = txn.type === "expense";
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-100 bg-white p-4 hover:bg-neutral-50 transition-colors">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-100 bg-white p-3 hover:bg-neutral-50 transition-colors">
       <input type="checkbox" checked={selected} onChange={(event) => onSelectedChange?.(event.target.checked)} aria-label={`Select ${txn.merchant_clean || txn.description || "transaction"}`} className="h-4 w-4 rounded border-neutral-300" />
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="h-10 w-10 rounded-[10px] flex items-center justify-center shrink-0 text-xs font-bold" style={{ backgroundColor: (txn.account_color || "#2563EB") + "15", color: txn.account_color || "#2563EB" }}>
+        <div className="h-9 w-9 rounded-[10px] flex items-center justify-center shrink-0 text-xs font-bold" style={{ backgroundColor: (txn.account_color || "#2563EB") + "15", color: txn.account_color || "#2563EB" }}>
           {txn.account_name.slice(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
