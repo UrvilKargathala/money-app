@@ -35,6 +35,7 @@ describe("email action rate limiting (forgot-password + magic-link)", () => {
       body,
     });
     expect(fourth.status).toBe(429);
+    expect(fourth.headers.get("retry-after")).toBe("900");
     const errBody = (await fourth.json()) as { error: string };
     expect(errBody.error).toContain("Too many");
 
@@ -66,6 +67,7 @@ describe("email action rate limiting (forgot-password + magic-link)", () => {
       body,
     });
     expect(fourth.status).toBe(429);
+    expect(fourth.headers.get("retry-after")).toBe("900");
   });
 
   it("login burst: 4 rapid attempts -> 5th gets 429 + Retry-After", async () => {
@@ -144,6 +146,41 @@ describe("email action rate limiting (forgot-password + magic-link)", () => {
       body,
     });
     expect(fourth.status).toBe(429);
+    expect(fourth.headers.get("retry-after")).toBe("900");
+  });
+
+  it("signup: 5 accounts from one IP -> 6th gets 429 + Retry-After", async () => {
+    // Forwarded IP: loopback/test clients ("local") are exempt from the
+    // signup limiter, so the budget IP must be explicit.
+    const headers = {
+      "content-type": "application/json",
+      "x-forwarded-for": "203.0.113.77",
+    };
+    for (let i = 0; i < 5; i++) {
+      const res = await rawRequest("/api/auth/signup", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: "Rate Test",
+          email: `signup-rl-${i}@moneymind.test`,
+          password: TEST_PASSWORD,
+          confirm: TEST_PASSWORD,
+        }),
+      });
+      expect(res.status).toBe(200);
+    }
+    const sixth = await rawRequest("/api/auth/signup", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        name: "Rate Test",
+        email: "signup-rl-5@moneymind.test",
+        password: TEST_PASSWORD,
+        confirm: TEST_PASSWORD,
+      }),
+    });
+    expect(sixth.status).toBe(429);
+    expect(sixth.headers.get("retry-after")).toBe("900");
   });
 });
 

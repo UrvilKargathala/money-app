@@ -156,6 +156,7 @@ auth.post("/signup", async (c) => {
   }
 
   if (await isSignupRateLimited(getClientIp(c))) {
+    c.header("Retry-After", String(LOGIN_WINDOW_MINUTES * 60));
     return c.json(
       { error: "Too many accounts created from this IP. Please try again later." },
       429
@@ -187,6 +188,8 @@ auth.post("/signup", async (c) => {
     return c.json({ error: "Something went wrong. Please try again." }, 500);
   }
 
+  // Feed the signup limiter: without this row the per-IP budget never fills.
+  await recordAccessLog(userId, c, "signup");
   const session = await createSessionRecord(userId!, true);
   try {
     const { enforceSingleSessionIfFree } = await import("../queries/entitlements");

@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
-import { normalizeEmail, isValidPassword, passwordPolicyHint, hashPassword, verifyPassword, isEmailActionRateLimited, getClientIp } from "../auth";
+import { normalizeEmail, isValidPassword, passwordPolicyHint, hashPassword, verifyPassword, isEmailActionRateLimited, EMAIL_ACTION_WINDOW_MINUTES, getClientIp } from "../auth";
 import { findActiveUserByEmail } from "../queries/auth";
 import { createAuthToken } from "../queries/user-tokens";
 import {
@@ -31,6 +31,7 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
   auth.post("/forgot-password", async (c) => {
     const ip = getClientIp(c);
     if (await isEmailActionRateLimited(ip)) {
+      c.header("Retry-After", String(EMAIL_ACTION_WINDOW_MINUTES * 60));
       return c.json(
         { error: "Too many password reset requests. Please try again later." },
         429
@@ -110,6 +111,7 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
   auth.post("/magic-link", async (c) => {
     const ip = getClientIp(c);
     if (await isEmailActionRateLimited(ip)) {
+      c.header("Retry-After", String(EMAIL_ACTION_WINDOW_MINUTES * 60));
       return c.json(
         { error: "Too many login link requests. Please try again later." },
         429
