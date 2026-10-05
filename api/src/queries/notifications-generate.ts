@@ -44,6 +44,18 @@ function keySet(payloads: Record<string, unknown>[]): Set<string> {
   return out;
 }
 
+/**
+ * Hoisted dedupe index: building one keySet per candidate row is O(n^2) in
+ * the user's alert count. Build each user's set once, then probe per row.
+ */
+function seenByUser(existing: Map<number, Record<string, unknown>[]>): Map<number, Set<string>> {
+  const out = new Map<number, Set<string>>();
+  for (const [userId, payloads] of existing) out.set(userId, keySet(payloads));
+  return out;
+}
+
+const EMPTY_SET: Set<string> = new Set();
+
 function prefOn(
   matrix: { notification_type: string; channel: string; is_enabled: boolean }[],
   type: string
@@ -142,6 +154,7 @@ export async function generateBillAlerts(q: Queryable = DB): Promise<number> {
     "bills",
     q
   );
+  const seen = seenByUser(existing);
   const rows: NewNotification[] = [];
   for (const bill of result.rows) {
     const due = nextBillDue(bill.due_day, bill.frequency, today);
@@ -155,8 +168,7 @@ export async function generateBillAlerts(q: Queryable = DB): Promise<number> {
       ref: bill.id,
       period,
     };
-    const seen = keySet(existing.get(bill.user_id) ?? []);
-    if (seen.has(`${key.kind}|${key.ref}|${key.period}`)) continue;
+    if ((seen.get(bill.user_id) ?? EMPTY_SET).has(`${key.kind}|${key.ref}|${key.period}`)) continue;
     const amount = Number(bill.amount ?? 0);
     rows.push({
       userId: bill.user_id,
@@ -205,6 +217,7 @@ export async function generateSubscriptionAlerts(q: Queryable = DB): Promise<num
     "subscription",
     q
   );
+  const seen = seenByUser(existing);
   const rows: NewNotification[] = [];
   for (const sub of result.rows) {
     if (!sub.reminder_on) continue;
@@ -216,8 +229,7 @@ export async function generateSubscriptionAlerts(q: Queryable = DB): Promise<num
       ref: sub.id,
       period: sub.renewal,
     };
-    const seen = keySet(existing.get(sub.user_id) ?? []);
-    if (seen.has(`${key.kind}|${key.ref}|${key.period}`)) continue;
+    if ((seen.get(sub.user_id) ?? EMPTY_SET).has(`${key.kind}|${key.ref}|${key.period}`)) continue;
     const amount = Number(sub.amount ?? 0);
     rows.push({
       userId: sub.user_id,
@@ -277,6 +289,7 @@ export async function generateGoalAlerts(q: Queryable = DB): Promise<number> {
     "goals",
     q
   );
+  const seen = seenByUser(existing);
   const rows: NewNotification[] = [];
   for (const goal of result.rows) {
     if (!goal.insight_on) continue;
@@ -289,8 +302,7 @@ export async function generateGoalAlerts(q: Queryable = DB): Promise<number> {
     const actual = (Number(goal.saved) / Number(goal.target)) * 100;
     if (actual >= expected - 10) continue;
     const key: AlertKey = { kind: "goal_behind", ref: goal.id, period };
-    const seen = keySet(existing.get(goal.user_id) ?? []);
-    if (seen.has(`${key.kind}|${key.ref}|${key.period}`)) continue;
+    if ((seen.get(goal.user_id) ?? EMPTY_SET).has(`${key.kind}|${key.ref}|${key.period}`)) continue;
     const now = new Date();
     rows.push({
       userId: goal.user_id,
