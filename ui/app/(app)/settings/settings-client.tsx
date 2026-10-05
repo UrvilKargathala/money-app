@@ -305,26 +305,20 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Settings</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">Manage your account, security, notifications, and data.</p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="/pricing">View plans and pricing</Link>
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold font-heading text-neutral-900">Settings</h1>
+        <p className="text-sm text-neutral-500 font-body mt-1">Manage your account, security, notifications, and data.</p>
       </div>
 
       <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40">
-        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-indigo-700">Your MoneyMind plan</p>
-            <h2 className="mt-1 text-xl font-bold font-heading text-neutral-900">
-              {planLoading ? "Checking plan..." : premium ? "Premium active" : "Starter plan"}
-            </h2>
-            <p className="text-sm text-neutral-500">{planLoading ? "Loading access status" : premium ? "All features are unlocked for now." : "Core money tools are available."}</p>
+        <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant={planLoading ? "default" : premium ? "success" : "default"}>
+              {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
+            </Badge>
+            <p className="text-sm text-neutral-500">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available."}</p>
           </div>
-          <Button asChild className="w-fit bg-indigo-600 hover:bg-indigo-700">
+          <Button asChild className="w-fit shrink-0 bg-indigo-600 hover:bg-indigo-700">
             <Link href="/pricing">Manage plan</Link>
           </Button>
         </CardContent>
