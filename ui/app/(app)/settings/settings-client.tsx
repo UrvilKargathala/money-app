@@ -353,21 +353,21 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           </CardTitle>
           <CardDescription>Your account information - edit name/bio and avatar</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
+        <CardContent className="space-y-5">
+          <div className="flex items-center gap-4 pb-1">
             <Avatar className="h-16 w-16">
               {profile?.avatar_url ? <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt="Profile photo" /> : null}
               <AvatarFallback>{(profile?.full_name ?? user?.full_name ?? user?.email ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="avatar" className="flex items-center gap-2 cursor-pointer text-sm font-medium text-primary-600 hover:underline">
-                <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload avatar (max 2MB)"}
+                <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload avatar"}
               </Label>
               <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatar} disabled={avatarUploading} />
               <p className="text-xs text-neutral-400">PNG/JPG/WebP up to 2MB. Re-uploading replaces the previous photo.</p>
             </div>
           </div>
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             <div className="space-y-1">
               <Label htmlFor="full_name">Full name</Label>
               <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
@@ -395,7 +395,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <CardDescription>Update your password (requires current password)</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleChangePassword} className="space-y-3">
+          <form onSubmit={handleChangePassword} className="space-y-5">
             {pwError && (
               <Alert variant="destructive">
                 <AlertDescription>{pwError}</AlertDescription>
