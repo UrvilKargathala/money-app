@@ -209,7 +209,42 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
         </div>
       </Card>
 
-      {selected.size > 0 ? <Card className="sticky top-20 z-30 flex flex-col gap-3 border-primary-200 bg-primary-50 p-3 shadow-md sm:flex-row sm:items-center"><p className="text-sm font-semibold">{selected.size} selected</p><div className="flex flex-1 flex-wrap gap-2"><Select value={bulkCategory} onValueChange={setBulkCategory}><SelectTrigger className="w-44 bg-white"><SelectValue placeholder="Choose category" /></SelectTrigger><SelectContent>{categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent></Select><Button size="sm" variant="outline" disabled={!bulkCategory || bulkBusy} onClick={() => void bulk("categorize")}>Apply category</Button><Select value={bulkTag} onValueChange={setBulkTag}><SelectTrigger className="w-40 bg-white"><SelectValue placeholder="Choose tag" /></SelectTrigger><SelectContent>{tags.map((tag) => <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>)}</SelectContent></Select><Button size="sm" variant="outline" disabled={!bulkTag || bulkBusy} onClick={() => void bulk("tag")}><Tags className="h-4 w-4" /> Apply tag</Button>{selected.size === 2 ? <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => void mergeSelected()}>Merge duplicates</Button> : null}<Button size="sm" variant="destructive" disabled={bulkBusy} onClick={() => void bulk("delete")}>Delete</Button><Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button></div></Card> : null}
+      <Card className={`sticky top-20 z-30 p-3 shadow-md ${selected.size > 0 ? "border-primary-200 bg-primary-50" : ""}`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="flex shrink-0 items-center gap-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              aria-label="Select all transactions in view"
+              title="Select all transactions in view"
+              checked={filtered.length > 0 && filtered.every((t) => selected.has(t.id))}
+              ref={(el) => { if (el) el.indeterminate = selected.size > 0 && !filtered.every((t) => selected.has(t.id)); }}
+              disabled={filtered.length === 0 || bulkBusy}
+              onChange={() => {
+                setSelected((current) => {
+                  const next = new Set(current);
+                  if (filtered.every((t) => next.has(t.id))) {
+                    for (const t of filtered) next.delete(t.id);
+                  } else {
+                    for (const t of filtered) next.add(t.id);
+                  }
+                  return next;
+                });
+              }}
+              className="h-4 w-4 rounded border-neutral-300"
+            />
+            {selected.size > 0 ? `${selected.size} selected` : "Bulk edit"}
+          </label>
+          <div className="flex flex-1 flex-wrap gap-2">
+            <Select value={bulkCategory} onValueChange={setBulkCategory} disabled={selected.size === 0 || bulkBusy}><SelectTrigger className="w-44 bg-white"><SelectValue placeholder="Choose category" /></SelectTrigger><SelectContent>{categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent></Select>
+            <Button size="sm" variant="outline" disabled={!bulkCategory || selected.size === 0 || bulkBusy} onClick={() => void bulk("categorize")}>Apply category</Button>
+            <Select value={bulkTag} onValueChange={setBulkTag} disabled={selected.size === 0 || bulkBusy}><SelectTrigger className="w-40 bg-white"><SelectValue placeholder="Choose tag" /></SelectTrigger><SelectContent>{tags.map((tag) => <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>)}</SelectContent></Select>
+            <Button size="sm" variant="outline" disabled={!bulkTag || selected.size === 0 || bulkBusy} onClick={() => void bulk("tag")}><Tags className="h-4 w-4" /> Apply tag</Button>
+            <Button size="sm" variant="outline" disabled={selected.size !== 2 || bulkBusy} title={selected.size === 2 ? "Merge the two selected transactions" : "Select exactly 2 transactions to merge"} onClick={() => void mergeSelected()}>Merge duplicates</Button>
+            <Button size="sm" variant="destructive" disabled={selected.size === 0 || bulkBusy} onClick={() => void bulk("delete")}>Delete</Button>
+            <Button size="sm" variant="ghost" disabled={selected.size === 0} onClick={() => setSelected(new Set())}>Clear</Button>
+          </div>
+        </div>
+      </Card>
 
       {filtered.length === 0 ? (
         <EmptyState
