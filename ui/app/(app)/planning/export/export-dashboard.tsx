@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileArchive, RefreshCw, Trash2, RotateCcw, Package, Activity, FileSpreadsheet } from "lucide-react";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { toast } from "sonner";
 
 type ModuleInfo = { module: string; label: string; columns?: string[]; column_sets?: string[][]; description?: string | null };
@@ -158,22 +159,29 @@ export function ExportDashboard({
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this export job?")) return;
-    setBusyId(id);
-    try {
-      const res = await fetch(`/api/export/jobs/${encodeURIComponent(id)}`, { method: "DELETE" });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(j.error || "Delete failed");
-        return;
-      }
-      toast.success("Job deleted");
-      setJobs((prev) => prev.filter((x) => x.id !== id));
-      router.refresh();
-    } finally {
-      setBusyId(null);
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  function handleDelete(id: string) {
+    askConfirm({
+      title: "Delete this export job?",
+      description: "The record is removed. You can re-run the export any time.",
+      onConfirm: async () => {
+        setBusyId(id);
+        try {
+          const res = await fetch(`/api/export/jobs/${encodeURIComponent(id)}`, { method: "DELETE" });
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            toast.error(j.error || "Delete failed");
+            return;
+          }
+          toast.success("Job deleted");
+          setJobs((prev) => prev.filter((x) => x.id !== id));
+          router.refresh();
+        } finally {
+          setBusyId(null);
+        }
+      },
+    });
   }
 
   return (
@@ -430,6 +438,7 @@ export function ExportDashboard({
           )}
         </CardContent>
       </Card>
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }

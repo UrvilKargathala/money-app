@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { useMembership } from "@/components/membership";
 import { WIDGETS } from "@/lib/widgets";
 import Link from "next/link";
@@ -128,12 +129,20 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     toast.success("Display preferences saved.");
   }
 
-  async function handlePermanentDelete() {
-    if (!confirm("Permanently delete this account now? This is only available after the 30-day deactivation period and cannot be undone.")) return;
-    const res = await fetch("/api/users/me", { method: "DELETE" });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) return toast.error(body.error ?? "Permanent deletion is not available yet.");
-    window.location.href = "/login?account=deleted";
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  function handlePermanentDelete() {
+    askConfirm({
+      title: "Permanently delete this account?",
+      description: "Only available after the 30-day deactivation period. Everything is destroyed and cannot be undone.",
+      confirmLabel: "Delete forever",
+      onConfirm: async () => {
+        const res = await fetch("/api/users/me", { method: "DELETE" });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) { toast.error(body.error ?? "Permanent deletion is not available yet."); return; }
+        window.location.href = "/login?account=deleted";
+      },
+    });
   }
 
   async function handleSaveProfile() {
@@ -243,20 +252,26 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     }
   }
 
-  async function handleDeactivate() {
-    if (!confirm("Deactivate your account? Data will be kept 30 days before purge. You can restore within that window.")) return;
-    setGdprLoading(true);
-    try {
-      const res = await fetch("/api/users/me/deactivate", { method: "POST" });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(j.error || "Could not deactivate.");
-        return;
-      }
-      toast.success(j.message || "Account deactivated.");
-    } finally {
-      setGdprLoading(false);
-    }
+  function handleDeactivate() {
+    askConfirm({
+      title: "Deactivate your account?",
+      description: "Data is kept 30 days before purge. You can restore within that window.",
+      confirmLabel: "Deactivate",
+      onConfirm: async () => {
+        setGdprLoading(true);
+        try {
+          const res = await fetch("/api/users/me/deactivate", { method: "POST" });
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            toast.error(j.error || "Could not deactivate.");
+            return;
+          }
+          toast.success(j.message || "Account deactivated.");
+        } finally {
+          setGdprLoading(false);
+        }
+      },
+    });
   }
 
   async function handleRestore() {
@@ -659,6 +674,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <p className="text-xs text-neutral-500">Deactivate keeps your data recoverable for 30 days. Permanent deletion becomes available after that grace period and cannot be undone.</p>
         </CardContent>
       </Card>
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -277,24 +278,36 @@ export function TaxDashboard({
     if (s?.error) toast.error(String(s.error));
   }, [suggestState, router]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this investment?")) return;
-    const res = await deleteTaxInvestmentAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Deleted");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete this investment?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteTaxInvestmentAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
-  const handleDeleteItr = async (id: string) => {
-    if (!confirm("Delete this document?")) return;
-    const res = await deleteItrDocAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Document deleted");
-      router.refresh();
-    }
+  const handleDeleteItr = (id: string) => {
+    askConfirm({
+      title: "Delete this document?",
+      description: "This cannot be undone.",
+      onConfirm: async () => {
+        const res = await deleteItrDocAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Document deleted");
+          router.refresh();
+        }
+      },
+    });
   };
 
   const handleFyChange = (v: string) => {
@@ -642,6 +655,7 @@ export function TaxDashboard({
       <TaxInvestmentDialog open={formOpen} onOpenChange={setFormOpen} investment={editing} sections={sections} fy={fy} onSuccess={() => router.refresh()} />
       <SalaryDialog open={salaryOpen} onOpenChange={setSalaryOpen} salary={salary} fy={fy} onSuccess={() => router.refresh()} />
       <ItrDialog open={itrOpen} onOpenChange={setItrOpen} doc={itrEditing} fy={fy} onSuccess={() => router.refresh()} />
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }

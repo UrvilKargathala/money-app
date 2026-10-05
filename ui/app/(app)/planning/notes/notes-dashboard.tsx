@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
+import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { FileText, Plus, Pin, Trash2, Search, RotateCcw, Tag, LayoutTemplate, LockKeyhole, ShieldCheck, Paperclip, Download, Eye, Pencil, Check, X } from "lucide-react";
 import { deleteNoteAction, pinNoteAction, unpinNoteAction, restoreNoteAction, purgeNoteAction } from "./actions";
 import { createNoteUserTemplate, deleteNoteUserTemplate, updateNoteUserTemplate, type NoteUserTemplate } from "@/lib/note-user-templates";
@@ -112,14 +113,21 @@ export function NotesDashboard({
     new Set(notes.map((n) => n.category).filter(Boolean))
   );
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this note?")) return;
-    const res = await deleteNoteAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Moved to trash");
-      router.refresh();
-    }
+  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+
+  const handleDelete = (id: string) => {
+    askConfirm({
+      title: "Delete this note?",
+      description: "It moves to trash for 30 days, then is purged.",
+      onConfirm: async () => {
+        const res = await deleteNoteAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Moved to trash");
+          router.refresh();
+        }
+      },
+    });
   };
   const handlePin = async (n: Note) => {
     const res = n.is_pinned ? await unpinNoteAction(n.id) : await pinNoteAction(n.id);
@@ -137,14 +145,19 @@ export function NotesDashboard({
       router.refresh();
     }
   };
-  const handlePurge = async (id: string) => {
-    if (!confirm("Permanently delete?")) return;
-    const res = await purgeNoteAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Purged");
-      router.refresh();
-    }
+  const handlePurge = (id: string) => {
+    askConfirm({
+      title: "Permanently delete?",
+      description: "This cannot be undone. The encrypted payload is destroyed.",
+      onConfirm: async () => {
+        const res = await purgeNoteAction(id);
+        if (res?.error) toast.error(res.error);
+        else {
+          toast.success("Purged");
+          router.refresh();
+        }
+      },
+    });
   };
 
   const openCreate = () => {
@@ -236,11 +249,16 @@ export function NotesDashboard({
     }
   };
 
-  const handleDeleteTemplate = async (id: string, title: string) => {
-    if (!confirm(`Delete template "${title}"?`)) return;
-    const ok = await deleteNoteUserTemplate(id);
-    if (ok) { toast.success("Template deleted"); router.refresh(); }
-    else toast.error("Could not delete the template.");
+  const handleDeleteTemplate = (id: string, title: string) => {
+    askConfirm({
+      title: `Delete template "${title}"?`,
+      description: "Notes already created from it are unaffected. This cannot be undone.",
+      onConfirm: async () => {
+        const ok = await deleteNoteUserTemplate(id);
+        if (ok) { toast.success("Template deleted"); router.refresh(); }
+        else toast.error("Could not delete the template.");
+      },
+    });
   };
 
   const saveNoteAsTemplate = async () => {
@@ -300,11 +318,17 @@ export function NotesDashboard({
     } catch { toast.error("Could not decrypt this attachment."); }
   }
 
-  async function removeAttachment(item: Attachment) {
-    if (!editing || !confirm(`Delete ${item.file_name}?`)) return;
-    const res = await fetch(`/api/notes/${editing.id}/attachments/${item.id}`, { method: "DELETE" });
-    if (res.ok) { setAttachments(current => current.filter(value => value.id !== item.id)); toast.success("Attachment removed."); }
-    else toast.error("Could not remove attachment.");
+  function removeAttachment(item: Attachment) {
+    if (!editing) return;
+    askConfirm({
+      title: `Delete ${item.file_name}?`,
+      description: "The encrypted file is destroyed. This cannot be undone.",
+      onConfirm: async () => {
+        const res = await fetch(`/api/notes/${editing.id}/attachments/${item.id}`, { method: "DELETE" });
+        if (res.ok) { setAttachments(current => current.filter(value => value.id !== item.id)); toast.success("Attachment removed."); }
+        else toast.error("Could not remove attachment.");
+      },
+    });
   }
 
   // Inline category rename: one chip editable at a time, Enter/check saves,
@@ -722,6 +746,7 @@ export function NotesDashboard({
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
     </div>
   );
 }
