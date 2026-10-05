@@ -172,6 +172,11 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
     }
   }
 
+  // True once the server reports receipt scanning is unconfigured (missing AI
+  // key): the raw env-var message means nothing to end users, so the receipt
+  // tab shows a persistent hint pointing at statement import instead.
+  const [scanUnavailable, setScanUnavailable] = useState(false);
+
   async function scanReceipt(selected: File | null) {
     if (!selected) return;
     setBusy(true);
@@ -182,11 +187,18 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
       const res = await fetch("/api/transactions/scan-receipt", { method: "POST", body: form });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "Could not read receipt.");
+      setScanUnavailable(false);
       setScanDraft(body.draft);
       const categoryId = categories.find((category) => category.name.toLowerCase() === body.draft.category_name?.toLowerCase())?.id;
       setScanCategoryId(categoryId ?? "none");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not read receipt.");
+      const message = error instanceof Error ? error.message : "Could not read receipt.";
+      if (message.includes("AI_GATEWAY_API_KEY")) {
+        setScanUnavailable(true);
+        toast.error("Receipt scanning is not configured on this server. Use statement import instead.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setBusy(false);
     }
@@ -285,6 +297,12 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
               <Label>Receipt photo or PDF</Label>
               <input aria-label="Take a receipt photo or choose a receipt file" ref={scanInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" className="block w-full rounded-md border p-2 text-sm" onChange={(event) => void scanReceipt(event.target.files?.[0] ?? null)} disabled={busy} />
               <p className="text-xs text-neutral-500">On a phone, this can open the rear camera. Nothing is saved until you confirm.</p>
+              {scanUnavailable ? (
+                <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning-light/30 p-3 text-xs text-warning-dark">
+                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                  Receipt scanning is not configured on this server. Import a CSV statement from the Statement tab instead — it works without any extra setup.
+                </p>
+              ) : null}
             </div>
             {busy && !scanDraft ? <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-primary-50 p-4 text-sm text-primary-700"><Loader2 className="h-4 w-4 animate-spin" />Reading receipt…</div> : null}
             {scanDraft ? (
