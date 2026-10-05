@@ -50,6 +50,7 @@ describe("security guard: every route requires auth except the public allowlist"
     // Intentionally-unguarded convenience endpoints:
     "GET /api/bills/upcoming",
     "GET /api/goals/templates",
+    "GET /api/health",
   ]);
 
   function parseRouteTable(): { method: string; path: string }[] {

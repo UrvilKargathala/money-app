@@ -1,5 +1,6 @@
 ﻿import { Hono } from "hono";
 import { auth } from "./routes/auth";
+import { health } from "./routes/health";
 import { accounts, accountTypes } from "./routes/accounts";
 import { transfers } from "./routes/transfers";
 import { transactions } from "./routes/transactions";
@@ -65,6 +66,7 @@ for (const path of ["reports/spending-by-category", "reports/trends", "reports/h
 }
 app.get("/api/users/me/plan", requireAuth, async (c) => c.json({ plan: await getPlan(c.get("user").user_id), limits: STARTER_LIMITS }));
 
+app.route("/api/health", health);
 app.route("/api/auth", auth);
 app.route("/api/accounts", accounts);
 app.route("/api/account-types", accountTypes);
