@@ -444,7 +444,14 @@ function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
       {sub.notes && <p className="text-xs text-neutral-500 border-t border-neutral-200 pt-2">{sub.notes}</p>}
       {premium && (
         <form onSubmit={saveUsage} className="space-y-1.5 border-t border-neutral-200 pt-3">
-          <Label htmlFor={`usage-${sub.id}`}>Last used</Label>
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor={`usage-${sub.id}`}>Last used</Label>
+            <p className="text-[11px] text-neutral-400">
+              {sub.last_used_at
+                ? `Recorded ${new Date(sub.last_used_at).toLocaleDateString("en-IN")}`
+                : "Not recorded"}
+            </p>
+          </div>
           <div className="flex gap-2">
             <Input
               id={`usage-${sub.id}`}
@@ -457,11 +464,6 @@ function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
             />
             <Button size="sm" disabled={savingUsage}>Save</Button>
           </div>
-          <p className="text-[11px] text-neutral-400">
-            {sub.last_used_at
-              ? `Recorded ${new Date(sub.last_used_at).toLocaleDateString("en-IN")}`
-              : "Never recorded"}
-          </p>
         </form>
       )}
     </Card>

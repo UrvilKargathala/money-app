@@ -56,21 +56,9 @@ export function SubscriptionCard({
 
   return (
     <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-warning-light/30" : ""}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold font-heading text-neutral-900">{sub.service_name}</p>
-          <p className="text-xs text-neutral-500">
-            {sub.frequency} • {sub.account_name || "No account"} • {sub.days_until_renewal >= 0 ? `Renews in ${sub.days_until_renewal}d` : "Overdue"}
-          </p>
-          <p className="text-xs text-neutral-400">Next: {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")}</p>
-          {snoozed && (
-            <Badge variant="info" className="mt-1.5 gap-1">
-              <AlarmClock className="h-3 w-3" /> Snoozed {sub.last_snooze_days}d → {new Date(sub.last_snooze_date as string).toLocaleDateString("en-IN")}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {statusBadge(sub.status)}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-sm font-semibold font-heading text-neutral-900">{sub.service_name}</p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${sub.service_name}`}>
@@ -102,6 +90,20 @@ export function SubscriptionCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        <div className="flex items-center gap-2">
+          {statusBadge(sub.status)}
+          <p className="text-xs text-neutral-500">
+            {sub.frequency} • {sub.account_name || "No account"}
+          </p>
+        </div>
+        <p className="text-xs text-neutral-400">
+          Next: {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")} • {sub.days_until_renewal >= 0 ? `Renews in ${sub.days_until_renewal}d` : "Overdue"}
+        </p>
+        {snoozed && (
+          <Badge variant="info" className="gap-1">
+            <AlarmClock className="h-3 w-3" /> Snoozed {sub.last_snooze_days}d → {new Date(sub.last_snooze_date as string).toLocaleDateString("en-IN")}
+          </Badge>
+        )}
       </div>
 
       <div className="flex items-end justify-between">
