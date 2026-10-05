@@ -268,8 +268,8 @@ transactions.post("/bulk", requireAuth, async (c) => {
         const res = await withUser(user.user_id, (client) =>
           bulkAttachTags(client, { userId: user.user_id, ids, tagIds })
         );
-        affected = ids.length;
-        void res;
+        // INSERT ... ON CONFLICT DO NOTHING: rowCount is newly attached rows.
+        affected = res.rowCount ?? 0;
         break;
       }
       case "delete": {
@@ -285,7 +285,18 @@ transactions.post("/bulk", requireAuth, async (c) => {
           400
         );
     }
-    return c.json({ success: true, affected });
+    // Transfer legs are excluded server-side (transfer_group_id IS NULL).
+    // Report them exactly so the UI can say so instead of "Updated 0".
+    const transferCheck = await withUser(user.user_id, (client) =>
+      client.query<{ n: number }>(
+        `SELECT COUNT(*)::int AS n FROM transactions
+         WHERE user_id = $1 AND id = ANY($2::uuid[]) AND transfer_group_id IS NOT NULL`,
+        [user.user_id, ids]
+      )
+    );
+    const skippedTransfers = transferCheck.rows[0]?.n ?? 0;
+    const skipped = Math.max(0, ids.length - affected);
+    return c.json({ success: true, affected, skipped, skipped_transfers: skippedTransfers });
   } catch (err) {
     console.error("[api] bulk edit failed:", err);
     return c.json(
