@@ -20,7 +20,8 @@ import { createVault, decryptVaultBytes, decryptVaultText, encryptVaultBytes, en
 
 type Note = { id: string; title: string; category: string; data_encrypted: string; data_iv: string; is_pinned: number; version: number; created_at: string; deleted_at?: string | null };
 type Category = { name: string; count?: number; seeded?: boolean };
-type Template = { id: string; title: string; category: string; content?: string | null };
+type RegistryTemplate = { template_code: string; name: string; description: string | null; fields: { fields?: { key: string; label: string }[] } | null };
+type Template = RegistryTemplate;
 type Attachment = { id: string; file_name: string; file_type?: string | null; file_size?: number };
 
 export function NotesDashboard({
@@ -151,11 +152,24 @@ export function NotesDashboard({
     setAttachments([]);
     setFormOpen(true);
   };
+  // Best-effort category suggestion per seeded template; the user can
+  // change it in the form. Registry templates carry no category of their own.
+  const REGISTRY_CATEGORY: Record<string, string> = {
+    passport: "document",
+    pan_card: "financial",
+    aadhaar: "document",
+    driving_license: "document",
+    vehicle_rc: "vehicle",
+    health_insurance: "health",
+    vehicle_insurance: "insurance",
+    membership: "other",
+  };
   const applyTemplate = (template: Template) => {
+    const fields = template.fields?.fields ?? [];
     setEditing(null);
-    setNoteTitle(template.title);
-    setCategory(template.category || "other");
-    setContent(template.content || "");
+    setNoteTitle(template.name);
+    setCategory(REGISTRY_CATEGORY[template.template_code] || "other");
+    setContent(fields.map((f) => `${f.label}: `).join("\n"));
     setAttachments([]);
     setFormOpen(true);
   };
@@ -349,7 +363,7 @@ export function NotesDashboard({
             ) : (
               <div className="flex flex-wrap gap-2">
                 {templates.map((t) => (
-                  <button key={t.id} onClick={() => applyTemplate(t)}><Badge variant="secondary">{t.title} · Use template</Badge></button>
+                  <button key={t.template_code} type="button" title={t.description ?? t.name} onClick={() => applyTemplate(t)}><Badge variant="secondary">{t.name} · Use template</Badge></button>
                 ))}
               </div>
             )}
@@ -478,7 +492,7 @@ export function NotesDashboard({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from(new Set(["personal", "financial", "document", "other", ...categories.map(c => c.name), ...templates.map(t => t.category)])).filter(Boolean).map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+                  {Array.from(new Set(["personal", "financial", "document", "other", ...categories.map(c => c.name)])).filter(Boolean).map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
