@@ -13,7 +13,8 @@ import { Download, FileArchive, RefreshCw, Trash2, RotateCcw, Package, Activity,
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { toast } from "sonner";
 
-type ModuleInfo = { module: string; label: string; columns?: string[]; column_sets?: string[][]; description?: string | null };
+type ModuleColumn = { key: string; label: string };
+type ModuleInfo = { name: string; label: string; columns?: ModuleColumn[]; description?: string | null };
 type Job = {
   id: string;
   status: string;
@@ -63,8 +64,12 @@ export function ExportDashboard({
   const [modules] = useState<ModuleInfo[]>(initialModules);
   const [status] = useState<StatusInfo | null>(initialStatus);
 
-  const [format, setFormat] = useState<string>("csv");
-  const [selectedModule, setSelectedModule] = useState<string>(initialModules[0]?.module ?? "");
+  // Backend contract (routes/export.ts): modules are {name,label,columns[]},
+  // and POST /jobs reads {export_type, scope, module_name, date_range_start,
+  // date_range_end}. PDF generation does not exist server-side (download
+  // always rebuilds CSV), so CSV is the only offered format.
+  const [format] = useState<string>("csv");
+  const [selectedModule, setSelectedModule] = useState<string>(initialModules[0]?.name ?? "");
   const [range, setRange] = useState<string>("All");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -91,17 +96,20 @@ export function ExportDashboard({
   // which is the only freshness signal needed.
 
   async function handleCreate() {
+    if (!selectedModule) {
+      toast.error("Select a module first.");
+      return;
+    }
     setCreating(true);
     try {
-      const payload: Record<string, unknown> = { format, range };
-      if (selectedModule) {
-        // spec says module scope - send as module; backend may accept modules array - send both
-        payload.module = selectedModule;
-        payload.modules = [selectedModule];
-      }
+      const payload: Record<string, unknown> = {
+        export_type: format,
+        scope: "module",
+        module_name: selectedModule,
+      };
       if (range === "custom") {
-        if (dateFrom) payload.date_from = dateFrom;
-        if (dateTo) payload.date_to = dateTo;
+        if (dateFrom) payload.date_range_start = dateFrom;
+        if (dateTo) payload.date_range_end = dateTo;
       }
       const res = await fetch("/api/export/jobs", {
         method: "POST",
@@ -110,7 +118,8 @@ export function ExportDashboard({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(j.error || j.fieldErrors ? JSON.stringify(j.fieldErrors) : "Could not create export job");
+        const detail = j.error || (j.fieldErrors ? Object.values(j.fieldErrors).join(" ") : null);
+        toast.error(detail || "Could not create export job");
         return;
       }
       toast.success("Export job created");
@@ -251,25 +260,22 @@ export function ExportDashboard({
               <div className="space-y-3 max-h-[360px] overflow-auto pr-1">
                 {modules.map((m) => (
                   <div
-                    key={m.module}
-                    className={`rounded-lg border p-3 ${selectedModule === m.module ? "border-primary-600 bg-primary-50/40" : "border-neutral-100"}`}
+                    key={m.name}
+                    className={`rounded-lg border p-3 ${selectedModule === m.name ? "border-primary-600 bg-primary-50/40" : "border-neutral-100"}`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium text-sm font-heading">{m.label ?? m.module}</p>
-                      <Badge variant="outline" className="text-[10px]">{m.module}</Badge>
+                      <p className="font-medium text-sm font-heading">{m.label ?? m.name}</p>
+                      <Badge variant="outline" className="text-[10px]">{m.name}</Badge>
                     </div>
                     {m.description && <p className="text-xs text-neutral-500 mt-1">{m.description}</p>}
-                    {(m.columns?.length ?? 0) > 0 && <p className="text-xs text-neutral-500 mt-1">Columns: {m.columns!.slice(0, 6).join(", ")}{m.columns!.length > 6 ? ` +${m.columns!.length - 6} more` : ""}</p>}
-                    {m.column_sets && m.column_sets.length > 0 && (
-                      <p className="text-xs text-neutral-500">Column sets: {m.column_sets.length} variants</p>
-                    )}
+                    {(m.columns?.length ?? 0) > 0 && <p className="text-xs text-neutral-500 mt-1">Columns: {m.columns!.slice(0, 6).map((c) => c.label).join(", ")}{m.columns!.length > 6 ? ` +${m.columns!.length - 6} more` : ""}</p>}
                     <Button
-                      variant={selectedModule === m.module ? "default" : "outline"}
+                      variant={selectedModule === m.name ? "default" : "outline"}
                       size="sm"
                       className="mt-2 h-7 text-xs"
-                      onClick={() => setSelectedModule(m.module)}
+                      onClick={() => setSelectedModule((prev) => (prev === m.name ? "" : m.name))}
                     >
-                      {selectedModule === m.module ? "Selected" : "Select"}
+                      {selectedModule === m.name ? "Selected" : "Select"}
                     </Button>
                   </div>
                 ))}
@@ -281,13 +287,12 @@ export function ExportDashboard({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Format</Label>
-                  <Select value={format} onValueChange={setFormat}>
+                  <Select value={format} disabled>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="csv">CSV</SelectItem>
-                      <SelectItem value="pdf">PDF</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -299,7 +304,7 @@ export function ExportDashboard({
                     </SelectTrigger>
                     <SelectContent>
                       {modules.map((m) => (
-                        <SelectItem key={m.module} value={m.module}>{m.label ?? m.module}</SelectItem>
+                        <SelectItem key={m.name} value={m.name}>{m.label ?? m.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

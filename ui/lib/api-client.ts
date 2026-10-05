@@ -1952,7 +1952,7 @@ export const restoreAccount = restoreAccountApi;
 // All wrappers return null on non-2xx per project convention.
 // ---------------------------------------------------------------------------
 
-export type ExportModuleInfo = { module: string; label: string; columns?: string[]; column_sets?: string[][]; description?: string | null };
+export type ExportModuleInfo = { name: string; label: string; columns?: { key: string; label: string }[]; description?: string | null };
 export type ExportJob = {
   id: string;
   status: string;
