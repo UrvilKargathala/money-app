@@ -311,20 +311,20 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </div>
 
       <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40">
-        <CardContent className="space-y-3 p-5">
+        <CardContent className="space-y-4 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <Badge variant={planLoading ? "default" : premium ? "success" : "default"}>
+              <Badge variant={planLoading ? "default" : premium ? "success" : "default"} className="font-bold">
                 {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
               </Badge>
-              <p className="text-sm text-neutral-500">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
+              <p className="text-base text-neutral-600">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
             </div>
             <Button asChild className="w-fit shrink-0 bg-indigo-600 hover:bg-indigo-700">
               <Link href="/pricing">Manage plan</Link>
             </Button>
           </div>
           <div className="space-y-1.5 border-t border-indigo-100 pt-3">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">Included in your plan</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">Included in your plan</p>
             <div className="flex flex-wrap gap-1.5">
               {[
                 { icon: ShieldAlert, label: "Subscription audits" },
