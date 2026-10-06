@@ -32,7 +32,7 @@ function ResetForm() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Set a new password</CardTitle>
         <CardDescription>Enter your new password below.</CardDescription>
       </CardHeader>

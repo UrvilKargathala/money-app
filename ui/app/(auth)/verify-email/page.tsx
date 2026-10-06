@@ -23,7 +23,7 @@ function VerifyForm() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Verify your email</CardTitle>
         <CardDescription>Enter the token from your verification email or click the link.</CardDescription>
       </CardHeader>

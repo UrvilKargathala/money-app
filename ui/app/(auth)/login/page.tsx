@@ -16,7 +16,7 @@ export default function LoginPage() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>Sign in to your MoneyMind account</CardDescription>
       </CardHeader>

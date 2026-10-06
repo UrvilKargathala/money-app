@@ -13,7 +13,7 @@ export default function MagicLinkPage() {
   const [state, formAction, isPending] = useActionState(magicLinkAction, null);
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Magic link sign-in</CardTitle>
         <CardDescription>We&apos;ll email you a one-time login link (15 min expiry).</CardDescription>
       </CardHeader>

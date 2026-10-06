@@ -25,7 +25,7 @@ export default async function MagicLinkVerifyPage({ searchParams }: { searchPara
   if (!token) {
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Magic link</CardTitle>
           <CardDescription>Missing token</CardDescription>
         </CardHeader>
@@ -44,7 +44,7 @@ export default async function MagicLinkVerifyPage({ searchParams }: { searchPara
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Magic link</CardTitle>
         <CardDescription>Verification failed</CardDescription>
       </CardHeader>

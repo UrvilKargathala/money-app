@@ -14,7 +14,7 @@ export default function SignupPage() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Create your account</CardTitle>
         <CardDescription>Start managing your finances today</CardDescription>
       </CardHeader>
