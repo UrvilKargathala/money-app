@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     0;
 
   return (
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-neutral-50 dark:bg-[#1E293B]">
       <a href="#main-content" className="sr-only z-[100] rounded-md bg-white px-4 py-2 text-neutral-900 shadow focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
       <SessionExpiryGuard />
       <Topbar userName={user.full_name} userEmail={user.email} initialUnread={initialUnread} hasAvatar={Boolean(profileRes?.profile?.avatar_url)} />

@@ -61,7 +61,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-white">
+      <header className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-white dark:border-[#334155] dark:bg-[#0F172A]">
       <div className="flex h-16 items-center justify-between gap-4 px-4 lg:px-6">
         {/* Left: logo + mobile hamburger */}
         <div className="flex items-center gap-3 shrink-0">
@@ -133,13 +133,13 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="hidden sm:inline text-lg font-bold font-heading text-neutral-800">MoneyMind</span>
+            <span className="hidden sm:inline text-lg font-bold font-heading text-neutral-800 dark:text-[#F8FAFC]">MoneyMind</span>
           </Link>
         </div>
 
         {/* Center: pill nav (desktop only) */}
         <nav className="hidden lg:flex items-center justify-center flex-1">
-          <div className="flex items-center gap-1 rounded-full bg-white border border-neutral-200 px-1.5 py-1.5 shadow-sm">
+          <div className="flex items-center gap-1 rounded-full bg-white border border-neutral-200 px-1.5 py-1.5 shadow-sm dark:bg-[#1E293B] dark:border-[#334155]">
             {NAV_GROUPS.map((group) => {
               const groupActive = isGroupActive(pathname, group);
               return (
@@ -147,7 +147,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   <DropdownMenuTrigger
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
-                      groupActive ? "bg-neutral-900 text-white shadow-sm" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900"
+                      groupActive ? "bg-neutral-900 text-white shadow-sm dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-[#CBD5E1] dark:hover:bg-[#334155] dark:hover:text-[#F8FAFC]"
                     )}
                   >
                     {group.label}
@@ -182,10 +182,10 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                    active ? "bg-neutral-900 text-white shadow-sm" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900"
-                  )}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                      active ? "bg-neutral-900 text-white shadow-sm dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-[#CBD5E1] dark:hover:bg-[#334155] dark:hover:text-[#F8FAFC]"
+                    )}
                 >
                   {item.label}
                 </Link>
@@ -219,7 +219,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
 
           <NotificationBell initialUnread={initialUnread} />
 
-          <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 ml-1 pl-3">
+          <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 dark:border-[#334155] ml-1 pl-3">
             {showAvatar ? (
               <Avatar className="h-8 w-8">
                 <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} />
@@ -233,8 +233,8 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
               </div>
             )}
             <div className="hidden lg:flex flex-col">
-              <span className="text-sm font-medium font-heading text-neutral-800 leading-none">{userName || "User"}</span>
-              <span className="text-xs text-neutral-500 leading-none mt-0.5">{userEmail || ""}</span>
+              <span className="text-sm font-medium font-heading text-neutral-800 dark:text-[#F8FAFC] leading-none">{userName || "User"}</span>
+              <span className="text-xs text-neutral-500 dark:text-[#94A3B8] leading-none mt-0.5">{userEmail || ""}</span>
             </div>
           </div>
 
