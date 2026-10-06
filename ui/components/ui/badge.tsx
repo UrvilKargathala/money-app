@@ -5,17 +5,17 @@ import { cn } from "@/lib/utils";
 const badgeVariants = cva(
   "inline-flex items-center rounded-[6px] px-2.5 py-1 text-xs font-medium font-heading transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
-    variants: {
-      variant: {
-        default: "bg-neutral-100 text-neutral-600",
-        success: "bg-success-light text-success-dark",
-        warning: "bg-warning-light text-warning-dark",
-        error: "bg-error-light text-error-dark",
-        info: "bg-info-light text-info-dark",
-        secondary: "bg-primary-50 text-primary-600",
-        outline: "border border-neutral-200 text-neutral-600",
+      variants: {
+        variant: {
+          default: "bg-neutral-100 text-neutral-600 dark:bg-[#1E293B] dark:text-[#CBD5E1]",
+          success: "bg-success-light text-success-dark dark:bg-[#064E3B] dark:text-[#A7F3D0]",
+          warning: "bg-warning-light text-warning-dark dark:bg-[#78350F] dark:text-[#FDE68A]",
+          error: "bg-error-light text-error-dark dark:bg-[#7F1D1D] dark:text-[#FCA5A5]",
+          info: "bg-info-light text-info-dark dark:bg-[#1E3A5F] dark:text-[#BFDBFE]",
+          secondary: "bg-primary-50 text-primary-600 dark:bg-[#1E3A5F] dark:text-[#BFDBFE]",
+          outline: "border border-neutral-200 text-neutral-600 dark:border-[#334155] dark:text-[#CBD5E1]",
+        },
       },
-    },
     defaultVariants: {
       variant: "default",
     },
