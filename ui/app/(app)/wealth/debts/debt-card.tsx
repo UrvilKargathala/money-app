@@ -78,7 +78,7 @@ export function DebtCard({
           <p className="text-xs text-ink-3">Outstanding</p>
           <p className="text-sm font-bold font-heading text-ink-1">{formatINR(outstanding)}</p>
         </div>
-          <div className="rounded-lg bg-primary-50 p-3 dark:bg-[#1E3A5F]/50">
+          <div className="rounded-lg bg-tint-info p-3 dark:bg-[#1E3A5F]/50">
           <p className="text-xs text-primary-700">EMI</p>
           <p className="text-sm font-bold font-heading text-primary-700">{formatINR(emi)}</p>
         </div>
