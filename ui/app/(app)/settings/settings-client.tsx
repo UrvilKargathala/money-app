@@ -14,6 +14,7 @@ import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
 import { Toggle } from "@/components/ui/toggle";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
+import { deviceName } from "@/lib/user-agent";
 
 const PREF_GROUPS: { type: string; label: string; description: string }[] = [
   { type: "warning", label: "Warnings", description: "Overdue bills, low balances and things needing action." },
@@ -551,7 +552,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                 return (
                   <div key={String(id)} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
                     <div className="min-w-0">
-                      <p className="font-medium truncate">{s.user_agent || "Unknown device"} {s.is_current ? <Badge variant="success" className="ml-2">Current</Badge> : null}</p>
+                      <p className="font-medium truncate" title={s.user_agent || undefined}>{deviceName(s.user_agent)} {s.is_current ? <Badge variant="success" className="ml-2">Current</Badge> : null}</p>
                       <p className="text-xs text-neutral-500">
                         {s.ip_address ? `${s.ip_address} • ` : ""}{s.created_at ? new Date(s.created_at).toLocaleString() : ""}
                       </p>
