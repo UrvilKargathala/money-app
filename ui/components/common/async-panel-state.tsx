@@ -15,5 +15,5 @@ export function PanelLoading({ label = "Loading" }: { label?: string }) {
 }
 
 export function PanelError({ message = "Could not load this section.", onRetry }: { message?: string; onRetry: () => void }) {
-  return <div role="alert" className="flex flex-col items-center gap-3 rounded-xl border border-error/20 bg-error/5 p-5 text-center"><AlertCircle className="h-5 w-5 text-error" /><p className="text-sm text-neutral-700">{message}</p><Button type="button" size="sm" variant="outline" onClick={onRetry}><RotateCcw className="h-4 w-4" /> Try again</Button></div>;
+  return <div role="alert" className="flex flex-col items-center gap-3 rounded-xl border border-error/20 bg-error/5 p-5 text-center"><AlertCircle className="h-5 w-5 text-error" /><p className="text-sm text-ink-2">{message}</p><Button type="button" size="sm" variant="outline" onClick={onRetry}><RotateCcw className="h-4 w-4" /> Try again</Button></div>;
 }

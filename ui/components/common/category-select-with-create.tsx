@@ -99,7 +99,7 @@ export function CategorySelectWithCreate({
       </Select>
 
       {isAdding ? (
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+        <div className="rounded-lg border border-line bg-sunken p-3">
           <div className="flex gap-2">
             <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New category name" />
             <Button type="button" size="icon" onClick={handleCreate} disabled={isPending} aria-label="Save category">

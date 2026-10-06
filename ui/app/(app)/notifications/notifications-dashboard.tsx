@@ -75,12 +75,12 @@ function SseIndicator() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs">
+    <div className="flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs">
       <span className={`h-2 w-2 rounded-full ${status === "live" ? "bg-success" : status === "checking" ? "bg-warning animate-pulse" : status === "offline" ? "bg-neutral-300" : "bg-neutral-200"}`} />
       <span className="font-medium flex items-center gap-1">
         <Radio className="h-3 w-3" /> {status === "idle" ? "Not checked" : status === "live" ? "Up to date" : status === "checking" ? "Checking" : "Offline"}
       </span>
-      {latestCount !== null && <span className="text-neutral-500">{latestCount} new since 1m</span>}
+      {latestCount !== null && <span className="text-ink-3">{latestCount} new since 1m</span>}
       {lastChecked && <span className="hidden sm:inline text-neutral-400">{new Date(lastChecked).toLocaleTimeString("en-IN")}</span>}
       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={poll} disabled={status === "checking"}>
         {status === "checking" ? "Checking…" : "Check for new"}
@@ -316,11 +316,11 @@ export function NotificationsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900 flex items-center gap-3">
+          <h1 className="text-3xl font-bold font-heading text-ink-1 flex items-center gap-3">
             Notifications {unreadCount > 0 && <Badge variant="error">{unreadCount} unread</Badge>}
-            <span className="text-sm font-normal text-neutral-500">{total != null ? `${total} total` : `${notifications.length} in feed`}</span>
+            <span className="text-sm font-normal text-ink-3">{total != null ? `${total} total` : `${notifications.length} in feed`}</span>
           </h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">Alerts, reminders and insights - feed, archive, preferences and delivery log</p>
+          <p className="text-sm text-ink-3 font-body mt-1">Alerts, reminders and insights - feed, archive, preferences and delivery log</p>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           <SseIndicator />
@@ -364,7 +364,7 @@ export function NotificationsDashboard({
               </Tabs>
               {selected.size > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-500">{selected.size} selected</span>
+                  <span className="text-xs text-ink-3">{selected.size} selected</span>
                   <Button variant="outline" size="sm" onClick={() => handleBulk("read")}>
                     <Check className="h-3 w-3" /> Mark read
                   </Button>
@@ -396,12 +396,12 @@ export function NotificationsDashboard({
                       />
                     )}
                     <div className="flex-1">
-                      <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold font-heading text-ink-1 flex items-center gap-2 flex-wrap">
                         {n.title} <Badge variant="info">{n.type}</Badge> {n.module && <Badge variant="outline">{n.module}</Badge>}{" "}
                         {!n.is_read && !n.is_dismissed && <Badge variant="error">New</Badge>}
                         {n.is_dismissed ? <Badge variant="default">Dismissed</Badge> : null}
                       </p>
-                      <p className="text-sm text-neutral-600 font-body mt-1">{n.message}</p>
+                      <p className="text-sm text-ink-2 font-body mt-1">{n.message}</p>
                       <p className="text-xs text-neutral-400 mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
                     </div>
                   </div>
@@ -481,7 +481,7 @@ export function NotificationsDashboard({
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-neutral-500">
+            <div className="flex items-center justify-between text-xs text-ink-3">
               <span>
                 Page {archivePage} • {archive.length} results {archiveSearch ? `for "${archiveSearch}"` : ""} {archiveType !== "all" ? `• type=${archiveType}` : ""}
               </span>
@@ -496,7 +496,7 @@ export function NotificationsDashboard({
             </div>
 
             {archiveLoading ? (
-              <div className="flex items-center justify-center py-8 text-sm text-neutral-500">
+              <div className="flex items-center justify-center py-8 text-sm text-ink-3">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading archive…
               </div>
             ) : archive.length === 0 ? (
@@ -504,13 +504,13 @@ export function NotificationsDashboard({
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-auto pr-1">
                 {archive.map((n) => (
-                  <div key={n.id} className="rounded-lg border border-neutral-100 p-3 flex items-start justify-between gap-3">
+                  <div key={n.id} className="rounded-lg border border-line p-3 flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold flex items-center gap-2">
                         {n.title} <Badge variant="info">{n.type}</Badge> {n.is_dismissed ? <Badge variant="default">dismissed</Badge> : null}{" "}
                         {!n.is_read ? <Badge variant="error">unread</Badge> : <Badge variant="outline">read</Badge>}
                       </p>
-                      <p className="text-sm text-neutral-600 mt-1">{n.message}</p>
+                      <p className="text-sm text-ink-2 mt-1">{n.message}</p>
                       <p className="text-xs text-neutral-400 mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
@@ -551,7 +551,7 @@ export function NotificationsDashboard({
 
             <div className="overflow-auto">
               <table className="w-full text-sm border rounded-lg overflow-hidden">
-                <thead className="bg-neutral-50 text-xs text-neutral-500">
+                <thead className="bg-sunken text-xs text-ink-3">
                     <tr>
                       <th className="p-3 text-left font-medium">Type</th>
                       {CHANNELS.map((ch) => (
@@ -601,10 +601,10 @@ export function NotificationsDashboard({
               <Button variant="outline" onClick={handleSaveAllPrefs}>
                 Save all ({prefs.length} cells)
               </Button>
-              <span className="text-xs text-neutral-500 self-center">Single toggles save immediately; Save all persists current matrix via PATCH /api/notification-preferences.</span>
+              <span className="text-xs text-ink-3 self-center">Single toggles save immediately; Save all persists current matrix via PATCH /api/notification-preferences.</span>
             </div>
 
-            <div className="rounded-lg bg-neutral-50 p-4 space-y-3">
+            <div className="rounded-lg bg-sunken p-4 space-y-3">
               <p className="text-sm font-semibold flex items-center gap-2">
                 <Mail className="h-4 w-4" /> Email preview
               </p>
@@ -636,7 +636,7 @@ export function NotificationsDashboard({
                   <Button type="submit" size="sm" disabled={previewLoading}>
                     {previewLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />} Preview email
                   </Button>
-                  <span className="text-xs text-neutral-500 self-center">POST /api/notifications/email/preview - no send, just render.</span>
+                  <span className="text-xs text-ink-3 self-center">POST /api/notifications/email/preview - no send, just render.</span>
                 </div>
               </form>
             </div>
@@ -658,7 +658,7 @@ export function NotificationsDashboard({
             ) : (
               <div className="overflow-auto rounded-lg border">
                 <table className="w-full text-sm">
-                  <thead className="bg-neutral-50 text-xs text-neutral-500">
+                  <thead className="bg-sunken text-xs text-ink-3">
                     <tr>
                       <th className="p-2 text-left">Type</th>
                       <th className="p-2 text-left">Recipient</th>
@@ -677,8 +677,8 @@ export function NotificationsDashboard({
                         <td className="p-2">
                           <Badge variant={e.status === "sent" ? "success" : e.status === "failed" ? "error" : "default"}>{e.status}</Badge>
                         </td>
-                        <td className="p-2 text-neutral-500">{e.sent_at ? new Date(e.sent_at).toLocaleString("en-IN") : "-"}</td>
-                        <td className="p-2 text-neutral-500">{new Date(e.created_at).toLocaleString("en-IN")}</td>
+                        <td className="p-2 text-ink-3">{e.sent_at ? new Date(e.sent_at).toLocaleString("en-IN") : "-"}</td>
+                        <td className="p-2 text-ink-3">{new Date(e.created_at).toLocaleString("en-IN")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -698,16 +698,16 @@ export function NotificationsDashboard({
           {previewResult && (
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-medium text-neutral-500">Subject</p>
+                <p className="text-xs font-medium text-ink-3">Subject</p>
                 <p className="text-sm font-semibold">{previewResult.subject}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-neutral-500">Body HTML</p>
-                <div className="rounded-lg border p-4 bg-white max-h-[30vh] overflow-auto" dangerouslySetInnerHTML={{ __html: previewResult.body_html }} />
+                <p className="text-xs font-medium text-ink-3">Body HTML</p>
+                <div className="rounded-lg border p-4 bg-surface max-h-[30vh] overflow-auto" dangerouslySetInnerHTML={{ __html: previewResult.body_html }} />
               </div>
               <div>
-                <p className="text-xs font-medium text-neutral-500">Body Text</p>
-                <pre className="rounded-lg bg-neutral-50 p-3 text-xs whitespace-pre-wrap">{previewResult.body_text}</pre>
+                <p className="text-xs font-medium text-ink-3">Body Text</p>
+                <pre className="rounded-lg bg-sunken p-3 text-xs whitespace-pre-wrap">{previewResult.body_text}</pre>
               </div>
             </div>
           )}

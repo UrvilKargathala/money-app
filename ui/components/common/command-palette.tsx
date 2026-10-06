@@ -40,7 +40,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 gap-0 max-w-[560px] overflow-hidden rounded-2xl border-0 shadow-2xl">
         <DialogTitle className="sr-only">Command palette</DialogTitle>
-        <div className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-line px-4 py-3">
           <Search className="h-5 w-5 text-neutral-400" />
           <Input
             autoFocus
@@ -73,7 +73,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
 
         <div className="max-h-[380px] overflow-y-auto p-2">
           {results.length === 0 ? (
-            <p className="py-8 text-center text-sm text-neutral-500">No shortcuts found for “{query}”.</p>
+            <p className="py-8 text-center text-sm text-ink-3">No shortcuts found for “{query}”.</p>
           ) : (
             <div className="space-y-4 p-1">
               {/* Recommended */}
@@ -89,14 +89,14 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                         <button
                           key={s.id}
                           onClick={() => handleSelect(s.href, s.action)}
-                          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-neutral-50 transition-colors"
+                          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-sunken transition-colors"
                         >
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium font-heading text-neutral-900">{s.label}</p>
-                            {s.description && <p className="text-xs text-neutral-500">{s.description}</p>}
+                            <p className="text-sm font-medium font-heading text-ink-1">{s.label}</p>
+                            {s.description && <p className="text-xs text-ink-3">{s.description}</p>}
                           </div>
                           <Badge variant="info" className="bg-teal-900 text-teal-400 border-0">Recommended</Badge>
                         </button>
@@ -123,12 +123,12 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                         onClick={() => handleSelect(s.href, s.action)}
                         className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${index === activeIndex ? "bg-primary-50 ring-1 ring-primary-200" : "hover:bg-neutral-50"}`}
                       >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-wash text-ink-2">
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium font-heading truncate">{s.label}</p>
-                          {s.description && <p className="text-xs text-neutral-500 truncate">{s.description}</p>}
+                          {s.description && <p className="text-xs text-ink-3 truncate">{s.description}</p>}
                         </div>
                         {s.premium && <Badge className="bg-neutral-900 text-white border-0">Premium</Badge>}
                         {s.recommended && !query && <span className="hidden" />}
@@ -141,8 +141,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
           )}
         </div>
 
-        <div className="border-t border-neutral-100 bg-neutral-50 px-4 py-2.5 flex items-center justify-between text-xs text-neutral-500">
-          <span>Press <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">↵</kbd> to select • <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">↑↓</kbd> navigate • <kbd className="rounded border border-neutral-200 bg-white px-1 py-0.5">ESC</kbd> to close</span>
+        <div className="border-t border-line bg-sunken px-4 py-2.5 flex items-center justify-between text-xs text-ink-3">
+          <span>Press <kbd className="rounded border border-line bg-surface px-1 py-0.5">↵</kbd> to select • <kbd className="rounded border border-line bg-surface px-1 py-0.5">↑↓</kbd> navigate • <kbd className="rounded border border-line bg-surface px-1 py-0.5">ESC</kbd> to close</span>
           <span className="hidden sm:inline">{results.length} shortcuts</span>
         </div>
       </DialogContent>

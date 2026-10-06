@@ -36,23 +36,23 @@ export function ResourceDetail({ title, subtitle, backHref, record, related }: {
   const collection = backHref.replace(/^\//, "");
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-neutral-500">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-ink-3">
         <Link href="/overview/dashboard" className="transition-colors hover:text-primary-600">Overview</Link><span aria-hidden="true">/</span>
         <Link href={backHref} className="transition-colors hover:text-primary-600">{subtitle}</Link><span aria-hidden="true">/</span>
-        <span className="truncate text-neutral-700" aria-current="page">{title}</span>
+        <span className="truncate text-ink-2" aria-current="page">{title}</span>
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><p className="text-sm font-medium text-primary-600">{subtitle}</p><h1 className="text-3xl font-bold font-heading text-neutral-900">{title}</h1></div>
+        <div><p className="text-sm font-medium text-primary-600">{subtitle}</p><h1 className="text-3xl font-bold font-heading text-ink-1">{title}</h1></div>
         <div className="flex items-center gap-2">{status ? <Badge variant={status === "active" || status === "paid" || status === "completed" ? "success" : "secondary"}>{status.replaceAll("_", " ")}</Badge> : null}{id ? <DetailActions id={id} collection={collection} editHref={`${backHref}?edit=${encodeURIComponent(id)}`} /> : null}</div>
       </div>
       <Button variant="ghost" asChild className="-ml-3"><Link href={backHref}><ArrowLeft className="h-4 w-4" /> Back to {subtitle}</Link></Button>
       <Card className="p-6">
         <h2 className="mb-5 text-lg font-semibold">Details</h2>
         <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-          {fields.map(([key, value]) => <div key={key} className="min-w-0"><dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">{labelFor(key)}</dt><dd className="mt-1 break-words text-sm font-medium text-neutral-900">{displayValue(key, value)}</dd></div>)}
+          {fields.map(([key, value]) => <div key={key} className="min-w-0"><dt className="text-xs font-medium uppercase tracking-wide text-ink-3">{labelFor(key)}</dt><dd className="mt-1 break-words text-sm font-medium text-ink-1">{displayValue(key, value)}</dd></div>)}
         </dl>
       </Card>
-      {related?.map((section) => section.items.length ? <Card key={section.title} className="p-6"><h2 className="mb-4 text-lg font-semibold">{section.title}</h2><div className="space-y-3">{section.items.map((item, index) => <div key={String(item.id ?? index)} className="grid gap-2 rounded-xl border p-4 sm:grid-cols-3">{Object.entries(item).filter(([key, value]) => !HIDDEN_KEYS.has(key) && typeof value !== "object").slice(0, 6).map(([key, value]) => <div key={key}><p className="text-xs text-neutral-500">{labelFor(key)}</p><p className="text-sm font-medium">{displayValue(key, value)}</p></div>)}</div>)}</div></Card> : null)}
+      {related?.map((section) => section.items.length ? <Card key={section.title} className="p-6"><h2 className="mb-4 text-lg font-semibold">{section.title}</h2><div className="space-y-3">{section.items.map((item, index) => <div key={String(item.id ?? index)} className="grid gap-2 rounded-xl border p-4 sm:grid-cols-3">{Object.entries(item).filter(([key, value]) => !HIDDEN_KEYS.has(key) && typeof value !== "object").slice(0, 6).map(([key, value]) => <div key={key}><p className="text-xs text-ink-3">{labelFor(key)}</p><p className="text-sm font-medium">{displayValue(key, value)}</p></div>)}</div>)}</div></Card> : null)}
     </div>
   );
 }

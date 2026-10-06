@@ -30,12 +30,12 @@ export default async function QuickAddPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold font-heading text-neutral-900">Quick Add</h1>
-        <p className="text-sm text-neutral-500 font-body mt-1">Two-tap expense or income entry</p>
+        <h1 className="text-3xl font-bold font-heading text-ink-1">Quick Add</h1>
+        <p className="text-sm text-ink-3 font-body mt-1">Two-tap expense or income entry</p>
       </div>
       {accounts.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-sm text-neutral-500">No active accounts. Create an account first.</p>
+          <p className="text-sm text-ink-3">No active accounts. Create an account first.</p>
           <Link href="/money/accounts" className="text-primary-600 hover:underline text-sm">
             Go to Accounts
           </Link>

@@ -149,7 +149,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
         variant="ghost"
         size="icon"
         onClick={() => setOpen((v) => !v)}
-        className="relative text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-full"
+        className="relative text-ink-2 hover:text-ink-1 hover:bg-wash rounded-full"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -163,10 +163,10 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden />
-          <div className="absolute right-0 top-full mt-2 z-40 w-[380px] max-w-[92vw] rounded-2xl border border-neutral-200 bg-white shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
+          <div className="absolute right-0 top-full mt-2 z-40 w-[380px] max-w-[92vw] rounded-2xl border border-line bg-surface shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-line">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold font-heading text-neutral-900">Notifications</h3>
+                <h3 className="text-sm font-semibold font-heading text-ink-1">Notifications</h3>
                 {unread > 0 && <Badge variant="error" className="text-xs">{unread} new</Badge>}
               </div>
               <div className="flex items-center gap-1">
@@ -176,7 +176,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
               </div>
             </div>
 
-            <div className="flex gap-1 px-3 py-2 border-b border-neutral-100 bg-neutral-50/50">
+            <div className="flex gap-1 px-3 py-2 border-b border-line bg-neutral-50/50">
               {(["all", "unread", "upcoming"] as const).map((tab) => (
                 <button
                   key={tab}
@@ -196,13 +196,13 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
 
             <div className="max-h-[380px] overflow-y-auto">
               {loading && !hasLoaded ? (
-                <div className="flex items-center justify-center py-10 text-sm text-neutral-500 gap-2">
+                <div className="flex items-center justify-center py-10 text-sm text-ink-3 gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                 </div>
               ) : display.length === 0 ? (
                 <div className="py-10 text-center">
                   <Bell className="h-8 w-8 mx-auto text-neutral-300 mb-2" />
-                  <p className="text-sm font-medium text-neutral-600">No notifications</p>
+                  <p className="text-sm font-medium text-ink-2">No notifications</p>
                   <p className="text-xs text-neutral-400 mt-1">{filter === "upcoming" ? "No upcoming reminders" : "You're all caught up"}</p>
                 </div>
               ) : (
@@ -211,12 +211,12 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                     <div key={n.id} className={cn("p-3 flex gap-3 hover:bg-neutral-50 transition-colors", !n.is_read && "bg-primary-50/40")}>
                       <div className={cn("h-2 w-2 rounded-full mt-2 shrink-0", !n.is_read ? "bg-primary-600" : "bg-transparent")} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-neutral-900 flex items-center gap-1.5 flex-wrap">
+                        <p className="text-sm font-medium text-ink-1 flex items-center gap-1.5 flex-wrap">
                           <span className="truncate">{n.title}</span>
                           <Badge variant="info" className="text-[10px] px-1 py-0 h-4">{n.type}</Badge>
                           {n.module && <span className="text-[10px] text-neutral-400">• {n.module}</span>}
                         </p>
-                        <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{n.message}</p>
+                        <p className="text-xs text-ink-2 mt-1 line-clamp-2">{n.message}</p>
                         <p className="text-[11px] text-neutral-400 mt-1">{new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
                         {n.deep_link && (
                           <Link href={n.deep_link} onClick={() => setOpen(false)} className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline mt-1">
@@ -240,7 +240,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
               )}
             </div>
 
-            <div className="border-t border-neutral-100 p-3 bg-neutral-50 flex items-center justify-between">
+            <div className="border-t border-line p-3 bg-sunken flex items-center justify-between">
               <Link href="/notifications" onClick={() => setOpen(false)} className="text-sm font-medium text-primary-600 hover:underline">
                 View all notifications
               </Link>

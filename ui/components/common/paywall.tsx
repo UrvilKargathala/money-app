@@ -41,7 +41,7 @@ export function Paywall({ feature, plan, trialDaysLeft }: { feature: string; pla
           <Button onClick={() => checkout("annual")} disabled={!!loading} variant="secondary">Annual ₹2400</Button>
           <Button onClick={() => checkout("lifetime")} disabled={!!loading} variant="outline">Lifetime ₹3500</Button>
         </div>
-        {loading && <p className="text-xs text-neutral-500 mt-2">Redirecting to checkout…</p>}
+        {loading && <p className="text-xs text-ink-3 mt-2">Redirecting to checkout…</p>}
       </CardContent>
     </Card>
   );

@@ -20,9 +20,9 @@ export function LiveWidget({ id }: { id: string }) {
     }).catch((e) => { if (e.name !== "AbortError") setError(true); });
     return () => controller.abort();
   }, [id]);
-  if (error) return <p role="alert" className="text-sm text-neutral-500">Could not load this widget.</p>;
+  if (error) return <p role="alert" className="text-sm text-ink-3">Could not load this widget.</p>;
   if (!data) return <p role="status" className="text-sm">Loading…</p>;
-  if (!data.length) return <p className="text-sm text-neutral-500">{id === "bills-due" ? "No bills due in the next seven days." : "No data yet."}</p>;
+  if (!data.length) return <p className="text-sm text-ink-3">{id === "bills-due" ? "No bills due in the next seven days." : "No data yet."}</p>;
   if (id === "networth-sparkline") {
     const min = Math.min(...data.map((p) => p.value)); const max = Math.max(...data.map((p) => p.value));
     const points = data.map((p, i) => `${5 + i / Math.max(1, data.length - 1) * 290},${65 - (p.value - min) / Math.max(1, max - min) * 55}`).join(" ");

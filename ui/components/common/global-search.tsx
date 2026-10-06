@@ -49,11 +49,11 @@ export function GlobalSearch({ mobile = false, onNavigate }: { mobile?: boolean;
       <input value={query} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search transactions, notes, bills..." className={cn("h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 pl-9 pr-9 text-sm placeholder:text-neutral-400 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100", !mobile && "h-9")} />
       {loading ? <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-neutral-400" /> : null}
       {open && query.trim().length >= 2 ? (
-        <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border bg-white p-2 shadow-xl sm:min-w-[360px]">
-          {!loading && results.length === 0 ? <p className="px-3 py-6 text-center text-sm text-neutral-500">No matching records</p> : null}
+        <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border bg-surface p-2 shadow-xl sm:min-w-[360px]">
+          {!loading && results.length === 0 ? <p className="px-3 py-6 text-center text-sm text-ink-3">No matching records</p> : null}
           {results.map((result) => {
             const Icon = icons[result.kind as keyof typeof icons] ?? Search;
-            return <button key={`${result.kind}-${result.id}`} type="button" onClick={() => navigate(result)} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-neutral-50"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-neutral-900">{result.title}</span><span className="block truncate text-xs capitalize text-neutral-500">{result.subtitle || result.kind}</span></span></button>;
+            return <button key={`${result.kind}-${result.id}`} type="button" onClick={() => navigate(result)} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-sunken"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-ink-1">{result.title}</span><span className="block truncate text-xs capitalize text-ink-3">{result.subtitle || result.kind}</span></span></button>;
           })}
         </div>
       ) : null}
