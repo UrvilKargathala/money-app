@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Target, Plus, Wallet, TrendingUp, History, Calendar, Flag, BarChart3, Layers, ArrowUpDown, PiggyBank, Edit, Trash2, Download } from "lucide-react";
+import { Target, Plus, Wallet, TrendingUp, History, Calendar, Flag, BarChart3, Layers, ArrowUpDown, PiggyBank, Edit, Trash2, Download, Camera } from "lucide-react";
 import { deleteGoalAction, pauseGoalAction, resumeGoalAction, completeGoalAction, addContribution, updateContribution, deleteContributionAction, addContributionWithTransfer, createSnapshot, createTemplate, updateTemplate, deleteTemplateAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -125,7 +125,7 @@ function SnapshotsTimeline({ snapshots, onCreate }: { snapshots: Snapshot[]; onC
         <Button onClick={handleCreate} disabled={pending}>{pending ? "..." : "Record snapshot"}</Button>
       </div>
       {snapshots.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4 text-center">No snapshots yet. Contributions automatically create snapshots.</p>
+        <EmptyState icon={<Camera className="h-6 w-6" />} title="No snapshots yet" description="Contributions automatically create snapshots." />
       ) : (
         <div className="relative border-l border-neutral-200 ml-4 space-y-4">
           {snapshots.map((s) => (
@@ -146,7 +146,7 @@ function SnapshotsTimeline({ snapshots, onCreate }: { snapshots: Snapshot[]; onC
 // ---------------------------------------------------------------------------
 
 function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasibility | null; projection: Projection | null }) {
-  if (!feasibility && !projection) return <p className="text-sm text-neutral-500">No data.</p>;
+  if (!feasibility && !projection) return <EmptyState title="No projection yet" description="Add contributions to project this goal." />;
   return (
     <div className="space-y-4">
       {feasibility && (

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { toast } from "sonner";
@@ -346,7 +347,7 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
 
           <TabsContent value="history" className="space-y-3">
             {historyBusy && batches.length === 0 ? <div className="flex items-center gap-2 py-8 text-sm text-neutral-500"><Loader2 className="h-4 w-4 animate-spin" />Loading import history…</div> : null}
-            {!historyBusy && batches.length === 0 ? <p className="py-8 text-center text-sm text-neutral-500">No statement imports yet.</p> : null}
+            {!historyBusy && batches.length === 0 ? <EmptyState title="No statement imports yet" description="Import a CSV statement to see its batches here." /> : null}
             {batches.map((batch) => <div key={batch.id} className="rounded-xl border p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2"><p className="font-semibold">{batch.filename}</p><Badge variant="secondary">{batch.status}</Badge></div><p className="text-xs text-neutral-500">{new Date(batch.created_at).toLocaleString("en-IN")}</p></div><div className="flex gap-3 text-xs"><span>{batch.imported_rows} imported</span><span>{batch.duplicate_rows} duplicates</span><span>{batch.error_rows} errors</span></div></div>{batch.status !== "rolled_back" ? <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">{batch.duplicate_rows > 0 ? <><Button size="sm" variant="outline" onClick={() => void resolveDuplicates(batch.id, "skip")} disabled={historyBusy}>Skip duplicates</Button><Button size="sm" variant="outline" onClick={() => void resolveDuplicates(batch.id, "import")} disabled={historyBusy}>Import duplicates</Button></> : null}<Button size="sm" variant="ghost" asChild><a href={`/api/import-batches/${batch.id}/errors/export`} download>Download issues</a></Button><Button size="sm" variant="destructive" onClick={() => void rollbackBatch(batch.id)} disabled={historyBusy}>Roll back import</Button></div> : null}</div>)}
           </TabsContent>
         </Tabs>

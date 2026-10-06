@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/common/empty-state";
 import { trackFeature } from "@/lib/analytics";
 
 type Template = { id: string; user_id: number | null; name: string; description: string | null; chart_config: unknown; version?: number };
@@ -84,7 +85,7 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
       <div className="grid gap-3 sm:grid-cols-2"><Input value={name} onChange={e=>setName(e.target.value)} placeholder="Template name" /><Input value={description} onChange={e=>setDescription(e.target.value)} placeholder="Description (optional)" /></div>
       <Button onClick={createTemplate} disabled={busy}><Plus className="mr-2 h-4 w-4"/>Save template</Button>
       <div className="divide-y rounded-xl border">
-        {templates.length === 0 && <p className="p-4 text-sm text-neutral-500">No templates yet.</p>}
+        {templates.length === 0 && <EmptyState title="No templates yet" description="Save the form above to reuse this report setup." />}
         {templates.map(t=><div key={t.id} className="flex items-center justify-between gap-3 p-4"><div><p className="font-medium">{t.name}</p><p className="text-xs text-neutral-500">{t.description || (t.user_id === null ? "MoneyMind template" : "Your template")}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={()=>mutate(`/api/report-templates/${t.id}/duplicate`,{method:"POST"})}><Copy className="h-4 w-4"/><span className="sr-only">Duplicate</span></Button>{t.user_id !== null && <><Button size="sm" variant="outline" onClick={()=>renameTemplate(t)}><Pencil className="h-4 w-4"/><span className="sr-only">Rename</span></Button><Button size="sm" variant="outline" onClick={()=>mutate(`/api/report-templates/${t.id}`,{method:"DELETE"})}><Trash2 className="h-4 w-4"/><span className="sr-only">Delete</span></Button></>}</div></div>)}
       </div>
     </CardContent></Card>

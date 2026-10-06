@@ -4,6 +4,8 @@
 // when these sections render (dynamic import, ssr: false).
 import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { formatINR, formatDate } from "@/lib/format";
+import { EmptyState } from "@/components/common/empty-state";
+import { PieChart as PieChartIcon, TrendingUp } from "lucide-react";
 
 export type Allocation = { category: string; value: number; pct: number };
 export type TrendPoint = { date: string; invested: number; value: number };
@@ -18,7 +20,7 @@ export function currencyTick(v: number): string {
 
 export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
   if (allocation.length === 0) {
-    return <p className="text-sm text-neutral-500 py-8 text-center">No allocation data. Add holdings.</p>;
+    return <EmptyState icon={<PieChartIcon className="h-6 w-6" />} title="No allocation data" description="Add holdings to see the breakdown." />;
   }
   return (
     <div className="h-[320px] w-full">
@@ -59,7 +61,7 @@ export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
 
 export function PortfolioTrend({ trend }: { trend: TrendPoint[] }) {
   if (trend.length === 0) {
-    return <p className="text-sm text-neutral-500 py-8 text-center">No snapshots yet. Price updates create trend.</p>;
+    return <EmptyState icon={<TrendingUp className="h-6 w-6" />} title="No snapshots yet" description="Price updates create trend." />;
   }
   return (
     <div className="h-[300px] w-full">

@@ -6,6 +6,8 @@ import { formatINR, formatDate } from "@/lib/format";
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { PanelError, PanelLoading } from "@/components/common/async-panel-state";
+import { EmptyState } from "@/components/common/empty-state";
+import { LineChart as LineChartIcon } from "lucide-react";
 
 type PricePoint = { price: number; date: string };
 
@@ -54,7 +56,7 @@ export function PriceHistoryDialog({
         {!loading && error ? <PanelError message="Could not load price history." onRetry={load} /> : null}
 
         {!loading && !error && points && points.length === 0 && (
-          <p className="text-sm text-neutral-500 py-8 text-center">No price history yet. Update price to create history.</p>
+          <EmptyState icon={<LineChartIcon className="h-6 w-6" />} title="No price history yet" description="Update the price to start tracking history." />
         )}
 
         {!loading && !error && points && points.length > 0 && (
