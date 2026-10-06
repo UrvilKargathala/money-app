@@ -73,7 +73,7 @@ export function TransactionRow({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-sm font-semibold font-heading tabular-nums ${isIncome ? "text-success" : isExpense ? "text-error" : "text-neutral-700"}`}>
+        <span className={`text-sm font-semibold font-heading tabular-nums ${isIncome ? "text-success" : isExpense ? "text-error" : "text-ink-2"}`}>
           {isIncome ? "+" : isExpense ? "-" : ""}
           {formatINR(Number(txn.amount))}
         </span>

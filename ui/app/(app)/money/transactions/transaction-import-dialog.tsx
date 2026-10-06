@@ -299,13 +299,13 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
               <input aria-label="Take a receipt photo or choose a receipt file" ref={scanInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" className="block w-full rounded-md border p-2 text-sm" onChange={(event) => void scanReceipt(event.target.files?.[0] ?? null)} disabled={busy} />
               <p className="text-xs text-ink-3">On a phone, this can open the rear camera. Nothing is saved until you confirm.</p>
               {scanUnavailable ? (
-                <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning-light/30 p-3 text-xs text-warning-dark">
+                <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning-light/30 p-3 text-xs text-warning-dark dark:border-[#92400E] dark:bg-[#78350F]/40 dark:text-[#FDE68A]">
                   <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
                   Receipt scanning is not configured on this server. Import a CSV statement from the Statement tab instead — it works without any extra setup.
                 </p>
               ) : null}
             </div>
-            {busy && !scanDraft ? <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-primary-50 p-4 text-sm text-primary-700"><Loader2 className="h-4 w-4 animate-spin" />Reading receipt…</div> : null}
+            {busy && !scanDraft ? <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-primary-50 p-4 text-sm text-primary-700 dark:bg-[#1E3A5F] dark:text-[#BFDBFE]"><Loader2 className="h-4 w-4 animate-spin" />Reading receipt…</div> : null}
             {scanDraft ? (
               <div className="space-y-4 rounded-xl border bg-sunken p-4">
                 <div className="flex items-center justify-between"><div><p className="font-semibold">Review extracted transaction</p><p className="text-xs text-ink-3">Correct any field before saving.</p></div>{scanDraft.confidence != null ? <Badge variant="secondary">{Math.round(scanDraft.confidence * 100)}% confidence</Badge> : null}</div>
