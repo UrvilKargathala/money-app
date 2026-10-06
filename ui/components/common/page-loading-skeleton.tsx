@@ -30,7 +30,7 @@ export function AppPageSkeleton() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
         <Card>
-          <CardHeader className="space-y-2">
+          <CardHeader className="space-y-2 pb-4">
             <Skeleton className="h-5 w-44" />
             <Skeleton className="h-4 w-64" />
           </CardHeader>
@@ -40,7 +40,7 @@ export function AppPageSkeleton() {
         </Card>
 
         <Card>
-          <CardHeader className="space-y-2">
+          <CardHeader className="space-y-2 pb-4">
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-4 w-56" />
           </CardHeader>
@@ -62,7 +62,7 @@ export function AppPageSkeleton() {
       <div className="grid gap-6 lg:grid-cols-2">
         {Array.from({ length: 2 }).map((_, index) => (
           <Card key={index}>
-            <CardHeader className="space-y-2">
+            <CardHeader className="space-y-2 pb-4">
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-4 w-52" />
             </CardHeader>
@@ -82,7 +82,7 @@ export function AuthPageSkeleton() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-6" aria-label="Loading authentication page">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-3">
+        <CardHeader className="space-y-3 pb-4">
           <Skeleton className="mx-auto h-12 w-12 rounded-2xl" />
           <Skeleton className="mx-auto h-7 w-44" />
           <Skeleton className="mx-auto h-4 w-64" />
