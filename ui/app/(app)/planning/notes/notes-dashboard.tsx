@@ -507,7 +507,7 @@ export function NotesDashboard({
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base">
               <LayoutTemplate className="h-4 w-4" /> Templates
             </CardTitle>
