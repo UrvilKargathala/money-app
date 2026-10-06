@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
-import { classifyRows, MAX_CSV_BYTES, readCsvBody, runConfirmImport } from "./import-service";
+import { classifyRows, MAX_CSV_BYTES, MAX_IMPORT_ROWS, readCsvBody, runConfirmImport } from "./import-service";
 import {
   detectMapping,
   parseCsv,
@@ -111,10 +111,17 @@ export function registerImportRoutes(transactions: import("hono").Hono): void {
   transactions.post("/import/preview", requireAuth, async (c) => {
     const csvText = await readCsvBody(c);
     if (!csvText) return c.json({ error: "Provide CSV content." }, 400);
+    // Same guards as confirm: preview must never parse an unbounded payload.
+    if (csvText.length > MAX_CSV_BYTES) {
+      return c.json({ error: "Statements are capped at 1.5MB per file." }, 400);
+    }
 
     const parsed = parseCsv(csvText);
     if (parsed.rows.length === 0) {
       return c.json({ error: "No data rows found." }, 400);
+    }
+    if (parsed.rows.length > MAX_IMPORT_ROWS) {
+      return c.json({ error: `Statements are capped at ${MAX_IMPORT_ROWS} rows per file.` }, 400);
     }
 
     const mapping: ColumnMapping = detectMapping(parsed.headers);
@@ -141,8 +148,14 @@ export function registerImportRoutes(transactions: import("hono").Hono): void {
     };
     const csvText = typeof body.csv === "string" ? body.csv : null;
     if (!csvText) return c.json({ error: "Provide CSV content." }, 400);
+    if (csvText.length > MAX_CSV_BYTES) {
+      return c.json({ error: "Statements are capped at 1.5MB per file." }, 400);
+    }
 
     const parsed = parseCsv(csvText);
+    if (parsed.rows.length > MAX_IMPORT_ROWS) {
+      return c.json({ error: `Statements are capped at ${MAX_IMPORT_ROWS} rows per file.` }, 400);
+    }
     const effective: ColumnMapping = { ...detectMapping(parsed.headers) };
     const provided = body.mapping ?? {};
     for (const key of Object.keys(effective) as (keyof ColumnMapping)[]) {

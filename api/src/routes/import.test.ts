@@ -52,6 +52,22 @@ describe("preview and validate (stateless)", () => {
     expect(body.sample_rows[1].type).toBe("income");
   });
 
+  it("preview rejects oversized payloads like confirm does", async () => {
+    const big = await rawRequest("/api/transactions/import/preview", {
+      method: "POST",
+      headers: { cookie: `mm_session=${db.alice.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ csv: "a\n".repeat(1_600_000) }),
+    });
+    expect(big.status).toBe(400);
+    const rows = Array.from({ length: 2005 }, (_, i) => `2026-03-01,Row${i},10,`).join("\n");
+    const many = await rawRequest("/api/transactions/import/preview", {
+      method: "POST",
+      headers: { cookie: `mm_session=${db.alice.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ csv: `${HEADERS}\n${rows}` }),
+    });
+    expect(many.status).toBe(400);
+  });
+
   it("validate reports row-level reasons without writing anything", async () => {
     await createAccount(db.alice);
     const csv = [
