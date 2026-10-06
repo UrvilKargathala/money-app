@@ -459,7 +459,7 @@ export function NotesDashboard({
                               aria-label="Save rename"
                               disabled={renaming}
                               onClick={() => void commitRenameCategory(c.name, categoryDraft)}
-                              className="p-1.5 text-success-dark hover:bg-success-light"
+                              className="p-1.5 text-success-dark hover:bg-success-light dark:hover:bg-[#064E3B]/50"
                             >
                               <Check className="h-3.5 w-3.5" />
                             </button>
@@ -478,7 +478,7 @@ export function NotesDashboard({
                     return (
                       <span
                         key={c.name}
-                        className={`inline-flex items-stretch overflow-hidden rounded-lg border bg-white ${active ? "border-primary-300 bg-primary-50" : "border-neutral-200"}`}
+                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-primary-50 dark:border-[#60A5FA] dark:bg-[#1E3A5F]/50" : "border-line bg-surface"}`}
                       >
                         <button
                           type="button"
@@ -486,7 +486,7 @@ export function NotesDashboard({
                           aria-label={`Filter by ${c.name}`}
                           aria-pressed={active}
                           onClick={() => setFilterCategory(active ? "all" : c.name)}
-                          className={`px-2.5 py-1 text-xs font-medium hover:bg-neutral-50 ${active ? "text-primary-700" : "text-neutral-600"}`}
+                          className={`px-2.5 py-1 text-xs font-medium hover:bg-sunken ${active ? "text-primary-700 dark:text-[#BFDBFE]" : "text-ink-2"}`}
                         >
                           {c.name} · {count}
                         </button>
@@ -586,7 +586,7 @@ export function NotesDashboard({
               {filtered
                 .sort((a, b) => b.is_pinned - a.is_pinned)
                 .map((n) => (
-                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-primary-50/50" : ""}`}>
+                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-primary-50/50 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40" : ""}`}>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-semibold font-heading text-ink-1 flex items-center gap-2">

@@ -252,7 +252,7 @@ export function ExportDashboard({
                 {modules.map((m) => (
                   <div
                     key={m.name}
-                    className={`rounded-lg border p-3 ${selectedModule === m.name ? "border-primary-600 bg-primary-50/40" : "border-neutral-100"}`}
+                    className={`rounded-lg border p-3 ${selectedModule === m.name ? "border-primary-600 bg-primary-50/40 dark:border-[#60A5FA] dark:bg-[#1E3A5F]/40" : "border-line"}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium text-sm font-heading">{m.label ?? m.name}</p>
@@ -273,7 +273,7 @@ export function ExportDashboard({
               </div>
             )}
 
-            <div className="rounded-lg border border-line bg-neutral-50/50 p-4 space-y-3">
+            <div className="rounded-lg border border-line bg-sunken/50 p-4 space-y-3">
               <p className="text-sm font-semibold font-heading">Create export job - POST /api/export/jobs</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
