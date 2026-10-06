@@ -15,6 +15,7 @@ import { CommandPalette } from "@/components/common/command-palette";
 import { EmptyState } from "@/components/common/empty-state";
 import { Toggle } from "@/components/ui/toggle";
 import { FormSelect } from "@/components/common/form-select";
+import { useTheme, type ThemeChoice } from "@/components/theme-provider";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { deviceName } from "@/lib/user-agent";
 
@@ -91,7 +92,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [savingHaptics, setSavingHaptics] = useState(false);
   const initialSettings = (settings ?? {}) as { currency?: string; theme?: string };
-  const [theme, setTheme] = useState(initialSettings.theme ?? "light");
+  const { theme, setTheme } = useTheme();
   const [currency, setCurrency] = useState(initialSettings.currency ?? "INR");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
@@ -135,7 +136,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         if (s.currency) setCurrency(s.currency);
         // Local choice wins: the server only seeds a fresh browser, so a
         // saved Dark pick is never clobbered back to light on revisit.
-        if (s.theme && window.localStorage.getItem("moneymind-theme") === null) setTheme(s.theme);
+        if (s.theme && window.localStorage.getItem("moneymind-theme") === null) setTheme(s.theme as ThemeChoice);
         if (Array.isArray(s.widget_layout) && s.widget_layout.length) setWidgetLayout(s.widget_layout.map(String));
         // initialize haptics cache
         setHapticsEnabledCache(!!Number(s.haptics_enabled ?? 1));
@@ -148,16 +149,10 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     if (stored) setDateFormat(stored);
   }, []);
 
-  useEffect(() => {
-    const dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList.toggle("dark", dark);
-  }, [theme]);
-
   async function saveAppearance(nextTheme = theme, nextCurrency = currency, nextDateFormat = dateFormat) {
     const res = await fetch("/api/users/me/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: nextTheme, currency: nextCurrency, widget_layout: widgetLayout }) });
     if (!res.ok) return toast.error("Could not save appearance settings.");
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    window.localStorage.setItem("moneymind-theme", nextTheme);
+    setTheme(nextTheme as "light" | "dark" | "system");
     window.localStorage.setItem("moneymind-currency", nextCurrency);
     window.localStorage.setItem("moneymind-date-format", nextDateFormat);
     toast.success("Display preferences saved.");
@@ -587,7 +582,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               id="theme"
               label="Theme"
               value={theme}
-              onValueChange={setTheme}
+              onValueChange={(v) => setTheme(v as ThemeChoice)}
               options={[
                 { value: "light", label: "Light" },
                 { value: "dark", label: "Dark" },
