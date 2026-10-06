@@ -54,8 +54,8 @@ export function BudgetCard({
     <Card className={`p-5 space-y-3 ${isOver ? "border-error/20 bg-error-light/50" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-semibold font-heading text-neutral-900">{budget.category_name || "Overall Budget"}</p>
-          <p className="text-xs text-neutral-500">Monthly • {formatINR(amount)} budgeted</p>
+          <p className="text-sm font-semibold font-heading text-ink-1">{budget.category_name || "Overall Budget"}</p>
+          <p className="text-xs text-ink-3">Monthly • {formatINR(amount)} budgeted</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={getBadgeVariant(budget.utilization_pct)}>{budget.utilization_pct.toFixed(1)}%</Badge>

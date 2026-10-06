@@ -45,8 +45,8 @@ export function AccountCard({
         <div className="flex items-center gap-3">
           <AccountIcon type={account.type} color={account.color} />
           <div>
-            <p className="text-sm font-semibold font-heading text-neutral-900 leading-none">{account.name}</p>
-            <p className="text-xs text-neutral-500">{account.display_name}{account.institution ? ` • ${account.institution}` : ""}</p>
+            <p className="text-sm font-semibold font-heading text-ink-1 leading-none">{account.name}</p>
+            <p className="text-xs text-ink-3">{account.display_name}{account.institution ? ` • ${account.institution}` : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export function AccountCard({
       </div>
 
       <div>
-        <p className="text-xs text-neutral-500 font-medium">Current Balance</p>
+        <p className="text-xs text-ink-3 font-medium">Current Balance</p>
         <p className={`text-xl font-bold font-heading ${account.balance < 0 ? "text-error" : "text-neutral-900"}`}>
           {formatINR(account.balance)}
         </p>
@@ -89,12 +89,12 @@ export function AccountCard({
       {isCredit && account.credit_limit != null && creditUtilization != null && (
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
-            <span className="text-neutral-500">Credit Used</span>
+            <span className="text-ink-3">Credit Used</span>
             <span className={`font-medium ${creditUtilization > 80 ? "text-error" : creditUtilization > 50 ? "text-warning" : "text-success"}`}>
               {creditUtilization.toFixed(1)}%
             </span>
           </div>
-          <div className="h-2 rounded-full bg-neutral-100 overflow-hidden">
+          <div className="h-2 rounded-full bg-wash overflow-hidden">
             <div
               className={`h-full rounded-full ${creditUtilization > 80 ? "bg-error" : creditUtilization > 50 ? "bg-warning" : "bg-success"}`}
               style={{ width: `${Math.min(creditUtilization, 100)}%` }}

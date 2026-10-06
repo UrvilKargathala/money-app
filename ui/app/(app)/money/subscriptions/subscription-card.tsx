@@ -58,7 +58,7 @@ export function SubscriptionCard({
     <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-warning-light/30" : ""}`}>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold font-heading text-neutral-900">{sub.service_name}</p>
+          <p className="truncate text-sm font-semibold font-heading text-ink-1">{sub.service_name}</p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${sub.service_name}`}>
@@ -107,8 +107,8 @@ export function SubscriptionCard({
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs text-neutral-500">Amount</p>
-          <p className="text-lg font-bold font-heading text-neutral-900">{formatINR(sub.amount)}</p>
+          <p className="text-xs text-ink-3">Amount</p>
+          <p className="text-lg font-bold font-heading text-ink-1">{formatINR(sub.amount)}</p>
         </div>
         {isActive && (
           <Button size="sm" onClick={onRenew}>

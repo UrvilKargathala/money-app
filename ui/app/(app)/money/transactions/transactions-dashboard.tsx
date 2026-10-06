@@ -160,8 +160,8 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Transactions</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">{summary.count} transactions • Net {formatINR(summary.net)}</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Transactions</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">{summary.count} transactions • Net {formatINR(summary.net)}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setRulesOpen(true)}><WandSparkles className="h-4 w-4" /> Merchant rules</Button>
@@ -235,9 +235,9 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
             {selected.size > 0 ? `${selected.size} selected` : "Bulk edit"}
           </label>
           <div className="flex flex-1 flex-wrap gap-2">
-            <Select value={bulkCategory} onValueChange={setBulkCategory} disabled={selected.size === 0 || bulkBusy}><SelectTrigger className="w-44 bg-white"><SelectValue placeholder="Choose category" /></SelectTrigger><SelectContent>{categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent></Select>
+            <Select value={bulkCategory} onValueChange={setBulkCategory} disabled={selected.size === 0 || bulkBusy}><SelectTrigger className="w-44 bg-surface"><SelectValue placeholder="Choose category" /></SelectTrigger><SelectContent>{categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}</SelectContent></Select>
             <Button size="sm" variant="outline" disabled={!bulkCategory || selected.size === 0 || bulkBusy} onClick={() => void bulk("categorize")}>Apply category</Button>
-            <Select value={bulkTag} onValueChange={setBulkTag} disabled={selected.size === 0 || bulkBusy}><SelectTrigger className="w-40 bg-white"><SelectValue placeholder="Choose tag" /></SelectTrigger><SelectContent>{tags.map((tag) => <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>)}</SelectContent></Select>
+            <Select value={bulkTag} onValueChange={setBulkTag} disabled={selected.size === 0 || bulkBusy}><SelectTrigger className="w-40 bg-surface"><SelectValue placeholder="Choose tag" /></SelectTrigger><SelectContent>{tags.map((tag) => <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>)}</SelectContent></Select>
             <Button size="sm" variant="outline" disabled={!bulkTag || selected.size === 0 || bulkBusy} onClick={() => void bulk("tag")}><Tags className="h-4 w-4" /> Apply tag</Button>
             <Button size="sm" variant="outline" disabled={selected.size !== 2 || bulkBusy} title={selected.size === 2 ? "Merge the two selected transactions" : "Select exactly 2 transactions to merge"} onClick={() => void mergeSelected()}>Merge duplicates</Button>
             <Button size="sm" variant="destructive" disabled={selected.size === 0 || bulkBusy} onClick={() => void bulk("delete")}>Delete</Button>
@@ -266,7 +266,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           {groups.map((g) => (
             <div key={g.date}>
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-sm font-semibold font-heading text-neutral-700">
+                <h3 className="text-sm font-semibold font-heading text-ink-2">
                   {new Date(g.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}
                 </h3>
                 <span className={`text-sm font-semibold tabular-nums ${g.total >= 0 ? "text-success" : "text-error"}`}>
@@ -284,7 +284,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4 border-t">
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-ink-3">
                 Page {page} of {totalPages} • {total} total
               </p>
               <div className="flex gap-2">

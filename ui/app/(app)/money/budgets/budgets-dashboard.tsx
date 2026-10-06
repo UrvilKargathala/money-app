@@ -104,8 +104,8 @@ export function BudgetsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Budgets</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">Track spending vs plan for {monthName}</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Budgets</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">Track spending vs plan for {monthName}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -128,7 +128,7 @@ export function BudgetsDashboard({
         <Button variant="ghost" size="icon" onClick={prevMonth}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        <span className="font-semibold font-heading text-neutral-800">{monthName}</span>
+        <span className="font-semibold font-heading text-ink-1">{monthName}</span>
         <Button variant="ghost" size="icon" onClick={nextMonth}>
           <ChevronRight className="h-5 w-5" />
         </Button>
@@ -178,11 +178,11 @@ export function BudgetsDashboard({
 
       {overview?.unbudgeted && overview.unbudgeted.length > 0 && (
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-neutral-800 mb-3">Unbudgeted Spending</h3>
+          <h3 className="font-semibold font-heading text-ink-1 mb-3">Unbudgeted Spending</h3>
           <div className="space-y-2">
             {overview.unbudgeted.map((u) => (
               <div key={u.category_id} className="flex justify-between text-sm">
-                <span className="text-neutral-700">{u.name}</span>
+                <span className="text-ink-2">{u.name}</span>
                 <span className="font-medium text-error">{formatINR(u.spent)}</span>
               </div>
             ))}
@@ -199,7 +199,7 @@ export function BudgetsDashboard({
           </DialogHeader>
           <div className="space-y-2">
             {breakdown?.items.length === 0 ? (
-              <p className="text-sm text-neutral-500">No breakdown data.</p>
+              <p className="text-sm text-ink-3">No breakdown data.</p>
             ) : (
               breakdown?.items.map((item) => (
                 <div key={item.name} className="flex justify-between text-sm border-b py-2 last:border-0">

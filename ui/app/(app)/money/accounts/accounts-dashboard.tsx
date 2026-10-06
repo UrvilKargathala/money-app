@@ -108,8 +108,8 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Accounts</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">{activeAccounts.length} active • Net {formatINR(net)}</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Accounts</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">{activeAccounts.length} active • Net {formatINR(net)}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setTransferOpen(true)}>

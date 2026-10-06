@@ -10,7 +10,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
   if (!data) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold font-heading text-neutral-900">Accounts</h1>
+        <h1 className="text-3xl font-bold font-heading text-ink-1">Accounts</h1>
         <p className="text-sm text-error">Could not load accounts. Please check your connection and try again.</p>
       </div>
     );
