@@ -12,7 +12,10 @@ export interface ToggleProps
 /**
  * DS 7.10 Toggle: 44x24 container, full radius. On: Primary/600, knob right.
  * Off: Neutral/300, knob left. Knob is a 20x20 white circle with Shadow/sm
- * and 2px container padding. Native button semantics: keyboard operable,
+ * and 2px container padding. The knob MUST be left-anchored (left-0):
+ * <button> is text-align:center by UA stylesheet, so an unanchored abspos
+ * knob takes a centered static position and overhangs the track.
+ * Native button semantics: keyboard operable,
  * focus-visible ring, 50% opacity when disabled.
  */
 export function Toggle({ checked, onCheckedChange, className, disabled, ...props }: ToggleProps) {
@@ -35,7 +38,7 @@ export function Toggle({ checked, onCheckedChange, className, disabled, ...props
       <span
         aria-hidden
         className={cn(
-          "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+          "absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
           checked ? "translate-x-[22px]" : "translate-x-0.5"
         )}
       />
