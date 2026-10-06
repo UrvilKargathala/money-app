@@ -2,6 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { formatINR } from "@/lib/format";
+import { chartTheme, useDarkMode } from "@/lib/chart-theme";
 import {
   BarChart,
   Bar,
@@ -84,6 +85,7 @@ export default function ReportsCharts({
 
   const daysInMonth = new Date(heatmapYear, heatmapMonth, 0).getDate();
   const heatmapMap = new Map<string, number>(heatmapDays.map((d) => [d.date, d.total]));
+  const t = chartTheme(useDarkMode());
 
   return (
     <div className="space-y-6">
@@ -99,14 +101,14 @@ export default function ReportsCharts({
             <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={cashflowWithNet} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#64748B" />
-                  <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} />
+                  <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
                   <Tooltip
                     formatter={(value: number, name: string) => [formatINR(Number(value)), name]}
-                    contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
+                    contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
                   />
-                  <Legend />
+                      <Legend wrapperStyle={{ color: t.legendText }} />
                   <Bar dataKey="income" name="Income" fill="#10B981" radius={[6, 6, 0, 0]} barSize={20} />
                   <Bar dataKey="expense" name="Expense" fill="#EF4444" radius={[6, 6, 0, 0]} barSize={20} />
                   <Line type="monotone" dataKey="net" name="Net" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
@@ -153,7 +155,7 @@ export default function ReportsCharts({
                           const pct = payload?.pct != null ? ` (${payload.pct}%)` : "";
                           return [formatINR(Number(value)) + pct, label];
                         }}
-                        contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0", backgroundColor: "#FFFFFF" }}
+                        contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
                         wrapperStyle={{ zIndex: 10, outline: "none" }}
                       />
                       <Legend
@@ -161,7 +163,7 @@ export default function ReportsCharts({
                         align="center"
                         iconType="circle"
                         iconSize={8}
-                        wrapperStyle={{ fontSize: "11px", lineHeight: "16px", paddingTop: "8px" }}
+                        wrapperStyle={{ fontSize: "11px", lineHeight: "16px", paddingTop: "8px", color: t.legendText }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -200,15 +202,15 @@ export default function ReportsCharts({
               <div className="h-[320px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trends} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#64748B" />
-                    <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} />
+                    <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
                     <Tooltip
                       // eslint-disable-next-line
                       formatter={(value: unknown, name: unknown) => [formatINR(Number(value as number)), String(name)]}
-                      contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
+                      contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
                     />
-                    <Legend />
+                        <Legend wrapperStyle={{ color: t.legendText }} />
                     <Line type="monotone" dataKey="month_spend" name="Month spend" stroke="#F59E0B" strokeWidth={2} dot={{ r: 3 }} />
                     <Line type="monotone" dataKey="cumulative_spend" name="Cumulative" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
                   </LineChart>
@@ -231,20 +233,20 @@ export default function ReportsCharts({
             <div className="h-[360px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={budgetVsActual} margin={{ top: 8, right: 16, left: 8, bottom: 56 }} barCategoryGap="24%" barGap={8}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 11 }}
-                    stroke="#64748B"
+                    tick={{ fontSize: 11, fill: t.tick }}
+                    stroke={t.tick}
                     interval={0}
                     angle={-20}
                     textAnchor="end"
                     height={60}
                     tickMargin={8}
                   />
-                  <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
-                  <Tooltip formatter={(value: number, name: string) => [formatINR(Number(value)), name]} contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }} />
-                  <Legend wrapperStyle={{ paddingTop: 8 }} />
+                  <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
+                  <Tooltip formatter={(value: number, name: string) => [formatINR(Number(value)), name]} contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }} />
+                      <Legend wrapperStyle={{ paddingTop: 8, color: t.legendText }} />
                   <Bar dataKey="budgeted" name="Budgeted" fill="#2563EB" radius={[6, 6, 0, 0]} maxBarSize={56} />
                   <Bar dataKey="actual" name="Actual" fill="#F59E0B" radius={[6, 6, 0, 0]} maxBarSize={56} />
                 </BarChart>
@@ -366,7 +368,7 @@ export default function ReportsCharts({
                         return [formatINR(Number(value)) + pct, label];
                       }}
                     />
-                    <Legend />
+                        <Legend wrapperStyle={{ color: t.legendText }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -386,15 +388,15 @@ export default function ReportsCharts({
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={netWorthSeries} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#64748B" tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
-                    <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
+                    <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
                     <Tooltip
                       formatter={(value: number, name: string) => (name === "net_worth" ? [formatINR(Number(value)), "Net worth"] : [value != null ? `${Number(value).toFixed(2)}%` : "-", "Change"])}
                       labelFormatter={(label: string) => new Date(label).toLocaleDateString("en-IN")}
-                      contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
+                      contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
                     />
-                    <Legend />
+                        <Legend wrapperStyle={{ color: t.legendText }} />
                     <Line type="monotone" dataKey="net_worth" name="Net worth" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
