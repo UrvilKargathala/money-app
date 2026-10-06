@@ -81,7 +81,7 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
   }
 
   return <div className="grid gap-6 xl:grid-cols-2">
-    <Card><CardHeader><CardTitle>Saved report templates</CardTitle><CardDescription>Save a reusable report setup for future exports.</CardDescription></CardHeader><CardContent className="space-y-4">
+    <Card><CardHeader className="pb-4"><CardTitle>Saved report templates</CardTitle><CardDescription>Save a reusable report setup for future exports.</CardDescription></CardHeader><CardContent className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2"><Input value={name} onChange={e=>setName(e.target.value)} placeholder="Template name" /><Input value={description} onChange={e=>setDescription(e.target.value)} placeholder="Description (optional)" /></div>
       <Button onClick={createTemplate} disabled={busy}><Plus className="mr-2 h-4 w-4"/>Save template</Button>
       <div className="divide-y rounded-xl border">
@@ -89,7 +89,7 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
         {templates.map(t=><div key={t.id} className="flex items-center justify-between gap-3 p-4"><div><p className="font-medium">{t.name}</p><p className="text-xs text-neutral-500">{t.description || (t.user_id === null ? "MoneyMind template" : "Your template")}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={()=>mutate(`/api/report-templates/${t.id}/duplicate`,{method:"POST"})}><Copy className="h-4 w-4"/><span className="sr-only">Duplicate</span></Button>{t.user_id !== null && <><Button size="sm" variant="outline" onClick={()=>renameTemplate(t)}><Pencil className="h-4 w-4"/><span className="sr-only">Rename</span></Button><Button size="sm" variant="outline" onClick={()=>mutate(`/api/report-templates/${t.id}`,{method:"DELETE"})}><Trash2 className="h-4 w-4"/><span className="sr-only">Delete</span></Button></>}</div></div>)}
       </div>
     </CardContent></Card>
-    <Card><CardHeader><CardTitle>Generate and download</CardTitle><CardDescription>Create a PDF and keep it in your report history.</CardDescription></CardHeader><CardContent className="space-y-4">
+    <Card><CardHeader className="pb-4"><CardTitle>Generate and download</CardTitle><CardDescription>Create a PDF and keep it in your report history.</CardDescription></CardHeader><CardContent className="space-y-4">
       <select aria-label="Report template" className="h-10 w-full rounded-md border bg-white px-3 text-sm" value={templateId} onChange={e=>setTemplateId(e.target.value)}><option value="">Standard report</option>{templates.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select>
       <div className="grid gap-3 sm:grid-cols-2"><Input type="date" aria-label="Report start date" value={start} onChange={e=>setStart(e.target.value)} /><Input type="date" aria-label="Report end date" value={end} onChange={e=>setEnd(e.target.value)} /></div>
       <div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={saveFilter}>Save filter</Button>{savedFilters.map((item) => <Button key={item.name} type="button" variant="ghost" size="sm" onClick={() => { setStart(item.start); setEnd(item.end); }}>{item.name}</Button>)}</div>

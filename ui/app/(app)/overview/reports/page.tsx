@@ -123,7 +123,7 @@ export default async function ReportsPage() {
       /></PremiumReports>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Export</CardTitle>
           <CardDescription>Download reports</CardDescription>
         </CardHeader>
