@@ -337,20 +337,20 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold font-heading text-neutral-900">Settings</h1>
-        <p className="text-sm text-neutral-500 font-body mt-1">Manage your account, security, notifications, and data.</p>
+        <h1 className="text-3xl font-bold font-heading text-neutral-900 dark:text-[#F8FAFC]">Settings</h1>
+        <p className="text-sm text-neutral-500 font-body mt-1 dark:text-[#94A3B8]">Manage your account, security, notifications, and data.</p>
       </div>
 
-      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40">
+      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40 dark:border-[#334155] dark:from-[#0F172A] dark:to-[#1E293B]">
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p>
-                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading ${planLoading ? "bg-neutral-100 text-neutral-400" : premium ? "bg-success-light text-success-dark" : "bg-neutral-100 text-neutral-900"}`}>
+                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading dark:bg-[#1E293B] ${planLoading ? "bg-neutral-100 text-neutral-400" : premium ? "bg-success-light text-success-dark dark:text-[#A7F3D0]" : "bg-neutral-100 text-neutral-900 dark:text-[#F8FAFC]"}`}>
                   {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
                 </span>
               </p>
-              <p className="text-sm text-neutral-500">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
+              <p className="text-sm text-neutral-500 dark:text-[#94A3B8]">{planLoading ? "Loading access status." : premium ? "All features are unlocked during early access." : "Core money tools are available — premium capabilities open to explore."}</p>
             </div>
             <Button asChild className="w-fit shrink-0 bg-indigo-600 hover:bg-indigo-700">
               <Link href="/pricing">Manage plan</Link>
@@ -377,7 +377,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
+        <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" /> Profile
@@ -391,7 +391,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <AvatarFallback className="text-lg">{(profile?.full_name ?? user?.full_name ?? user?.email ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-1.5">
-              <Label htmlFor="avatar" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+              <Label htmlFor="avatar" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:bg-[#0F172A] dark:hover:bg-[#334155] dark:border-[#334155] dark:text-[#CBD5E1]">
                 <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload photo"}
               </Label>
               <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatar} disabled={avatarUploading} />
@@ -408,7 +408,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <Input id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short bio" />
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-500">Email</span>
+              <span className="text-neutral-500 dark:text-[#94A3B8]">Email</span>
               <span className="font-medium">{profile?.email ?? user?.email ?? "-"}</span>
             </div>
             <Button onClick={handleSaveProfile} disabled={savingProfile} size="sm" className="w-fit">
@@ -418,7 +418,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5" /> Change password
@@ -441,7 +441,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <Label htmlFor="current_password">Current password</Label>
               <div className="relative">
                 <Input id="current_password" type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} required className="pr-10" />
-                <button type="button" aria-label={showCurrentPw ? "Hide current password" : "Show current password"} onClick={() => setShowCurrentPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+                <button type="button" aria-label={showCurrentPw ? "Hide current password" : "Show current password"} onClick={() => setShowCurrentPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-[#334155]">
                   {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -450,7 +450,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <Label htmlFor="new_password">New password</Label>
               <div className="relative">
                 <Input id="new_password" type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => setNewPw(e.target.value)} required className="pr-10" />
-                <button type="button" aria-label={showNewPw ? "Hide new password" : "Show new password"} onClick={() => setShowNewPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+                <button type="button" aria-label={showNewPw ? "Hide new password" : "Show new password"} onClick={() => setShowNewPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-[#334155]">
                   {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -460,7 +460,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <Label htmlFor="confirm_password">Confirm new password</Label>
               <div className="relative">
                 <Input id="confirm_password" type={showConfirmPw ? "text" : "password"} value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required className="pr-10" />
-                <button type="button" aria-label={showConfirmPw ? "Hide password confirmation" : "Show password confirmation"} onClick={() => setShowConfirmPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+                <button type="button" aria-label={showConfirmPw ? "Hide password confirmation" : "Show password confirmation"} onClick={() => setShowConfirmPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-[#334155]">
                   {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -479,7 +479,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4"><CardTitle className="flex items-center gap-2"><LayoutGrid className="h-5 w-5" /> Dashboard widgets</CardTitle><CardDescription>Choose the order shown on your dashboard.</CardDescription></CardHeader>
         <CardContent className="space-y-2">
           {widgetLayout.map((id, index) => {
@@ -514,17 +514,17 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                   });
                 }}
                 onDragEnd={() => setDragWidgetId(null)}
-                className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50" : "border-neutral-200"}`}
+                className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-[#0F172A] dark:border-[#334155] ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50" : "border-neutral-200"}`}
               >
                 <span title="Drag to reorder" aria-hidden className="cursor-grab text-neutral-400 active:cursor-grabbing">
                   <GripVertical className="h-4 w-4" />
                 </span>
                 <span className="flex-1 font-medium">{widget.label}</span>
                 <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-neutral-500 hover:text-neutral-800 disabled:opacity-30" disabled={index === 0} onClick={() => moveWidget(index, index - 1)} aria-label={`Move ${widget.label} up`}>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-neutral-500 hover:text-neutral-800 disabled:opacity-30 dark:text-[#94A3B8]" disabled={index === 0} onClick={() => moveWidget(index, index - 1)} aria-label={`Move ${widget.label} up`}>
                     <ChevronUp className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-neutral-500 hover:text-neutral-800 disabled:opacity-30" disabled={index === widgetLayout.length - 1} onClick={() => moveWidget(index, index + 1)} aria-label={`Move ${widget.label} down`}>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-neutral-500 hover:text-neutral-800 disabled:opacity-30 dark:text-[#94A3B8]" disabled={index === widgetLayout.length - 1} onClick={() => moveWidget(index, index + 1)} aria-label={`Move ${widget.label} down`}>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </div>
@@ -535,7 +535,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Monitor className="h-5 w-5" /> Active sessions
@@ -544,7 +544,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardHeader>
         <CardContent>
           {sessions === null ? (
-            <p className="text-sm text-neutral-500">Loading sessions...</p>
+            <p className="text-sm text-neutral-500 dark:text-[#94A3B8]">Loading sessions...</p>
           ) : sessions.length === 0 ? (
             <EmptyState icon={<Monitor className="h-6 w-6" />} title="No active sessions found" description="Sessions appear here when you sign in." />
           ) : (
@@ -552,10 +552,10 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               {sessions.map((s) => {
                 const id = s.id ?? s.token_id ?? 0;
                 return (
-                  <div key={String(id)} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm">
+                  <div key={String(id)} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm dark:bg-[#0F172A] dark:border-[#334155]">
                     <div className="min-w-0">
                       <p className="font-medium truncate" title={s.user_agent || undefined}>{deviceName(s.user_agent)} {s.is_current ? <Badge variant="success" className="ml-2">Current</Badge> : null}</p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">
                         {s.ip_address ? `${s.ip_address} • ` : ""}{s.created_at ? new Date(s.created_at).toLocaleString() : ""}
                       </p>
                     </div>
@@ -572,7 +572,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" /> Appearance
@@ -620,13 +620,13 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4"><CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/>Account security history</CardTitle><CardDescription>Recent sign-ins and security actions on your account.</CardDescription></CardHeader>
-        <CardContent className="divide-y divide-neutral-100">{auditLogs.length===0&&<p className="text-sm text-neutral-500">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div className="min-w-0"><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-neutral-500">{log.ip_address||"IP unavailable"}</p></div><time className="shrink-0 text-xs tabular-nums text-neutral-500">{new Date(log.created_at).toLocaleString("en-IN")}</time></div>)}</CardContent>
+        <CardContent className="divide-y divide-neutral-100">{auditLogs.length===0&&<p className="text-sm text-neutral-500 dark:text-[#94A3B8]">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div className="min-w-0"><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-neutral-500 dark:text-[#94A3B8]">{log.ip_address||"IP unavailable"}</p></div><time className="shrink-0 text-xs tabular-nums text-neutral-500 dark:text-[#94A3B8]">{new Date(log.created_at).toLocaleString("en-IN")}</time></div>)}</CardContent>
       </Card>
 
       {billing && (
-        <Card className="border-amber-200">
+        <Card className="border-amber-200 dark:border-[#92400E] dark:bg-[#0F172A]">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" /> Billing — {billing.plan.name} ({billing.plan.code})</CardTitle>
             <CardDescription>
@@ -634,7 +634,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-xs text-neutral-500">Free: 2 accounts, 2 budgets/month, 5 reminders, 3 subs, 1 goal, no investments/debts/tax/reports. Paid unlocks all + batch export, email notifications, sync.</p>
+            <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">Free: 2 accounts, 2 budgets/month, 5 reminders, 3 subs, 1 goal, no investments/debts/tax/reports. Paid unlocks all + batch export, email notifications, sync.</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={async () => { const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan: "monthly" }) }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else toast.error(j.error || "Checkout unavailable"); }}>Monthly ₹300</Button>
               <Button size="sm" variant="secondary" onClick={async () => { const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan: "annual" }) }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else toast.error(j.error || "Checkout unavailable"); }}>Annual ₹2400</Button>
@@ -647,20 +647,20 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </Card>
       )}
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">Personalization</CardTitle>
           <CardDescription>Control center, shortcuts, and haptic feedback</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors dark:bg-[#0F172A] dark:hover:bg-[#334155] dark:border-[#334155]">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
                 <SlidersHorizontal className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold font-heading text-neutral-900">Control center</p>
-                <p className="text-xs text-neutral-500">Quick toggles for app preferences</p>
+                <p className="text-sm font-semibold font-heading text-neutral-900 dark:text-[#F8FAFC]">Control center</p>
+                <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">Quick toggles for app preferences</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowControlCenter(true); }}>
@@ -668,16 +668,16 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             </Button>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors">
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50 transition-colors dark:bg-[#0F172A] dark:hover:bg-[#334155] dark:border-[#334155]">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-amber-400">
                 <Zap className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
+                <p className="text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2 dark:text-[#F8FAFC]">
                   Shortcuts <Badge className="bg-teal-900 text-teal-400 border-0 text-xs">Recommended</Badge>
                 </p>
-                <p className="text-xs text-neutral-500">Cmd+K palette with app actions</p>
+                <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">Cmd+K palette with app actions</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => { triggerHaptic("light"); setShowShortcuts(true); }}>
@@ -685,14 +685,14 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             </Button>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4">
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 dark:bg-[#0F172A] dark:border-[#334155]">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
                 <Fingerprint className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold font-heading text-neutral-900">Haptic feedback</p>
-                <p className="text-xs text-neutral-500">Tap feedback and success/error pulses</p>
+                <p className="text-sm font-semibold font-heading text-neutral-900 dark:text-[#F8FAFC]">Haptic feedback</p>
+                <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">Tap feedback and success/error pulses</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -730,14 +730,14 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             </div>
           </div>
 
-          <p className="text-sm text-neutral-500">Customize everyday controls without exposing developer-only settings.</p>
+          <p className="text-sm text-neutral-500 dark:text-[#94A3B8]">Customize everyday controls without exposing developer-only settings.</p>
         </CardContent>
       </Card>
 
       {showControlCenter && (
         <Card className="p-6 border-dashed">
           <h3 className="font-semibold font-heading flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" /> Control Center</h3>
-          <p className="text-sm text-neutral-500 mt-1">Quick toggles - same as Appearance & Notifications but in one place.</p>
+          <p className="text-sm text-neutral-500 mt-1 dark:text-[#94A3B8]">Quick toggles - same as Appearance & Notifications but in one place.</p>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between"><span>Dark mode</span><Badge variant={theme === "dark" ? "success" : "default"}>{theme === "dark" ? "On" : "Off"}</Badge></div>
             <div className="flex items-center justify-between"><span>Notifications</span><Badge variant="default">Use Notification Preferences</Badge></div>
@@ -748,7 +748,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       )}
       <CommandPalette open={showShortcuts} onOpenChange={setShowShortcuts} />
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" /> Notification Preferences
@@ -756,23 +756,23 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <CardDescription>Toggle per type/channel</CardDescription>
         </CardHeader>
         <CardContent>
-          {emailDelivery && <div className={`mb-4 rounded-xl border p-3 text-sm ${emailDelivery.configured ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}><p className="font-medium">Email delivery {emailDelivery.configured ? "is configured" : "needs production configuration"}</p><p className="mt-1 text-xs">{emailDelivery.configured ? (emailDelivery.sender_configured ? "The API key and sender address are ready." : "Delivery is enabled; add a verified sender address before launch.") : "Local links are written to the server log. Add RESEND_API_KEY and a verified RESEND_FROM_EMAIL before deployment."}</p></div>}
+          {emailDelivery && <div className={`mb-4 rounded-xl border p-3 text-sm dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#E2E8F0] ${emailDelivery.configured ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}><p className="font-medium">Email delivery {emailDelivery.configured ? "is configured" : "needs production configuration"}</p><p className="mt-1 text-xs">{emailDelivery.configured ? (emailDelivery.sender_configured ? "The API key and sender address are ready." : "Delivery is enabled; add a verified sender address before launch.") : "Local links are written to the server log. Add RESEND_API_KEY and a verified RESEND_FROM_EMAIL before deployment."}</p></div>}
           {prefs ? (
             <div className="space-y-5">
               {PREF_GROUPS.filter((g) => prefs.some((p) => p.type === g.type)).map((g) => (
                 <div key={g.type} className="space-y-2">
                   <div>
-                    <p className="text-sm font-semibold font-heading text-neutral-900">{g.label}</p>
-                    <p className="text-xs text-neutral-500">{g.description}</p>
+                    <p className="text-sm font-semibold font-heading text-neutral-900 dark:text-[#F8FAFC]">{g.label}</p>
+                    <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">{g.description}</p>
                   </div>
                   {(["in_app", "email"] as const).map((channel) => {
                     const row = prefs.find((p) => p.type === g.type && p.channel === channel);
                     if (!row) return null;
                     const locked = channel === "email" && !premium;
                     return (
-                      <div key={channel} className="flex items-center justify-between gap-3 rounded-lg bg-neutral-50 px-3 py-2">
+                      <div key={channel} className="flex items-center justify-between gap-3 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-[#1E293B]">
                         <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-neutral-800">{channel === "in_app" ? "In-app" : "Email"}</span>
+                          <span className="font-medium text-neutral-800 dark:text-[#E2E8F0]">{channel === "in_app" ? "In-app" : "Email"}</span>
                           {locked ? <Badge variant="default" className="text-[10px]">Premium</Badge> : null}
                         </div>
                         <Toggle
@@ -789,12 +789,12 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               ))}
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">Loading preferences...</p>
+            <p className="text-sm text-neutral-500 dark:text-[#94A3B8]">Loading preferences...</p>
           )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" /> Data Export
@@ -806,7 +806,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             <Button asChild size="sm">
               <a href={premium ? "/planning/export" : "/pricing"}>{premium ? "Open Export Center" : "Unlock Export Center"}</a>
             </Button>
-            <span className="text-xs text-neutral-500">Create jobs (CSV/PDF), track progress, download files</span>
+            <span className="text-xs text-neutral-500 dark:text-[#94A3B8]">Create jobs (CSV/PDF), track progress, download files</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {exportModules.map((m) => (
@@ -826,7 +826,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-[#0F172A] dark:border-[#334155]">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" /> Data & Privacy
@@ -843,7 +843,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             </Button>
             <Button variant="destructive" onClick={handlePermanentDelete} disabled={gdprLoading}>Permanently delete</Button>
           </div>
-          <p className="text-xs text-neutral-500">Deactivate keeps your data recoverable for 30 days. Permanent deletion becomes available after that grace period and cannot be undone.</p>
+          <p className="text-xs text-neutral-500 dark:text-[#94A3B8]">Deactivate keeps your data recoverable for 30 days. Permanent deletion becomes available after that grace period and cannot be undone.</p>
         </CardContent>
       </Card>
       <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
