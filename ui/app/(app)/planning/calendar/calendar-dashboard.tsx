@@ -107,9 +107,9 @@ function sourceBadgeVariant(source: string): string {
 }
 
 function kindBadge(kind: string): string {
-  if (kind === "inflow") return "bg-success-light text-success-dark border border-success/20";
-  if (kind === "outflow") return "bg-error-light text-error-dark border border-error/20";
-  return "bg-neutral-100 text-neutral-600 border border-neutral-200";
+  if (kind === "inflow") return "bg-success-light text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
+  if (kind === "outflow") return "bg-error-light text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
+  return "bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -436,7 +436,7 @@ export function CalendarDashboard({
                               </Button>
                             )}
                             {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light">
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light dark:hover:bg-[#7F1D1D]/40">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
@@ -481,7 +481,7 @@ export function CalendarDashboard({
                               </Button>
                             )}
                             {ev.source === "custom" && ev.event_id ? (
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light">
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light dark:hover:bg-[#7F1D1D]/40">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             ) : (
@@ -621,7 +621,7 @@ export function CalendarDashboard({
                       </div>
                     </div>
                     {p.negative_days.length > 0 ? (
-                      <div className="rounded bg-error-light/50 p-2">
+                      <div className="rounded bg-error-light/50 p-2 dark:bg-[#7F1D1D]/40">
                         <p className="text-xs font-medium text-error-dark">Negative on {p.negative_days.length} days</p>
                         <p className="text-[11px] text-error-dark/80 break-all">{p.negative_days.slice(0, 5).join(", ")}{p.negative_days.length > 5 ? ` +${p.negative_days.length - 5} more` : ""}</p>
                       </div>
