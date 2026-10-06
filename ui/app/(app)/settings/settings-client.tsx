@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart } from "lucide-react";
+import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart, Eye, EyeOff, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
@@ -50,6 +50,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSuccess, setPwSuccess] = useState(false);
 
@@ -408,18 +411,40 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             )}
             <div className="space-y-1">
               <Label htmlFor="current_password">Current password</Label>
-              <Input id="current_password" type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} required />
+              <div className="relative">
+                <Input id="current_password" type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} required className="pr-10" />
+                <button type="button" aria-label={showCurrentPw ? "Hide current password" : "Show current password"} onClick={() => setShowCurrentPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+                  {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-1">
               <Label htmlFor="new_password">New password</Label>
-              <Input id="new_password" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} required />
+              <div className="relative">
+                <Input id="new_password" type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => setNewPw(e.target.value)} required className="pr-10" />
+                <button type="button" aria-label={showNewPw ? "Hide new password" : "Show new password"} onClick={() => setShowNewPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+                  {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <p className="text-xs text-neutral-400">At least 8 characters, letter + digit.</p>
             </div>
             <div className="space-y-1">
               <Label htmlFor="confirm_password">Confirm new password</Label>
-              <Input id="confirm_password" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required />
+              <div className="relative">
+                <Input id="confirm_password" type={showConfirmPw ? "text" : "password"} value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required className="pr-10" />
+                <button type="button" aria-label={showConfirmPw ? "Hide password confirmation" : "Show password confirmation"} onClick={() => setShowConfirmPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+                  {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {newPw.length > 0 && confirmPw.length > 0 ? (
+                newPw === confirmPw ? (
+                  <p className="flex items-center gap-1 text-xs text-success-dark"><Check className="h-3 w-3" /> Passwords match</p>
+                ) : (
+                  <p className="text-xs text-error-dark">Passwords don&apos;t match</p>
+                )
+              ) : null}
             </div>
-            <Button type="submit" disabled={pwLoading} size="sm">
+            <Button type="submit" disabled={pwLoading || (newPw.length > 0 && confirmPw.length > 0 && newPw !== confirmPw)} size="sm">
               {pwLoading ? "Updating..." : "Change password"}
             </Button>
           </form>
