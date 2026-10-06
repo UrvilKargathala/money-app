@@ -102,14 +102,14 @@ function sourceBadgeVariant(source: string): string {
     case "recurring":
       return "bg-teal-100 text-teal-700 border border-teal-200";
     default:
-      return "bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
+      return "bg-wash text-ink-2 border border-line dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
   }
 }
 
 function kindBadge(kind: string): string {
-  if (kind === "inflow") return "bg-success-light text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
-  if (kind === "outflow") return "bg-error-light text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
-  return "bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
+  if (kind === "inflow") return "bg-tint-success text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
+  if (kind === "outflow") return "bg-tint-error text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
+  return "bg-wash text-ink-2 border border-line dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -351,7 +351,7 @@ export function CalendarDashboard({
                       <button
                         key={cell.iso}
                         onClick={() => setSelectedDate(cell.iso)}
-                        className={`min-h-[88px] p-1.5 text-left bg-surface hover:bg-sunken transition-colors flex flex-col ${!cell.inMonth ? "bg-sunken/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-primary-50/60 dark:bg-[#1E3A5F]/60" : ""}`}
+                        className={`min-h-[88px] p-1.5 text-left bg-surface hover:bg-sunken transition-colors flex flex-col ${!cell.inMonth ? "bg-sunken/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-tint-info/60 dark:bg-[#1E3A5F]/60" : ""}`}
                       >
                         <div className="flex items-center justify-between">
                           <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-ink-2"}`}>
@@ -621,7 +621,7 @@ export function CalendarDashboard({
                       </div>
                     </div>
                     {p.negative_days.length > 0 ? (
-                      <div className="rounded bg-error-light/50 p-2 dark:bg-[#7F1D1D]/40">
+                      <div className="rounded bg-tint-error/50 p-2 dark:bg-[#7F1D1D]/40">
                         <p className="text-xs font-medium text-error-dark">Negative on {p.negative_days.length} days</p>
                         <p className="text-[11px] text-error-dark/80 break-all">{p.negative_days.slice(0, 5).join(", ")}{p.negative_days.length > 5 ? ` +${p.negative_days.length - 5} more` : ""}</p>
                       </div>

@@ -412,7 +412,7 @@ export function TaxDashboard({
                     <p className="text-sm text-ink-2 mt-1">Taxable {formatINR(compare.old_regime.taxable_income)} • Tax {formatINR(compare.old_regime.total_tax)}</p>
                     <p className="text-xs text-neutral-400">Gross {formatINR(compare.old_regime.gross_income)} • Exemptions {formatINR(compare.old_regime.exemptions)}</p>
                   </div>
-                  <div className="rounded-lg border border-line p-4 bg-primary-50/50 dark:bg-[#1E3A5F]/40">
+                  <div className="rounded-lg border border-line p-4 bg-tint-info/50 dark:bg-[#1E3A5F]/40">
                     <p className="text-xs font-medium text-primary-700">New Regime</p>
                     <p className="text-sm text-ink-2 mt-1">Taxable {formatINR(compare.new_regime.taxable_income)} • Tax {formatINR(compare.new_regime.total_tax)}</p>
                     <p className="text-xs text-neutral-400">Gross {formatINR(compare.new_regime.gross_income)} • Exemptions {formatINR(compare.new_regime.exemptions)}</p>
@@ -554,7 +554,7 @@ export function TaxDashboard({
                     <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Additional income</p><p className="font-semibold">{salary.additional_income != null ? formatINR(salary.additional_income) : "-"}</p></div>
                     <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">TDS deducted</p><p className="font-semibold">{salary.tds_deducted != null ? formatINR(salary.tds_deducted) : "-"}</p></div>
                     <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Gross annual (non-salaried)</p><p className="font-semibold">{salary.gross_annual_income != null ? formatINR(salary.gross_annual_income) : "-"}</p></div>
-                    <div className="rounded-lg bg-primary-50 p-3 dark:bg-[#1E3A5F]/50"><p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Financial year</p><p className="font-semibold">{salary.financial_year}</p></div>
+                    <div className="rounded-lg bg-tint-info p-3 dark:bg-[#1E3A5F]/50"><p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Financial year</p><p className="font-semibold">{salary.financial_year}</p></div>
                   </div>
                   <p className="text-xs text-neutral-400">FY {salary.financial_year} • All amounts in INR, from API salary structure.</p>
                 </div>
