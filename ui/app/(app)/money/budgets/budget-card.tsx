@@ -51,7 +51,7 @@ export function BudgetCard({
   const isOver = budget.is_over_budget === 1 || budget.utilization_pct > 100;
 
   return (
-      <Card className={`p-5 space-y-3 ${isOver ? "border-error/20 bg-error-light/50 dark:bg-[#7F1D1D]/30" : ""}`}>
+      <Card className={`p-5 space-y-3 ${isOver ? "border-error/20 bg-tint-error/50 dark:bg-[#7F1D1D]/30" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold font-heading text-ink-1">{budget.category_name || "Overall Budget"}</p>
