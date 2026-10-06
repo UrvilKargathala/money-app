@@ -94,7 +94,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                             onClick={() => setMobileOpen(false)}
                             className={cn(
                               "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                              active ? "bg-primary-50 text-primary-600 font-semibold dark:bg-[#1E3A5F] dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
+                              active ? "bg-tint-info text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
                             )}
                           >
                             <Icon className="h-4 w-4 shrink-0" />
@@ -116,7 +116,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                         onClick={() => setMobileOpen(false)}
                         className={cn(
                           "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                              active ? "bg-primary-50 text-primary-600 font-semibold dark:bg-[#1E3A5F] dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken"
+                              active ? "bg-tint-info text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken"
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
@@ -161,7 +161,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                         <DropdownMenuItem
                           key={item.href}
                           asChild
-                          className={cn("rounded-lg", active && "bg-primary-50 text-primary-600 focus:bg-primary-50 focus:text-primary-600")}
+                          className={cn("rounded-lg", active && "bg-tint-info text-primary-600 focus:bg-tint-info focus:text-primary-600 dark:text-[#BFDBFE]")}
                         >
                           <Link href={item.href} className="flex items-center gap-2.5 w-full">
                             <Icon className="h-4 w-4 shrink-0" />
@@ -223,12 +223,12 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             {showAvatar ? (
               <Avatar className="h-8 w-8">
                 <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} />
-                <AvatarFallback className="bg-primary-100 text-primary-600 text-xs">
+                <AvatarFallback className="bg-primary-100 text-primary-600 text-xs dark:bg-[#1E3A5F] dark:text-[#BFDBFE]">
                   {(userName ?? "U").trim().slice(0, 1).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-[#1E3A5F] dark:text-[#BFDBFE]">
                 <User className="h-4 w-4" />
               </div>
             )}
