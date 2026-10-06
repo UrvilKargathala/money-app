@@ -12,7 +12,17 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
+import { Toggle } from "@/components/ui/toggle";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
+
+const PREF_GROUPS: { type: string; label: string; description: string }[] = [
+  { type: "warning", label: "Warnings", description: "Overdue bills, low balances and things needing action." },
+  { type: "alert", label: "Alerts", description: "Price changes, duplicates and important findings." },
+  { type: "reminder", label: "Reminders", description: "Upcoming renewals, due bills and scheduled events." },
+  { type: "insight", label: "Insights", description: "Spending patterns and saving opportunities." },
+  { type: "summary", label: "Summaries", description: "Periodic digests of your money." },
+  { type: "info", label: "Informational", description: "Product updates and general notices." },
+];
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 import { useMembership } from "@/components/membership";
 import { WIDGETS } from "@/lib/widgets";
@@ -38,6 +48,20 @@ type AuditRow = { id: string | number; action: string; ip_address?: string | nul
 export function SettingsClient({ user, settings, billing }: { user: { full_name: string | null; email: string } | null; settings?: unknown; billing?: { plan: { code: string; name: string }; status: string; source: string; trial: { active: boolean; daysLeft: number }; price: { amountInr: number; perText: string }; entitlements: Record<string, unknown>; locks: Record<string, unknown> } | null }) {
   const { premium, loading: planLoading } = useMembership();
   const [prefs, setPrefs] = useState<{ type: string; channel: string; enabled: number }[] | null>(null);
+
+  async function savePref(type: string, channel: string, enabled: boolean) {
+    try {
+      const res = await fetch("/api/notification-preferences", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ preferences: [{ notification_type: type, channel, is_enabled: enabled }] }),
+      });
+      if (!res.ok) throw new Error();
+      setPrefs((current) => current?.map((row) => row.type === type && row.channel === channel ? { ...row, enabled: enabled ? 1 : 0 } : row) ?? null);
+    } catch {
+      toast.error("Could not save notification preference");
+    }
+  }
   const [profile, setProfile] = useState<{ full_name: string | null; email: string; bio?: string | null; avatar_url?: string | null } | null>(null);
   const [fullName, setFullName] = useState(user?.full_name ?? "");
   const [bio, setBio] = useState("");
@@ -655,18 +679,33 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <CardContent>
           {emailDelivery && <div className={`mb-4 rounded-xl border p-3 text-sm ${emailDelivery.configured ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}><p className="font-medium">Email delivery {emailDelivery.configured ? "is configured" : "needs production configuration"}</p><p className="mt-1 text-xs">{emailDelivery.configured ? (emailDelivery.sender_configured ? "The API key and sender address are ready." : "Delivery is enabled; add a verified sender address before launch.") : "Local links are written to the server log. Add RESEND_API_KEY and a verified RESEND_FROM_EMAIL before deployment."}</p></div>}
           {prefs ? (
-            <div className="space-y-2 max-h-64 overflow-auto">
-              {prefs.slice(0, 12).map((p, i) => (
-                <div key={i} className="flex justify-between text-sm border-b py-2 last:border-0">
-                  <span>
-                    {p.type} • {p.channel}
-                  </span>
-                  <label className={`flex items-center gap-2 ${p.channel === "email" && !premium ? "text-neutral-400" : ""}`} title={p.channel === "email" && !premium ? "Upgrade to enable email alerts" : undefined}>
-                    <input type="checkbox" aria-label={`${p.type} ${p.channel}`} disabled={planLoading || (p.channel === "email" && !premium)} checked={p.channel === "email" && !premium ? false : !!p.enabled} onChange={async (e) => {
-                      const enabled = e.target.checked;
-                      try { const res = await fetch("/api/notification-preferences", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ preferences: [{ notification_type: p.type, channel: p.channel, is_enabled: enabled }] }) }); if (!res.ok) throw new Error(); setPrefs((current) => current?.map((row) => row.type === p.type && row.channel === p.channel ? { ...row, enabled: enabled ? 1 : 0 } : row) ?? null); } catch { toast.error("Could not save notification preference"); }
-                    }} />{p.channel === "email" && !premium ? "Upgrade to enable email alerts" : p.enabled ? "On" : "Off"}
-                  </label>
+            <div className="space-y-5">
+              {PREF_GROUPS.filter((g) => prefs.some((p) => p.type === g.type)).map((g) => (
+                <div key={g.type} className="space-y-2">
+                  <div>
+                    <p className="text-sm font-semibold font-heading text-neutral-900">{g.label}</p>
+                    <p className="text-xs text-neutral-500">{g.description}</p>
+                  </div>
+                  {(["in_app", "email"] as const).map((channel) => {
+                    const row = prefs.find((p) => p.type === g.type && p.channel === channel);
+                    if (!row) return null;
+                    const locked = channel === "email" && !premium;
+                    return (
+                      <div key={channel} className="flex items-center justify-between gap-3 rounded-lg bg-neutral-50 px-3 py-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium text-neutral-800">{channel === "in_app" ? "In-app" : "Email"}</span>
+                          {locked ? <Badge variant="default" className="text-[10px]">Premium</Badge> : null}
+                        </div>
+                        <Toggle
+                          checked={locked ? false : !!row.enabled}
+                          disabled={planLoading || locked}
+                          aria-label={`${g.label} via ${channel === "in_app" ? "in-app" : "email"}`}
+                          title={locked ? "Upgrade to enable email alerts" : undefined}
+                          onCheckedChange={(enabled) => void savePref(g.type, channel, enabled)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
