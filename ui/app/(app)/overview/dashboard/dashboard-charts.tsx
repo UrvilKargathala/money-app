@@ -23,7 +23,7 @@ export function CashflowTrendCard({ cashflow }: { cashflow: CashflowRow[] }) {
 
   return (
     <Card className="min-h-[390px]">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Cashflow trend</CardTitle>
         <CardDescription>Income vs expenses for the latest months</CardDescription>
       </CardHeader>
@@ -57,7 +57,7 @@ export function SpendingBreakdownCard({ categories }: { categories: CategoryRow[
 
   return (
     <Card className="min-h-[390px]">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Spending breakdown</CardTitle>
         <CardDescription>Top categories this period</CardDescription>
       </CardHeader>

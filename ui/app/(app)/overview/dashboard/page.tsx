@@ -116,7 +116,7 @@ export default async function DashboardPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <CashflowTrendCard cashflow={cashflow} />
         <Card className="min-h-[390px]">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" /> Needs attention</CardTitle>
             <CardDescription>Items that may need action soon</CardDescription>
           </CardHeader>
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)]">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div>
               <CardTitle>Recent Transactions</CardTitle>
               <CardDescription>Latest money movement</CardDescription>
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div>
               <CardTitle>Accounts</CardTitle>
               <CardDescription>
@@ -263,7 +263,7 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Budget pulse</CardTitle>
             <CardDescription>This month against plan</CardDescription>
           </CardHeader>
