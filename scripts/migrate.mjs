@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(new URL('../api/package.json', import.meta.url));
 const { Pool } = require('pg');
-for (const path of process.argv.includes('--neon') ? ['../.env.neon.local'] : ['../ui/.env.local', '../.env.local', '../.env']) {
+for (const path of process.argv.includes('--neon') ? ['../.env.neon.local', '../.env.local'] : ['../ui/.env.local', '../.env.local', '../.env']) {
   try { process.loadEnvFile(fileURLToPath(new URL(path, import.meta.url))); } catch (e) { if (e.code !== 'ENOENT') throw e; }
 }
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
