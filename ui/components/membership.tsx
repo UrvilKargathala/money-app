@@ -11,7 +11,7 @@ const MembershipContext = createContext<{ premium: boolean; loading: boolean; pl
 export const useMembership = () => useContext(MembershipContext);
 
 export function UpgradeCard({ feature = "Premium features" }: { feature?: string }) {
-  return <Card className="border-indigo-200 bg-indigo-50/40"><CardHeader><CardTitle>{feature}</CardTitle></CardHeader><CardContent className="space-y-4"><p>Available with Growth, Wealth, or Legacy. Every paid plan includes the same features.</p><Button asChild className="bg-indigo-600 hover:bg-indigo-700"><Link href="/pricing">Compare plans</Link></Button></CardContent></Card>;
+  return <Card className="border-indigo-200 bg-indigo-50/40"><CardHeader className="pb-4"><CardTitle>{feature}</CardTitle></CardHeader><CardContent className="space-y-4"><p>Available with Growth, Wealth, or Legacy. Every paid plan includes the same features.</p><Button asChild className="bg-indigo-600 hover:bg-indigo-700"><Link href="/pricing">Compare plans</Link></Button></CardContent></Card>;
 }
 
 export function MembershipProvider({ children }: { children: React.ReactNode }) {

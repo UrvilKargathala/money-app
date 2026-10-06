@@ -23,7 +23,7 @@ export function Paywall({ feature, plan, trialDaysLeft }: { feature: string; pla
 
   return (
     <Card className="border-amber-200 bg-amber-50">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-amber-900">
           <Lock className="h-5 w-5" /> {feature} — Premium
         </CardTitle>

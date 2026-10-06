@@ -10,7 +10,7 @@ export function PlaceholderPage({ title, description, module }: { title: string;
         <p className="text-sm text-neutral-500 font-body mt-1">{description}</p>
       </div>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Coming Soon</CardTitle>
           <CardDescription>The {module} module is under construction.</CardDescription>
         </CardHeader>

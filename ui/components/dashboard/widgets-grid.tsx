@@ -17,7 +17,7 @@ export function WidgetsGrid({ layout }: { layout?: unknown[] }) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2"><LayoutGrid className="h-4 w-4" /> Widgets</CardTitle>
         <CardDescription>Drag to reorder in Settings → Widgets (Premium)</CardDescription>
       </CardHeader>
