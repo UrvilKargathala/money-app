@@ -355,13 +355,13 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center gap-4 pb-1">
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-20 w-20 ring-2 ring-primary-100 ring-offset-2">
               {profile?.avatar_url ? <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt="Profile photo" /> : null}
-              <AvatarFallback>{(profile?.full_name ?? user?.full_name ?? user?.email ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="text-lg">{(profile?.full_name ?? user?.full_name ?? user?.email ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-1.5">
-              <Label htmlFor="avatar" className="flex items-center gap-2 cursor-pointer text-sm font-medium text-primary-600 hover:underline">
-                <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload avatar"}
+              <Label htmlFor="avatar" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload photo"}
               </Label>
               <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatar} disabled={avatarUploading} />
               <p className="text-xs text-neutral-400">PNG/JPG/WebP up to 2MB. Re-uploading replaces the previous photo.</p>
