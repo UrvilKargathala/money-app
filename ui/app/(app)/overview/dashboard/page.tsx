@@ -52,7 +52,7 @@ export default async function DashboardPage() {
   const attentionItems = [
     ...(bills?.overdue_count ? [{ label: "Overdue bills", value: String(bills.overdue_count), href: "/money/bills", tone: "text-error" }] : []),
     ...(budget && budget.utilization_pct >= 80 ? [{ label: "Budget used", value: `${Math.round(budget.utilization_pct)}%`, href: "/money/budgets", tone: budget.utilization_pct >= 100 ? "text-error" : "text-warning" }] : []),
-    ...(bills?.upcoming?.slice(0, 2).map((item) => ({ label: item.label, value: formatINR(item.amount), href: "/money/bills", tone: "text-neutral-900" })) ?? []),
+    ...(bills?.upcoming?.slice(0, 2).map((item) => ({ label: item.label, value: formatINR(item.amount), href: "/money/bills", tone: "text-ink-1" })) ?? []),
     ...lowBalanceAccounts.map((account) => ({ label: `${account.name} low balance`, value: formatINR(account.balance), href: "/money/accounts", tone: "text-warning" })),
   ].slice(0, 5);
 
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {attentionItems.map((item) => (
-                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-line p-3 transition hover:border-primary-200 hover:bg-primary-50/40">
+                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-line bg-surface p-3 transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-[#60A5FA] dark:hover:bg-[#1E3A5F]/40">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
                         <CalendarClock className="h-4 w-4" />
@@ -183,7 +183,7 @@ export default async function DashboardPage() {
                     </div>
                     <span
                       className={`text-sm font-semibold font-heading ${
-                        t.type === "income" ? "text-success" : t.type === "expense" ? "text-error" : "text-neutral-700"
+                        t.type === "income" ? "text-success" : t.type === "expense" ? "text-error" : "text-ink-2"
                       }`}
                     >
                       {t.type === "income" ? "+" : t.type === "expense" ? "- " : ""}
@@ -225,17 +225,17 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="rounded-lg bg-success-light p-3">
-                    <p className="text-xs text-success-dark font-medium">Assets</p>
-                    <p className="text-sm font-bold font-heading text-success-dark">{formatINR(totalAssets)}</p>
+                    <div className="rounded-lg bg-success-light p-3 dark:bg-[#064E3B]/40">
+                    <p className="text-xs text-success-dark dark:text-[#A7F3D0] font-medium">Assets</p>
+                    <p className="text-sm font-bold font-heading text-success-dark dark:text-[#A7F3D0]">{formatINR(totalAssets)}</p>
                   </div>
-                  <div className="rounded-lg bg-error-light p-3">
-                    <p className="text-xs text-error-dark font-medium">Liabilities</p>
-                    <p className="text-sm font-bold font-heading text-error-dark">{formatINR(totalLiabilities)}</p>
+                    <div className="rounded-lg bg-error-light p-3 dark:bg-[#7F1D1D]/40">
+                    <p className="text-xs text-error-dark dark:text-[#FCA5A5] font-medium">Liabilities</p>
+                    <p className="text-sm font-bold font-heading text-error-dark dark:text-[#FCA5A5]">{formatINR(totalLiabilities)}</p>
                   </div>
-                  <div className="rounded-lg bg-primary-50 p-3">
-                    <p className="text-xs text-primary-700 font-medium">Net</p>
-                    <p className="text-sm font-bold font-heading text-primary-700">{formatINR(netWorth)}</p>
+                    <div className="rounded-lg bg-primary-50 p-3 dark:bg-[#1E3A5F]/40">
+                    <p className="text-xs text-primary-700 dark:text-[#BFDBFE] font-medium">Net</p>
+                    <p className="text-sm font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{formatINR(netWorth)}</p>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -250,7 +250,7 @@ export default async function DashboardPage() {
                           <p className="text-xs text-ink-3">{a.display_name}</p>
                         </div>
                       </div>
-                      <span className={`text-sm font-semibold font-heading ${a.balance >= 0 ? "text-neutral-900" : "text-error"}`}>
+                      <span className={`text-sm font-semibold font-heading ${a.balance >= 0 ? "text-ink-1" : "text-error"}`}>
                         {formatINR(a.balance)}
                       </span>
                     </div>

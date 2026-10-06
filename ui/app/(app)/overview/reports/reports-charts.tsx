@@ -168,7 +168,7 @@ export default function ReportsCharts({
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="rounded-xl border border-line bg-neutral-50/70 divide-y divide-neutral-100 overflow-hidden">
+                <div className="rounded-xl border border-line bg-sunken/70 divide-y divide-line overflow-hidden">
                   {spendingByCategory.slice(0, 6).map((c, i) => (
                     <div key={c.category_id ?? c.category} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs">
                       <span className="flex items-center gap-2 min-w-0">
@@ -329,7 +329,7 @@ export default function ReportsCharts({
                     <div className="min-w-0">
                       <p className="text-sm font-medium font-heading text-ink-1 truncate">{m.merchant}</p>
                       <p className="text-xs text-ink-3">
-                        {m.txn_count} txns · avg {formatINR(m.avg_amount)} {m.recurring === 1 && <span className="ml-1 inline-flex items-center rounded-full bg-warning-light px-1.5 py-0.5 text-[10px] font-medium text-warning-dark">recurring</span>}
+                        {m.txn_count} txns · avg {formatINR(m.avg_amount)} {m.recurring === 1 && <span className="ml-1 inline-flex items-center rounded-full bg-warning-light px-1.5 py-0.5 text-[10px] font-medium text-warning-dark dark:bg-[#78350F]/60 dark:text-[#FDE68A]">recurring</span>}
                       </p>
                     </div>
                     <span className="text-sm font-semibold font-heading text-ink-1">{formatINR(m.total)}</span>
