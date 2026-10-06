@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart, Eye, EyeOff, Check } from "lucide-react";
+import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart, Eye, EyeOff, Check, LayoutGrid } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
@@ -476,7 +476,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Dashboard widgets</CardTitle><CardDescription>Choose the order shown on your dashboard.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><LayoutGrid className="h-5 w-5" /> Dashboard widgets</CardTitle><CardDescription>Choose the order shown on your dashboard.</CardDescription></CardHeader>
         <CardContent className="space-y-2">
           {widgetLayout.map((id, index) => {
             const widget = WIDGETS.find((item) => item.id === id);
@@ -533,9 +533,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div><Label htmlFor="theme">Theme</Label><select id="theme" className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm" value={theme} onChange={e=>setTheme(e.target.value)}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></div>
-            <div><Label htmlFor="currency">Currency</Label><select id="currency" className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm" value={currency} onChange={e=>setCurrency(e.target.value)}><option value="INR">INR — Indian Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — Pound Sterling</option></select></div>
-            <div><Label htmlFor="date-format">Date format</Label><select id="date-format" className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm" value={dateFormat} onChange={e=>setDateFormat(e.target.value)}><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+            <div className="space-y-1"><Label htmlFor="theme">Theme</Label><select id="theme" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={theme} onChange={e=>setTheme(e.target.value)}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></div>
+            <div className="space-y-1"><Label htmlFor="currency">Currency</Label><select id="currency" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={currency} onChange={e=>setCurrency(e.target.value)}><option value="INR">INR — Indian Rupee</option><option value="USD">US Dollar</option><option value="EUR">Euro</option><option value="GBP">Pound Sterling</option></select></div>
+            <div className="space-y-1"><Label htmlFor="date-format">Date format</Label><select id="date-format" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={dateFormat} onChange={e=>setDateFormat(e.target.value)}><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
           </div>
           <Button size="sm" onClick={()=>saveAppearance()}>Save display preferences</Button>
         </CardContent>
