@@ -12,7 +12,7 @@ type EmptyStateProps = {
 
 export function EmptyState({ icon, title, description, actionLabel, onAction, className }: EmptyStateProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center rounded-xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center", className)}>
+    <div className={cn("flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-surface px-6 py-12 text-center", className)}>
       {icon && (
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-wash text-neutral-400">
           {icon}

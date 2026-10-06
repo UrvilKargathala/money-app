@@ -116,7 +116,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                         onClick={() => setMobileOpen(false)}
                         className={cn(
                           "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                          active ? "bg-primary-50 text-primary-600 font-semibold" : "text-neutral-600 hover:bg-neutral-50"
+                              active ? "bg-primary-50 text-primary-600 font-semibold dark:bg-[#1E3A5F] dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken"
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
@@ -147,7 +147,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   <DropdownMenuTrigger
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
-                      groupActive ? "bg-neutral-900 text-white shadow-sm dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-[#CBD5E1] dark:hover:bg-[#334155] dark:hover:text-[#F8FAFC]"
+                      groupActive ? "bg-ink-1 text-surface shadow-sm" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
                     )}
                   >
                     {group.label}
@@ -184,7 +184,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   href={item.href}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                      active ? "bg-neutral-900 text-white shadow-sm dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-[#CBD5E1] dark:hover:bg-[#334155] dark:hover:text-[#F8FAFC]"
+                      active ? "bg-ink-1 text-surface shadow-sm" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
                     )}
                 >
                   {item.label}
