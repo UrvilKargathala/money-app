@@ -14,6 +14,7 @@ import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
 import { EmptyState } from "@/components/common/empty-state";
 import { Toggle } from "@/components/ui/toggle";
+import { FormSelect } from "@/components/common/form-select";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { deviceName } from "@/lib/user-agent";
 
@@ -580,9 +581,40 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1"><Label htmlFor="theme">Theme</Label><select id="theme" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={theme} onChange={e=>setTheme(e.target.value)}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></div>
-            <div className="space-y-1"><Label htmlFor="currency">Currency</Label><select id="currency" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={currency} onChange={e=>setCurrency(e.target.value)}><option value="INR">INR — Indian Rupee</option><option value="USD">US Dollar</option><option value="EUR">Euro</option><option value="GBP">Pound Sterling</option></select></div>
-            <div className="space-y-1"><Label htmlFor="date-format">Date format</Label><select id="date-format" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={dateFormat} onChange={e=>setDateFormat(e.target.value)}><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+            <FormSelect
+              id="theme"
+              label="Theme"
+              value={theme}
+              onValueChange={setTheme}
+              options={[
+                { value: "light", label: "Light" },
+                { value: "dark", label: "Dark" },
+                { value: "system", label: "System" },
+              ]}
+            />
+            <FormSelect
+              id="currency"
+              label="Currency"
+              value={currency}
+              onValueChange={setCurrency}
+              options={[
+                { value: "INR", label: "INR — Indian Rupee" },
+                { value: "USD", label: "US Dollar" },
+                { value: "EUR", label: "Euro" },
+                { value: "GBP", label: "Pound Sterling" },
+              ]}
+            />
+            <FormSelect
+              id="date-format"
+              label="Date format"
+              value={dateFormat}
+              onValueChange={setDateFormat}
+              options={[
+                { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
+                { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
+                { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
+              ]}
+            />
           </div>
           <Button size="sm" onClick={()=>saveAppearance()}>Save display preferences</Button>
         </CardContent>
