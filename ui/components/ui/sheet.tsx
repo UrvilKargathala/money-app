@@ -65,7 +65,7 @@ SheetFooter.displayName = "SheetFooter";
 
 const SheetTitle = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Title>, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>>(
   ({ className, ...props }, ref) => (
-    <DialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold font-heading text-neutral-800", className)} {...props} />
+    <DialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold font-heading text-ink-1", className)} {...props} />
   )
 );
 SheetTitle.displayName = DialogPrimitive.Title.displayName;
