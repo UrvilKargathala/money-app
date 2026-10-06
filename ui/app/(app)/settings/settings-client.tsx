@@ -348,7 +348,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p>
-                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading ${planLoading ? "bg-wash text-neutral-400" : premium ? "bg-success-light text-success-dark dark:text-[#A7F3D0]" : "bg-wash text-ink-1"}`}>
+                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading ${planLoading ? "bg-wash text-neutral-400" : premium ? "bg-success-light text-success-dark dark:bg-[#064E3B]/60 dark:text-[#A7F3D0]" : "bg-wash text-ink-1"}`}>
                   {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
                 </span>
               </p>
