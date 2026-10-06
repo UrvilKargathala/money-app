@@ -229,7 +229,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
                   key={m}
                   type="button"
                   onClick={() => { setMode(m); persistSnoozeState({ mode: m, preset, custom }); }}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-white text-neutral-900 shadow-sm dark:bg-[#1E293B] dark:text-[#F8FAFC]" : "text-neutral-500 hover:text-neutral-800 dark:text-[#94A3B8] dark:hover:text-[#F8FAFC]"}`}
                 >
                   {m === "preset" ? "Presets" : "Custom"}
                 </button>

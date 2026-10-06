@@ -55,7 +55,7 @@ export function SubscriptionCard({
   const snoozed = sub.last_snooze_days != null && sub.last_snooze_date != null;
 
   return (
-    <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-warning-light/30" : ""}`}>
+    <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-warning-light/30 dark:bg-[#78350F]/30" : ""}`}>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-sm font-semibold font-heading text-ink-1">{sub.service_name}</p>
