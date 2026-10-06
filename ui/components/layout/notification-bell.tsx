@@ -176,14 +176,14 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
               </div>
             </div>
 
-            <div className="flex gap-1 px-3 py-2 border-b border-line bg-neutral-50/50">
+            <div className="flex gap-1 px-3 py-2 border-b border-line bg-sunken/50">
               {(["all", "unread", "upcoming"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
                   className={cn(
                     "flex-1 rounded-full px-3 py-1.5 text-xs font-medium capitalize transition-colors",
-                    filter === tab ? "bg-neutral-900 text-white shadow-sm" : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                    filter === tab ? "bg-neutral-900 text-white shadow-sm dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "bg-surface border border-line text-ink-2 hover:bg-sunken"
                   )}
                 >
                   {tab}
@@ -206,9 +206,9 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                   <p className="text-xs text-neutral-400 mt-1">{filter === "upcoming" ? "No upcoming reminders" : "You're all caught up"}</p>
                 </div>
               ) : (
-                <div className="divide-y divide-neutral-100">
+                <div className="divide-y divide-line">
                   {display.map((n) => (
-                    <div key={n.id} className={cn("p-3 flex gap-3 hover:bg-neutral-50 transition-colors", !n.is_read && "bg-primary-50/40")}>
+                    <div key={n.id} className={cn("p-3 flex gap-3 hover:bg-sunken transition-colors", !n.is_read && "bg-primary-50/40 dark:bg-[#1E3A5F]/40")}>
                       <div className={cn("h-2 w-2 rounded-full mt-2 shrink-0", !n.is_read ? "bg-primary-600" : "bg-transparent")} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-ink-1 flex items-center gap-1.5 flex-wrap">
