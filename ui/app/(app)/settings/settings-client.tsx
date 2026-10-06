@@ -133,7 +133,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         const s = d?.settings ?? d ?? {};
         if (s.haptics_enabled !== undefined) setHapticsEnabled(!!Number(s.haptics_enabled));
         if (s.currency) setCurrency(s.currency);
-        if (s.theme) setTheme(s.theme);
+        // Local choice wins: the server only seeds a fresh browser, so a
+        // saved Dark pick is never clobbered back to light on revisit.
+        if (s.theme && window.localStorage.getItem("moneymind-theme") === null) setTheme(s.theme);
         if (Array.isArray(s.widget_layout) && s.widget_layout.length) setWidgetLayout(s.widget_layout.map(String));
         // initialize haptics cache
         setHapticsEnabledCache(!!Number(s.haptics_enabled ?? 1));
@@ -346,7 +348,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p>
-                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading dark:bg-[#1E293B] ${planLoading ? "bg-neutral-100 text-neutral-400" : premium ? "bg-success-light text-success-dark dark:text-[#A7F3D0]" : "bg-neutral-100 text-neutral-900 dark:text-[#F8FAFC]"}`}>
+                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading dark:bg-[#1E293B] ${planLoading ? "bg-neutral-100 text-neutral-400 dark:bg-[#1E293B] dark:text-[#94A3B8]" : premium ? "bg-success-light text-success-dark dark:text-[#A7F3D0]" : "bg-neutral-100 text-neutral-900 dark:text-[#F8FAFC]"}`}>
                   {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
                 </span>
               </p>
@@ -514,7 +516,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                   });
                 }}
                 onDragEnd={() => setDragWidgetId(null)}
-                className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-[#0F172A] dark:border-[#334155] ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50" : "border-neutral-200"}`}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50 dark:border-[#60A5FA] dark:bg-[#1E3A5F]" : "border-neutral-200 bg-white dark:border-[#334155] dark:bg-[#0F172A]"}`}
               >
                 <span title="Drag to reorder" aria-hidden className="cursor-grab text-neutral-400 active:cursor-grabbing">
                   <GripVertical className="h-4 w-4" />
