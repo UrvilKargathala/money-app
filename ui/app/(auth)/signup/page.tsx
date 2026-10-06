@@ -55,7 +55,7 @@ export default function SignupPage() {
             {isPending ? "Creating account..." : "Create account"}
           </Button>
 
-          <p className="text-center text-sm text-neutral-500">
+          <p className="text-center text-sm text-ink-3">
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-primary-600 hover:underline">
               Sign in

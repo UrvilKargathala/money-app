@@ -71,8 +71,8 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Dashboard</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">Month-to-date financial control center</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Dashboard</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">Month-to-date financial control center</p>
         </div>
         <Button asChild>
           <Link href="/add"><Plus className="h-4 w-4" /> Quick Add</Link>
@@ -122,18 +122,18 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {attentionItems.length === 0 ? (
-              <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-neutral-200 text-center text-sm text-neutral-500">
+              <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-line text-center text-sm text-ink-3">
                 No urgent money tasks right now.
               </div>
             ) : (
               <div className="space-y-3">
                 {attentionItems.map((item) => (
-                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-neutral-100 p-3 transition hover:border-primary-200 hover:bg-primary-50/40">
+                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-line p-3 transition hover:border-primary-200 hover:bg-primary-50/40">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
                         <CalendarClock className="h-4 w-4" />
                       </div>
-                      <p className="truncate text-sm font-medium text-neutral-800">{item.label}</p>
+                      <p className="truncate text-sm font-medium text-ink-1">{item.label}</p>
                     </div>
                     <p className={`text-sm font-semibold ${item.tone}`}>{item.value}</p>
                   </Link>
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
           <CardContent>
             {recent.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-neutral-500">No transactions yet.</p>
+                <p className="text-sm text-ink-3">No transactions yet.</p>
                 <Button asChild className="mt-4">
                   <Link href="/money/transactions">Add transaction</Link>
                 </Button>
@@ -170,13 +170,13 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {recent.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-neutral-100 p-3">
+                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-line p-3">
                     <div>
-                      <p className="text-sm font-medium font-heading text-neutral-800">
+                      <p className="text-sm font-medium font-heading text-ink-1">
                         {t.merchant_clean || t.description || "Transfer"}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                        <span className="rounded-full bg-neutral-100 px-2 py-0.5">{t.category_name || "Uncategorized"}</span>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-3">
+                        <span className="rounded-full bg-wash px-2 py-0.5">{t.category_name || "Uncategorized"}</span>
                         <span>{t.account_name}</span>
                         <span>{new Date(t.date).toLocaleDateString("en-IN")}</span>
                       </div>
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
           <CardContent>
             {accounts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-neutral-500">No accounts yet.</p>
+                <p className="text-sm text-ink-3">No accounts yet.</p>
                 <Button asChild className="mt-4">
                   <Link href="/money/accounts">Manage accounts</Link>
                 </Button>
@@ -240,14 +240,14 @@ export default async function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   {accounts.slice(0, 4).map((a) => (
-                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-neutral-100 p-3">
+                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-line p-3">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ backgroundColor: (a.color || "#2563EB") + "15", color: a.color || "#2563EB" }}>
                           {a.name.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-medium font-heading text-neutral-800">{a.name}</p>
-                          <p className="text-xs text-neutral-500">{a.display_name}</p>
+                          <p className="text-sm font-medium font-heading text-ink-1">{a.name}</p>
+                          <p className="text-xs text-ink-3">{a.display_name}</p>
                         </div>
                       </div>
                       <span className={`text-sm font-semibold font-heading ${a.balance >= 0 ? "text-neutral-900" : "text-error"}`}>
@@ -255,7 +255,7 @@ export default async function DashboardPage() {
                       </span>
                     </div>
                   ))}
-                  {accounts.length > 4 && <p className="text-xs text-center text-neutral-500">+ {accounts.length - 4} more accounts</p>}
+                  {accounts.length > 4 && <p className="text-xs text-center text-ink-3">+ {accounts.length - 4} more accounts</p>}
                 </div>
               </div>
             )}
@@ -269,31 +269,31 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {!budget ? (
-              <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-neutral-200 text-sm text-neutral-500">
+              <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-line text-sm text-ink-3">
                 Create a budget to track monthly control.
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-neutral-50 p-3">
-                    <p className="text-xs text-neutral-500">Budgeted</p>
-                    <p className="text-sm font-bold text-neutral-900">{formatINR(budget.total_budgeted)}</p>
+                  <div className="rounded-lg bg-sunken p-3">
+                    <p className="text-xs text-ink-3">Budgeted</p>
+                    <p className="text-sm font-bold text-ink-1">{formatINR(budget.total_budgeted)}</p>
                   </div>
-                  <div className="rounded-lg bg-neutral-50 p-3">
-                    <p className="text-xs text-neutral-500">Spent</p>
-                    <p className="text-sm font-bold text-neutral-900">{formatINR(budget.total_spent)}</p>
+                  <div className="rounded-lg bg-sunken p-3">
+                    <p className="text-xs text-ink-3">Spent</p>
+                    <p className="text-sm font-bold text-ink-1">{formatINR(budget.total_spent)}</p>
                   </div>
-                  <div className="rounded-lg bg-neutral-50 p-3">
-                    <p className="text-xs text-neutral-500">Over</p>
-                    <p className="text-sm font-bold text-neutral-900">{budget.over_budget_count}</p>
+                  <div className="rounded-lg bg-sunken p-3">
+                    <p className="text-xs text-ink-3">Over</p>
+                    <p className="text-sm font-bold text-ink-1">{budget.over_budget_count}</p>
                   </div>
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-medium text-neutral-700">Utilization</span>
-                    <span className="font-semibold text-neutral-900">{Math.round(budget.utilization_pct)}%</span>
+                    <span className="font-medium text-ink-2">Utilization</span>
+                    <span className="font-semibold text-ink-1">{Math.round(budget.utilization_pct)}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-neutral-100">
+                  <div className="h-2 overflow-hidden rounded-full bg-wash">
                     <div className="h-full rounded-full bg-primary-600" style={{ width: `${Math.min(100, budget.utilization_pct)}%` }} />
                   </div>
                 </div>

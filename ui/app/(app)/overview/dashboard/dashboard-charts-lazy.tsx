@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import type { CashflowTrendCard as CashflowCard, SpendingBreakdownCard as SpendingCard } from "./dashboard-charts";
 
 function Skeleton() {
-  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-neutral-100" />;
+  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-wash" />;
 }
 
 const LazyCashflow = nextDynamic(() => import("./dashboard-charts").then((m) => m.CashflowTrendCard), {

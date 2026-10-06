@@ -78,7 +78,7 @@ export default function LoginPage() {
             {isPending ? "Signing in..." : "Sign in"}
           </Button>
 
-          <p className="text-center text-sm text-neutral-500">
+          <p className="text-center text-sm text-ink-3">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="font-medium text-primary-600 hover:underline">
               Sign up

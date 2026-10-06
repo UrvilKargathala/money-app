@@ -89,7 +89,7 @@ function ResetForm() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Resetting..." : "Reset password"}
           </Button>
-          <p className="text-center text-sm text-neutral-500">
+          <p className="text-center text-sm text-ink-3">
             <Link href="/login" className="font-medium text-primary-600 hover:underline">Back to sign in</Link>
           </p>
         </form>
@@ -100,7 +100,7 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<Card><CardContent><p className="text-sm text-neutral-500">Loading...</p></CardContent></Card>}>
+    <Suspense fallback={<Card><CardContent><p className="text-sm text-ink-3">Loading...</p></CardContent></Card>}>
       <ResetForm />
     </Suspense>
   );

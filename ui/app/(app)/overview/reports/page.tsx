@@ -88,8 +88,8 @@ export default async function ReportsPage() {
     <div className="space-y-6">
       {billing?.trial.active && <TrialBanner daysLeft={billing.trial.daysLeft} />}
       <div>
-        <h1 className="text-3xl font-bold font-heading text-neutral-900">Reports</h1>
-        <p className="text-sm text-neutral-500 font-body mt-1">Analytics and insights</p>
+        <h1 className="text-3xl font-bold font-heading text-ink-1">Reports</h1>
+        <p className="text-sm text-ink-3 font-body mt-1">Analytics and insights</p>
       </div>
 
       {summary && (

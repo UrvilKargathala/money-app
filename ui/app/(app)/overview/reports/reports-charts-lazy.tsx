@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import type ReportsCharts from "./reports-charts";
 
 function Skeleton() {
-  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-neutral-100" />;
+  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-wash" />;
 }
 
 const LazyCharts = nextDynamic(() => import("./reports-charts"), {

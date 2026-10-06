@@ -51,7 +51,7 @@ export default async function MagicLinkVerifyPage({ searchParams }: { searchPara
       <CardContent className="space-y-4">
         <Alert variant="destructive"><AlertDescription>{result.error}</AlertDescription></Alert>
         <Button asChild className="w-full"><Link href="/magic-link">Request new link</Link></Button>
-        <p className="text-center text-sm text-neutral-500"><Link href="/login" className="font-medium text-primary-600 hover:underline">Back to sign in</Link></p>
+        <p className="text-center text-sm text-ink-3"><Link href="/login" className="font-medium text-primary-600 hover:underline">Back to sign in</Link></p>
       </CardContent>
     </Card>
   );

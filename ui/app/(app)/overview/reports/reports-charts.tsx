@@ -22,7 +22,7 @@ import {
 const PIE_COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#EC4899", "#14B8A6", "#F97316", "#6366F1", "#0EA5E9", "#A855F7"];
 
 function EmptyState({ message }: { message: string }) {
-  return <p className="text-sm text-neutral-500 py-8 text-center">{message}</p>;
+  return <p className="text-sm text-ink-3 py-8 text-center">{message}</p>;
 }
 
 type CashflowRow = { month: string; income: number; expense: number; net?: number };
@@ -166,15 +166,15 @@ export default function ReportsCharts({
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="rounded-xl border border-neutral-100 bg-neutral-50/70 divide-y divide-neutral-100 overflow-hidden">
+                <div className="rounded-xl border border-line bg-neutral-50/70 divide-y divide-neutral-100 overflow-hidden">
                   {spendingByCategory.slice(0, 6).map((c, i) => (
                     <div key={c.category_id ?? c.category} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs">
                       <span className="flex items-center gap-2 min-w-0">
                         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                        <span className="truncate font-medium text-neutral-700">{c.category}</span>
+                        <span className="truncate font-medium text-ink-2">{c.category}</span>
                         <span className="text-neutral-400">({c.count})</span>
                       </span>
-                      <span className="shrink-0 font-semibold text-neutral-900">{formatINR(c.total)} · {c.pct}%</span>
+                      <span className="shrink-0 font-semibold text-ink-1">{formatINR(c.total)} · {c.pct}%</span>
                     </div>
                   ))}
                 </div>
@@ -267,7 +267,7 @@ export default function ReportsCharts({
               <>
                 <div className="grid grid-cols-7 gap-1.5">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                    <div key={d} className="text-[11px] text-center font-medium text-neutral-500 py-1">
+                    <div key={d} className="text-[11px] text-center font-medium text-ink-3 py-1">
                       {d}
                     </div>
                   ))}
@@ -275,7 +275,7 @@ export default function ReportsCharts({
                     const firstWeekday = new Date(heatmapYear, heatmapMonth - 1, 1).getDay();
                     const cells: React.ReactNode[] = [];
                     for (let i = 0; i < firstWeekday; i++) {
-                      cells.push(<div key={`pad-${i}`} className="h-9 rounded-md bg-neutral-50" />);
+                      cells.push(<div key={`pad-${i}`} className="h-9 rounded-md bg-sunken" />);
                     }
                     for (let day = 1; day <= daysInMonth; day++) {
                       const iso = `${heatmapYear}-${String(heatmapMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -286,7 +286,7 @@ export default function ReportsCharts({
                       cells.push(
                         <div
                           key={iso}
-                          className="h-9 rounded-md border border-neutral-100 flex flex-col items-center justify-center text-[11px] font-medium"
+                          className="h-9 rounded-md border border-line flex flex-col items-center justify-center text-[11px] font-medium"
                           style={{ backgroundColor: bg, color: textColor }}
                           title={total > 0 ? `${iso}: ${formatINR(total)}` : `${iso}: no spend`}
                         >
@@ -298,11 +298,11 @@ export default function ReportsCharts({
                     return cells;
                   })()}
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-neutral-500">
+                <div className="mt-3 flex items-center justify-between text-xs text-ink-3">
                   <span>Less</span>
                   <div className="flex gap-1">
                     {[0.15, 0.35, 0.6, 0.9].map((o) => (
-                      <div key={o} className="h-3 w-6 rounded-sm border border-neutral-100" style={{ backgroundColor: `rgba(37,99,235,${o})` }} />
+                      <div key={o} className="h-3 w-6 rounded-sm border border-line" style={{ backgroundColor: `rgba(37,99,235,${o})` }} />
                     ))}
                   </div>
                   <span>More</span>
@@ -323,14 +323,14 @@ export default function ReportsCharts({
             ) : (
               <div className="space-y-3">
                 {topMerchants.map((m) => (
-                  <div key={m.merchant} className="flex items-center justify-between rounded-lg border border-neutral-100 p-3">
+                  <div key={m.merchant} className="flex items-center justify-between rounded-lg border border-line p-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium font-heading text-neutral-800 truncate">{m.merchant}</p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-sm font-medium font-heading text-ink-1 truncate">{m.merchant}</p>
+                      <p className="text-xs text-ink-3">
                         {m.txn_count} txns · avg {formatINR(m.avg_amount)} {m.recurring === 1 && <span className="ml-1 inline-flex items-center rounded-full bg-warning-light px-1.5 py-0.5 text-[10px] font-medium text-warning-dark">recurring</span>}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold font-heading text-neutral-900">{formatINR(m.total)}</span>
+                    <span className="text-sm font-semibold font-heading text-ink-1">{formatINR(m.total)}</span>
                   </div>
                 ))}
               </div>
