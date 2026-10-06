@@ -84,15 +84,10 @@ export async function getApiUser(): Promise<{
   try {
     const res = await apiFetch("/api/auth/me");
     if (!res.ok) return null;
-    const data = (await res.json()) as { user?: { user_id: number; email: string; full_name: string | null } } & {
-      user_id?: number;
-      email?: string;
-      full_name?: string | null;
+    const data = (await res.json()) as {
+      user?: { user_id: number; email: string; full_name: string | null } | null;
     };
-    // Handle both { user: {...} } and direct { user_id, email, ... }
-    if (data.user) return data.user;
-    if (data.user_id != null) return data as { user_id: number; email: string; full_name: string | null };
-    return null;
+    return data.user ?? null;
   } catch {
     return null;
   }

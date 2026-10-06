@@ -208,7 +208,9 @@ auth.post("/logout", async (c) => {
 });
 
 auth.get("/me", requireAuth, async (c) => {
-  return c.json(c.get("user"));
+  // Single envelope shape: { user }. The client no longer sniffs for a flat
+  // legacy variant (removed 2026-10).
+  return c.json({ user: c.get("user") });
 });
 
 import { registerAuthExtras } from './auth-extras';
