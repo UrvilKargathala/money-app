@@ -41,7 +41,7 @@ export function GoalCard({
   const isPaused = goal.status === "paused";
 
   return (
-    <Card className={`p-5 space-y-3 ${isCompleted ? "border-success/30 bg-success-light/50" : isPaused ? "opacity-60" : ""}`}>
+      <Card className={`p-5 space-y-3 ${isCompleted ? "border-success/30 bg-success-light/50 dark:bg-[#064E3B]/30" : isPaused ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold font-heading text-ink-1">{goal.name}</p>

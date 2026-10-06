@@ -291,8 +291,8 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
         {cost && (
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
             <div className="rounded-lg bg-sunken p-2"><p className="text-ink-3">Principal paid</p><p className="font-semibold">{formatINR(cost.principal_paid)}</p></div>
-            <div className="rounded-lg bg-primary-50 p-2"><p className="text-primary-700">Interest paid</p><p className="font-semibold">{formatINR(cost.interest_paid)}</p></div>
-            <div className="rounded-lg bg-amber-50 p-2"><p className="text-amber-700">Remaining interest</p><p className="font-semibold">{formatINR(cost.remaining_interest)}</p></div>
+            <div className="rounded-lg bg-primary-50 p-2 dark:bg-[#1E3A5F]/50"><p className="text-primary-700 dark:text-[#BFDBFE]">Interest paid</p><p className="font-semibold">{formatINR(cost.interest_paid)}</p></div>
+            <div className="rounded-lg bg-amber-50 p-2 dark:bg-[#78350F]/40"><p className="text-amber-700 dark:text-[#FDE68A]">Remaining interest</p><p className="font-semibold">{formatINR(cost.remaining_interest)}</p></div>
           </div>
         )}
         {loadError ? <PanelError message="Could not load the amortization schedule." onRetry={loadSchedule} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
