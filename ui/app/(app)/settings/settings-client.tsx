@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
+import { EmptyState } from "@/components/common/empty-state";
 import { Toggle } from "@/components/ui/toggle";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { deviceName } from "@/lib/user-agent";
@@ -544,13 +545,13 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           {sessions === null ? (
             <p className="text-sm text-neutral-500">Loading sessions...</p>
           ) : sessions.length === 0 ? (
-            <p className="text-sm text-neutral-500">No active sessions found.</p>
+            <EmptyState icon={<Monitor className="h-6 w-6" />} title="No active sessions found" description="Sessions appear here when you sign in." />
           ) : (
             <div className="space-y-2 max-h-64 overflow-auto">
               {sessions.map((s) => {
                 const id = s.id ?? s.token_id ?? 0;
                 return (
-                  <div key={String(id)} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
+                  <div key={String(id)} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm">
                     <div className="min-w-0">
                       <p className="font-medium truncate" title={s.user_agent || undefined}>{deviceName(s.user_agent)} {s.is_current ? <Badge variant="success" className="ml-2">Current</Badge> : null}</p>
                       <p className="text-xs text-neutral-500">
@@ -589,7 +590,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/>Account security history</CardTitle><CardDescription>Recent sign-ins and security actions on your account.</CardDescription></CardHeader>
-        <CardContent className="divide-y">{auditLogs.length===0&&<p className="text-sm text-neutral-500">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-neutral-500">{log.ip_address||"IP unavailable"}</p></div><time className="text-xs text-neutral-500">{new Date(log.created_at).toLocaleString()}</time></div>)}</CardContent>
+        <CardContent className="divide-y divide-neutral-100">{auditLogs.length===0&&<p className="text-sm text-neutral-500">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div className="min-w-0"><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-neutral-500">{log.ip_address||"IP unavailable"}</p></div><time className="shrink-0 text-xs tabular-nums text-neutral-500">{new Date(log.created_at).toLocaleString("en-IN")}</time></div>)}</CardContent>
       </Card>
 
       {billing && (
