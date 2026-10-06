@@ -3,6 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatINR } from "@/lib/format";
+import { chartTheme, useDarkMode } from "@/lib/chart-theme";
 
 type CashflowRow = { month: string; income: number; expense: number; net: number };
 type CategoryRow = { category_id: string | null; category: string; total: number; count: number; pct: number };
@@ -16,6 +17,7 @@ function currencyTick(value: number): string {
 }
 
 export function CashflowTrendCard({ cashflow }: { cashflow: CashflowRow[] }) {
+  const t = chartTheme(useDarkMode());
   const rows = cashflow.slice(-6).map((row) => ({
     ...row,
     month: row.month.slice(5) || row.month,
@@ -36,10 +38,10 @@ export function CashflowTrendCard({ cashflow }: { cashflow: CashflowRow[] }) {
           <div className="h-[270px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#64748B" />
-                <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={64} />
-                <Tooltip formatter={(value: number, name: string) => [formatINR(Number(value)), name]} contentStyle={{ borderRadius: 8, borderColor: "#E5E7EB" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} />
+                <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={64} />
+                <Tooltip formatter={(value: number, name: string) => [formatINR(Number(value)), name]} contentStyle={{ borderRadius: 8, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }} labelStyle={{ color: t.tooltipText }} itemStyle={{ color: t.tooltipText }} />
                 <Bar dataKey="income" name="Income" fill="#10B981" radius={[6, 6, 0, 0]} />
                 <Bar dataKey="expense" name="Expense" fill="#EF4444" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -52,6 +54,7 @@ export function CashflowTrendCard({ cashflow }: { cashflow: CashflowRow[] }) {
 }
 
 export function SpendingBreakdownCard({ categories }: { categories: CategoryRow[] }) {
+  const t = chartTheme(useDarkMode());
   const rows = categories.slice(0, 5);
   const total = rows.reduce((sum, category) => sum + category.total, 0);
 
@@ -76,7 +79,7 @@ export function SpendingBreakdownCard({ categories }: { categories: CategoryRow[
                       <Cell key={entry.category_id ?? entry.category} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatINR(Number(value))} contentStyle={{ borderRadius: 8, borderColor: "#E5E7EB" }} />
+                  <Tooltip formatter={(value: number) => formatINR(Number(value))} contentStyle={{ borderRadius: 8, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }} itemStyle={{ color: t.tooltipText }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
