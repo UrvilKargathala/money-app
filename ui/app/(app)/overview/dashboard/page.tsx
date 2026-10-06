@@ -225,15 +225,15 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="rounded-lg bg-success-light p-3 dark:bg-[#064E3B]/40">
+                    <div className="rounded-lg bg-tint-success p-3 dark:bg-[#064E3B]/40">
                     <p className="text-xs text-success-dark dark:text-[#A7F3D0] font-medium">Assets</p>
                     <p className="text-sm font-bold font-heading text-success-dark dark:text-[#A7F3D0]">{formatINR(totalAssets)}</p>
                   </div>
-                    <div className="rounded-lg bg-error-light p-3 dark:bg-[#7F1D1D]/40">
+                    <div className="rounded-lg bg-tint-error p-3 dark:bg-[#7F1D1D]/40">
                     <p className="text-xs text-error-dark dark:text-[#FCA5A5] font-medium">Liabilities</p>
                     <p className="text-sm font-bold font-heading text-error-dark dark:text-[#FCA5A5]">{formatINR(totalLiabilities)}</p>
                   </div>
-                    <div className="rounded-lg bg-primary-50 p-3 dark:bg-[#1E3A5F]/40">
+                    <div className="rounded-lg bg-tint-info p-3 dark:bg-[#1E3A5F]/40">
                     <p className="text-xs text-primary-700 dark:text-[#BFDBFE] font-medium">Net</p>
                     <p className="text-sm font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{formatINR(netWorth)}</p>
                   </div>
