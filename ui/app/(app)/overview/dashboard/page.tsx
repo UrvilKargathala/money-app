@@ -14,7 +14,7 @@ import {
   getSettings,
 } from "@/lib/api-client";
 import { formatINR } from "@/lib/format";
-import { CashflowTrendCard, SpendingBreakdownCard } from "./dashboard-charts";
+import { CashflowTrendCardLazy as CashflowTrendCard, SpendingBreakdownCardLazy as SpendingBreakdownCard } from "./dashboard-charts-lazy";
 import { WidgetsGrid } from "@/components/dashboard/widgets-grid";
 
 export const dynamic = "force-dynamic";

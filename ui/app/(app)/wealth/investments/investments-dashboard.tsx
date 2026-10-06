@@ -12,8 +12,27 @@ import { InvestmentCard } from "./investment-card";
 import { InvestmentFormDialog } from "./investment-form-dialog";
 import { SipFormDialog } from "./sip-form-dialog";
 import { DividendFormDialog } from "./dividend-form-dialog";
-import { PriceHistoryDialog } from "./price-history-dialog";
+import dynamic from "next/dynamic";
 import { formatINR, formatDate } from "@/lib/format";
+import type { Allocation, TrendPoint } from "./investment-charts";
+
+function ChartSkeleton({ height = 300 }: { height?: number }) {
+  return <div aria-hidden className="w-full animate-pulse rounded-lg bg-neutral-100" style={{ height }} />;
+}
+
+// Recharts ships in deferred chunks: the allocation donut, the trend chart
+// and the price-history dialog load only when their sections render.
+const AllocationDonut = dynamic(() => import("./investment-charts").then((m) => m.AllocationDonut), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={320} />,
+});
+const PortfolioTrend = dynamic(() => import("./investment-charts").then((m) => m.PortfolioTrend), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={300} />,
+});
+const PriceHistoryDialog = dynamic(() => import("./price-history-dialog").then((m) => m.PriceHistoryDialog), {
+  ssr: false,
+});
 import { TrendingUp, Plus, Wallet, Calendar, Coins, PieChart, AlertTriangle, LineChartIcon, History, MoreVertical, Pencil, Trash2, Pause, Play } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { deleteInvestmentAction, deleteSipAction, pauseSip, resumeSip, logInstallment, deleteDividendAction } from "./actions";
@@ -22,8 +41,6 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-
 type Investment = {
   id: string;
   name: string;
@@ -61,11 +78,7 @@ type Dividend = {
   notes: string | null;
 };
 
-type Allocation = { category: string; value: number; pct: number };
-type TrendPoint = { date: string; invested: number; value: number };
 type AlertItem = { id: string; name: string; type: string; maturity_date: string; days_until: number };
-
-const PIE_COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#EC4899", "#14B8A6", "#F97316", "#6366F1"];
 
 export function InvestmentsDashboard({
   investments,
@@ -206,12 +219,6 @@ export function InvestmentsDashboard({
     } catch {
       return [];
     }
-  };
-
-  const currencyTick = (v: number) => {
-    if (Math.abs(v) >= 100000) return `₹${(v / 1000).toFixed(0)}k`;
-    if (Math.abs(v) >= 1000) return `₹${(v / 1000).toFixed(1)}k`;
-    return `₹${v}`;
   };
 
   return (
@@ -502,43 +509,7 @@ export function InvestmentsDashboard({
                 <CardDescription>By category • donut</CardDescription>
               </CardHeader>
               <CardContent>
-                {allocation.length === 0 ? (
-                  <p className="text-sm text-neutral-500 py-8 text-center">No allocation data. Add holdings.</p>
-                ) : (
-                  <div className="h-[320px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RePieChart>
-                        <Pie data={allocation} dataKey="value" nameKey="category" cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={2}>
-                          {allocation.map((_, idx) => (
-                            <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value: number, _name: string, item: unknown) => {
-                            const payload = (item as { payload?: Allocation })?.payload;
-                            const label = payload?.category ?? String(_name);
-                            const pct = payload?.pct != null ? ` (${payload.pct}%)` : "";
-                            return [formatINR(Number(value)) + pct, label];
-                          }}
-                        />
-                        <Legend />
-                      </RePieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-2 space-y-1">
-                      {allocation.slice(0, 6).map((a, i) => (
-                        <div key={a.category} className="flex items-center justify-between text-xs">
-                          <span className="flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                            {a.category}
-                          </span>
-                          <span className="font-medium">
-                            {formatINR(a.value)} · {a.pct}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <AllocationDonut allocation={allocation} />
               </CardContent>
             </Card>
 
@@ -589,29 +560,9 @@ export function InvestmentsDashboard({
               </CardTitle>
               <CardDescription>Invested vs current value over time</CardDescription>
             </CardHeader>
-            <CardContent>
-              {trend.length === 0 ? (
-                <p className="text-sm text-neutral-500 py-8 text-center">No snapshots yet. Price updates create trend.</p>
-              ) : (
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trend} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#64748B" tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
-                      <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
-                      <Tooltip
-                        formatter={(value: number, name: string) => [formatINR(Number(value)), name === "value" ? "Current" : "Invested"]}
-                        labelFormatter={(l: string) => formatDate(l)}
-                        contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
-                      />
-                      <Legend />
-                      <Line type="monotone" dataKey="invested" name="Invested" stroke="#94A3B8" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="value" name="Current" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </CardContent>
+              <CardContent>
+                <PortfolioTrend trend={trend} />
+              </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
