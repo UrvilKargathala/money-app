@@ -305,7 +305,7 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
                 </p>
               ) : null}
             </div>
-            {busy && !scanDraft ? <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-tint-info p-4 text-sm text-primary-700 dark:bg-[#1E3A5F] dark:text-[#BFDBFE]"><Loader2 className="h-4 w-4 animate-spin" />Reading receipt…</div> : null}
+            {busy && !scanDraft ? <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-tint-info p-4 text-sm text-primary-700 dark:bg-[#1E1E1E] dark:text-[#BFDBFE]"><Loader2 className="h-4 w-4 animate-spin" />Reading receipt…</div> : null}
             {scanDraft ? (
               <div className="space-y-4 rounded-xl border bg-sunken p-4">
                 <div className="flex items-center justify-between"><div><p className="font-semibold">Review extracted transaction</p><p className="text-xs text-ink-3">Correct any field before saving.</p></div>{scanDraft.confidence != null ? <Badge variant="secondary">{Math.round(scanDraft.confidence * 100)}% confidence</Badge> : null}</div>

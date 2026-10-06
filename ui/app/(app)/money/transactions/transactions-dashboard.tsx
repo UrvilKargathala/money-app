@@ -209,7 +209,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
         </div>
       </Card>
 
-      <Card className={`sticky top-20 z-30 p-3 shadow-md ${selected.size > 0 ? "border-primary-200 bg-tint-info dark:border-[#60A5FA] dark:bg-[#1E3A5F]/50" : ""}`}>
+      <Card className={`sticky top-20 z-30 p-3 shadow-md ${selected.size > 0 ? "border-primary-200 bg-tint-info dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : ""}`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <label className="flex shrink-0 items-center gap-2 text-sm font-semibold">
             <input

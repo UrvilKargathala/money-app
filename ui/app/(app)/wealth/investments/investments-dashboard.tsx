@@ -521,7 +521,7 @@ export function InvestmentsDashboard({
                 <CardDescription>Portfolio XIRR & maturity alerts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="rounded-lg bg-tint-info p-4 text-center dark:bg-[#1E3A5F]/50">
+                <div className="rounded-lg bg-tint-info p-4 text-center dark:bg-[#1E1E1E]/50">
                   <p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Portfolio XIRR</p>
                   <p className="text-2xl font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{portfolioXirr != null ? `${portfolioXirr.toFixed(2)}%` : "-"}</p>
                   <p className="text-xs text-ink-3 mt-1">Annualized return • {returnPct.toFixed(1)}% absolute</p>

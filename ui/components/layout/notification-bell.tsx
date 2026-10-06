@@ -183,7 +183,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                   onClick={() => setFilter(tab)}
                   className={cn(
                     "flex-1 rounded-full px-3 py-1.5 text-xs font-medium capitalize transition-colors",
-                    filter === tab ? "bg-neutral-900 text-white shadow-sm dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "bg-surface border border-line text-ink-2 hover:bg-sunken"
+                    filter === tab ? "bg-neutral-900 text-white shadow-sm dark:bg-[#EAF1FF] dark:text-[#111111]" : "bg-surface border border-line text-ink-2 hover:bg-sunken"
                   )}
                 >
                   {tab}
@@ -208,7 +208,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
               ) : (
                 <div className="divide-y divide-line">
                   {display.map((n) => (
-                    <div key={n.id} className={cn("p-3 flex gap-3 hover:bg-sunken transition-colors", !n.is_read && "bg-primary-50/40 dark:bg-[#1E3A5F]/40")}>
+                    <div key={n.id} className={cn("p-3 flex gap-3 hover:bg-sunken transition-colors", !n.is_read && "bg-primary-50/40 dark:bg-[#1E1E1E]/40")}>
                       <div className={cn("h-2 w-2 rounded-full mt-2 shrink-0", !n.is_read ? "bg-primary-600" : "bg-transparent")} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-ink-1 flex items-center gap-1.5 flex-wrap">

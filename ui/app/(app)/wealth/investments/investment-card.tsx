@@ -75,7 +75,7 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
           <p className="text-xs text-ink-3">Invested</p>
           <p className="text-base font-bold font-heading text-ink-1">{formatINR(invested)}</p>
         </div>
-        <div className="rounded-lg border border-primary-200 bg-tint-info p-3 dark:bg-[#1E3A5F]/40">
+        <div className="rounded-lg border border-primary-200 bg-tint-info p-3 dark:bg-[#1E1E1E]/40">
           <p className="text-xs text-primary-700">Current</p>
           <p className="text-base font-bold font-heading text-primary-700">{formatINR(current)}</p>
         </div>

@@ -91,7 +91,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                           onClick={() => handleSelect(s.href, s.action)}
                           className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-sunken transition-colors"
                         >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tint-info text-primary-600 dark:bg-[#1E3A5F] dark:text-[#BFDBFE]">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tint-info text-primary-600 dark:bg-[#1E1E1E] dark:text-[#BFDBFE]">
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="flex-1">
@@ -121,7 +121,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                         aria-selected={index === activeIndex}
                         onMouseEnter={() => setActiveIndex(index)}
                         onClick={() => handleSelect(s.href, s.action)}
-                        className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${index === activeIndex ? "bg-tint-info ring-1 ring-primary-200 dark:bg-[#1E3A5F]/50 dark:ring-[#60A5FA]" : "hover:bg-sunken"}`}
+                        className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${index === activeIndex ? "bg-tint-info ring-1 ring-primary-200 dark:bg-[#1E1E1E]/50 dark:ring-[#60A5FA]" : "hover:bg-sunken"}`}
                       >
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-wash text-ink-2">
                           <Icon className="h-4 w-4" />

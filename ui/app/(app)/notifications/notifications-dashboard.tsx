@@ -384,7 +384,7 @@ export function NotificationsDashboard({
           ) : (
             <div className="space-y-3">
               {filtered.map((n) => (
-                <Card key={n.id} className={`p-4 flex items-start justify-between gap-3 ${!n.is_read && !n.is_dismissed ? "border-primary-200 bg-tint-info/50 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40" : ""}`}>
+                <Card key={n.id} className={`p-4 flex items-start justify-between gap-3 ${!n.is_read && !n.is_dismissed ? "border-primary-200 bg-tint-info/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
                   <div className="flex gap-3 flex-1">
                     {!n.is_dismissed && (
                       <input

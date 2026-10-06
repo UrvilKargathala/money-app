@@ -8,7 +8,7 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-surface text-ink-2 border-line",
-        info: "bg-info-light text-info-dark border-info/20 dark:bg-[#1E3A5F] dark:text-[#BFDBFE]",
+        info: "bg-info-light text-info-dark border-info/20 dark:bg-[#1E1E1E] dark:text-[#BFDBFE]",
         success: "bg-success-light text-success-dark border-success/20 dark:bg-[#064E3B] dark:text-[#A7F3D0]",
         warning: "bg-warning-light text-warning-dark border-warning/20 dark:bg-[#78350F] dark:text-[#FDE68A]",
         destructive: "bg-error-light text-error-dark border-error/20 dark:bg-[#7F1D1D] dark:text-[#FCA5A5]",

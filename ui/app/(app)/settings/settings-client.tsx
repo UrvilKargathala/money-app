@@ -338,7 +338,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <p className="text-sm text-ink-3 font-body mt-1">Manage your account, security, notifications, and data.</p>
       </div>
 
-      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40 dark:from-[#0F172A] dark:to-[#1E293B]">
+      <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40 dark:from-[#111111] dark:to-[#1E1E1E]">
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
@@ -511,7 +511,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                   });
                 }}
                 onDragEnd={() => setDragWidgetId(null)}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50 dark:border-[#60A5FA] dark:bg-[#1E3A5F]" : "border-line bg-surface"}`}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50 dark:border-[#60A5FA] dark:bg-[#1E1E1E]" : "border-line bg-surface"}`}
               >
                 <span title="Drag to reorder" aria-hidden className="cursor-grab text-neutral-400 active:cursor-grabbing">
                   <GripVertical className="h-4 w-4" />

@@ -85,7 +85,8 @@ export default function ReportsCharts({
 
   const daysInMonth = new Date(heatmapYear, heatmapMonth, 0).getDate();
   const heatmapMap = new Map<string, number>(heatmapDays.map((d) => [d.date, d.total]));
-  const t = chartTheme(useDarkMode());
+  const dark = useDarkMode();
+  const t = chartTheme(dark);
 
   return (
     <div className="space-y-6">
@@ -283,8 +284,8 @@ export default function ReportsCharts({
                       const iso = `${heatmapYear}-${String(heatmapMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                       const total = heatmapMap.get(iso) ?? 0;
                       const intensity = maxHeat > 0 && total > 0 ? Math.min(1, 0.2 + (total / maxHeat) * 0.8) : 0;
-                      const bg = total > 0 ? `rgba(37, 99, 235, ${intensity})` : "#F8FAFC";
-                      const textColor = intensity > 0.55 ? "#FFFFFF" : "#334155";
+                      const bg = total > 0 ? `rgba(37, 99, 235, ${intensity})` : dark ? "#1E1E1E" : "#F8FAFC";
+                      const textColor = intensity > 0.55 ? "#FFFFFF" : dark ? "#B9C7DE" : "#334155";
                       cells.push(
                         <div
                           key={iso}

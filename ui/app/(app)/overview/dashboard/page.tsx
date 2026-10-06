@@ -128,7 +128,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {attentionItems.map((item) => (
-                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-line bg-surface p-3 transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-[#60A5FA] dark:hover:bg-[#1E3A5F]/40">
+                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-line bg-surface p-3 transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-[#60A5FA] dark:hover:bg-[#1E1E1E]/40">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
                         <CalendarClock className="h-4 w-4" />
@@ -233,7 +233,7 @@ export default async function DashboardPage() {
                     <p className="text-xs text-error-dark dark:text-[#FCA5A5] font-medium">Liabilities</p>
                     <p className="text-sm font-bold font-heading text-error-dark dark:text-[#FCA5A5]">{formatINR(totalLiabilities)}</p>
                   </div>
-                    <div className="rounded-lg bg-tint-info p-3 dark:bg-[#1E3A5F]/40">
+                    <div className="rounded-lg bg-tint-info p-3 dark:bg-[#1E1E1E]/40">
                     <p className="text-xs text-primary-700 dark:text-[#BFDBFE] font-medium">Net</p>
                     <p className="text-sm font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{formatINR(netWorth)}</p>
                   </div>

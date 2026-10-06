@@ -432,7 +432,7 @@ function CashflowPanel({ projection, waterfall }: { projection: CashflowProjecti
           <p className="text-xs font-medium text-ink-3 mb-2">Waterfall (cumulative)</p>
           <div className="space-y-2">
             {wf.map((w) => (
-                  <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-tint-info/50 p-3 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40">
+                  <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-tint-info/50 p-3 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40">
                 <p className="text-sm font-medium">{w.month}</p>
                 <div className="text-right">
                   <p className="text-sm font-semibold">{formatINR(w.total)}</p>

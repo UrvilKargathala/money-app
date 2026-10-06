@@ -478,7 +478,7 @@ export function NotesDashboard({
                     return (
                       <span
                         key={c.name}
-                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-tint-info dark:border-[#60A5FA] dark:bg-[#1E3A5F]/50" : "border-line bg-surface"}`}
+                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-tint-info dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : "border-line bg-surface"}`}
                       >
                         <button
                           type="button"
@@ -586,7 +586,7 @@ export function NotesDashboard({
               {filtered
                 .sort((a, b) => b.is_pinned - a.is_pinned)
                 .map((n) => (
-                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-tint-info/50 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40" : ""}`}>
+                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-tint-info/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-semibold font-heading text-ink-1 flex items-center gap-2">

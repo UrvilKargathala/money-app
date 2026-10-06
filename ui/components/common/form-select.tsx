@@ -46,7 +46,7 @@ export function FormSelect({
         <SelectTrigger
           id={id}
           className={cn(
-            "dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#F8FAFC]",
+            "dark:border-[#2A2A2A] dark:bg-[#111111] dark:text-[#EAF1FF]",
             error && "border-error"
           )}
         >

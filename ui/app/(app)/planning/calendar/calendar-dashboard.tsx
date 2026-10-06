@@ -102,14 +102,14 @@ function sourceBadgeVariant(source: string): string {
     case "recurring":
       return "bg-teal-100 text-teal-700 border border-teal-200";
     default:
-      return "bg-wash text-ink-2 border border-line dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
+      return "bg-wash text-ink-2 border border-line dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
   }
 }
 
 function kindBadge(kind: string): string {
   if (kind === "inflow") return "bg-tint-success text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
   if (kind === "outflow") return "bg-tint-error text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
-  return "bg-wash text-ink-2 border border-line dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
+  return "bg-wash text-ink-2 border border-line dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -351,10 +351,10 @@ export function CalendarDashboard({
                       <button
                         key={cell.iso}
                         onClick={() => setSelectedDate(cell.iso)}
-                        className={`min-h-[88px] p-1.5 text-left bg-surface hover:bg-sunken transition-colors flex flex-col ${!cell.inMonth ? "bg-sunken/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-tint-info/60 dark:bg-[#1E3A5F]/60" : ""}`}
+                        className={`min-h-[88px] p-1.5 text-left bg-surface hover:bg-sunken transition-colors flex flex-col ${!cell.inMonth ? "bg-sunken/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-tint-info/60 dark:bg-[#1E1E1E]/60" : ""}`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-ink-2"}`}>
+                          <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#EAF1FF] dark:text-[#111111]" : "text-ink-2"}`}>
                             {cell.date.getDate()}
                           </span>
                           {countFromApi > 0 && <span className="text-[10px] font-medium text-ink-3">{countFromApi}</span>}
