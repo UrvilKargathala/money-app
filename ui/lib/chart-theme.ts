@@ -28,7 +28,7 @@ const LIGHT: ChartTheme = {
 };
 
 const DARK: ChartTheme = {
-  tick: "#8F8F8F",
+  tick: "#8A94A6",
   grid: "#262626",
   tooltipBg: "#111111",
   tooltipBorder: "#2A2A2A",
