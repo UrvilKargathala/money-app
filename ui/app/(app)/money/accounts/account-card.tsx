@@ -81,7 +81,7 @@ export function AccountCard({
 
       <div>
         <p className="text-xs text-ink-3 font-medium">Current Balance</p>
-        <p className={`text-xl font-bold font-heading ${account.balance < 0 ? "text-error" : "text-neutral-900"}`}>
+        <p className={`text-xl font-bold font-heading ${account.balance < 0 ? "text-error" : "text-ink-1"}`}>
           {formatINR(account.balance)}
         </p>
       </div>
