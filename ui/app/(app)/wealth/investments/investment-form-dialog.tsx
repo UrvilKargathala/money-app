@@ -62,6 +62,11 @@ export function InvestmentFormDialog({
               <AlertDescription>{state.error}</AlertDescription>
             </Alert>
           )}
+          {state?.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
+            <Alert variant="destructive">
+              <AlertDescription>{Object.values(state.fieldErrors).join(" ")}</AlertDescription>
+            </Alert>
+          )}
 
           {!isEdit ? (
             <>
