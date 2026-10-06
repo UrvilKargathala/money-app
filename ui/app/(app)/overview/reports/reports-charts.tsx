@@ -88,7 +88,7 @@ export default function ReportsCharts({
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Cashflow</CardTitle>
           <CardDescription>Monthly income vs expense - net line</CardDescription>
         </CardHeader>
@@ -119,7 +119,7 @@ export default function ReportsCharts({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="overflow-hidden">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Spending by Category</CardTitle>
             <CardDescription>Expense breakdown - donut</CardDescription>
           </CardHeader>
@@ -189,7 +189,7 @@ export default function ReportsCharts({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Trends - last {trendsMonths} months</CardTitle>
             <CardDescription>Cumulative spend vs monthly spend</CardDescription>
           </CardHeader>
@@ -220,7 +220,7 @@ export default function ReportsCharts({
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Budget vs Actual - {budgetLabel}</CardTitle>
           <CardDescription>Budgeted vs actual spend per category</CardDescription>
         </CardHeader>
@@ -256,7 +256,7 @@ export default function ReportsCharts({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Spending Heatmap - {monthName}</CardTitle>
             <CardDescription>Daily expense intensity</CardDescription>
           </CardHeader>
@@ -313,7 +313,7 @@ export default function ReportsCharts({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Top Merchants</CardTitle>
             <CardDescription>Ranked by total spend</CardDescription>
           </CardHeader>
@@ -341,7 +341,7 @@ export default function ReportsCharts({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Income Sources</CardTitle>
             <CardDescription>Total {formatINR(totalIncome)} - by category</CardDescription>
           </CardHeader>
@@ -375,7 +375,7 @@ export default function ReportsCharts({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Net Worth</CardTitle>
             <CardDescription>Snapshot trend with daily change</CardDescription>
           </CardHeader>
