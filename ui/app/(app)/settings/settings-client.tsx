@@ -377,7 +377,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" /> Profile
           </CardTitle>
@@ -418,7 +418,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5" /> Change password
           </CardTitle>
@@ -479,7 +479,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><LayoutGrid className="h-5 w-5" /> Dashboard widgets</CardTitle><CardDescription>Choose the order shown on your dashboard.</CardDescription></CardHeader>
+        <CardHeader className="pb-4"><CardTitle className="flex items-center gap-2"><LayoutGrid className="h-5 w-5" /> Dashboard widgets</CardTitle><CardDescription>Choose the order shown on your dashboard.</CardDescription></CardHeader>
         <CardContent className="space-y-2">
           {widgetLayout.map((id, index) => {
             const widget = WIDGETS.find((item) => item.id === id);
@@ -535,7 +535,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Monitor className="h-5 w-5" /> Active sessions
           </CardTitle>
@@ -572,7 +572,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" /> Appearance
           </CardTitle>
@@ -589,13 +589,13 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/>Account security history</CardTitle><CardDescription>Recent sign-ins and security actions on your account.</CardDescription></CardHeader>
+        <CardHeader className="pb-4"><CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/>Account security history</CardTitle><CardDescription>Recent sign-ins and security actions on your account.</CardDescription></CardHeader>
         <CardContent className="divide-y divide-neutral-100">{auditLogs.length===0&&<p className="text-sm text-neutral-500">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div className="min-w-0"><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-neutral-500">{log.ip_address||"IP unavailable"}</p></div><time className="shrink-0 text-xs tabular-nums text-neutral-500">{new Date(log.created_at).toLocaleString("en-IN")}</time></div>)}</CardContent>
       </Card>
 
       {billing && (
         <Card className="border-amber-200">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" /> Billing — {billing.plan.name} ({billing.plan.code})</CardTitle>
             <CardDescription>
               Status: {billing.status} • Source: {billing.source} {billing.trial.active ? `• Trial ${billing.trial.daysLeft}d left` : ""} • Price: ₹{billing.price.amountInr} {billing.price.perText}
@@ -616,7 +616,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       )}
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">Personalization</CardTitle>
           <CardDescription>Control center, shortcuts, and haptic feedback</CardDescription>
         </CardHeader>
@@ -717,7 +717,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       <CommandPalette open={showShortcuts} onOpenChange={setShowShortcuts} />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" /> Notification Preferences
           </CardTitle>
@@ -763,7 +763,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" /> Data Export
           </CardTitle>
@@ -795,7 +795,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" /> Data & Privacy
           </CardTitle>
