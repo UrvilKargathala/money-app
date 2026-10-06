@@ -66,7 +66,9 @@ export async function getImportBatch(
   q: Queryable = DB
 ): Promise<ImportBatchRow | null> {
   const result = await q.query<RawBatch>(
-    `SELECT * FROM import_batches WHERE user_id = $1 AND id = $2::uuid`,
+    `SELECT id, filename, total_rows, imported_rows, duplicate_rows,
+            error_rows, status, date_from, date_to, created_at
+     FROM import_batches WHERE user_id = $1 AND id = $2::uuid`,
     [userId, id]
   );
   return result.rowCount === 1 ? mapBatch(result.rows[0]) : null;
@@ -77,7 +79,9 @@ export async function listImportBatches(
   q: Queryable = DB
 ): Promise<ImportBatchRow[]> {
   const result = await q.query<RawBatch>(
-    `SELECT * FROM import_batches WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    `SELECT id, filename, total_rows, imported_rows, duplicate_rows,
+            error_rows, status, date_from, date_to, created_at
+     FROM import_batches WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
     [userId]
   );
   return result.rows.map(mapBatch);

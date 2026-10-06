@@ -172,7 +172,9 @@ export async function getBudgetTemplate(
   userId: number, id: string, q: Queryable = DB
 ): Promise<Record<string, unknown> | null> {
   const tpl = await q.query<Record<string, unknown>>(
-    `SELECT * FROM budget_templates
+    `SELECT id, user_id, name, description, is_default, version,
+            created_at, updated_at
+     FROM budget_templates
      WHERE id = $2::uuid AND (user_id = $1 OR user_id IS NULL)`,
     [userId, id]
   );

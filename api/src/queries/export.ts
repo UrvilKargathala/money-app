@@ -81,7 +81,10 @@ export async function getExportJob(
   q: Queryable = DB
 ): Promise<ExportJobRow | null> {
   const result = await q.query<RawJob>(
-    `SELECT * FROM data_export_jobs WHERE user_id = $1 AND id = $2::uuid`,
+    `SELECT id, export_type, scope, module_name, date_range_start,
+            date_range_end, status, file_path, file_type, row_count,
+            file_size, error_message, created_at
+     FROM data_export_jobs WHERE user_id = $1 AND id = $2::uuid`,
     [userId, id]
   );
   return result.rowCount === 1 ? mapJob(result.rows[0]) : null;
@@ -92,7 +95,10 @@ export async function listExportJobs(
   q: Queryable = DB
 ): Promise<ExportJobRow[]> {
   const result = await q.query<RawJob>(
-    `SELECT * FROM data_export_jobs WHERE user_id = $1
+    `SELECT id, export_type, scope, module_name, date_range_start,
+            date_range_end, status, file_path, file_type, row_count,
+            file_size, error_message, created_at
+     FROM data_export_jobs WHERE user_id = $1
      ORDER BY created_at DESC LIMIT 50`,
     [userId]
   );
