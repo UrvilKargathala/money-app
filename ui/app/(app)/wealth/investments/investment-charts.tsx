@@ -6,6 +6,7 @@ import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend
 import { formatINR, formatDate } from "@/lib/format";
 import { EmptyState } from "@/components/common/empty-state";
 import { PieChart as PieChartIcon, TrendingUp } from "lucide-react";
+import { chartTheme, useDarkMode } from "@/lib/chart-theme";
 
 export type Allocation = { category: string; value: number; pct: number };
 export type TrendPoint = { date: string; invested: number; value: number };
@@ -19,6 +20,7 @@ export function currencyTick(v: number): string {
 }
 
 export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
+  const t = chartTheme(useDarkMode());
   if (allocation.length === 0) {
     return <EmptyState icon={<PieChartIcon className="h-6 w-6" />} title="No allocation data" description="Add holdings to see the breakdown." />;
   }
@@ -38,8 +40,10 @@ export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
               const pct = payload?.pct != null ? ` (${payload.pct}%)` : "";
               return [formatINR(Number(value)) + pct, label];
             }}
+            contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
+            itemStyle={{ color: t.tooltipText }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ color: t.legendText }} />
         </RePieChart>
       </ResponsiveContainer>
       <div className="mt-2 space-y-1">
@@ -60,6 +64,7 @@ export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
 }
 
 export function PortfolioTrend({ trend }: { trend: TrendPoint[] }) {
+  const t = chartTheme(useDarkMode());
   if (trend.length === 0) {
     return <EmptyState icon={<TrendingUp className="h-6 w-6" />} title="No snapshots yet" description="Price updates create trend." />;
   }
@@ -67,15 +72,17 @@ export function PortfolioTrend({ trend }: { trend: TrendPoint[] }) {
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={trend} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-          <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#64748B" tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
-          <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12 }} stroke="#64748B" width={80} />
+          <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
+          <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
           <Tooltip
             formatter={(value: number, name: string) => [formatINR(Number(value)), name === "value" ? "Current" : "Invested"]}
             labelFormatter={(l: string) => formatDate(l)}
-            contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
+            labelStyle={{ color: t.tooltipText }}
+            contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
+            itemStyle={{ color: t.tooltipText }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ color: t.legendText }} />
           <Line type="monotone" dataKey="invested" name="Invested" stroke="#94A3B8" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="value" name="Current" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3 }} />
         </LineChart>

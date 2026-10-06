@@ -8,6 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { PanelError, PanelLoading } from "@/components/common/async-panel-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { LineChart as LineChartIcon } from "lucide-react";
+import { chartTheme, useDarkMode } from "@/lib/chart-theme";
 
 type PricePoint = { price: number; date: string };
 
@@ -27,6 +28,7 @@ export function PriceHistoryDialog({
   const [points, setPoints] = useState<PricePoint[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const t = chartTheme(useDarkMode());
 
   const load = useCallback(() => {
     if (!investmentId) return;
@@ -64,10 +66,10 @@ export function PriceHistoryDialog({
             <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={points} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#64748B" tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
-                  <YAxis tickFormatter={(v: number) => `₹${v}`} tick={{ fontSize: 12 }} stroke="#64748B" width={70} />
-                  <Tooltip formatter={(v: number) => [formatINR(Number(v)), "Price"]} labelFormatter={(l: string) => formatDate(l)} contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
+                  <YAxis tickFormatter={(v: number) => `₹${v}`} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={70} />
+                  <Tooltip formatter={(v: number) => [formatINR(Number(v)), "Price"]} labelFormatter={(l: string) => formatDate(l)} labelStyle={{ color: t.tooltipText }} contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }} itemStyle={{ color: t.tooltipText }} />
                   <Line type="monotone" dataKey="price" stroke="#2563EB" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
