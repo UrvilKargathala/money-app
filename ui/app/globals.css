@@ -5,8 +5,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Semantic surface tokens: single source of truth for light/dark color.
+ * Recoloring later = editing the values below, nothing else.
+ * Light values mirror the DS light column; .dark mirrors the DS dark column.
+ */
 @layer base {
   :root {
+    --surface: 255 255 255;
+    --sunken: 248 250 252;
+    --wash: 241 245 249;
+    --line: 226 232 240;
+    --ink-1: 15 23 42;
+    --ink-2: 71 85 105;
+    --ink-3: 100 116 139;
+    --tint-info: 239 246 255;
+    --tint-success: 236 253 245;
+    --tint-warning: 255 251 235;
+    --tint-error: 254 242 242;
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -29,6 +45,17 @@
     --radius: 0.75rem;
   }
   .dark {
+    --surface: 15 23 42;
+    --sunken: 30 41 59;
+    --wash: 30 41 59;
+    --line: 51 65 85;
+    --ink-1: 248 250 252;
+    --ink-2: 203 213 225;
+    --ink-3: 148 163 184;
+    --tint-info: 30 58 95;
+    --tint-success: 6 78 59;
+    --tint-warning: 120 53 15;
+    --tint-error: 127 29 29;
     --background: 222 47% 7%;
     --foreground: 210 40% 96%;
     --card: 222 40% 11%;

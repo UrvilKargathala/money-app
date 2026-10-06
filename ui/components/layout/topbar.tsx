@@ -61,7 +61,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
   };
 
   return (
-      <header className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-white dark:border-[#334155] dark:bg-[#0F172A]">
+      <header className="sticky top-0 z-40 w-full border-b border-line bg-surface">
       <div className="flex h-16 items-center justify-between gap-4 px-4 lg:px-6">
         {/* Left: logo + mobile hamburger */}
         <div className="flex items-center gap-3 shrink-0">
@@ -73,11 +73,11 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[320px] p-0 overflow-y-auto">
-              <div className="flex h-16 items-center gap-2 border-b border-neutral-100 px-6">
+              <div className="flex h-16 items-center gap-2 border-b border-line px-6">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
                   <Wallet className="h-5 w-5" />
                 </div>
-                <span className="text-lg font-bold font-heading text-neutral-800">MoneyMind</span>
+                <span className="text-lg font-bold font-heading text-ink-1">MoneyMind</span>
               </div>
               <nav className="p-4 space-y-6">
                 {NAV_GROUPS.map((group) => (
@@ -105,7 +105,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                     </div>
                   </div>
                 ))}
-                <div className="border-t border-neutral-100 pt-4 space-y-1">
+                <div className="border-t border-line pt-4 space-y-1">
                   {[NOTIFICATION_NAV_ITEM, ...STANDALONE_NAV_ITEMS].map((item) => {
                     const active = isItemActive(pathname, item.href);
                     const Icon = item.icon;
@@ -133,13 +133,13 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="hidden sm:inline text-lg font-bold font-heading text-neutral-800 dark:text-[#F8FAFC]">MoneyMind</span>
+            <span className="hidden sm:inline text-lg font-bold font-heading text-ink-1">MoneyMind</span>
           </Link>
         </div>
 
         {/* Center: pill nav (desktop only) */}
         <nav className="hidden lg:flex items-center justify-center flex-1">
-          <div className="flex items-center gap-1 rounded-full bg-white border border-neutral-200 px-1.5 py-1.5 shadow-sm dark:bg-[#1E293B] dark:border-[#334155]">
+          <div className="flex items-center gap-1 rounded-full bg-surface border border-line px-1.5 py-1.5 shadow-sm">
             {NAV_GROUPS.map((group) => {
               const groupActive = isGroupActive(pathname, group);
               return (
@@ -211,7 +211,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
               triggerHaptic("light");
               setPaletteOpen(true);
             }}
-            className="hidden lg:flex text-neutral-500 hover:text-neutral-900"
+            className="hidden lg:flex text-ink-3 hover:text-ink-1"
             title="Shortcuts (Cmd+K)"
           >
             <Command className="h-5 w-5" />
@@ -219,7 +219,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
 
           <NotificationBell initialUnread={initialUnread} />
 
-          <div className="hidden sm:flex items-center gap-3 border-l border-neutral-200 dark:border-[#334155] ml-1 pl-3">
+          <div className="hidden sm:flex items-center gap-3 border-l border-line ml-1 pl-3">
             {showAvatar ? (
               <Avatar className="h-8 w-8">
                 <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} />
@@ -233,12 +233,12 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
               </div>
             )}
             <div className="hidden lg:flex flex-col">
-              <span className="text-sm font-medium font-heading text-neutral-800 dark:text-[#F8FAFC] leading-none">{userName || "User"}</span>
-              <span className="text-xs text-neutral-500 dark:text-[#94A3B8] leading-none mt-0.5">{userEmail || ""}</span>
+              <span className="text-sm font-medium font-heading text-ink-1 leading-none">{userName || "User"}</span>
+              <span className="text-xs text-ink-3 leading-none mt-0.5">{userEmail || ""}</span>
             </div>
           </div>
 
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="text-neutral-600">
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="text-ink-2">
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
@@ -246,7 +246,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
 
       {/* Mobile search bar */}
       {searchOpen && (
-        <div className="border-t border-neutral-100 px-4 py-3 lg:hidden bg-white">
+        <div className="border-t border-line px-4 py-3 lg:hidden bg-surface">
           <GlobalSearch mobile onNavigate={() => setSearchOpen(false)} />
         </div>
       )}

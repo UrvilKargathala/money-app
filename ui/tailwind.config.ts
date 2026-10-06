@@ -14,6 +14,21 @@ const config: Config = {
         body: ['"Questrial"', "sans-serif"],
       },
       colors: {
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        sunken: "rgb(var(--sunken) / <alpha-value>)",
+        wash: "rgb(var(--wash) / <alpha-value>)",
+        line: "rgb(var(--line) / <alpha-value>)",
+        ink: {
+          1: "rgb(var(--ink-1) / <alpha-value>)",
+          2: "rgb(var(--ink-2) / <alpha-value>)",
+          3: "rgb(var(--ink-3) / <alpha-value>)",
+        },
+        tint: {
+          info: "rgb(var(--tint-info) / <alpha-value>)",
+          success: "rgb(var(--tint-success) / <alpha-value>)",
+          warning: "rgb(var(--tint-warning) / <alpha-value>)",
+          error: "rgb(var(--tint-error) / <alpha-value>)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
