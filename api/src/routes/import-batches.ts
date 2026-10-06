@@ -11,7 +11,7 @@ import {
   listImportErrors,
   shiftDuplicateToImported,
   skipDuplicatesAdjust,
-  findCategoryIdByName,
+  loadUserCategoryMap,
   insertImportedTransactions,
   applyMergeFields,
 } from "../queries/import";
@@ -220,47 +220,58 @@ importBatches.post("/:id/duplicates/resolve", requireAuth, async (c) => {
 
     // action === "merge": per-row explicit targets; folds merchant/category
     // from each stored draft into the chosen existing transaction.
-    let mergedCount = 0;
-    for (const r of (Array.isArray(body.resolutions)
+    // Batched: one read for all error rows, one category map, then a single
+    // transaction for every merge + cleanup (was 3-4 round-trips per row).
+    const pairs = (Array.isArray(body.resolutions)
       ? (body.resolutions as {
           row_id?: unknown;
           existing_transaction_id?: unknown;
         }[])
       : []
-    ).slice(0, 500)) {
-      const rowId = String(r.row_id ?? "");
-      const targetTxn = String(r.existing_transaction_id ?? "");
-      if (!uuidRe.test(rowId) || !uuidRe.test(targetTxn)) continue;
-      const errRows = await getImportErrorsByIds(user.user_id, [rowId]);
-      if (errRows.length === 0 || errRows[0].error_reason !== "duplicate") continue;
-      const draft = safeParseDraft(errRows[0].raw_data);
+    )
+      .slice(0, 500)
+      .map((r) => ({
+        rowId: String(r.row_id ?? ""),
+        targetTxn: String(r.existing_transaction_id ?? ""),
+      }))
+      .filter((p) => uuidRe.test(p.rowId) && uuidRe.test(p.targetTxn));
+    const errById = new Map(
+      (await getImportErrorsByIds(user.user_id, pairs.map((p) => p.rowId))).map((r) => [r.id, r])
+    );
+    const categoryMap = await loadUserCategoryMap(user.user_id);
+    const jobs: { rowId: string; targetTxn: string; merchantClean: string | null; categoryId: string | null }[] = [];
+    for (const p of pairs) {
+      const errRow = errById.get(p.rowId);
+      if (!errRow || errRow.error_reason !== "duplicate") continue;
+      const draft = safeParseDraft(errRow.raw_data);
       if (!draft) continue;
-
-      const categoryId = draft.category_name
-        ? await findCategoryIdByName(user.user_id, draft.category_name)
-        : null;
-      await withUser(user.user_id, (client) =>
-        applyMergeFields(client, {
-          userId: user.user_id,
-          keepId: targetTxn,
-          merchantClean: draft.merchant_clean,
-          categoryId,
-          notes: null,
-        })
-      );
-      await withUser(user.user_id, (client) =>
-        deleteImportErrors(client, user.user_id, [rowId])
-      );
-      mergedCount += 1;
+      jobs.push({
+        rowId: p.rowId,
+        targetTxn: p.targetTxn,
+        merchantClean: draft.merchant_clean,
+        categoryId: draft.category_name ? (categoryMap.get(draft.category_name.toLowerCase()) ?? null) : null,
+      });
     }
-    if (mergedCount > 0) {
-      await withUser(user.user_id, (client) =>
-        skipDuplicatesAdjust(client, {
+    let mergedCount = 0;
+    if (jobs.length > 0) {
+      await withUser(user.user_id, async (client) => {
+        for (const job of jobs) {
+          await applyMergeFields(client, {
+            userId: user.user_id,
+            keepId: job.targetTxn,
+            merchantClean: job.merchantClean,
+            categoryId: job.categoryId,
+            notes: null,
+          });
+        }
+        await deleteImportErrors(client, user.user_id, jobs.map((j) => j.rowId));
+        await skipDuplicatesAdjust(client, {
           userId: user.user_id,
           batchId,
-          count: mergedCount,
-        })
-      );
+          count: jobs.length,
+        });
+      });
+      mergedCount = jobs.length;
     }
 
     return c.json({ success: true, action, merged: mergedCount });
