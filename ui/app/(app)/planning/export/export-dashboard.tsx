@@ -215,7 +215,7 @@ export function ExportDashboard({
 
       {/* Status panel */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-base">
             <Activity className="h-5 w-5" /> Export Activity
           </CardTitle>
@@ -238,7 +238,7 @@ export function ExportDashboard({
       {/* Modules + create job */}
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileSpreadsheet className="h-5 w-5" /> Exportable Modules
             </CardTitle>
@@ -338,7 +338,7 @@ export function ExportDashboard({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileArchive className="h-5 w-5" /> Full Archive
             </CardTitle>
@@ -355,7 +355,7 @@ export function ExportDashboard({
 
       {/* Recent exports with progress + download */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-base">
             <Download className="h-5 w-5" /> Recent Exports
           </CardTitle>
