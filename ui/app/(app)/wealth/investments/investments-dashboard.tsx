@@ -502,7 +502,7 @@ export function InvestmentsDashboard({
         <TabsContent value="portfolio" className="space-y-4 mt-4">
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-4 w-4" /> Asset Allocation
                 </CardTitle>
@@ -514,7 +514,7 @@ export function InvestmentsDashboard({
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" /> Returns
                 </CardTitle>
@@ -554,7 +554,7 @@ export function InvestmentsDashboard({
           </div>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2">
                 <LineChartIcon className="h-4 w-4" /> Portfolio Trend
               </CardTitle>
