@@ -393,7 +393,7 @@ function UpcomingPanel({ data }: { data: UpcomingData }) {
       </CardHeader>
       <div className="space-y-2">
         {data.items.map((e) => (
-          <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg bg-warning-light/20 p-3">
+                  <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg bg-warning-light/20 p-3 dark:bg-[#78350F]/30">
             <div>
               <p className="text-sm font-medium">{e.name}</p>
               <p className="text-xs text-ink-3">{e.due_date} • {e.days_until}d • {e.status}</p>
@@ -432,7 +432,7 @@ function CashflowPanel({ projection, waterfall }: { projection: CashflowProjecti
           <p className="text-xs font-medium text-ink-3 mb-2">Waterfall (cumulative)</p>
           <div className="space-y-2">
             {wf.map((w) => (
-              <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-primary-50/50 p-3">
+                  <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-primary-50/50 p-3 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40">
                 <p className="text-sm font-medium">{w.month}</p>
                 <div className="text-right">
                   <p className="text-sm font-semibold">{formatINR(w.total)}</p>

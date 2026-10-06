@@ -62,7 +62,7 @@ export function BillCard({
   const isPaid = bill.current_period_status === "paid";
 
   return (
-    <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-light/30" : isPaid ? "border-success/30 bg-success-light/30" : ""}`}>
+      <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-light/30 dark:bg-[#7F1D1D]/30" : isPaid ? "border-success/30 bg-success-light/30 dark:bg-[#064E3B]/30" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold font-heading text-ink-1">{bill.name}</p>
