@@ -324,8 +324,8 @@ export function InvestmentsDashboard({
           </div>
 
           {sipsDue.length > 0 && (
-            <Card className="p-4 border-warning/20 bg-warning-light/30">
-              <p className="text-sm font-medium font-heading text-warning-dark flex items-center gap-2">
+            <Card className="p-4 border-warning/20 bg-warning-light/30 dark:bg-[#78350F]/30">
+              <p className="text-sm font-medium font-heading text-warning-dark dark:text-[#FDE68A] flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> Due in next 7 days - {sipsDue.length}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -521,9 +521,9 @@ export function InvestmentsDashboard({
                 <CardDescription>Portfolio XIRR & maturity alerts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="rounded-lg bg-primary-50 p-4 text-center">
-                  <p className="text-xs text-primary-700">Portfolio XIRR</p>
-                  <p className="text-2xl font-bold font-heading text-primary-700">{portfolioXirr != null ? `${portfolioXirr.toFixed(2)}%` : "-"}</p>
+                <div className="rounded-lg bg-primary-50 p-4 text-center dark:bg-[#1E3A5F]/50">
+                  <p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Portfolio XIRR</p>
+                  <p className="text-2xl font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{portfolioXirr != null ? `${portfolioXirr.toFixed(2)}%` : "-"}</p>
                   <p className="text-xs text-ink-3 mt-1">Annualized return • {returnPct.toFixed(1)}% absolute</p>
                 </div>
 
@@ -536,7 +536,7 @@ export function InvestmentsDashboard({
                   ) : (
                     <div className="mt-2 space-y-2">
                       {alerts.map((al) => (
-                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-light/20 px-3 py-2 text-sm">
+                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-light/20 px-3 py-2 text-sm dark:bg-[#78350F]/30">
                           <div>
                             <p className="font-medium font-heading">{al.name}</p>
                             <p className="text-xs text-ink-3">
