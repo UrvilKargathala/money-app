@@ -398,7 +398,7 @@ export function NotesDashboard({
           <CardContent className="space-y-4 p-6">
             <div className="space-y-2"><Label htmlFor="vault-password">Account password</Label><Input id="vault-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void unlockVault(); }} /></div>
             <Button className="w-full" onClick={() => void unlockVault()} disabled={unlocking || !password}>{unlocking ? "Unlocking..." : vaultReady ? "Unlock vault" : "Create encrypted vault"}</Button>
-            <p className="flex items-start gap-2 text-xs text-neutral-500"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success-dark" /> Uses PBKDF2 and AES-256-GCM through your browser&apos;s Web Crypto API.</p>
+            <p className="flex items-start gap-2 text-xs text-ink-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success-dark" /> Uses PBKDF2 and AES-256-GCM through your browser&apos;s Web Crypto API.</p>
           </CardContent>
         </Card>
       </div>
@@ -409,8 +409,8 @@ export function NotesDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Secure Notes</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Secure Notes</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">
             {notes.length} notes • {trash.length} in trash • Encrypted vault
           </p>
         </div>
@@ -441,7 +441,7 @@ export function NotesDashboard({
                     const active = filterCategory === c.name;
                     if (editingCategory === c.name) {
                       return (
-                        <span key={c.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 bg-white ring-1 ring-primary-200">
+                        <span key={c.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 bg-surface ring-1 ring-primary-200">
                           <Input
                             autoFocus
                             value={categoryDraft}
@@ -453,7 +453,7 @@ export function NotesDashboard({
                             aria-label={`Rename category ${c.name}`}
                             className="h-7 w-32 border-0 px-2 py-0 text-xs shadow-none focus-visible:ring-0"
                           />
-                          <span className="flex items-center border-l border-neutral-200">
+                          <span className="flex items-center border-l border-line">
                             <button
                               type="button"
                               aria-label="Save rename"
@@ -467,7 +467,7 @@ export function NotesDashboard({
                               type="button"
                               aria-label="Cancel rename"
                               onClick={() => setEditingCategory(null)}
-                              className="p-1.5 text-neutral-400 hover:bg-neutral-100"
+                              className="p-1.5 text-neutral-400 hover:bg-wash"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -495,7 +495,7 @@ export function NotesDashboard({
                           title={`Rename ${c.name}`}
                           aria-label={`Rename category ${c.name}`}
                           onClick={() => { setEditingCategory(c.name); setCategoryDraft(c.name); }}
-                          className="border-l border-neutral-200 px-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                          className="border-l border-line px-1.5 text-neutral-400 hover:bg-wash hover:text-ink-2"
                         >
                           <Pencil className="h-3 w-3" />
                         </button>
@@ -530,7 +530,7 @@ export function NotesDashboard({
               </Button>
             </div>
             {templates.length > 0 && (
-              <div className="space-y-1.5 border-t border-neutral-100 pt-3">
+              <div className="space-y-1.5 border-t border-line pt-3">
                 <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">Starters</p>
                 <div className="flex flex-wrap gap-2">
                   {templates.map((t) => (
@@ -589,7 +589,7 @@ export function NotesDashboard({
                   <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-primary-50/50" : ""}`}>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-semibold font-heading text-neutral-900 flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold font-heading text-ink-1 flex items-center gap-2">
                           {n.is_pinned ? <Pin className="h-3 w-3 shrink-0 text-primary-600" /> : null}
                           <span className="truncate">{n.title}</span>
                         </p>
@@ -620,15 +620,15 @@ export function NotesDashboard({
         <TabsContent value="trash" className="space-y-4">
           {trash.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-sm text-neutral-500">Trash is empty</p>
+              <p className="text-sm text-ink-3">Trash is empty</p>
             </Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {trash.map((n) => (
-                <Card key={n.id} className="p-4 space-y-3 bg-neutral-50">
+                <Card key={n.id} className="p-4 space-y-3 bg-sunken">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold font-heading text-neutral-900">{n.title}</p>
+                      <p className="text-sm font-semibold font-heading text-ink-1">{n.title}</p>
                       <Badge variant="default" className="mt-1">
                         {n.category}
                       </Badge>

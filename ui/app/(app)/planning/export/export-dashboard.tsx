@@ -196,10 +196,10 @@ export function ExportDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold font-heading text-ink-1 flex items-center gap-2">
             <Package className="h-7 w-7" /> Data Export
           </h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">
+          <p className="text-sm text-ink-3 font-body mt-1">
             {modules.length} exportable modules • {jobs.length} recent jobs • create CSV/PDF jobs and archives
           </p>
         </div>
@@ -230,7 +230,7 @@ export function ExportDashboard({
               <StatCard label="Processing" value={String(status.processing ?? 0)} icon={<RefreshCw className="h-5 w-5" />} variant="amber" />
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">Status unavailable right now.</p>
+            <p className="text-sm text-ink-3">Status unavailable right now.</p>
           )}
         </CardContent>
       </Card>
@@ -246,7 +246,7 @@ export function ExportDashboard({
           </CardHeader>
           <CardContent className="space-y-4">
             {modules.length === 0 ? (
-              <p className="text-sm text-neutral-500">No modules returned from API. Backend may be pending.</p>
+              <p className="text-sm text-ink-3">No modules returned from API. Backend may be pending.</p>
             ) : (
               <div className="space-y-3 max-h-[360px] overflow-auto pr-1">
                 {modules.map((m) => (
@@ -258,8 +258,8 @@ export function ExportDashboard({
                       <p className="font-medium text-sm font-heading">{m.label ?? m.name}</p>
                       <Badge variant="outline" className="text-[10px]">{m.name}</Badge>
                     </div>
-                    {m.description && <p className="text-xs text-neutral-500 mt-1">{m.description}</p>}
-                    {(m.columns?.length ?? 0) > 0 && <p className="text-xs text-neutral-500 mt-1">Columns: {m.columns!.slice(0, 6).map((c) => c.label).join(", ")}{m.columns!.length > 6 ? ` +${m.columns!.length - 6} more` : ""}</p>}
+                    {m.description && <p className="text-xs text-ink-3 mt-1">{m.description}</p>}
+                    {(m.columns?.length ?? 0) > 0 && <p className="text-xs text-ink-3 mt-1">Columns: {m.columns!.slice(0, 6).map((c) => c.label).join(", ")}{m.columns!.length > 6 ? ` +${m.columns!.length - 6} more` : ""}</p>}
                     <Button
                       variant={selectedModule === m.name ? "default" : "outline"}
                       size="sm"
@@ -273,7 +273,7 @@ export function ExportDashboard({
               </div>
             )}
 
-            <div className="rounded-lg border border-neutral-100 bg-neutral-50/50 p-4 space-y-3">
+            <div className="rounded-lg border border-line bg-neutral-50/50 p-4 space-y-3">
               <p className="text-sm font-semibold font-heading">Create export job - POST /api/export/jobs</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
@@ -345,7 +345,7 @@ export function ExportDashboard({
             <CardDescription>ZIP with one CSV per module plus a manifest</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-neutral-600">One-click full data export. The archive downloads right away and is also tracked below.</p>
+            <p className="text-sm text-ink-2">One-click full data export. The archive downloads right away and is also tracked below.</p>
             <Button onClick={handleFullArchive} disabled={archiveLoading} className="w-full">
               <FileArchive className="h-4 w-4" /> {archiveLoading ? "Creating archive..." : "Create full archive"}
             </Button>
@@ -365,12 +365,12 @@ export function ExportDashboard({
           {jobs.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <Package className="h-6 w-6 mx-auto text-neutral-400 mb-2" />
-              <p className="text-sm font-medium text-neutral-700">No exports yet</p>
-              <p className="text-xs text-neutral-500 mt-1">Create a job above and it shows up here with its download link.</p>
+              <p className="text-sm font-medium text-ink-2">No exports yet</p>
+              <p className="text-xs text-ink-3 mt-1">Create a job above and it shows up here with its download link.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-500">{jobs.length} jobs • status reflects completed exports • actions: download / retry / delete</p>
+              <p className="text-xs text-ink-3">{jobs.length} jobs • status reflects completed exports • actions: download / retry / delete</p>
               <div className="space-y-3 max-h-[560px] overflow-auto pr-1">
                 {jobs.map((j) => {
                   const pct = formatProgress(j);
@@ -379,7 +379,7 @@ export function ExportDashboard({
                   const canDownload = ["completed", "done", "success", "ready"].includes(s);
                   const canRetry = ["failed", "error"].includes(s);
                   return (
-                    <div key={j.id} className="rounded-lg border border-neutral-100 p-4 flex flex-col gap-3">
+                    <div key={j.id} className="rounded-lg border border-line p-4 flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold font-heading flex items-center gap-2 flex-wrap">
@@ -388,7 +388,7 @@ export function ExportDashboard({
                             {j.export_type && <Badge variant="outline" className="text-[10px]">{String(j.export_type).toUpperCase()}</Badge>}
                             {j.scope && <Badge variant="outline" className="text-[10px]">{j.scope}</Badge>}
                           </p>
-                          <p className="text-xs text-neutral-500 mt-1">
+                          <p className="text-xs text-ink-3 mt-1">
                             {j.created_at ? new Date(j.created_at).toLocaleString("en-IN") : ""}{est != null ? ` • ~${Number(est).toLocaleString("en-IN")} bytes` : ""}
                             {j.error ? ` • ${j.error}` : ""}
                           </p>
@@ -412,7 +412,7 @@ export function ExportDashboard({
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-neutral-500">
+                        <div className="flex justify-between text-xs text-ink-3">
                           <span>Progress</span>
                           <span>{Math.round(pct)}%</span>
                         </div>

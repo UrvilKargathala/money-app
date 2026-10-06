@@ -348,8 +348,8 @@ export function TaxDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Tax Planning</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">Section 80C/80D tracking • FY {fy}</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Tax Planning</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">Section 80C/80D tracking • FY {fy}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Select value={selectedFy} onValueChange={handleFyChange}>
@@ -399,28 +399,28 @@ export function TaxDashboard({
           {/* Regime compare */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Regime Compare</h3>
+              <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Regime Compare</h3>
               {compare?.recommended_label && <Badge variant={compare.recommended === "new" ? "info" : "success"}>{compare.recommended_label} recommended</Badge>}
             </div>
             {!compare || !compare.has_salary || !compare.old_regime || !compare.new_regime ? (
-              <p className="text-sm text-neutral-500">Add a salary structure to compare Old vs New regime. All data from API.</p>
+              <p className="text-sm text-ink-3">Add a salary structure to compare Old vs New regime. All data from API.</p>
             ) : (
               <div className="space-y-3">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-lg border border-neutral-100 p-4">
-                    <p className="text-xs font-medium text-neutral-500">Old Regime</p>
-                    <p className="text-sm text-neutral-700 mt-1">Taxable {formatINR(compare.old_regime.taxable_income)} • Tax {formatINR(compare.old_regime.total_tax)}</p>
+                  <div className="rounded-lg border border-line p-4">
+                    <p className="text-xs font-medium text-ink-3">Old Regime</p>
+                    <p className="text-sm text-ink-2 mt-1">Taxable {formatINR(compare.old_regime.taxable_income)} • Tax {formatINR(compare.old_regime.total_tax)}</p>
                     <p className="text-xs text-neutral-400">Gross {formatINR(compare.old_regime.gross_income)} • Exemptions {formatINR(compare.old_regime.exemptions)}</p>
                   </div>
-                  <div className="rounded-lg border border-neutral-100 p-4 bg-primary-50/50">
+                  <div className="rounded-lg border border-line p-4 bg-primary-50/50">
                     <p className="text-xs font-medium text-primary-700">New Regime</p>
-                    <p className="text-sm text-neutral-700 mt-1">Taxable {formatINR(compare.new_regime.taxable_income)} • Tax {formatINR(compare.new_regime.total_tax)}</p>
+                    <p className="text-sm text-ink-2 mt-1">Taxable {formatINR(compare.new_regime.taxable_income)} • Tax {formatINR(compare.new_regime.total_tax)}</p>
                     <p className="text-xs text-neutral-400">Gross {formatINR(compare.new_regime.gross_income)} • Exemptions {formatINR(compare.new_regime.exemptions)}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center text-sm">
                   <Badge variant={compare.savings != null && compare.savings > 0 ? "success" : "default"}>Tax saved: {compare.savings != null ? formatINR(Math.abs(compare.savings)) : "-"}</Badge>
-                  <span className="text-xs text-neutral-500">Recommendation: {compare.recommended_label ?? compare.recommended ?? "-"}</span>
+                  <span className="text-xs text-ink-3">Recommendation: {compare.recommended_label ?? compare.recommended ?? "-"}</span>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" asChild><a href={`/api/tax/exports/utilization?financial_year=${fy}`} download><Download className="h-4 w-4" /> Export Utilization</a></Button>
@@ -432,16 +432,16 @@ export function TaxDashboard({
 
           {/* Suggestions */}
           <Card className="p-6">
-            <h3 className="font-semibold font-heading text-neutral-800 mb-4 flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Suggestions - unused limits</h3>
+            <h3 className="font-semibold font-heading text-ink-1 mb-4 flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Suggestions - unused limits</h3>
             {suggestions.length === 0 ? (
-              <p className="text-sm text-neutral-500">No suggestions - all limits utilized or no actionable sections for FY {fy}.</p>
+              <p className="text-sm text-ink-3">No suggestions - all limits utilized or no actionable sections for FY {fy}.</p>
             ) : (
               <div className="space-y-3">
                 {suggestions.map((s) => (
-                  <div key={s.section} className="flex justify-between items-start rounded-lg border border-neutral-100 p-3">
+                  <div key={s.section} className="flex justify-between items-start rounded-lg border border-line p-3">
                     <div>
-                      <p className="text-sm font-medium font-heading text-neutral-900">{s.section} - {s.name}</p>
-                      <p className="text-xs text-neutral-500">{s.reason}</p>
+                      <p className="text-sm font-medium font-heading text-ink-1">{s.section} - {s.name}</p>
+                      <p className="text-xs text-ink-3">{s.reason}</p>
                       <p className="text-xs text-neutral-400 mt-1">Invested {formatINR(s.invested)} / {formatINR(s.max_limit)} • Remaining {formatINR(s.remaining)}</p>
                     </div>
                     <div className="text-right">
@@ -456,7 +456,7 @@ export function TaxDashboard({
 
           {utilization.length > 0 && (
             <Card className="p-6">
-              <h3 className="font-semibold font-heading text-neutral-800 mb-4">Section Utilization</h3>
+              <h3 className="font-semibold font-heading text-ink-1 mb-4">Section Utilization</h3>
               <div className="space-y-4">
                 {utilization.map((u) => (
                   <div key={u.section_code} className="space-y-1">
@@ -464,7 +464,7 @@ export function TaxDashboard({
                       <span className="font-medium">
                         {u.section_code} - {u.section_name}
                       </span>
-                      <span className="text-neutral-500">
+                      <span className="text-ink-3">
                         {formatINR(u.invested)} / {formatINR(u.limit)} • {u.utilization_pct.toFixed(1)}%
                       </span>
                     </div>
@@ -491,8 +491,8 @@ export function TaxDashboard({
               {investments.map((inv) => (
                 <Card key={inv.id} className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold font-heading text-neutral-900">{inv.name}</p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-sm font-semibold font-heading text-ink-1">{inv.name}</p>
+                    <p className="text-xs text-ink-3">
                       {inv.section} • {formatINR(Number(inv.amount))} • {new Date(inv.investment_date).toLocaleDateString("en-IN")} • FY {inv.financial_year}
                     </p>
                     <Badge variant={inv.proof_status === "verified" ? "success" : inv.proof_status === "collected" ? "info" : "default"} className="mt-1">
@@ -524,8 +524,8 @@ export function TaxDashboard({
           <Card className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Salary Structure - FY {fy}</h3>
-                <p className="text-sm text-neutral-500 font-body mt-1">Employment type, gross and deductions feed the Old vs New computation.</p>
+                <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Salary Structure - FY {fy}</h3>
+                <p className="text-sm text-ink-3 font-body mt-1">Employment type, gross and deductions feed the Old vs New computation.</p>
               </div>
               <Button onClick={() => setSalaryOpen(true)}><Wallet className="h-4 w-4" /> {salary ? "Edit Salary" : "Add Salary"}</Button>
             </div>
@@ -537,23 +537,23 @@ export function TaxDashboard({
             ) : (
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2"><span className="text-sm text-neutral-500">Employment type</span><Badge variant="secondary">{salary.employment_type}</Badge></div>
+                  <div className="flex items-center gap-2"><span className="text-sm text-ink-3">Employment type</span><Badge variant="secondary">{salary.employment_type}</Badge></div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Basic (monthly)</p><p className="font-semibold">{formatINR(salary.basic_monthly)}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">HRA (monthly)</p><p className="font-semibold">{salary.hra_monthly != null ? formatINR(salary.hra_monthly) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Special allow. (monthly)</p><p className="font-semibold">{salary.special_allowances != null ? formatINR(salary.special_allowances) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">LTA (annual)</p><p className="font-semibold">{salary.lta_annual != null ? formatINR(salary.lta_annual) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Actual rent (monthly)</p><p className="font-semibold">{salary.actual_rent_monthly != null ? formatINR(salary.actual_rent_monthly) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Gross (derived)</p><p className="font-semibold">{salaryGross != null ? formatINR(salaryGross) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Basic (monthly)</p><p className="font-semibold">{formatINR(salary.basic_monthly)}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">HRA (monthly)</p><p className="font-semibold">{salary.hra_monthly != null ? formatINR(salary.hra_monthly) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Special allow. (monthly)</p><p className="font-semibold">{salary.special_allowances != null ? formatINR(salary.special_allowances) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">LTA (annual)</p><p className="font-semibold">{salary.lta_annual != null ? formatINR(salary.lta_annual) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Actual rent (monthly)</p><p className="font-semibold">{salary.actual_rent_monthly != null ? formatINR(salary.actual_rent_monthly) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Gross (derived)</p><p className="font-semibold">{salaryGross != null ? formatINR(salaryGross) : "-"}</p></div>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Other exemptions</p><p className="font-semibold">{salary.other_exemptions != null ? formatINR(salary.other_exemptions) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Employer PF (monthly)</p><p className="font-semibold">{salary.employer_pf != null ? formatINR(salary.employer_pf) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Additional income</p><p className="font-semibold">{salary.additional_income != null ? formatINR(salary.additional_income) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">TDS deducted</p><p className="font-semibold">{salary.tds_deducted != null ? formatINR(salary.tds_deducted) : "-"}</p></div>
-                    <div className="rounded-lg bg-neutral-50 p-3"><p className="text-xs text-neutral-500">Gross annual (non-salaried)</p><p className="font-semibold">{salary.gross_annual_income != null ? formatINR(salary.gross_annual_income) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Other exemptions</p><p className="font-semibold">{salary.other_exemptions != null ? formatINR(salary.other_exemptions) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Employer PF (monthly)</p><p className="font-semibold">{salary.employer_pf != null ? formatINR(salary.employer_pf) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Additional income</p><p className="font-semibold">{salary.additional_income != null ? formatINR(salary.additional_income) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">TDS deducted</p><p className="font-semibold">{salary.tds_deducted != null ? formatINR(salary.tds_deducted) : "-"}</p></div>
+                    <div className="rounded-lg bg-sunken p-3"><p className="text-xs text-ink-3">Gross annual (non-salaried)</p><p className="font-semibold">{salary.gross_annual_income != null ? formatINR(salary.gross_annual_income) : "-"}</p></div>
                     <div className="rounded-lg bg-primary-50 p-3"><p className="text-xs text-primary-700">Financial year</p><p className="font-semibold">{salary.financial_year}</p></div>
                   </div>
                   <p className="text-xs text-neutral-400">FY {salary.financial_year} • All amounts in INR, from API salary structure.</p>
@@ -564,7 +564,7 @@ export function TaxDashboard({
 
           {salary && compare?.has_salary && compare.old_regime && compare.new_regime && (
             <Card className="p-6">
-              <h3 className="font-semibold font-heading text-neutral-800 mb-3">Tax Impact of Salary</h3>
+              <h3 className="font-semibold font-heading text-ink-1 mb-3">Tax Impact of Salary</h3>
               <div className="grid gap-3 md:grid-cols-3">
                 <StatCard label="Old Regime Tax" value={formatINR(compare.old_regime.total_tax)} subtext={`Taxable ${formatINR(compare.old_regime.taxable_income)}`} variant="warning" />
                 <StatCard label="New Regime Tax" value={formatINR(compare.new_regime.total_tax)} subtext={`Taxable ${formatINR(compare.new_regime.taxable_income)}`} variant="teal" />
@@ -578,16 +578,16 @@ export function TaxDashboard({
           <Card className="p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2"><FileCheck className="h-5 w-5" /> ITR Checklist - FY {fy}</h3>
-                <p className="text-sm text-neutral-500">{completionTotal} documents • {completionPct.toFixed(1)}% complete • {pendingCount} pending, {collectedCount} collected, {submittedCount} submitted</p>
+                <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><FileCheck className="h-5 w-5" /> ITR Checklist - FY {fy}</h3>
+                <p className="text-sm text-ink-3">{completionTotal} documents • {completionPct.toFixed(1)}% complete • {pendingCount} pending, {collectedCount} collected, {submittedCount} submitted</p>
                 <div className="mt-3 max-w-sm">
                   <Progress value={Math.min(completionPct, 100)} indicatorClassName={completionPct >= 100 ? "bg-success" : completionPct >= 50 ? "bg-primary-600" : "bg-warning"} />
-                  <div className="flex justify-between text-xs text-neutral-500 mt-1"><span>{completionPct.toFixed(0)}% done</span><span>{completionTotal} total</span></div>
+                  <div className="flex justify-between text-xs text-ink-3 mt-1"><span>{completionPct.toFixed(0)}% done</span><span>{completionTotal} total</span></div>
                 </div>
                 {/* Completion pie (simple SVG) */}
                 <div className="mt-4 flex items-center gap-4">
                   <div className="h-20 w-20 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: `conic-gradient(#16a34a ${completionPct}%, #e5e7eb ${completionPct}% 100%)` }}>
-                    <span className="h-14 w-14 rounded-full bg-white flex items-center justify-center">{completionPct.toFixed(0)}%</span>
+                    <span className="h-14 w-14 rounded-full bg-surface flex items-center justify-center">{completionPct.toFixed(0)}%</span>
                   </div>
                   <div className="text-xs space-y-1">
                     <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-amber-400" /> Pending {pendingCount}</div>
@@ -621,11 +621,11 @@ export function TaxDashboard({
                 <EmptyState icon={<FileCheck className="h-6 w-6" />} title="No ITR documents" description={`No checklist items for FY ${fy}. Use Suggest to auto-create the standard document set for this FY.`} actionLabel="Suggest Documents" onAction={() => { const fd = new FormData(); fd.set("financial_year", fy); suggestItrDocs(null as never, fd as never).then(() => { toast.success("Suggested"); router.refresh(); }); }} />
               </div>
             ) : filteredItr.length === 0 ? (
-              <p className="text-sm text-neutral-500 mt-6">No documents match category {itrCategoryFilter}.</p>
+              <p className="text-sm text-ink-3 mt-6">No documents match category {itrCategoryFilter}.</p>
             ) : (
-              <div className="mt-6 overflow-auto rounded-lg border border-neutral-100">
+              <div className="mt-6 overflow-auto rounded-lg border border-line">
                 <table className="w-full text-sm">
-                  <thead className="bg-neutral-50 text-xs text-neutral-500">
+                  <thead className="bg-sunken text-xs text-ink-3">
                     <tr><th className="p-2 text-left">Category</th><th className="p-2 text-left">Document</th><th className="p-2 text-left">Status</th><th className="p-2 text-left">Notes</th><th className="p-2 text-right">Actions</th></tr>
                   </thead>
                   <tbody>
@@ -634,7 +634,7 @@ export function TaxDashboard({
                         <td className="p-2"><Badge variant="default">{d.category.replace(/_/g," ")}</Badge></td>
                         <td className="p-2 font-medium">{d.document_name}</td>
                         <td className="p-2"><Badge variant={d.status === "submitted" ? "success" : d.status === "collected" ? "info" : "warning"}>{d.status}</Badge></td>
-                        <td className="p-2 text-xs text-neutral-500 max-w-[20ch] truncate">{d.notes ?? "-"}</td>
+                        <td className="p-2 text-xs text-ink-3 max-w-[20ch] truncate">{d.notes ?? "-"}</td>
                         <td className="p-2 text-right">
                           <div className="flex gap-1 justify-end">
                             <Button variant="ghost" size="icon" onClick={() => { setItrEditing(d); setItrOpen(true); }}><Pencil className="h-4 w-4" /></Button>

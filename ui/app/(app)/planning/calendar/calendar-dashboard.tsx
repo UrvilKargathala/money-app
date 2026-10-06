@@ -271,13 +271,13 @@ export function CalendarDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Calendar</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Calendar</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">
             {totalEvents} events • Financial timeline • {monthLabel}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-neutral-200 bg-white">
+          <div className="flex items-center rounded-lg border border-line bg-surface">
             <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -301,7 +301,7 @@ export function CalendarDashboard({
 
       {/* Legend */}
       <Card className="p-4">
-        <p className="text-xs font-medium text-neutral-500 mb-2">Legend - color coded by type</p>
+        <p className="text-xs font-medium text-ink-3 mb-2">Legend - color coded by type</p>
         <div className="flex flex-wrap gap-2">
           {[
             { label: "Bill", cls: "bg-red-500" },
@@ -329,16 +329,16 @@ export function CalendarDashboard({
               <TabsTrigger value="grid">Month Grid</TabsTrigger>
               <TabsTrigger value="list">List</TabsTrigger>
             </TabsList>
-            <p className="text-xs text-neutral-500 hidden sm:block">Click a date to view details • All data from API</p>
+            <p className="text-xs text-ink-3 hidden sm:block">Click a date to view details • All data from API</p>
           </div>
 
           <TabsContent value="grid" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
               {/* Month grid */}
               <div>
-                <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-neutral-200 bg-neutral-200">
+                <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-line bg-neutral-200">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                    <div key={d} className="bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-500">
+                    <div key={d} className="bg-sunken py-2 text-center text-xs font-semibold text-ink-3">
                       {d}
                     </div>
                   ))}
@@ -357,17 +357,17 @@ export function CalendarDashboard({
                           <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white" : "text-neutral-700"}`}>
                             {cell.date.getDate()}
                           </span>
-                          {countFromApi > 0 && <span className="text-[10px] font-medium text-neutral-500">{countFromApi}</span>}
+                          {countFromApi > 0 && <span className="text-[10px] font-medium text-ink-3">{countFromApi}</span>}
                         </div>
                         <div className="mt-1 space-y-0.5">
                           {dayEvents.slice(0, 3).map((ev, idx) => (
                             <div key={`${ev.source}-${ev.label}-${idx}`} className="flex items-center gap-1 truncate">
                               <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${sourceDot(ev.source)}`} />
-                              <span className="text-[11px] truncate text-neutral-700">{ev.label}</span>
-                              {ev.amount != null && <span className="text-[10px] text-neutral-500 truncate ml-auto">{formatINR(ev.amount).replace("₹", "").trim().slice(0, 6)}</span>}
+                              <span className="text-[11px] truncate text-ink-2">{ev.label}</span>
+                              {ev.amount != null && <span className="text-[10px] text-ink-3 truncate ml-auto">{formatINR(ev.amount).replace("₹", "").trim().slice(0, 6)}</span>}
                             </div>
                           ))}
-                          {dayEvents.length > 3 && <p className="text-[10px] text-neutral-500">+{dayEvents.length - 3} more</p>}
+                          {dayEvents.length > 3 && <p className="text-[10px] text-ink-3">+{dayEvents.length - 3} more</p>}
                         </div>
                       </button>
                     );
@@ -383,17 +383,17 @@ export function CalendarDashboard({
               {/* Day detail panel */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold font-heading text-neutral-800">Day Detail</h3>
-                  {selectedDate && <span className="text-xs text-neutral-500">{new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>}
+                  <h3 className="font-semibold font-heading text-ink-1">Day Detail</h3>
+                  {selectedDate && <span className="text-xs text-ink-3">{new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>}
                 </div>
                 {!selectedDate ? (
-                  <Card className="p-6 bg-neutral-50 border-dashed">
-                    <p className="text-sm text-neutral-500 text-center">Click a date in the grid to view events with amounts.</p>
+                  <Card className="p-6 bg-sunken border-dashed">
+                    <p className="text-sm text-ink-3 text-center">Click a date in the grid to view events with amounts.</p>
                     <p className="text-xs text-neutral-400 text-center mt-1">{totalEvents} events in {monthLabel}</p>
                   </Card>
                 ) : selectedEvents.length === 0 ? (
                   <Card className="p-6">
-                    <p className="text-sm text-neutral-500">No events on {selectedDate}</p>
+                    <p className="text-sm text-ink-3">No events on {selectedDate}</p>
                     <p className="text-xs text-neutral-400 mt-1">Day totals: inflow {formatINR(0)} • outflow {formatINR(0)}</p>
                     <Button size="sm" variant="outline" className="mt-3" onClick={() => setFormOpen(true)}>
                       <Plus className="h-3 w-3" /> Add event on this date
@@ -401,17 +401,17 @@ export function CalendarDashboard({
                   </Card>
                 ) : (
                   <div className="space-y-3">
-                    <Card className="p-3 bg-neutral-50">
+                    <Card className="p-3 bg-sunken">
                       <div className="flex justify-between text-xs">
-                        <span className="text-neutral-500">Inflow</span>
+                        <span className="text-ink-3">Inflow</span>
                         <span className="font-semibold text-success">{formatINR(selectedTotals.inflow)}</span>
                       </div>
                       <div className="flex justify-between text-xs mt-1">
-                        <span className="text-neutral-500">Outflow</span>
+                        <span className="text-ink-3">Outflow</span>
                         <span className="font-semibold text-error">{formatINR(selectedTotals.outflow)}</span>
                       </div>
                       <div className="flex justify-between text-xs mt-1 border-t pt-1">
-                        <span className="text-neutral-500">Net</span>
+                        <span className="text-ink-3">Net</span>
                         <span className="font-bold">{formatINR(selectedTotals.inflow - selectedTotals.outflow)}</span>
                       </div>
                     </Card>
@@ -425,7 +425,7 @@ export function CalendarDashboard({
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(ev.kind)}`}>{ev.kind}</span>
                             </div>
-                            <p className="text-xs text-neutral-500 mt-1">
+                            <p className="text-xs text-ink-3 mt-1">
                               {ev.amount != null ? formatINR(ev.amount) : "No amount"} {ev.status ? `• ${ev.status}` : ""}
                             </p>
                           </div>
@@ -457,7 +457,7 @@ export function CalendarDashboard({
               <div className="space-y-6">
                 {sortedDates.map((d) => (
                   <div key={d}>
-                    <h3 className="text-sm font-semibold font-heading text-neutral-700 mb-2">
+                    <h3 className="text-sm font-semibold font-heading text-ink-2 mb-2">
                       {new Date(d).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                     </h3>
                     <div className="space-y-2">
@@ -470,7 +470,7 @@ export function CalendarDashboard({
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(ev.kind)}`}>{ev.kind}</span>
                             </div>
-                            <p className="text-xs text-neutral-500">
+                            <p className="text-xs text-ink-3">
                               {ev.amount != null ? formatINR(ev.amount) : "No amount"} {ev.status ? `• ${ev.status}` : ""}
                             </p>
                           </div>
@@ -504,7 +504,7 @@ export function CalendarDashboard({
         {/* Upcoming */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold font-heading text-neutral-800 flex items-center gap-2">
+            <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2">
               <Clock className="h-4 w-4" /> Upcoming
             </h3>
             <div className="flex gap-1">
@@ -518,19 +518,19 @@ export function CalendarDashboard({
           </div>
           {upcoming && upcomingDays.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-500">Window {upcoming.window_days} days • Net {formatINR(upcoming.net_cashflow)} • Showing {upcomingDays.length} days • All from API</p>
+              <p className="text-xs text-ink-3">Window {upcoming.window_days} days • Net {formatINR(upcoming.net_cashflow)} • Showing {upcomingDays.length} days • All from API</p>
               <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
                 {upcomingDays.map((u) => (
                   <div key={u.date} className="border-b last:border-0 pb-3 last:pb-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
-                      <span className="text-xs text-neutral-500">
+                      <span className="text-xs text-ink-3">
                         In {formatINR(u.inflow_total)} • Out {formatINR(u.outflow_total)}
                       </span>
                     </div>
                     <div className="space-y-1 mt-1">
                       {u.events.map((ev, i) => (
-                        <div key={i} className="flex justify-between text-xs text-neutral-600 gap-2">
+                        <div key={i} className="flex justify-between text-xs text-ink-2 gap-2">
                           <span className="flex items-center gap-1.5 truncate">
                             <span className={`h-1.5 w-1.5 rounded-full ${sourceDot(ev.source)}`} /> {ev.label}
                             <span className={`inline-flex px-1 py-0 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
@@ -550,7 +550,7 @@ export function CalendarDashboard({
                   <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} - {formatINR(u.total)}</p>
                   <div className="space-y-1 mt-1">
                     {u.events.map((ev, i) => (
-                      <div key={i} className="flex justify-between text-xs text-neutral-600">
+                      <div key={i} className="flex justify-between text-xs text-ink-2">
                         <span>
                           {ev.title} <Badge variant="default" className="ml-1 text-[10px]">{ev.type}</Badge>
                         </span>
@@ -562,13 +562,13 @@ export function CalendarDashboard({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">No upcoming events in next {upcomingWindow} days.</p>
+            <p className="text-sm text-ink-3">No upcoming events in next {upcomingWindow} days.</p>
           )}
         </Card>
 
         {/* Tax deadlines */}
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-neutral-800 mb-3 flex items-center gap-2">
+          <h3 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
             <Landmark className="h-4 w-4" /> Tax Deadlines {taxDeadlines ? `• ${taxDeadlines.year}` : ""}
           </h3>
           {taxList.length > 0 ? (
@@ -578,45 +578,45 @@ export function CalendarDashboard({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium font-heading">{t.label}</p>
-                      <p className="text-xs text-neutral-500">{t.description}</p>
+                      <p className="text-xs text-ink-3">{t.description}</p>
                     </div>
                     <Badge variant={t.past ? "default" : "secondary"} className="shrink-0 text-[10px]">
                       {t.past ? "past" : "upcoming"}
                     </Badge>
                   </div>
-                  <p className="text-xs font-medium mt-1 text-neutral-600">{new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  <p className="text-xs font-medium mt-1 text-ink-2">{new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </div>
               ))}
               <p className="text-xs text-neutral-400">{taxList.length} deadlines • Registry from API</p>
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">No tax deadlines found.</p>
+            <p className="text-sm text-ink-3">No tax deadlines found.</p>
           )}
         </Card>
 
         {/* Cashflow projection */}
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-neutral-800 mb-3 flex items-center gap-2">
+          <h3 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Cashflow Projection
           </h3>
           {cashflowProjections.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-500">{cashflowProjections.length} accounts • Daily balances • All from API</p>
+              <p className="text-xs text-ink-3">{cashflowProjections.length} accounts • Daily balances • All from API</p>
               <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
                 {cashflowProjections.map((p) => (
-                  <div key={p.account_id} className="rounded-lg border border-neutral-100 p-3 space-y-2">
+                  <div key={p.account_id} className="rounded-lg border border-line p-3 space-y-2">
                     <p className="text-sm font-medium font-heading">{p.account_name}</p>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div>
-                        <p className="text-neutral-500">Today</p>
+                        <p className="text-ink-3">Today</p>
                         <p className="font-semibold">{formatINR(p.balance_today)}</p>
                       </div>
                       <div>
-                        <p className="text-neutral-500">+7 days</p>
+                        <p className="text-ink-3">+7 days</p>
                         <p className={`font-semibold ${p.balance_plus7 < 0 ? "text-error" : ""}`}>{formatINR(p.balance_plus7)}</p>
                       </div>
                       <div>
-                        <p className="text-neutral-500">+30 days</p>
+                        <p className="text-ink-3">+30 days</p>
                         <p className={`font-semibold ${p.balance_plus30 < 0 ? "text-error" : ""}`}>{formatINR(p.balance_plus30)}</p>
                       </div>
                     </div>
@@ -633,7 +633,7 @@ export function CalendarDashboard({
               </div>
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">No cashflow projection available. Add accounts with balances.</p>
+            <p className="text-sm text-ink-3">No cashflow projection available. Add accounts with balances.</p>
           )}
         </Card>
       </div>
