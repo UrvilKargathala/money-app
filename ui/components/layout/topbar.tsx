@@ -94,7 +94,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                             onClick={() => setMobileOpen(false)}
                             className={cn(
                               "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                              active ? "bg-primary-50 text-primary-600 font-semibold" : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                              active ? "bg-primary-50 text-primary-600 font-semibold dark:bg-[#1E3A5F] dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
                             )}
                           >
                             <Icon className="h-4 w-4 shrink-0" />

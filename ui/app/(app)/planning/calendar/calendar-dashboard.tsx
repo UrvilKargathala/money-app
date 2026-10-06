@@ -102,7 +102,7 @@ function sourceBadgeVariant(source: string): string {
     case "recurring":
       return "bg-teal-100 text-teal-700 border border-teal-200";
     default:
-      return "bg-neutral-100 text-neutral-600 border border-neutral-200";
+      return "bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
   }
 }
 
@@ -351,10 +351,10 @@ export function CalendarDashboard({
                       <button
                         key={cell.iso}
                         onClick={() => setSelectedDate(cell.iso)}
-                        className={`min-h-[88px] p-1.5 text-left bg-white hover:bg-neutral-50 transition-colors flex flex-col ${!cell.inMonth ? "bg-neutral-50/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-primary-50/60" : ""}`}
+                        className={`min-h-[88px] p-1.5 text-left bg-surface hover:bg-sunken transition-colors flex flex-col ${!cell.inMonth ? "bg-sunken/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-primary-50/60 dark:bg-[#1E3A5F]/60" : ""}`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white" : "text-neutral-700"}`}>
+                          <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#F8FAFC] dark:text-[#0F172A]" : "text-ink-2"}`}>
                             {cell.date.getDate()}
                           </span>
                           {countFromApi > 0 && <span className="text-[10px] font-medium text-ink-3">{countFromApi}</span>}
@@ -574,7 +574,7 @@ export function CalendarDashboard({
           {taxList.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-auto pr-1">
               {taxList.map((t) => (
-                <div key={t.date} className={`rounded-lg border p-3 ${t.past ? "bg-neutral-50 border-neutral-100 opacity-70" : "bg-purple-50/50 border-purple-100"}`}>
+                <div key={t.date} className={`rounded-lg border p-3 ${t.past ? "bg-sunken border-line opacity-70" : "bg-purple-50/50 border-purple-100"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium font-heading">{t.label}</p>
