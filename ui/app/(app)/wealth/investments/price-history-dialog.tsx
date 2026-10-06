@@ -73,9 +73,9 @@ export function PriceHistoryDialog({
               </ResponsiveContainer>
             </div>
 
-            <div className="max-h-[200px] overflow-auto rounded-lg border border-neutral-100">
+            <div className="max-h-[200px] overflow-auto rounded-lg border border-line">
               <table className="w-full text-sm">
-                <thead className="bg-neutral-50 text-xs text-neutral-500 sticky top-0">
+                <thead className="bg-sunken text-xs text-ink-3 sticky top-0">
                   <tr>
                     <th className="text-left px-3 py-2 font-medium">Date</th>
                     <th className="text-right px-3 py-2 font-medium">Price</th>
@@ -83,7 +83,7 @@ export function PriceHistoryDialog({
                 </thead>
                 <tbody>
                   {points.map((p) => (
-                    <tr key={`${p.date}-${p.price}`} className="border-t border-neutral-100">
+                    <tr key={`${p.date}-${p.price}`} className="border-t border-line">
                       <td className="px-3 py-2">{formatDate(p.date)}</td>
                       <td className="px-3 py-2 text-right font-medium">{formatINR(p.price)}</td>
                     </tr>

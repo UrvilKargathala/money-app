@@ -42,7 +42,7 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
     <Card className="p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 space-y-1.5">
-          <p className="truncate text-sm font-semibold font-heading text-neutral-900">{investment.name}</p>
+          <p className="truncate text-sm font-semibold font-heading text-ink-1">{investment.name}</p>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="default">{investment.type}</Badge>
             <Badge variant="default">{investment.category}</Badge>
@@ -71,9 +71,9 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-center">
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-          <p className="text-xs text-neutral-500">Invested</p>
-          <p className="text-base font-bold font-heading text-neutral-900">{formatINR(invested)}</p>
+        <div className="rounded-lg border border-line bg-sunken p-3">
+          <p className="text-xs text-ink-3">Invested</p>
+          <p className="text-base font-bold font-heading text-ink-1">{formatINR(invested)}</p>
         </div>
         <div className="rounded-lg border border-primary-200 bg-primary-50 p-3">
           <p className="text-xs text-primary-700">Current</p>

@@ -94,11 +94,11 @@ function DtiCard({ dti }: { dti: Dti }) {
       <Card className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-[13px] font-medium font-heading text-neutral-500">Debt-to-Income (DTI)</p>
+            <p className="text-[13px] font-medium font-heading text-ink-3">Debt-to-Income (DTI)</p>
             <p className="text-[28px] font-bold font-heading leading-none" style={{ color: dti?.dti != null ? levelColor : "#111827" }}>
               {dti?.dti != null ? `${dti.dti.toFixed(2)}%` : "-"}
             </p>
-            <p className="text-xs text-neutral-500 font-body">
+            <p className="text-xs text-ink-3 font-body">
               {dti?.income_missing ? "Set monthly income to calculate DTI" : dti?.level ? `Level: ${dti.level}` : "No active EMI"}
             </p>
             <p className="text-xs text-neutral-400">EMI {formatINR(dti?.total_monthly_emi ?? 0)} {dti?.monthly_income != null ? `• Income ${formatINR(dti.monthly_income)}` : ""}</p>
@@ -160,12 +160,12 @@ function AlertBody({ alert }: { alert: { type: string; details: unknown } }) {
     return (
       <div className="mt-1.5 space-y-1.5">
         {details.debts.map((d, j) => (
-          <p key={j} className="text-xs text-neutral-600">
-            <span className="font-medium text-neutral-800">{d.name ?? "Debt"}</span>
+          <p key={j} className="text-xs text-ink-2">
+            <span className="font-medium text-ink-1">{d.name ?? "Debt"}</span>
             {" — missed "}
             {(d.missed_months ?? []).map(shortMonth).join(", ") || "—"}
             {(d.partial_months?.length ?? 0) > 0 && (
-              <span className="text-neutral-500"> (partial: {(d.partial_months ?? []).map(shortMonth).join(", ")})</span>
+              <span className="text-ink-3"> (partial: {(d.partial_months ?? []).map(shortMonth).join(", ")})</span>
             )}
           </p>
         ))}
@@ -174,7 +174,7 @@ function AlertBody({ alert }: { alert: { type: string; details: unknown } }) {
   }
   if (alert.type === "high_dti" && typeof details.dti === "number") {
     return (
-      <p className="text-xs text-neutral-600 mt-1.5">
+      <p className="text-xs text-ink-2 mt-1.5">
         Debt-to-income is {details.dti}%{details.level ? ` (${details.level})` : ""} — consider slowing new borrowing.
       </p>
     );
@@ -185,8 +185,8 @@ function AlertBody({ alert }: { alert: { type: string; details: unknown } }) {
     return (
       <div className="mt-1.5 space-y-1">
         {stale.map((d, j) => (
-          <p key={j} className="text-xs text-neutral-600">
-            <span className="font-medium text-neutral-800">{d.name ?? "Debt"}</span>
+          <p key={j} className="text-xs text-ink-2">
+            <span className="font-medium text-ink-1">{d.name ?? "Debt"}</span>
             {typeof d.days_since === "number" ? ` — no EMI in ${d.days_since} days` : ""}
           </p>
         ))}
@@ -211,13 +211,13 @@ function HealthAlertsCard({ data }: { data: HealthAlerts }) {
         <CardDescription>{alerts.length} alerts • {data.summary?.critical ?? 0} critical, {data.summary?.warning ?? 0} warning, {data.summary?.info ?? 0} info</CardDescription>
       </CardHeader>
       {alerts.length === 0 ? (
-        <p className="text-sm text-neutral-500">No health alerts - you are on track.</p>
+        <p className="text-sm text-ink-3">No health alerts - you are on track.</p>
       ) : (
         <div className="space-y-3">
           {alerts.map((a, i) => (
-            <div key={i} className="flex items-start justify-between gap-3 rounded-lg border border-neutral-100 p-3">
+            <div key={i} className="flex items-start justify-between gap-3 rounded-lg border border-line p-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium font-heading text-neutral-800">{titles[a.type] ?? a.type.replace(/_/g, " ")}</p>
+                <p className="text-sm font-medium font-heading text-ink-1">{titles[a.type] ?? a.type.replace(/_/g, " ")}</p>
                 <AlertBody alert={a} />
               </div>
               <Badge variant={a.severity === "critical" ? "error" : a.severity === "warning" ? "warning" : "info"}>{a.severity}</Badge>
@@ -290,18 +290,18 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
         </div>
         {cost && (
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg bg-neutral-50 p-2"><p className="text-neutral-500">Principal paid</p><p className="font-semibold">{formatINR(cost.principal_paid)}</p></div>
+            <div className="rounded-lg bg-sunken p-2"><p className="text-ink-3">Principal paid</p><p className="font-semibold">{formatINR(cost.principal_paid)}</p></div>
             <div className="rounded-lg bg-primary-50 p-2"><p className="text-primary-700">Interest paid</p><p className="font-semibold">{formatINR(cost.interest_paid)}</p></div>
             <div className="rounded-lg bg-amber-50 p-2"><p className="text-amber-700">Remaining interest</p><p className="font-semibold">{formatINR(cost.remaining_interest)}</p></div>
           </div>
         )}
         {loadError ? <PanelError message="Could not load the amortization schedule." onRetry={loadSchedule} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
+            <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
               <tr><th className="p-2 text-left">Period</th><th className="p-2 text-right">EMI</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2 text-right">Cumulative</th><th className="p-2 text-left">Date</th></tr>
             </thead>
             <tbody>
-              {loading ? <TableLoadingRows columns={7} /> : rows.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-neutral-500">No schedule (credit card or fully paid)</td></tr> : rows.map((r) => (
+              {loading ? <TableLoadingRows columns={7} /> : rows.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-ink-3">No schedule (credit card or fully paid)</td></tr> : rows.map((r) => (
                 <tr key={r.period} className="border-t text-xs">
                   <td className="p-2">{r.period}</td>
                   <td className="p-2 text-right">{formatINR(r.emi_amount)}</td>
@@ -383,15 +383,15 @@ function PrepaymentSimulatorDialog({ debt, open, onOpenChange }: { debt: Debt | 
           <Button onClick={simulate} disabled={loading} className="w-full"><Calculator className="h-4 w-4" /> {loading ? "Simulating..." : "Simulate"}</Button>
 
           {result && (
-            <Card className="p-4 space-y-2 bg-neutral-50">
+            <Card className="p-4 space-y-2 bg-sunken">
               <p className="text-sm font-semibold">Result ({strategy.replace("_"," ")})</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><p className="text-xs text-neutral-500">New EMI</p><p className="font-medium">{formatINR(result.new_emi)}</p></div>
-                <div><p className="text-xs text-neutral-500">New tenure</p><p className="font-medium">{result.new_tenure_months} months</p></div>
-                <div><p className="text-xs text-neutral-500">Months saved</p><p className="font-medium">{result.months_saved}</p></div>
-                <div><p className="text-xs text-neutral-500">Interest saved</p><p className="font-medium text-success">{formatINR(result.interest_saved)}</p></div>
-                <div><p className="text-xs text-neutral-500">Original interest</p><p className="font-medium">{formatINR(result.original_interest)}</p></div>
-                <div><p className="text-xs text-neutral-500">New interest</p><p className="font-medium">{formatINR(result.new_interest)}</p></div>
+                <div><p className="text-xs text-ink-3">New EMI</p><p className="font-medium">{formatINR(result.new_emi)}</p></div>
+                <div><p className="text-xs text-ink-3">New tenure</p><p className="font-medium">{result.new_tenure_months} months</p></div>
+                <div><p className="text-xs text-ink-3">Months saved</p><p className="font-medium">{result.months_saved}</p></div>
+                <div><p className="text-xs text-ink-3">Interest saved</p><p className="font-medium text-success">{formatINR(result.interest_saved)}</p></div>
+                <div><p className="text-xs text-ink-3">Original interest</p><p className="font-medium">{formatINR(result.original_interest)}</p></div>
+                <div><p className="text-xs text-ink-3">New interest</p><p className="font-medium">{formatINR(result.new_interest)}</p></div>
               </div>
               <p className="text-xs text-neutral-400">Current debt-free {result.current_debt_free_date ?? "-"} → New {result.new_debt_free_date ?? "-"}</p>
               <Button onClick={apply} variant="default" className="w-full mt-2">Apply prepayment</Button>
@@ -480,9 +480,9 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
           <TabsContent value="history" className="space-y-3">
             {loadError ? <PanelError message="Could not load debt payments." onRetry={() => void load()} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Type</th><th className="p-2 text-right">Amount</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2">Actions</th></tr></thead>
+                <thead className="sticky top-0 bg-sunken text-xs text-ink-3"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Type</th><th className="p-2 text-right">Amount</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2">Actions</th></tr></thead>
                 <tbody>
-                  {loading ? <TableLoadingRows columns={7} /> : payments.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-neutral-500">No payments yet</td></tr> : payments.map((p) => (
+                  {loading ? <TableLoadingRows columns={7} /> : payments.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-ink-3">No payments yet</td></tr> : payments.map((p) => (
                     <tr key={p.id} className="border-t text-xs">
                       <td className="p-2">{p.date}</td>
                       <td className="p-2"><Badge variant={p.type === "prepayment" ? "warning" : "secondary"}>{p.type}</Badge></td>
@@ -559,14 +559,14 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
           <div className="space-y-2 max-h-[60vh] overflow-auto">
             <div className="grid grid-cols-4 gap-2 text-xs">
               {entries.map((m) => (
-                <div key={m.month} className="rounded-lg border border-neutral-100 p-2 text-center">
+                <div key={m.month} className="rounded-lg border border-line p-2 text-center">
                   <p className="font-medium">{m.month}</p>
                   <Badge variant={colorFor(m.status) as never} className="mt-1">{m.status}</Badge>
                   <p className="text-[11px] text-neutral-400 mt-1">{m.amount != null ? formatINR(m.amount) : "-"} {m.scheduled_emi != null ? `/ ${formatINR(m.scheduled_emi)}` : ""}</p>
                 </div>
               ))}
             </div>
-            {entries.length === 0 && <p className="text-sm text-neutral-500">No schedule available.</p>}
+            {entries.length === 0 && <p className="text-sm text-ink-3">No schedule available.</p>}
           </div>
         )}
       </DialogContent>
@@ -609,10 +609,10 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
         <CardTitle className="flex items-center gap-2 text-base"><ArrowUpDown className="h-5 w-5" /> Strategies: Avalanche vs Snowball
           <span className="group relative inline-flex">
             <Info className="h-4 w-4 text-neutral-400 cursor-help" aria-label="About payoff strategies" />
-            <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-lg border border-neutral-200 bg-white p-3 text-xs font-normal normal-case text-neutral-600 shadow-lg group-hover:block group-focus-within:block">
-              <strong className="text-neutral-900">Avalanche</strong> pays the highest-interest debt first — least total interest paid.
+            <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-lg border border-line bg-surface p-3 text-xs font-normal normal-case text-ink-2 shadow-lg group-hover:block group-focus-within:block">
+              <strong className="text-ink-1">Avalanche</strong> pays the highest-interest debt first — least total interest paid.
               <br />
-              <strong className="text-neutral-900">Snowball</strong> clears the smallest balance first — fastest first win, keeps momentum.
+              <strong className="text-ink-1">Snowball</strong> clears the smallest balance first — fastest first win, keeps momentum.
               <br />
               <span className="text-neutral-400">Educational comparison only, not financial advice.</span>
             </span>
@@ -631,20 +631,20 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
       {data && (
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-neutral-500">Baseline</p>
+            <p className="text-xs text-ink-3">Baseline</p>
             <p className="text-sm font-semibold">{data.baseline.months_to_debt_free} months</p>
-            <p className="text-xs text-neutral-500">Interest {formatINR(data.baseline.total_interest)}</p>
+            <p className="text-xs text-ink-3">Interest {formatINR(data.baseline.total_interest)}</p>
           </div>
           <div className="rounded-lg border border-green-200 bg-green-50 p-3">
             <p className="text-xs text-green-700">Avalanche (high rate first)</p>
             <p className="text-sm font-semibold">{data.avalanche.months_to_debt_free} months • Saved {formatINR(data.avalanche.interest_saved)}</p>
-            <p className="text-xs text-neutral-500">Interest {formatINR(data.avalanche.total_interest)}</p>
+            <p className="text-xs text-ink-3">Interest {formatINR(data.avalanche.total_interest)}</p>
             <p className="text-xs text-neutral-400 break-all">Order: {data.avalanche.payoff_order.join(" → ") || "-"}</p>
           </div>
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
             <p className="text-xs text-blue-700">Snowball (small balance first)</p>
             <p className="text-sm font-semibold">{data.snowball.months_to_debt_free} months • Saved {formatINR(data.snowball.interest_saved)}</p>
-            <p className="text-xs text-neutral-500">Interest {formatINR(data.snowball.total_interest)}</p>
+            <p className="text-xs text-ink-3">Interest {formatINR(data.snowball.total_interest)}</p>
             <p className="text-xs text-neutral-400 break-all">Order: {data.snowball.payoff_order.join(" → ") || "-"}</p>
           </div>
         </div>
@@ -718,8 +718,8 @@ export function DebtsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Debts</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">{debts.length} debts • Total EMI {formatINR(totalEmi)} {debtFreeDate ? `• Debt-free ${debtFreeDate}` : ""}</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Debts</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">{debts.length} debts • Total EMI {formatINR(totalEmi)} {debtFreeDate ? `• Debt-free ${debtFreeDate}` : ""}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -754,18 +754,18 @@ export function DebtsDashboard({
           </CardHeader>
           <div className="space-y-2">
             {combinedTimeline.timeline.map((t) => (
-              <div key={t.debt_id} className="flex justify-between items-center rounded-lg bg-neutral-50 p-3">
+              <div key={t.debt_id} className="flex justify-between items-center rounded-lg bg-sunken p-3">
                 <div>
                   <p className="text-sm font-medium">{t.name} • {t.type.replace(/_/g, " ")}</p>
-                  <p className="text-xs text-neutral-500">{t.months_remaining != null ? `${t.months_remaining} months remaining` : "no EMI"} {t.payoff_date ? `• Payoff ${t.payoff_date}` : ""}</p>
+                  <p className="text-xs text-ink-3">{t.months_remaining != null ? `${t.months_remaining} months remaining` : "no EMI"} {t.payoff_date ? `• Payoff ${t.payoff_date}` : ""}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold">{formatINR(t.outstanding)}</p>
-                  <p className="text-xs text-neutral-500">{t.emi_amount != null ? formatINR(t.emi_amount) : "-"} @ {t.interest_rate}%</p>
+                  <p className="text-xs text-ink-3">{t.emi_amount != null ? formatINR(t.emi_amount) : "-"} @ {t.interest_rate}%</p>
                 </div>
               </div>
             ))}
-            {combinedTimeline.timeline.length === 0 && <p className="text-sm text-neutral-500">No active debts.</p>}
+            {combinedTimeline.timeline.length === 0 && <p className="text-sm text-ink-3">No active debts.</p>}
           </div>
         </Card>
       )}

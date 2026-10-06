@@ -89,7 +89,7 @@ function MilestonesDisplay({ milestones, progressPct }: { milestones: Milestone[
           return (
             <div key={pct} className={`rounded-lg border p-3 text-center ${isReached ? "border-success/30 bg-success-light/50" : "border-neutral-100 bg-neutral-50"}`}>
               <p className={`text-lg font-bold font-heading ${isReached ? "text-success-dark" : "text-neutral-400"}`}>{pct}%</p>
-              <p className="text-xs text-neutral-500">{isReached ? m?.reached_date ?? "-" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
+              <p className="text-xs text-ink-3">{isReached ? m?.reached_date ?? "-" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
               {isReached && <Badge variant="success" className="mt-1 text-[10px]">reached</Badge>}
             </div>
           );
@@ -127,12 +127,12 @@ function SnapshotsTimeline({ snapshots, onCreate }: { snapshots: Snapshot[]; onC
       {snapshots.length === 0 ? (
         <EmptyState icon={<Camera className="h-6 w-6" />} title="No snapshots yet" description="Contributions automatically create snapshots." />
       ) : (
-        <div className="relative border-l border-neutral-200 ml-4 space-y-4">
+        <div className="relative border-l border-line ml-4 space-y-4">
           {snapshots.map((s) => (
             <div key={s.date} className="relative pl-6">
               <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-primary-600" />
               <p className="text-sm font-medium font-heading">{s.date}</p>
-              <p className="text-sm text-neutral-600">{formatINR(s.current_amount)}</p>
+              <p className="text-sm text-ink-2">{formatINR(s.current_amount)}</p>
             </div>
           ))}
         </div>
@@ -154,7 +154,7 @@ function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasi
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium font-heading">Feasibility</p>
-              <p className="text-xs text-neutral-500">Required {formatINR(feasibility.required_monthly)}/mo • Avg {formatINR(feasibility.avg_monthly)}/mo</p>
+              <p className="text-xs text-ink-3">Required {formatINR(feasibility.required_monthly)}/mo • Avg {formatINR(feasibility.avg_monthly)}/mo</p>
             </div>
             <Badge variant={feasibilityColor(feasibility.status) as never}>{feasibilityLabel(feasibility.status)}</Badge>
           </div>
@@ -165,10 +165,10 @@ function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasi
         <Card className="p-4">
           <p className="text-sm font-medium font-heading">Projection</p>
           <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
-            <div><p className="text-xs text-neutral-500">Target</p><p className="font-semibold">{formatINR(projection.target_amount)}</p></div>
-            <div><p className="text-xs text-neutral-500">Saved</p><p className="font-semibold">{formatINR(projection.current_amount)}</p></div>
-            <div><p className="text-xs text-neutral-500">Avg monthly</p><p className="font-semibold">{formatINR(projection.avg_monthly)}</p></div>
-            <div><p className="text-xs text-neutral-500">Months to finish</p><p className="font-semibold">{projection.months_to_finish ?? "-"}</p></div>
+            <div><p className="text-xs text-ink-3">Target</p><p className="font-semibold">{formatINR(projection.target_amount)}</p></div>
+            <div><p className="text-xs text-ink-3">Saved</p><p className="font-semibold">{formatINR(projection.current_amount)}</p></div>
+            <div><p className="text-xs text-ink-3">Avg monthly</p><p className="font-semibold">{formatINR(projection.avg_monthly)}</p></div>
+            <div><p className="text-xs text-ink-3">Months to finish</p><p className="font-semibold">{projection.months_to_finish ?? "-"}</p></div>
           </div>
           <p className="text-xs text-neutral-400 mt-2">Projected completion {projection.projected_date ?? "-"}</p>
         </Card>
@@ -316,16 +316,16 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
           </TabsList>
           <TabsContent value="history" className="space-y-3">
             <div className="flex justify-between items-center">
-              <p className="text-xs text-neutral-500">{contributions.length} records</p>
+              <p className="text-xs text-ink-3">{contributions.length} records</p>
               <Button variant="outline" size="sm" asChild><a href={`/api/goals/${goal.id}/contributions/export`} download><Download className="h-3 w-3" /> Export CSV</a></Button>
             </div>
             {loadError ? <PanelError message="Could not load goal contributions." onRetry={load} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-neutral-50 text-xs text-neutral-500">
+                <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
                   <tr><th className="p-2 text-left">Date</th><th className="p-2 text-right">Amount</th><th className="p-2 text-left">Notes</th><th className="p-2 text-center">Actions</th></tr>
                 </thead>
                 <tbody>
-                  {loading ? <TableLoadingRows columns={4} /> : contributions.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-neutral-500">No contributions yet</td></tr> : contributions.map((c) => (
+                  {loading ? <TableLoadingRows columns={4} /> : contributions.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-ink-3">No contributions yet</td></tr> : contributions.map((c) => (
                     <tr key={c.id} className="border-t text-xs">
                       <td className="p-2">{c.date}</td>
                       <td className="p-2 text-right font-medium">{formatINR(c.amount)}</td>
@@ -586,19 +586,19 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
           </div>
         </CardHeader>
         {templates.length === 0 ? (
-          <p className="text-sm text-neutral-500">No templates. Create one or use system templates.</p>
+          <p className="text-sm text-ink-3">No templates. Create one or use system templates.</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((t) => (
-              <div key={t.id} className="rounded-lg border border-neutral-100 p-4 space-y-2 bg-white">
+              <div key={t.id} className="rounded-lg border border-line p-4 space-y-2 bg-surface">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold font-heading">{t.icon ? `${t.icon} ` : ""}{t.name}</p>
-                    <p className="text-xs text-neutral-500">{t.description ?? "-"}</p>
+                    <p className="text-xs text-ink-3">{t.description ?? "-"}</p>
                   </div>
                   <Badge variant={t.is_system ? "info" : "secondary"}>{t.is_system ? "system" : "custom"}</Badge>
                 </div>
-                <p className="text-xs text-neutral-600">
+                <p className="text-xs text-ink-2">
                   {t.default_target_amount != null ? formatINR(t.default_target_amount) : "No amount"} • {t.default_timeframe_months != null ? `${t.default_timeframe_months} months` : "no timeframe"}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -705,10 +705,10 @@ function DistributeCard({ goals }: { goals: Goal[] }) {
       {suggestions.length > 0 && (
         <div className="mt-4 space-y-2">
           {suggestions.map((s) => (
-            <div key={s.goal_id} className="flex justify-between items-center rounded-lg bg-neutral-50 p-3">
+            <div key={s.goal_id} className="flex justify-between items-center rounded-lg bg-sunken p-3">
               <div>
                 <p className="text-sm font-medium">{s.name}</p>
-                <p className="text-xs text-neutral-500">Remaining {formatINR(s.remaining)}</p>
+                <p className="text-xs text-ink-3">Remaining {formatINR(s.remaining)}</p>
               </div>
               <p className="text-sm font-bold">{formatINR(s.amount)}</p>
             </div>
@@ -716,7 +716,7 @@ function DistributeCard({ goals }: { goals: Goal[] }) {
           <p className="text-xs text-neutral-400">Total {formatINR(suggestions.reduce((a,b)=>a+b.amount,0))} across {suggestions.length} goals</p>
         </div>
       )}
-      {goals.filter((g)=>g.status==='active').length===0 && <p className="text-sm text-neutral-500 mt-2">No active goals to distribute to.</p>}
+      {goals.filter((g)=>g.status==='active').length===0 && <p className="text-sm text-ink-3 mt-2">No active goals to distribute to.</p>}
     </Card>
   );
 }
@@ -787,8 +787,8 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-900">Goals</h1>
-          <p className="text-sm text-neutral-500 font-body mt-1">{dashboard ? `${dashboard.goal_count} goals • ${dashboard.completion_pct.toFixed(1)}% overall` : "Track your savings goals"}</p>
+          <h1 className="text-3xl font-bold font-heading text-ink-1">Goals</h1>
+          <p className="text-sm text-ink-3 font-body mt-1">{dashboard ? `${dashboard.goal_count} goals • ${dashboard.completion_pct.toFixed(1)}% overall` : "Track your savings goals"}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild><a href="/api/goals/export" download><Download className="h-4 w-4" /> Export CSV</a></Button>

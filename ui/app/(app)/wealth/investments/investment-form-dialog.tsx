@@ -133,7 +133,7 @@ export function InvestmentFormDialog({
                 <Label htmlFor="inv-price-edit">Current price *</Label>
                 <Input id="inv-price-edit" name="current_price" type="number" step="0.01" defaultValue={investment?.current_price ?? ""} required />
               </div>
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-ink-3">
                 {investment?.name} • {investment?.units} units @ {investment?.buy_price}
               </p>
             </>

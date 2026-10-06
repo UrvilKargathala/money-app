@@ -42,8 +42,8 @@ export function DebtCard({
     <Card className="p-5 space-y-3">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-semibold font-heading text-neutral-900">{debt.name}</p>
-          <p className="text-xs text-neutral-500">
+          <p className="text-sm font-semibold font-heading text-ink-1">{debt.name}</p>
+          <p className="text-xs text-ink-3">
             {debt.type.replace(/_/g, " ")} • {rate}% • {debt.tenure_months}m
           </p>
           <p className="text-xs text-neutral-400">Start {new Date(debt.start_date).toLocaleDateString("en-IN")}</p>
@@ -74,9 +74,9 @@ export function DebtCard({
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-center">
-        <div className="rounded-lg bg-neutral-50 p-3">
-          <p className="text-xs text-neutral-500">Outstanding</p>
-          <p className="text-sm font-bold font-heading text-neutral-900">{formatINR(outstanding)}</p>
+        <div className="rounded-lg bg-sunken p-3">
+          <p className="text-xs text-ink-3">Outstanding</p>
+          <p className="text-sm font-bold font-heading text-ink-1">{formatINR(outstanding)}</p>
         </div>
         <div className="rounded-lg bg-primary-50 p-3">
           <p className="text-xs text-primary-700">EMI</p>
