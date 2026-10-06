@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart, Eye, EyeOff, Check, LayoutGrid } from "lucide-react";
+import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart, Eye, EyeOff, Check, LayoutGrid, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
@@ -94,6 +94,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
   const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
   const [emailDelivery, setEmailDelivery] = useState<{ configured: boolean; sender_configured: boolean } | null>(null);
   const [widgetLayout, setWidgetLayout] = useState<string[]>(WIDGETS.map((widget) => widget.id));
+  const [dragWidgetId, setDragWidgetId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/notification-preferences")
@@ -481,7 +482,51 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           {widgetLayout.map((id, index) => {
             const widget = WIDGETS.find((item) => item.id === id);
             if (!widget) return null;
-            return <div key={id} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"><span>{widget.label}</span><div className="flex gap-1"><Button size="sm" variant="ghost" disabled={index === 0} onClick={() => setWidgetLayout((current) => { const next = [...current]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; return next; })} aria-label={`Move ${widget.label} up`}>↑</Button><Button size="sm" variant="ghost" disabled={index === widgetLayout.length - 1} onClick={() => setWidgetLayout((current) => { const next = [...current]; [next[index], next[index + 1]] = [next[index + 1], next[index]]; return next; })} aria-label={`Move ${widget.label} down`}>↓</Button></div></div>;
+            const moveWidget = (from: number, to: number) => {
+              if (to < 0 || to >= widgetLayout.length) return;
+              setWidgetLayout((current) => { const next = [...current]; [next[from], next[to]] = [next[to], next[from]]; return next; });
+            };
+            return (
+              <div
+                key={id}
+                draggable
+                onDragStart={(e) => { e.dataTransfer.setData("text/plain", id); e.dataTransfer.effectAllowed = "move"; }}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragWidgetId(id); }}
+                onDragLeave={() => setDragWidgetId((cur) => (cur === id ? null : cur))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const fromId = e.dataTransfer.getData("text/plain");
+                  setDragWidgetId(null);
+                  if (!fromId || fromId === id) return;
+                  const from = widgetLayout.indexOf(fromId);
+                  const to = widgetLayout.indexOf(id);
+                  if (from < 0 || to < 0) return;
+                  setWidgetLayout((current) => {
+                    const next = current.filter((w) => w !== fromId);
+                    const at = next.indexOf(id);
+                    // Dropping onto a row inserts after it when dragging down,
+                    // before it when dragging up.
+                    next.splice(at < 0 ? next.length : at + (from < to ? 1 : 0), 0, fromId);
+                    return next;
+                  });
+                }}
+                onDragEnd={() => setDragWidgetId(null)}
+                className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50" : "border-neutral-200"}`}
+              >
+                <span title="Drag to reorder" aria-hidden className="cursor-grab text-neutral-400 active:cursor-grabbing">
+                  <GripVertical className="h-4 w-4" />
+                </span>
+                <span className="flex-1 font-medium">{widget.label}</span>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-neutral-500 hover:text-neutral-800 disabled:opacity-30" disabled={index === 0} onClick={() => moveWidget(index, index - 1)} aria-label={`Move ${widget.label} up`}>
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-neutral-500 hover:text-neutral-800 disabled:opacity-30" disabled={index === widgetLayout.length - 1} onClick={() => moveWidget(index, index + 1)} aria-label={`Move ${widget.label} down`}>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
           })}
           <Button size="sm" onClick={() => saveAppearance()}>Save widget order</Button>
         </CardContent>
