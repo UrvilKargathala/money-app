@@ -17,6 +17,7 @@
 !/README.md
 !/.gitignore
 !/.vercelignore
+!/.github/
 
 # --- inside api/ ---
 api/node_modules/
