@@ -155,14 +155,18 @@ export async function getSpendingHeatmap(
   month: number,
   q: Queryable = DB
 ): Promise<HeatmapDay[]> {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return [];
+  // Sargable month range (EXTRACT() kills the date index).
+  const mm = String(month).padStart(2, "0");
+  const from = `${year}-${mm}-01`;
+  const to = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
   const result = await q.query<{ date: Date; total: string }>(
     `SELECT date, SUM(amount)::text AS total
      FROM transactions
      WHERE user_id = $1 AND type = 'expense'
-       AND EXTRACT(YEAR FROM date) = $2::int
-       AND EXTRACT(MONTH FROM date) = $3::int
+       AND date >= $2::date AND date < $3::date
      GROUP BY date ORDER BY date`,
-    [userId, year, month]
+    [userId, from, to]
   );
   return result.rows.map((row) => ({
     date: isoDate(row.date),
@@ -228,40 +232,38 @@ export async function getReportsSummary(
   net_worth: number;
   debt_outstanding: number;
 }> {
-  const [cashflow, categories, merchants] = [
-    await getCashflow(userId, range, q),
-    await getSpendingByCategory(userId, range, q),
-    await getTopMerchants(userId, range, { limit: 1 }, q),
-  ];
+  const [cashflow, categories, merchants, overruns, nw, debt] = await Promise.all([
+    getCashflow(userId, range, q),
+    getSpendingByCategory(userId, range, q),
+    getTopMerchants(userId, range, { limit: 1 }, q),
+    q.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count
+       FROM budgets b
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(t.amount), 0) AS spent
+         FROM transactions t
+         WHERE t.user_id = $1 AND t.type = 'expense'
+           AND t.category_id = b.category_id
+           AND t.date >= make_date(b.year, b.month, 1)
+           AND t.date < make_date(b.year, b.month, 1) + INTERVAL '1 month'
+       ) s ON true
+       WHERE b.user_id = $1 AND b.deleted_at IS NULL
+         AND s.spent > b.amount`,
+      [userId]
+    ),
+    q.query<{ net: string }>(
+      `SELECT COALESCE(SUM(current_value), 0)::text AS net
+       FROM investments WHERE user_id = $1 AND is_active = 1`,
+      [userId]
+    ),
+    q.query<{ outstanding: string }>(
+      `SELECT COALESCE(SUM(principal_outstanding), 0)::text AS outstanding
+       FROM debts WHERE user_id = $1 AND is_active = 1`,
+      [userId]
+    ),
+  ]);
   const income = cashflow.reduce((s, m) => s + m.income, 0);
   const expense = cashflow.reduce((s, m) => s + m.expense, 0);
-
-  const overruns = await q.query<{ count: string }>(
-    `SELECT COUNT(*)::text AS count
-     FROM budgets b
-     LEFT JOIN LATERAL (
-       SELECT COALESCE(SUM(t.amount), 0) AS spent
-       FROM transactions t
-       WHERE t.user_id = $1 AND t.type = 'expense'
-         AND t.category_id = b.category_id
-         AND EXTRACT(YEAR FROM t.date) = b.year
-         AND EXTRACT(MONTH FROM t.date) = b.month
-     ) s ON true
-     WHERE b.user_id = $1 AND b.deleted_at IS NULL
-       AND s.spent > b.amount`,
-    [userId]
-  );
-
-  const nw = await q.query<{ net: string }>(
-    `SELECT COALESCE(SUM(current_value), 0)::text AS net
-     FROM investments WHERE user_id = $1 AND is_active = 1`,
-    [userId]
-  );
-  const debt = await q.query<{ outstanding: string }>(
-    `SELECT COALESCE(SUM(principal_outstanding), 0)::text AS outstanding
-     FROM debts WHERE user_id = $1 AND is_active = 1`,
-    [userId]
-  );
 
   return {
     total_income: round2(income),
