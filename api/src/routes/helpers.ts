@@ -35,3 +35,13 @@ export function isUniqueViolation(err: unknown) {
     (err as { code?: string }).code === "23505"
   );
 }
+
+/** Escape text for safe interpolation into HTML (stored-XSS guard). */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}

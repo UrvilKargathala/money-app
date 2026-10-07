@@ -2,7 +2,7 @@
 import { withUserSingle } from "../db";
 import { requireAuth } from "../middleware";
 import { notificationsRateLimit } from "../rate-limit";
-import { readJson, isUniqueViolation } from "./helpers";
+import { readJson, isUniqueViolation, escapeHtml } from "./helpers";
 import {
   bulkAction,
   dismissNotification,
@@ -105,10 +105,13 @@ notifications.post("/email/preview", requireAuth, async (c) => {
     return c.json({ fieldErrors: { type: "Invalid notification type." } }, 400);
   }
 
+  // Escape stored values before HTML interpolation (stored-XSS safe).
+  const safeTitle = escapeHtml(title);
+  const safeMessage = escapeHtml(message);
   return c.json({
     preview: {
       subject: `[MoneyMind] ${title}`,
-      body_html: `<div style="font-family:sans-serif;padding:16px"><h2>${title}</h2><p>${message}</p><p style="color:#999;font-size:12px">Sent by MoneyMind (${type})</p></div>`,
+      body_html: `<div style="font-family:sans-serif;padding:16px"><h2>${safeTitle}</h2><p>${safeMessage}</p><p style="color:#999;font-size:12px">Sent by MoneyMind (${type})</p></div>`,
       body_text: `${title}\n\n${message}\n\n- MoneyMind (${type})`,
     },
   });
