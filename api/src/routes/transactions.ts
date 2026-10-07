@@ -208,10 +208,7 @@ transactions.post("/quick-add", requireAuth, async (c) => {
       }
     }
     console.error("[api] quick-add failed:", err);
-    return c.json(
-      { error: "Could not save the transaction. Please try again." },
-      500
-    );
+    return serverError(c, "transactions_quick_add_failed", "Could not save the transaction. Please try again.");
   }
 });
 
@@ -299,10 +296,7 @@ transactions.post("/bulk", requireAuth, async (c) => {
     return c.json({ success: true, affected, skipped, skipped_transfers: skippedTransfers });
   } catch (err) {
     console.error("[api] bulk edit failed:", err);
-    return c.json(
-      { error: "Could not apply the bulk edit. Please try again." },
-      500
-    );
+    return serverError(c, "transactions_bulk_failed", "Could not apply the bulk edit. Please try again.");
   }
 });
 
@@ -504,10 +498,7 @@ transactions.post("/", requireAuth, async (c) => {
       return c.json({ error: "The account is no longer active." }, 409);
     }
     console.error("[api] create transaction failed:", err);
-    return c.json(
-      { error: "Could not save the transaction. Please try again." },
-      500
-    );
+    return serverError(c, "transactions_create_failed", "Could not save the transaction. Please try again.");
   }
 
   return c.json({ success: true });
@@ -612,10 +603,7 @@ transactions.patch("/:id", requireAuth, async (c) => {
       return c.json({ error: "The account is no longer active." }, 409);
     }
     console.error("[api] update transaction failed:", err);
-    return c.json(
-      { error: "Could not update the transaction. Please try again." },
-      500
-    );
+    return serverError(c, "transactions_update_failed", "Could not update the transaction. Please try again.");
   }
 
   return c.json({ success: true });

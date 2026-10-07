@@ -200,10 +200,7 @@ export function registerAuthExtras(auth: import("hono").Hono): void {
         );
       } catch (err) {
         console.error("[api] change-password failed:", err);
-        return c.json(
-          { error: "Could not change the password. Please try again." },
-          500
-        );
+        return serverError(c, "auth_change_password_failed", "Could not change the password. Please try again.");
       }
       return c.json({ success: true });
     }

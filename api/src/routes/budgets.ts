@@ -3,7 +3,7 @@ import type { Context } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson, isUniqueViolation } from "./helpers";
+import { readJson, isUniqueViolation, serverError } from "./helpers";
 import { categoryReferenceExists } from "../queries/references";
 import {
   getBudgetHistory,
@@ -145,10 +145,7 @@ budgets.post("/", requireAuth, async (c) => {
       );
     }
     console.error("[api] create budget failed:", err);
-    return c.json(
-      { error: "Could not create the budget. Please try again." },
-      500
-    );
+    return serverError(c, "budgets_create_failed", "Could not create the budget. Please try again.");
   }
 
   return c.json({ success: true });
@@ -251,10 +248,7 @@ budgets.patch("/:id", requireAuth, async (c) => {
     }
   } catch (err) {
     console.error("[api] update budget failed:", err);
-    return c.json(
-      { error: "Could not update the budget. Please try again." },
-      500
-    );
+    return serverError(c, "budgets_update_failed", "Could not update the budget. Please try again.");
   }
 
   return c.json({ success: true });
