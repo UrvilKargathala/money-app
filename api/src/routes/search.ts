@@ -10,36 +10,44 @@ search.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const term = (c.req.query("q") ?? "").trim();
   if (term.length < 2) return c.json({ results: [] });
+  // Escape LIKE wildcards so q=% can't dump rows; each branch capped so one
+  // huge table can't starve the others before the final LIMIT.
+  const escaped = term.replace(/[\\%_]/g, (m) => `\\${m}`);
 
   const result = await query<SearchRow>(
     `WITH matches AS (
-       SELECT id::text, COALESCE(NULLIF(merchant_clean, ''), NULLIF(description, ''), 'Transaction') AS title,
+       (SELECT id::text, COALESCE(NULLIF(merchant_clean, ''), NULLIF(description, ''), 'Transaction') AS title,
               CONCAT(type, ' · ₹', amount::text, ' · ', date::text) AS subtitle,
               'transaction'::text AS kind, '/transactions'::text AS href, 1 AS priority
        FROM transactions
        WHERE user_id = $1
-         AND (description ILIKE '%' || $2 || '%' OR merchant_clean ILIKE '%' || $2 || '%')
+         AND (description ILIKE '%' || $2 || '%' ESCAPE '\\' OR merchant_clean ILIKE '%' || $2 || '%' ESCAPE '\\')
+       ORDER BY date DESC LIMIT 20)
        UNION ALL
-       SELECT id::text, title, category, 'note', '/notes', 2
+       (SELECT id::text, title, category, 'note', '/notes', 2
        FROM secure_notes
-       WHERE user_id = $1 AND deleted_at IS NULL AND title ILIKE '%' || $2 || '%'
+       WHERE user_id = $1 AND deleted_at IS NULL AND title ILIKE '%' || $2 || '%' ESCAPE '\\'
+       ORDER BY created_at DESC LIMIT 20)
        UNION ALL
-       SELECT id::text, name, COALESCE(institution, type), 'account', '/accounts', 3
+       (SELECT id::text, name, COALESCE(institution, type), 'account', '/accounts', 3
        FROM accounts
        WHERE user_id = $1 AND deleted_at IS NULL
-         AND (name ILIKE '%' || $2 || '%' OR institution ILIKE '%' || $2 || '%')
+         AND (name ILIKE '%' || $2 || '%' ESCAPE '\\' OR institution ILIKE '%' || $2 || '%' ESCAPE '\\')
+       LIMIT 20)
        UNION ALL
-       SELECT id::text, name, CONCAT('Bill · ₹', COALESCE(amount, estimated_amount, 0)::text), 'bill', '/bills', 4
+       (SELECT id::text, name, CONCAT('Bill · ₹', COALESCE(amount, estimated_amount, 0)::text), 'bill', '/bills', 4
        FROM bills
-       WHERE user_id = $1 AND is_active = 1 AND name ILIKE '%' || $2 || '%'
+       WHERE user_id = $1 AND is_active = 1 AND name ILIKE '%' || $2 || '%' ESCAPE '\\'
+       LIMIT 20)
        UNION ALL
-       SELECT id::text, service_name, CONCAT('Subscription · ₹', amount::text), 'subscription', '/subscriptions', 5
+       (SELECT id::text, service_name, CONCAT('Subscription · ₹', amount::text), 'subscription', '/subscriptions', 5
        FROM subscriptions
-       WHERE user_id = $1 AND status <> 'cancelled' AND service_name ILIKE '%' || $2 || '%'
+       WHERE user_id = $1 AND status <> 'cancelled' AND service_name ILIKE '%' || $2 || '%' ESCAPE '\\'
+       LIMIT 20)
      )
      SELECT id, title, subtitle, kind, href FROM matches
      ORDER BY priority, title LIMIT 20`,
-    [user.user_id, term],
+    [user.user_id, escaped],
   );
   return c.json({ results: result.rows });
 });
