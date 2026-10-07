@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useTheme } from "@/components/theme-provider";
 
 /**
  * Chart chrome theming (axes, grid, tooltip, legend). Data series colors
@@ -37,21 +37,14 @@ const DARK: ChartTheme = {
   cursor: "#262626",
 };
 
-function isDark(): boolean {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("dark");
-}
-
-/** SSR-safe: renders light first, swaps on mount + class changes. */
+/**
+ * Reads the single theme source (ThemeProvider). Previously each chart
+ * mounted its own MutationObserver on <html>; now one matchMedia listener
+ * in the provider serves all charts. Same return contract - SSR renders
+ * light first, provider corrects on hydration.
+ */
 export function useDarkMode(): boolean {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    setDark(isDark());
-    const observer = new MutationObserver(() => setDark(isDark()));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
-  return dark;
+  return useTheme().dark;
 }
 
 export function chartTheme(dark: boolean): ChartTheme {

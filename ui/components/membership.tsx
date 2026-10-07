@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +35,8 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
   }, []);
   const premium = true; // Plans are informational until billing is enabled.
   const premiumPage = ["/wealth/investments", "/wealth/debts", "/planning/tax", "/planning/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  return <MembershipContext.Provider value={{ premium, loading, plan }}>
+  const value = useMemo(() => ({ premium, loading, plan }), [premium, loading, plan]);
+  return <MembershipContext.Provider value={value}>
     {children}
   </MembershipContext.Provider>;
 }
