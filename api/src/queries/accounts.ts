@@ -75,23 +75,7 @@ const BALANCE_EXPR = `
     ELSE 0 END), 0)::numeric(12,2)
 `;
 
-async function ensureAccountTypesSeeded(): Promise<void> {
-  // Idempotent seed - fixes prod DBs where db_setup was run without mock_data
-  await query(`
-    INSERT INTO account_types (type_code, display_name, icon, is_asset, sort_order) VALUES
-      ('bank_savings', 'Savings Account', 'wallet', 1, 1),
-      ('bank_current', 'Current Account', 'briefcase', 1, 2),
-      ('credit_card', 'Credit Card', 'card', 0, 3),
-      ('wallet', 'E-Wallet', 'phone', 1, 4),
-      ('cash', 'Cash', 'note', 1, 5),
-      ('fd', 'Fixed Deposit', 'lock', 1, 6),
-      ('ppf', 'PPF Account', 'shield', 1, 7)
-    ON CONFLICT (type_code) DO NOTHING
-  `);
-}
-
 export async function getAccountTypes(): Promise<AccountType[]> {
-  await ensureAccountTypesSeeded();
   const result = await query<AccountType>(
     `SELECT type_code, display_name, icon, is_asset, sort_order
      FROM account_types ORDER BY sort_order`
@@ -103,7 +87,6 @@ export async function getAccountsWithBalances(
   userId: number,
   includeInactive = false
 ): Promise<AccountWithBalance[]> {
-  await ensureAccountTypesSeeded();
   const result = await query<AccountRow>(
     `SELECT a.id, a.name, a.type, a.institution, a.opening_balance, a.credit_limit,
             a.currency, a.color, a.notes, a.is_active, a.sort_order, a.version,
@@ -130,7 +113,6 @@ export async function getAccountById(
   userId: number,
   accountId: string
 ): Promise<AccountWithBalance | null> {
-  await ensureAccountTypesSeeded();
   const result = await query<AccountRow>(
     `SELECT a.id, a.name, a.type, a.institution, a.opening_balance, a.credit_limit,
             a.currency, a.color, a.notes, a.is_active, a.sort_order, a.version,
@@ -320,7 +302,6 @@ export async function getAccountSummaryTotals(
   net_worth: number;
   account_count: number;
 }> {
-  await ensureAccountTypesSeeded();
   const result = await q.query<{ kind: string; total: string }>(
     `WITH per_account AS (
        SELECT a.id, a.opening_balance, COALESCE(at.is_asset, 1) AS is_asset,
