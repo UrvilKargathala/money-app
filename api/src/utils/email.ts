@@ -3,6 +3,7 @@
  * When RESEND_API_KEY is absent, emails print to terminal so the
  * developer can copy verification/reset/magic links during development.
  */
+import { logDebug, logInfo } from "./log";
 
 export type EmailPayload = {
   to: string;
@@ -39,10 +40,9 @@ function deliverViaConsole(payload: EmailPayload): void {
       "[email] RESEND_API_KEY not set - emails are printed to terminal (dev mode)."
     );
   }
-  console.log(
-    `[email] To: ${payload.to} | Subject: ${payload.subject}\n` +
-      `  Text: ${payload.text}\n`
-  );
+  // Dev-only sink: never runs in prod (sendEmail throws above without a key).
+  logInfo({ msg: "email_dev_sink", to: payload.to, subject: payload.subject });
+  logDebug({ msg: "email_dev_body", text: payload.text });
 }
 
 /** Sends an email via Resend or prints it locally depending on configuration. */

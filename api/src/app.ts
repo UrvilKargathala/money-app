@@ -1,4 +1,5 @@
 ﻿import { Hono } from "hono";
+import { logError, logInfo, logWarn } from "./utils/log";
 import { auth } from "./routes/auth";
 import { health } from "./routes/health";
 import { accounts, accountTypes } from "./routes/accounts";
@@ -56,10 +57,12 @@ app.use("/api/*", async (c, next) => {
   await next();
   const ms = Date.now() - started;
   const level = c.res.status >= 500 ? "error" : c.res.status >= 400 ? "warn" : "info";
-  const event = JSON.stringify({ level, msg: "api_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms });
-  if (level === "error") console.error(event); else console.log(event);
+  const event = { msg: "api_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms };
+  if (level === "error") logError(event);
+  else if (level === "warn") logWarn(event);
+  else logInfo(event);
   if (ms > SLOW_REQUEST_MS && c.res.status < 500) {
-    console.warn(JSON.stringify({ level: "warn", msg: "slow_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms }));
+    logWarn({ msg: "slow_request", requestId, route: c.req.path, method: c.req.method, status: c.res.status, ms });
   }
 });
 

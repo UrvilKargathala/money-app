@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { logInfo } from "../utils/log";
 import { insertNotifications, pruneNotifications } from "../queries/notifications";
 import {
   buildAccountAlerts,
@@ -96,9 +97,7 @@ jobs.get("/run", async (c) => {
   const processed = Object.entries(counts)
     .filter(([name]) => name !== "pruned")
     .reduce((sum, [, n]) => sum + n, 0);
-  console.log(
-    JSON.stringify({ level: "info", msg: "jobs_run", job, counts, processed, errors })
-  );
+  logInfo({ msg: "jobs_run", job, counts, processed, errors });
   const failed = Object.keys(errors).length > 0;
   return c.json({ ok: !failed, processed, jobs: counts, ...(failed ? { errors } : {}) }, failed ? 207 : 200);
 });
