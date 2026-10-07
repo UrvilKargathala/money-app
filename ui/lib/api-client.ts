@@ -1399,7 +1399,7 @@ export async function getNetWorthData(): Promise<{
   return apiJson("/api/net-worth");
 }
 
-export async function getNetWorthTrend(range?: string): Promise<{ trend: { date: string; value: number }[] } | null> {
+export async function getNetWorthTrend(range?: string): Promise<{ trend: { date: string; assets_total: number; liabilities_total: number; net_worth: number }[] } | null> {
   const qs = range ? `?range=${range}` : "";
   return apiJson(`/api/net-worth/trend${qs}`);
 }

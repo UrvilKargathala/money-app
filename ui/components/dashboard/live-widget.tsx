@@ -2,24 +2,47 @@
 import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
 type WidgetData = { label: string; value: number }[];
-export function LiveWidget({ id }: { id: string }) {
+
+/** Raw API payload for one widget, captured server-side with its month. */
+export type WidgetSeed = { payload: unknown; month: number; year: number };
+
+function toRows(id: string, d: any): WidgetData {
+  return id === "networth-sparkline" ? d.trend.map((p: { date: string; net_worth: number }) => ({ label: p.date, value: Number(p.net_worth) }))
+    : id === "bills-due" ? d.events.filter((p: { days_until: number }) => p.days_until <= 7).map((p: { name: string; amount: number }) => ({ label: p.name, value: Number(p.amount) }))
+    : id === "budget-util" ? [{ label: "Budgeted", value: Number(d.overview?.total_budgeted ?? 0) }, { label: "Spent", value: Number(d.overview?.total_spent ?? 0) }]
+    : id === "cashflow-mini" ? d.cashflow.map((p: { month: string; net: number }) => ({ label: p.month, value: Number(p.net) }))
+    : d.merchants.slice(0, 5).map((p: { merchant: string; total: number }) => ({ label: p.merchant, value: Number(p.total) }));
+}
+
+export function LiveWidget({ id, seed }: { id: string; seed?: WidgetSeed | null }) {
   const [data, setData] = useState<WidgetData | null>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
+    // Seeded payload wins - except budget-util whose month must still be
+    // current (server rendered in June, tab viewed in July -> refetch).
+    if (seed && seed.payload != null) {
+      const now = new Date();
+      const fresh = id !== "budget-util" || (seed.month === now.getMonth() + 1 && seed.year === now.getFullYear());
+      if (fresh) {
+        try {
+          setData(toRows(id, seed.payload));
+          setError(false);
+          return;
+        } catch {
+          // Malformed seed falls through to client fetch below.
+        }
+      }
+    }
     const controller = new AbortController();
     const urls: Record<string, string> = { "networth-sparkline": "/api/net-worth/trend", "bills-due": "/api/bills/calendar", "budget-util": `/api/budgets/overview?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`, "cashflow-mini": "/api/reports/cashflow", "top-merchants": "/api/reports/top-merchants" };
     fetch(urls[id], { signal: controller.signal }).then(async (r) => {
       if (!r.ok) throw new Error();
       const d = await r.json();
-      const rows: WidgetData = id === "networth-sparkline" ? d.trend.map((p: { date: string; net_worth: number }) => ({ label: p.date, value: Number(p.net_worth) }))
-        : id === "bills-due" ? d.events.filter((p: { days_until: number }) => p.days_until <= 7).map((p: { name: string; amount: number }) => ({ label: p.name, value: Number(p.amount) }))
-        : id === "budget-util" ? [{ label: "Budgeted", value: Number(d.overview?.total_budgeted ?? 0) }, { label: "Spent", value: Number(d.overview?.total_spent ?? 0) }]
-        : id === "cashflow-mini" ? d.cashflow.map((p: { month: string; net: number }) => ({ label: p.month, value: Number(p.net) }))
-        : d.merchants.slice(0, 5).map((p: { merchant: string; total: number }) => ({ label: p.merchant, value: Number(p.total) }));
+      const rows: WidgetData = toRows(id, d);
       setData(rows); setError(false);
     }).catch((e) => { if (e.name !== "AbortError") setError(true); });
     return () => controller.abort();
-  }, [id]);
+  }, [id, seed]);
   if (error) return <p role="alert" className="text-sm text-ink-3">Could not load this widget.</p>;
   if (!data) return <p role="status" className="text-sm">Loading…</p>;
   if (!data.length) return <p className="text-sm text-ink-3">{id === "bills-due" ? "No bills due in the next seven days." : "No data yet."}</p>;

@@ -5,14 +5,18 @@ import { AlertTriangle, ArrowUpRight, CalendarClock, FileUp, PiggyBank, Plus, Re
 import Link from "next/link";
 import {
   getAccountsData,
+  getBillsCalendar,
   getBillsOverview,
   getBudgetOverview,
+  getNetWorthTrend,
   getReportsCashflow,
   getReportsSpendingByCategory,
+  getReportsTopMerchants,
   getTransactionsData,
   getTransactionSummary,
   getSettings,
 } from "@/lib/api-client";
+import type { WidgetSeed } from "@/components/dashboard/live-widget";
 import { formatINR } from "@/lib/format";
 import { CashflowTrendCardLazy as CashflowTrendCard, SpendingBreakdownCardLazy as SpendingBreakdownCard } from "./dashboard-charts-lazy";
 import { WidgetsGrid } from "@/components/dashboard/widgets-grid";
@@ -24,7 +28,7 @@ export default async function DashboardPage() {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
-  const [accountsData, txnSummary, recentTxns, budgetOverview, billsOverview, cashflowData, spendingData, settingsData] = await Promise.all([
+  const [accountsData, txnSummary, recentTxns, budgetOverview, billsOverview, cashflowData, spendingData, settingsData, trendData, calendarData, merchantsData] = await Promise.all([
     getAccountsData(),
     getTransactionSummary(),
     getTransactionsData(new URLSearchParams({ page: "1", pageSize: "5" })),
@@ -33,7 +37,19 @@ export default async function DashboardPage() {
     getReportsCashflow().catch(() => null),
     getReportsSpendingByCategory().catch(() => null),
     getSettings().catch(() => null),
+    getNetWorthTrend().catch(() => null),
+    getBillsCalendar().catch(() => null),
+    getReportsTopMerchants().catch(() => null),
   ]);
+
+  // Server seeds for LiveWidgets: same payloads the client would fetch.
+  const widgetSeeds: Record<string, WidgetSeed | null> = {
+    "networth-sparkline": trendData ? { payload: trendData, month, year } : null,
+    "bills-due": calendarData ? { payload: calendarData, month, year } : null,
+    "budget-util": budgetOverview ? { payload: budgetOverview, month, year } : null,
+    "cashflow-mini": cashflowData ? { payload: cashflowData, month, year } : null,
+    "top-merchants": merchantsData ? { payload: merchantsData, month, year } : null,
+  };
 
   const accounts = accountsData?.accounts ?? [];
   const totalAssets = accounts.filter((a) => a.is_asset === 1).reduce((sum, a) => sum + a.balance, 0);
@@ -144,7 +160,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <WidgetsGrid layout={(settingsData as { widget_layout?: unknown[] } | null)?.widget_layout} />
+        <WidgetsGrid layout={(settingsData as { widget_layout?: unknown[] } | null)?.widget_layout} seeds={widgetSeeds} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)]">
         <Card>
