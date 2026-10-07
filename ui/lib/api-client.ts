@@ -115,6 +115,19 @@ export async function getApiUser(): Promise<{
   }
 }
 
+// Server-only plan read for the app shell (seeds MembershipProvider so the
+// client skips its /api/users/me/plan fetch on first load).
+export async function getMyPlan(): Promise<{
+  plan_type: "free" | "premium";
+  billing_cycle: "monthly" | "annual" | "lifetime" | null;
+} | null> {
+  const data = await apiJson<{ plan?: {
+    plan_type: "free" | "premium";
+    billing_cycle: "monthly" | "annual" | "lifetime" | null;
+  } | null }>("/api/users/me/plan");
+  return data?.plan ?? null;
+}
+
 // Server-only profile read for the app shell (avatar source of truth).
 export async function getMyProfile(): Promise<{
   profile: { full_name: string | null; email: string; bio?: string | null; avatar_url?: string | null };

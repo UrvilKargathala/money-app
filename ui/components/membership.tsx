@@ -14,15 +14,17 @@ export function UpgradeCard({ feature = "Premium features" }: { feature?: string
   return <Card className="border-indigo-200 bg-indigo-50/40"><CardHeader className="pb-4"><CardTitle>{feature}</CardTitle></CardHeader><CardContent className="space-y-4"><p>Available with Growth, Wealth, or Legacy. Every paid plan includes the same features.</p><Button asChild className="bg-indigo-600 hover:bg-indigo-700"><Link href="/pricing">Compare plans</Link></Button></CardContent></Card>;
 }
 
-export function MembershipProvider({ children }: { children: React.ReactNode }) {
+export function MembershipProvider({ children, initialPlan }: { children: React.ReactNode; initialPlan?: Plan | null }) {
   const pathname = usePathname();
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<Plan | null>(initialPlan ?? null);
+  const [loading, setLoading] = useState(initialPlan ? false : true);
   const [error, setError] = useState(false);
   // Once per session: plan tier never changes mid-click, so refetching on
   // every navigation only multiplied /users/me/plan traffic. Billing flows
   // remount the provider tree on success, which re-runs this fetch.
+  // Skipped entirely when the server shell already seeded the plan.
   useEffect(() => {
+    if (initialPlan) return;
     const controller = new AbortController();
     setLoading(true);
     fetch("/api/users/me/plan", { signal: controller.signal }).then(async (r) => {
@@ -32,7 +34,7 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
     }).catch((e) => { if (e.name !== "AbortError") { setError(true); setLoading(false); } });
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialPlan]);
   const premium = true; // Plans are informational until billing is enabled.
   const premiumPage = ["/wealth/investments", "/wealth/debts", "/planning/tax", "/planning/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const value = useMemo(() => ({ premium, loading, plan }), [premium, loading, plan]);

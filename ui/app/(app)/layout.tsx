@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getApiUser, getMyProfile, getNotificationsUnreadCount } from "@/lib/api-client";
+import { getApiUser, getMyPlan, getMyProfile, getNotificationsUnreadCount } from "@/lib/api-client";
 import { Topbar } from "@/components/layout/topbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Toaster } from "@/components/ui/sonner";
@@ -7,7 +7,7 @@ import { MembershipProvider } from "@/components/membership";
 import { SessionExpiryGuard } from "@/components/common/session-expiry-guard";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const [user, unreadRes, profileRes] = await Promise.all([getApiUser(), getNotificationsUnreadCount(), getMyProfile()]);
+  const [user, unreadRes, profileRes, planRes] = await Promise.all([getApiUser(), getNotificationsUnreadCount(), getMyProfile(), getMyPlan()]);
 
   if (!user) {
     redirect("/login?expired=1");
@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <SessionExpiryGuard />
       <Topbar userName={user.full_name} userEmail={user.email} initialUnread={initialUnread} hasAvatar={Boolean(profileRes?.profile?.avatar_url)} />
       <main id="main-content" tabIndex={-1} className="p-4 lg:p-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8">
-        <MembershipProvider>{children}</MembershipProvider>
+        <MembershipProvider initialPlan={planRes}>{children}</MembershipProvider>
       </main>
       <BottomNav />
       <Toaster />
