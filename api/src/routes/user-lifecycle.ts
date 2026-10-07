@@ -19,6 +19,7 @@ import {
   loadAllUserData,
 } from "../queries/user-lifecycle";
 import { getObjectStorage } from "../utils/object-storage";
+import { sniffImageKind } from "../ocr/preprocess";
 
 const userLifecycle = new Hono();
 
@@ -128,12 +129,18 @@ userLifecycle.post("/avatar", requireAuth, async (c) => {
   if (!contentType.startsWith("image/")) {
     return c.json({ error: "Only image files are accepted." }, 400);
   }
+  // Trust bytes, not headers: curl can claim image/png with JS bytes.
+  const sniffed = sniffImageKind(bytes);
+  if (sniffed !== "jpeg" && sniffed !== "png" && sniffed !== "webp") {
+    return c.json({ error: "Only JPEG, PNG or WebP images are accepted." }, 400);
+  }
 
   try {
     const storage = getObjectStorage();
     // Stable per-user key: re-uploads replace instead of accumulating
     // timestamped orphans. Previous blob (different key) is deleted.
-    const ext = contentType.includes("webp") ? "webp" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
+    // Extension comes from sniffed bytes, never the client header.
+    const ext = sniffed === "webp" ? "webp" : sniffed === "jpeg" ? "jpg" : "png";
     const key = `avatars/${user.user_id}/avatar.${ext}`;
     const previous = (await getProfile(user.user_id))?.avatar_url ?? null;
     const stored = await storage.put(key, bytes);
