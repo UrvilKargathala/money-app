@@ -38,7 +38,7 @@ export function TransactionFilters({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-        <Input placeholder="Search transactions..." value={search} onChange={(e) => onSearchChange(e.target.value)} className="pl-9" />
+        <Input placeholder="Search transactions..." aria-label="Search transactions" value={search} onChange={(e) => onSearchChange(e.target.value)} className="pl-9" />
       </div>
 
       <Select value={typeFilter} onValueChange={onTypeChange}>

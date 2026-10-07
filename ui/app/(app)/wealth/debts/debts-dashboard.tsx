@@ -284,7 +284,7 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
           <DialogDescription>{rows.length} periods • {formatINR(Number(debt.emi_amount || 0))} EMI at {debt.interest_rate}%</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-2 items-center">
-          <Input placeholder="Filter year e.g. 2026" value={year} onChange={(e) => setYear(e.target.value)} className="w-40" />
+          <Input placeholder="Filter year e.g. 2026" aria-label="Filter amortization by year" value={year} onChange={(e) => setYear(e.target.value)} className="w-40" />
           <Button variant="outline" size="sm" onClick={handleRegenerate}><RefreshCw className="h-4 w-4" /> Regenerate</Button>
           <Button variant="outline" size="sm" asChild><a href={`/api/debts/${debt.id}/amortization/export`} download><Download className="h-4 w-4" /> Export CSV</a></Button>
         </div>
