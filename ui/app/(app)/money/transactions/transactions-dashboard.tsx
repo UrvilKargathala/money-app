@@ -99,6 +99,17 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
   }, [filtered]);
 
+  const reviewCount = useMemo(
+    () => transactions.filter((transaction) => transaction.needs_review).length,
+    [transactions]
+  );
+
+  const allSelected = useMemo(
+    () => filtered.length > 0 && filtered.every((t) => selected.has(t.id)),
+    [filtered, selected]
+  );
+  const indeterminate = selected.size > 0 && !allSelected;
+
   const handleEdit = (t: Txn) => {
     setEditing(t);
     setFormOpen(true);
@@ -203,9 +214,9 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           onClear={clearFilters}
         />
         <div className="mt-3 flex justify-end">
-          <Button variant={reviewOnly ? "default" : "outline"} size="sm" onClick={() => setReviewOnly((value) => !value)}>
-            Review imported ({transactions.filter((transaction) => transaction.needs_review).length})
-          </Button>
+            <Button variant={reviewOnly ? "default" : "outline"} size="sm" onClick={() => setReviewOnly((value) => !value)}>
+              Review imported ({reviewCount})
+            </Button>
         </div>
       </Card>
 
@@ -216,8 +227,8 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
               type="checkbox"
               aria-label="Select all transactions in view"
               title="Select all transactions in view"
-              checked={filtered.length > 0 && filtered.every((t) => selected.has(t.id))}
-              ref={(el) => { if (el) el.indeterminate = selected.size > 0 && !filtered.every((t) => selected.has(t.id)); }}
+              checked={allSelected}
+              ref={(el) => { if (el) el.indeterminate = indeterminate; }}
               disabled={filtered.length === 0 || bulkBusy}
               onChange={() => {
                 setSelected((current) => {

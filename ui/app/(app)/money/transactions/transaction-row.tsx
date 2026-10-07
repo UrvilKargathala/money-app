@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -23,21 +24,22 @@ type Txn = {
   tags: { id: string; name: string; color: string | null }[];
 };
 
-export function TransactionRow({
-  txn,
-  onEdit,
-  onDelete,
-  selected,
-  onSelectedChange,
-  onOrganize,
-}: {
-  txn: Txn;
-  onEdit: () => void;
-  onDelete: () => void;
-  selected?: boolean;
-  onSelectedChange?: (selected: boolean) => void;
-  onOrganize?: () => void;
-}) {
+export const TransactionRow = memo(
+  function TransactionRow({
+    txn,
+    onEdit,
+    onDelete,
+    selected = false,
+    onSelectedChange,
+    onOrganize,
+  }: {
+    txn: Txn;
+    onEdit: () => void;
+    onDelete: () => void;
+    selected?: boolean;
+    onSelectedChange?: (selected: boolean) => void;
+    onOrganize?: () => void;
+  }) {
   const isIncome = txn.type === "income";
   const isExpense = txn.type === "expense";
 
@@ -97,4 +99,9 @@ export function TransactionRow({
       </div>
     </div>
   );
-}
+},
+(prev, next) =>
+  // Callbacks are inline closures with behavior constant across renders
+  // (functional setState only), so identity is data + selection.
+  prev.txn === next.txn && prev.selected === next.selected
+);
