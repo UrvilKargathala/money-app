@@ -13,8 +13,16 @@ export const pool =
   globalForPg.mmPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 10,
+    max: Number(process.env.PGPOOL_MAX ?? 10),
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+    // Kills runaway analytics/export queries before they starve the pool.
+    statement_timeout: Number(process.env.PG_STATEMENT_TIMEOUT_MS ?? 15_000),
   });
+
+pool.on("error", (err) => {
+  console.error(JSON.stringify({ level: "error", msg: "pg_pool_error", error: err.message }));
+});
 
 if (process.env.NODE_ENV !== "production") {
   globalForPg.mmPool = pool;
