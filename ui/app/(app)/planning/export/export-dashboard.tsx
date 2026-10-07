@@ -406,7 +406,7 @@ export function ExportDashboard({
                               <RotateCcw className="h-3 w-3" /> {busyId === j.id ? "Retrying..." : "Retry"}
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(j.id)} disabled={busyId === j.id} title="Delete job">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(j.id)} disabled={busyId === j.id} title="Delete job" aria-label="Delete export job">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

@@ -503,6 +503,7 @@ export function TaxDashboard({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label={`Edit tax investment ${inv.name}`}
                       onClick={() => {
                         setEditing(inv);
                         setFormOpen(true);
@@ -510,7 +511,7 @@ export function TaxDashboard({
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(inv.id)}>
+                    <Button variant="ghost" size="icon" aria-label={`Delete tax investment ${inv.name}`} onClick={() => handleDelete(inv.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -637,8 +638,8 @@ export function TaxDashboard({
                         <td className="p-2 text-xs text-ink-3 max-w-[20ch] truncate">{d.notes ?? "-"}</td>
                         <td className="p-2 text-right">
                           <div className="flex gap-1 justify-end">
-                            <Button variant="ghost" size="icon" onClick={() => { setItrEditing(d); setItrOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteItr(d.id)}><Trash2 className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" aria-label={`Edit document ${d.document_name}`} onClick={() => { setItrEditing(d); setItrOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" aria-label={`Delete document ${d.document_name}`} onClick={() => handleDeleteItr(d.id)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </td>
                       </tr>

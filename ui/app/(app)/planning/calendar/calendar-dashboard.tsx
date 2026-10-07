@@ -431,7 +431,7 @@ export function CalendarDashboard({
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(ev.event_id!)} title="Duplicate">
+                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(ev.event_id!)} title="Duplicate" aria-label={`Duplicate event ${ev.label}`}>
                                 <Copy className="h-4 w-4" />
                               </Button>
                             )}
@@ -476,7 +476,7 @@ export function CalendarDashboard({
                           </div>
                           <div className="flex items-center gap-1">
                             {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(ev.event_id!)} title="Duplicate">
+                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(ev.event_id!)} title="Duplicate" aria-label={`Duplicate event ${ev.label}`}>
                                 <Copy className="h-4 w-4" />
                               </Button>
                             )}

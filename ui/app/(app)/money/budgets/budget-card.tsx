@@ -61,7 +61,7 @@ export function BudgetCard({
           <Badge variant={getBadgeVariant(budget.utilization_pct)}>{budget.utilization_pct.toFixed(1)}%</Badge>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Budget actions for ${budget.category_name || "overall budget"}`}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

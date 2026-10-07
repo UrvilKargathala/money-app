@@ -115,7 +115,7 @@ export function NetWorthDashboard({
                     {a.category} • {formatINR(Number(a.valuation))} • {new Date(a.acquisition_date).toLocaleDateString("en-IN")}
                   </p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)}>
+                <Button variant="ghost" size="icon" aria-label={`Delete asset ${a.name}`} onClick={() => handleDelete(a.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>

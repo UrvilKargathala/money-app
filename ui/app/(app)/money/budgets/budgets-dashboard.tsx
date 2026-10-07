@@ -128,11 +128,11 @@ export function BudgetsDashboard({
       </div>
 
       <Card className="p-4 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={prevMonth}>
+        <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month">
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <span className="font-semibold font-heading text-ink-1">{monthName}</span>
-        <Button variant="ghost" size="icon" onClick={nextMonth}>
+        <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Next month">
           <ChevronRight className="h-5 w-5" />
         </Button>
       </Card>

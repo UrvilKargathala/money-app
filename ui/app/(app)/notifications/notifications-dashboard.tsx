@@ -407,16 +407,16 @@ export function NotificationsDashboard({
                   </div>
                   <div className="flex gap-1 shrink-0">
                     {!n.is_read && !n.is_dismissed && (
-                      <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} title="Mark read" disabled={pendingIds.has(n.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} title="Mark read" aria-label={`Mark as read: ${n.title}`} disabled={pendingIds.has(n.id)}>
                         <Check className="h-4 w-4" />
                       </Button>
                     )}
                     {!n.is_dismissed ? (
-                      <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} title="Dismiss" disabled={pendingIds.has(n.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} title="Dismiss" aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     ) : (
-                      <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} title="Restore" disabled={pendingIds.has(n.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} title="Restore" aria-label={`Restore: ${n.title}`} disabled={pendingIds.has(n.id)}>
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     )}
@@ -515,16 +515,16 @@ export function NotificationsDashboard({
                     </div>
                     <div className="flex gap-1 shrink-0">
                       {!n.is_read && !n.is_dismissed && (
-                        <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} disabled={pendingIds.has(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} aria-label={`Mark as read: ${n.title}`} disabled={pendingIds.has(n.id)}>
                           <Check className="h-4 w-4" />
                         </Button>
                       )}
                       {!n.is_dismissed ? (
-                        <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} disabled={pendingIds.has(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} disabled={pendingIds.has(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} aria-label={`Restore: ${n.title}`} disabled={pendingIds.has(n.id)}>
                           <RotateCcw className="h-4 w-4" />
                         </Button>
                       )}
