@@ -114,9 +114,9 @@ export async function getAccountsWithBalances(
             (a.opening_balance + ${BALANCE_EXPR})::numeric(12,2) AS balance
      FROM accounts a
       LEFT JOIN account_types at ON at.type_code = a.type
-      LEFT JOIN transactions t ON t.account_id = a.id
+      LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
       LEFT JOIN account_transfers tf
-        ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+        ON (tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id) AND tf.user_id = a.user_id
       WHERE a.user_id = $1
         ${includeInactive ? "" : "AND a.is_active = 1 AND a.deleted_at IS NULL"}
       GROUP BY a.id, at.display_name, at.icon, at.is_asset, at.sort_order
@@ -141,9 +141,9 @@ export async function getAccountById(
             (a.opening_balance + ${BALANCE_EXPR})::numeric(12,2) AS balance
      FROM accounts a
       LEFT JOIN account_types at ON at.type_code = a.type
-      LEFT JOIN transactions t ON t.account_id = a.id
+      LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
       LEFT JOIN account_transfers tf
-        ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+        ON (tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id) AND tf.user_id = a.user_id
       WHERE a.user_id = $1 AND a.id = $2
       GROUP BY a.id, at.display_name, at.icon, at.is_asset`,
     [userId, accountId]
@@ -173,8 +173,8 @@ export async function getTransfers(userId: number): Promise<TransferRow[]> {
             f.name AS from_name, f.type AS from_type, f.color AS from_color,
             t.name AS to_name, t.type AS to_type, t.color AS to_color
      FROM account_transfers at
-     JOIN accounts f ON f.id = at.from_account_id
-     JOIN accounts t ON t.id = at.to_account_id
+     JOIN accounts f ON f.id = at.from_account_id AND f.user_id = at.user_id
+     JOIN accounts t ON t.id = at.to_account_id AND t.user_id = at.user_id
      WHERE at.user_id = $1
      ORDER BY at.date DESC, at.id DESC`,
     [userId]
@@ -332,9 +332,9 @@ export async function getAccountSummaryTotals(
                 ELSE 0 END),0) AS txn_sum
        FROM accounts a
        LEFT JOIN account_types at ON at.type_code = a.type
-       LEFT JOIN transactions t ON t.account_id = a.id
+       LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
        LEFT JOIN account_transfers tf
-         ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+         ON (tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id) AND tf.user_id = a.user_id
        WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
        GROUP BY a.id, at.is_asset, a.opening_balance
      )
@@ -375,7 +375,7 @@ export async function getCreditUtilization(
               WHEN t.type='income' THEN t.amount WHEN t.type='expense' THEN -t.amount
               ELSE 0 END),0))::text AS balance, a.type
      FROM accounts a
-     LEFT JOIN transactions t ON t.account_id = a.id
+     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
      WHERE a.user_id = $1 AND a.id = $2::uuid AND a.type = 'credit_card'
      GROUP BY a.id`,
     [userId, accountId]

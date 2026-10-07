@@ -97,7 +97,7 @@ export async function getTransferLegs(
     `SELECT t.id,
             CASE WHEN tf.from_transaction_id = t.id THEN 'out' ELSE 'in' END AS direction
      FROM transactions t
-     JOIN account_transfers atf ON atf.from_transaction_id = t.id OR atf.to_transaction_id = t.id
+     JOIN account_transfers atf ON (atf.from_transaction_id = t.id OR atf.to_transaction_id = t.id) AND atf.user_id = t.user_id
      WHERE t.user_id = $1 AND atf.transfer_group_id = $2::uuid`,
     [userId, groupId]
   );

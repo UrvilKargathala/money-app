@@ -92,7 +92,7 @@ export async function getCalendarEvents(
       `SELECT d.name AS debt_name, a.emi_amount::text AS emi_amount, a.scheduled_date,
               d.account_id
        FROM amortization_schedule a
-       JOIN debts d ON d.id = a.debt_id
+       JOIN debts d ON d.id = a.debt_id AND d.user_id = a.user_id
        WHERE a.user_id = $1 AND d.is_active = 1
          AND a.scheduled_date BETWEEN $2::date AND $3::date`,
       [userId, window.from, window.to]
@@ -108,7 +108,7 @@ export async function getCalendarEvents(
       `SELECT s.id, i.name AS holding_name, s.amount::text AS amount, s.next_date,
               s.account_id
        FROM sip_trackers s
-       JOIN investments i ON i.id = s.investment_id
+       JOIN investments i ON i.id = s.investment_id AND i.user_id = s.user_id
        WHERE s.user_id = $1 AND s.status = 'active'
          AND s.next_date BETWEEN $2::date AND $3::date`,
       [userId, window.from, window.to]
@@ -504,9 +504,9 @@ async function loadAccountBalances(
                  CASE WHEN tf.from_transaction_id = t.id THEN -t.amount ELSE t.amount END
                ELSE 0 END), 0))::text AS net
      FROM accounts a
-     LEFT JOIN transactions t ON t.account_id = a.id
+     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
      LEFT JOIN account_transfers tf
-       ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+       ON (tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id) AND tf.user_id = a.user_id
      WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
      GROUP BY a.id, a.name, a.type
      ORDER BY a.name`,

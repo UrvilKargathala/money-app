@@ -41,9 +41,9 @@ export async function getNetWorthBreakdown(
       SELECT a.type AS type,
              ${ACCOUNT_NET} AS net
       FROM accounts a
-      LEFT JOIN transactions t ON t.account_id = a.id
+      LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
       LEFT JOIN account_transfers tf
-        ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
+        ON (tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id) AND tf.user_id = a.user_id
       WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
       GROUP BY a.id, a.type
     )
@@ -177,11 +177,11 @@ export async function upsertSnapshotFromComputation(
                CASE WHEN net >= 0 THEN net ELSE -net END AS value
        FROM (
          SELECT ${ACCOUNT_NET} AS net
-         FROM accounts a
-         LEFT JOIN transactions t ON t.account_id = a.id
-         LEFT JOIN account_transfers tf
-           ON tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id
-         WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
+          FROM accounts a
+          LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
+          LEFT JOIN account_transfers tf
+            ON (tf.from_transaction_id = t.id OR tf.to_transaction_id = t.id) AND tf.user_id = a.user_id
+          WHERE a.user_id = $1 AND a.is_active = 1 AND a.deleted_at IS NULL
          GROUP BY a.id
        ) account_nets
        UNION ALL

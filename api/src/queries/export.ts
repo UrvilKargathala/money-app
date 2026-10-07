@@ -228,8 +228,8 @@ export async function loadModuleData(
                 t.amount::text AS amount, COALESCE(c.name,'') AS category_name,
                 COALESCE(a.name,'') AS account_name, COALESCE(t.notes,'') AS notes
          FROM transactions t
-         LEFT JOIN categories c ON c.id = t.category_id
-         LEFT JOIN accounts a ON a.id = t.account_id
+         LEFT JOIN categories c ON c.id = t.category_id AND (c.user_id = t.user_id OR c.is_system = 1)
+         LEFT JOIN accounts a ON a.id = t.account_id AND a.user_id = t.user_id
          WHERE t.user_id = $1
            AND ($2::date IS NULL OR t.date >= $2::date)
            AND ($3::date IS NULL OR t.date <= $3::date)
@@ -246,7 +246,7 @@ export async function loadModuleData(
                   ELSE 0 END),0))::text AS balance,
                 CASE WHEN a.is_active = 1 THEN 'Active' ELSE 'Deactivated' END AS is_active_label
          FROM accounts a
-         LEFT JOIN transactions t ON t.account_id = a.id
+         LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
          WHERE a.user_id = $1
          GROUP BY a.id ORDER BY a.name`,
         [userId]
@@ -268,7 +268,7 @@ export async function loadModuleData(
                     AND EXTRACT(MONTH FROM t.date) = b.month AND t.type = 'expense'
                 ),0))::text AS remaining
          FROM budgets b
-         LEFT JOIN categories c ON c.id = b.category_id
+         LEFT JOIN categories c ON c.id = b.category_id AND (c.user_id = b.user_id OR c.is_system = 1)
          WHERE b.user_id = $1 AND b.deleted_at IS NULL
          ORDER BY b.year DESC, b.month DESC`,
         [userId]
