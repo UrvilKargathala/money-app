@@ -5,6 +5,14 @@ import { apiFetchRaw } from "@/lib/api-client";
 import { setSessionCookie } from "@/lib/session";
 import type { ActionState } from "@moneymind/api";
 
+/** Only allow relative in-app return paths (blocks open-redirect via ?next=). */
+function safeNext(next: string): string {
+  if (next.startsWith("/") && !next.startsWith("//") && !next.includes("\\")) {
+    return next;
+  }
+  return "/overview/dashboard";
+}
+
 export async function loginAction(prev: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -32,7 +40,7 @@ export async function loginAction(prev: ActionState, formData: FormData): Promis
       await setSessionCookie(token, maxAge);
     }
 
-    redirect("/overview/dashboard");
+    redirect(safeNext(String(formData.get("next") ?? "")));
   } catch (err) {
     if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) throw err;
     return { error: "Something went wrong. Please try again." };
