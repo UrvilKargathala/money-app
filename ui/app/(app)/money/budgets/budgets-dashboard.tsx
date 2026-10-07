@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
@@ -76,14 +76,17 @@ export function BudgetsDashboard({
     });
   };
 
+  const breakdownReq = useRef(0);
   const handleBreakdown = async (id: string) => {
+    const reqId = ++breakdownReq.current;
     try {
       const res = await fetch(`/api/budgets/${id}/breakdown`);
       const data = await res.json();
+      if (breakdownReq.current !== reqId) return;
       if (res.ok) setBreakdown({ id, items: data.breakdown || data.items || [] });
       else toast.error("Could not load breakdown");
     } catch {
-      toast.error("Could not load breakdown");
+      if (breakdownReq.current === reqId) toast.error("Could not load breakdown");
     }
   };
 

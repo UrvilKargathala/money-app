@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -195,19 +195,23 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
   const [fromAccount, setFromAccount] = useState("");
   const [toAccount, setToAccount] = useState("");
 
+  const contribReq = useRef(0);
   const load = useCallback(async () => {
     if (!goal) return;
+    const reqId = ++contribReq.current;
     setLoading(true);
     setLoadError(false);
     try {
       const res = await fetch(`/api/goals/${goal.id}/contributions`);
+      if (contribReq.current !== reqId) return;
       if (!res.ok) throw new Error();
       const data = await res.json();
+      if (contribReq.current !== reqId) return;
       setContributions((data.contributions ?? []).map((c: { amount: string | number }) => ({ ...c, amount: Number((c as { amount: string | number }).amount) })));
     } catch {
-      setLoadError(true);
+      if (contribReq.current === reqId) setLoadError(true);
     } finally {
-      setLoading(false);
+      if (contribReq.current === reqId) setLoading(false);
     }
   }, [goal]);
 

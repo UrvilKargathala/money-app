@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatINR, formatDate } from "@/lib/format";
 import { Card } from "@/components/ui/card";
@@ -30,15 +30,17 @@ export function PriceHistoryDialog({
   const [error, setError] = useState(false);
   const t = chartTheme(useDarkMode());
 
+  const reqRef = useRef(0);
   const load = useCallback(() => {
     if (!investmentId) return;
+    const reqId = ++reqRef.current;
     setLoading(true);
     setError(false);
     setPoints(null);
     fetchHistory(investmentId)
-      .then(setPoints)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .then((p) => { if (reqRef.current === reqId) setPoints(p); })
+      .catch(() => { if (reqRef.current === reqId) setError(true); })
+      .finally(() => { if (reqRef.current === reqId) setLoading(false); });
   }, [fetchHistory, investmentId]);
 
   useEffect(() => {
