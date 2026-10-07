@@ -94,13 +94,18 @@ export function NotesDashboard({
     }
   };
 
-  const lockVault = () => {
+  const lockVault = async () => {
     setVaultKey(null);
     setContent("");
     setEditing(null);
     setFormOpen(false);
-    void fetch("/api/vault/lock", { method: "POST" });
-    toast.success("Vault locked");
+    try {
+      const res = await fetch("/api/vault/lock", { method: "POST" });
+      if (!res.ok) throw new Error("lock failed");
+      toast.success("Vault locked");
+    } catch {
+      toast.error("Could not lock the vault on the server. Your local copy is cleared.");
+    }
   };
 
   const filtered = notes.filter((n) => {

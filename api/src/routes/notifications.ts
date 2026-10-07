@@ -165,7 +165,11 @@ notifications.post("/:id/read", requireAuth, async (c) => {
     markRead(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    return c.json({ error: "Not found or already read." }, 404);
+    const existing = await withUser(user.user_id, (client) =>
+      getNotification(user.user_id, id, client)
+    );
+    if (existing) return c.json({ success: true, already: true });
+    return c.json({ error: "Not found." }, 404);
   }
   return c.json({ success: true });
 });
@@ -179,7 +183,11 @@ notifications.post("/:id/dismiss", requireAuth, async (c) => {
     dismissNotification(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    return c.json({ error: "Not found or already dismissed." }, 404);
+    const existing = await withUser(user.user_id, (client) =>
+      getNotification(user.user_id, id, client)
+    );
+    if (existing) return c.json({ success: true, already: true });
+    return c.json({ error: "Not found." }, 404);
   }
   return c.json({ success: true });
 });
@@ -193,7 +201,11 @@ notifications.post("/:id/restore", requireAuth, async (c) => {
     restoreNotification(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    return c.json({ error: "Not found or not dismissed." }, 404);
+    const existing = await withUser(user.user_id, (client) =>
+      getNotification(user.user_id, id, client)
+    );
+    if (existing) return c.json({ success: true, already: true });
+    return c.json({ error: "Not found." }, 404);
   }
   return c.json({ success: true });
 });

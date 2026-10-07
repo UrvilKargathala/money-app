@@ -774,7 +774,13 @@ bills.post("/:id/reminders", requireAuth, async (c) => {
   }
   const body = await readJson(c);
   const daysBefore = Number(body.days_before ?? 3);
+  if (!Number.isInteger(daysBefore) || daysBefore < 0 || daysBefore > 90) {
+    return c.json({ fieldErrors: { days_before: "Days must be between 0 and 90." } }, 400);
+  }
   const channel = String(body.channel ?? "in_app");
+  if (channel !== "in_app" && channel !== "email") {
+    return c.json({ fieldErrors: { channel: "Channel must be in_app or email." } }, 400);
+  }
   const isEnabled = body.is_enabled === false ? 0 : 1;
   try {
     const reminderId = await withUser(user.user_id, (client) =>

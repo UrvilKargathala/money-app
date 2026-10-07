@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GlobalSearch } from "@/components/common/global-search";
+import { toast } from "sonner";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { useEffect } from "react";
 
@@ -56,8 +57,14 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
-      if (res.ok) router.push("/login");
-    } catch {}
+      if (res.ok) {
+        router.push("/login");
+      } else {
+        toast.error("Could not log out. Please try again.");
+      }
+    } catch {
+      toast.error("Could not log out. Check your connection and try again.");
+    }
   };
 
   return (
