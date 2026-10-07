@@ -9,7 +9,7 @@ for (const path of process.argv.includes('--neon') ? ['../.env.neon.local', '../
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
 const pool = new Pool({ connectionString: process.argv.includes('--neon') ? process.env.DIRECT_DATABASE_URL : process.env.DATABASE_URL });
 const client = await pool.connect();
-const MIGRATIONS = ['./migrations/001_membership.sql', './migrations/002_billing_catalog.sql', './migrations/003_report_filters.sql', './migrations/004_subscription_snoozes.sql', './migrations/005_investments_updated_at.sql', './migrations/006_snooze_attempt_id.sql', './migrations/007_note_user_templates.sql', './migrations/008_bill_reminders_channel.sql', './migrations/009_plan_code_and_manifest.sql'];
+const MIGRATIONS = ['./migrations/001_membership.sql', './migrations/002_billing_catalog.sql', './migrations/003_report_filters.sql', './migrations/004_subscription_snoozes.sql', './migrations/005_investments_updated_at.sql', './migrations/006_snooze_attempt_id.sql', './migrations/007_note_user_templates.sql', './migrations/008_bill_reminders_channel.sql', './migrations/009_plan_code_and_manifest.sql', './migrations/010_perf_indexes.sql'];
 try {
   // Manifest table first so every run is recorded; all migration files are
   // idempotent (IF NOT EXISTS / ON CONFLICT DO NOTHING), so re-running on
