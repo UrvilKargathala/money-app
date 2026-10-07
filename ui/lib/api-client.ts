@@ -52,6 +52,28 @@ async function apiFetch(
   return app.request(req);
 }
 
+export class ApiError extends Error {
+  status: number;
+  body: unknown;
+  constructor(status: number, body: unknown, path: string) {
+    super(`API ${status}: ${path}`);
+    this.status = status;
+    this.body = body;
+  }
+}
+
+/** Like apiJson but throws ApiError on non-2xx so callers can distinguish 401/403/400. */
+export async function apiJsonOrThrow<T>(path: string): Promise<T> {
+  const res = await apiFetch(path);
+  if (!res.ok) {
+    let body: unknown = null;
+    try { body = await res.json(); } catch { /* non-JSON error body */ }
+    if (res.status >= 500) reportClientError(new Error(`API ${res.status}: ${path}`), { path, status: res.status });
+    throw new ApiError(res.status, body, path);
+  }
+  return (await res.json()) as T;
+}
+
 export async function apiJson<T>(path: string): Promise<T | null> {
   const res = await apiFetch(path);
   if (!res.ok) { if (res.status >= 500) reportClientError(new Error(`API ${res.status}: ${path}`), { path, status: res.status }); return null; }

@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [user, unreadRes, profileRes] = await Promise.all([getApiUser(), getNotificationsUnreadCount(), getMyProfile()]);
 
   if (!user) {
-    redirect("/login");
+    redirect("/login?expired=1");
   }
 
   const initialUnread =
