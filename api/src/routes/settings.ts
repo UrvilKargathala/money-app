@@ -7,13 +7,8 @@ import { withUser } from "../db";
 
 const settings = new Hono();
 
-async function ensureReportFiltersColumn(userId: number) {
-  await withUser(userId, (client) => client.query("ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS report_filters JSONB NOT NULL DEFAULT '[]'::jsonb"));
-}
-
 settings.patch("/", requireAuth, async (c) => {
   const body = await readJson(c);
-  await ensureReportFiltersColumn(c.get("user").user_id);
   const ids = ["networth-sparkline", "bills-due", "budget-util", "cashflow-mini", "top-merchants"];
   if (body.widget_layout !== undefined) {
     const layout = body.widget_layout;
@@ -34,7 +29,6 @@ settings.patch("/", requireAuth, async (c) => {
 
 settings.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  await ensureReportFiltersColumn(user.user_id);
   const settings = await getSettings(user.user_id);
   const extra = await withUser(user.user_id, (client) => client.query("SELECT widget_layout, haptics_enabled, report_filters FROM user_settings WHERE user_id = $1", [user.user_id]));
   return c.json({ settings: { ...settings, ...extra.rows[0] } });
