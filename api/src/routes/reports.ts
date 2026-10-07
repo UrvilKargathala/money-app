@@ -1,5 +1,5 @@
 ﻿import { Hono } from "hono";
-import { withUser } from "../db";
+import { withUserSingle } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
 import { csvEscape } from "../utils/format";
@@ -272,7 +272,7 @@ reports.post("/export-pdf", requireAuth, async (c) => {
     return c.json({ fieldErrors }, 400);
   }
 
-  const jobId = await withUser(user.user_id, (client) =>
+  const jobId = await withUserSingle(user.user_id, (client) =>
     createExportJob(client, {
       userId: user.user_id,
       templateId,

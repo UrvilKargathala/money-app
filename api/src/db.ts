@@ -37,6 +37,33 @@ export function query<T extends QueryResultRow = QueryResultRow>(
 }
 
 /**
+ * Config-only variant of withUser for SINGLE-statement calls: sets
+ * `app.current_user_id` for RLS without BEGIN/COMMIT (saves 2 round-trips
+ * per call). The setting is session-scoped on a pooled connection, so it
+ * is always reset before release - never leaks to the next borrower.
+ */
+export async function withUserSingle<T>(
+  userId: number,
+  fn: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query(
+      "SELECT set_config('app.current_user_id', $1::text, false)",
+      [String(userId)]
+    );
+    return await fn(client);
+  } finally {
+    try {
+      await client.query("SELECT set_config('app.current_user_id', ''::text, false)");
+    } catch {
+      // Release anyway - a failed reset must not leak the connection.
+    }
+    client.release();
+  }
+}
+
+/**
  * Runs `fn` inside a transaction with `app.current_user_id` set for the
  * duration of the transaction (SET LOCAL - never leaks to other requests on
  * the same pooled connection). Row Level Security policies in

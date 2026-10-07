@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { Hono } from "hono";
-import { withUser } from "../db";
+import { withUserSingle } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson, serverError } from "./helpers";
 import { csvEscape, isoDate } from "../utils/format";
@@ -81,7 +81,7 @@ exportJobs.post("/jobs", requireAuth, async (c) => {
   }
 
   try {
-    const jobId = await withUser(user.user_id, async (client) => {
+    const jobId = await withUserSingle(user.user_id, async (client) => {
       const fileType = exportType === "full_archive" ? "zip" : exportType;
       return createExportJob(client, {
         userId: user.user_id,
@@ -101,7 +101,7 @@ exportJobs.post("/jobs", requireAuth, async (c) => {
       if (generated) rowCount = generated.rowCount;
     }
 
-    await withUser(user.user_id, (client) => {
+    await withUserSingle(user.user_id, (client) => {
       setExportJobRowCount(client, { userId: user.user_id, jobId, rowCount });
       return Promise.resolve();
     });
@@ -238,7 +238,7 @@ exportJobs.post("/jobs/:id/retry", requireAuth, async (c) => {
     return c.json({ error: "Only failed jobs can be retried." }, 409);
   }
 
-  await withUser(user.user_id, (client) =>
+  await withUserSingle(user.user_id, (client) =>
     updateExportJobStatus(client, {
       userId: user.user_id,
       jobId: id,
@@ -254,7 +254,7 @@ exportJobs.delete("/jobs/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
   if (!uuidRe.test(id)) return c.json({ error: "Not found" }, 404);
 
-  const deleted = await withUser(user.user_id, (client) =>
+  const deleted = await withUserSingle(user.user_id, (client) =>
     deleteExportJob(client, user.user_id, id)
   );
   if (!deleted) return c.json({ error: "Not found" }, 404);
@@ -271,7 +271,7 @@ exportJobs.post("/full-archive", requireAuth, async (c) => {
   }
 
   try {
-    const jobId = await withUser(user.user_id, (client) =>
+    const jobId = await withUserSingle(user.user_id, (client) =>
       createExportJob(client, {
         userId: user.user_id,
         exportType: "full_archive",

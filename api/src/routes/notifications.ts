@@ -1,5 +1,5 @@
 ﻿import { Hono } from "hono";
-import { withUser } from "../db";
+import { withUserSingle } from "../db";
 import { requireAuth } from "../middleware";
 import { notificationsRateLimit } from "../rate-limit";
 import { readJson, isUniqueViolation } from "./helpers";
@@ -127,7 +127,7 @@ notifications.get("/:id", requireAuth, async (c) => {
 
 notifications.post("/read-all", requireAuth, async (c) => {
   const user = c.get("user");
-  await withUser(user.user_id, (client) => markAllRead(client, user.user_id));
+  await withUserSingle(user.user_id, (client) => markAllRead(client, user.user_id));
   return c.json({ success: true });
 });
 
@@ -146,7 +146,7 @@ notifications.post("/bulk", requireAuth, async (c) => {
     return c.json({ error: "action must be read or dismiss." }, 400);
   }
 
-  const affected = await withUser(user.user_id, (client) =>
+  const affected = await withUserSingle(user.user_id, (client) =>
     bulkAction(client, {
       userId: user.user_id,
       ids,
@@ -161,11 +161,11 @@ notifications.post("/:id/read", requireAuth, async (c) => {
   const id = c.req.param("id");
   if (!uuidRe.test(id)) return c.json({ error: "Not found" }, 404);
 
-  const result = await withUser(user.user_id, (client) =>
+  const result = await withUserSingle(user.user_id, (client) =>
     markRead(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    const existing = await withUser(user.user_id, (client) =>
+    const existing = await withUserSingle(user.user_id, (client) =>
       getNotification(user.user_id, id, client)
     );
     if (existing) return c.json({ success: true, already: true });
@@ -179,11 +179,11 @@ notifications.post("/:id/dismiss", requireAuth, async (c) => {
   const id = c.req.param("id");
   if (!uuidRe.test(id)) return c.json({ error: "Not found" }, 404);
 
-  const result = await withUser(user.user_id, (client) =>
+  const result = await withUserSingle(user.user_id, (client) =>
     dismissNotification(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    const existing = await withUser(user.user_id, (client) =>
+    const existing = await withUserSingle(user.user_id, (client) =>
       getNotification(user.user_id, id, client)
     );
     if (existing) return c.json({ success: true, already: true });
@@ -197,11 +197,11 @@ notifications.post("/:id/restore", requireAuth, async (c) => {
   const id = c.req.param("id");
   if (!uuidRe.test(id)) return c.json({ error: "Not found" }, 404);
 
-  const result = await withUser(user.user_id, (client) =>
+  const result = await withUserSingle(user.user_id, (client) =>
     restoreNotification(client, user.user_id, id)
   );
   if (result.rowCount !== 1) {
-    const existing = await withUser(user.user_id, (client) =>
+    const existing = await withUserSingle(user.user_id, (client) =>
       getNotification(user.user_id, id, client)
     );
     if (existing) return c.json({ success: true, already: true });
@@ -221,7 +221,7 @@ notifications.post("/:id/action", requireAuth, async (c) => {
 
   // Mark read on action.
   if (!notification.is_read) {
-    await withUser(user.user_id, (client) =>
+    await withUserSingle(user.user_id, (client) =>
       markRead(client, user.user_id, id)
     );
   }
