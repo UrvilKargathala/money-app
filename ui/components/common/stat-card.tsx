@@ -83,7 +83,7 @@ const variantStyles: Record<StatCardVariant, { card: string; label: string; valu
 export function StatCard({ label, value, subtext, trend, icon, className, variant = "primary" }: StatCardProps) {
   const v = variantStyles[variant];
   return (
-    <Card className={cn("p-6 relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5", v.card, className)}>
+    <Card className={cn("p-6 relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5 min-h-[104px]", v.card, className)}>
       {/* subtle overlay texture */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent pointer-events-none" />
       <div className="relative flex items-start justify-between">
