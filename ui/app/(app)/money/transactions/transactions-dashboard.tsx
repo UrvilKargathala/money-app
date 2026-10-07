@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
@@ -51,11 +51,12 @@ type Props = {
   merchantMappings: { id: string; merchant_raw: string; merchant_clean: string | null; category_name: string | null; use_count: number }[];
   initialImport?: boolean;
   initialCreate?: boolean;
+  initialQ?: string;
 };
 
-export function TransactionsDashboard({ transactions, summary, total, page, pageSize, accounts, categories, tags, merchantMappings, initialImport = false, initialCreate = false }: Props) {
+export function TransactionsDashboard({ transactions, summary, total, page, pageSize, accounts, categories, tags, merchantMappings, initialImport = false, initialCreate = false, initialQ = "" }: Props) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialQ);
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [accountFilter, setAccountFilter] = useState("all");
@@ -69,6 +70,22 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   const [bulkCategory, setBulkCategory] = useState("");
   const [bulkTag, setBulkTag] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
+
+  // Debounced server search: filters the full history via ?q= (page 1),
+  // while the local `filtered` memo keeps instant feedback on this page.
+  const pushedQ = useRef(initialQ);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search === pushedQ.current) return;
+      pushedQ.current = search;
+      router.push(
+        search
+          ? `/money/transactions?q=${encodeURIComponent(search)}&page=1`
+          : `/money/transactions?page=1`
+      );
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [search, router]);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {

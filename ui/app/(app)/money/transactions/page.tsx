@@ -38,6 +38,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       merchantMappings={(mappingsData?.mappings ?? []) as never}
       initialImport={params.import === "1"}
       initialCreate={params.create === "1"}
+      initialQ={params.q ?? ""}
     />
   );
 }
