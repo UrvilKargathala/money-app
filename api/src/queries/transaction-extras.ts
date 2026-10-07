@@ -60,29 +60,29 @@ export function insertQuickAddTransaction(
 
 export type RecentMerchant = { merchant: string; last_used_at: string };
 
-/** Five most recently used distinct merchants (FR-2.x). */
+/** Most recently used distinct merchants, newest first (FR-2.x). */
 export async function getRecentMerchants(
   userId: number,
   limit: number,
   q: Queryable = DB
 ): Promise<RecentMerchant[]> {
+  const n = Math.min(50, Math.max(1, Math.floor(limit) || 5));
   const result = await q.query<{
     merchant_clean: string;
     last_used_at: Date;
   }>(
-    `SELECT DISTINCT ON (merchant_clean) merchant_clean, created_at AS last_used_at
+    `SELECT merchant_clean, MAX(created_at) AS last_used_at
      FROM transactions
      WHERE user_id = $1 AND type = 'expense' AND merchant_clean IS NOT NULL
-     ORDER BY merchant_clean, created_at DESC`,
-    [userId]
+     GROUP BY merchant_clean
+     ORDER BY MAX(created_at) DESC
+     LIMIT $2::int`,
+    [userId, n]
   );
-  return result.rows
-    .sort((a, b) => b.last_used_at.getTime() - a.last_used_at.getTime())
-    .slice(0, limit)
-    .map((row) => ({
-      merchant: row.merchant_clean,
-      last_used_at: row.last_used_at.toISOString(),
-    }));
+  return result.rows.map((row) => ({
+    merchant: row.merchant_clean,
+    last_used_at: row.last_used_at.toISOString(),
+  }));
 }
 
 /** Bulk categorize: one UPDATE over the id array (set-based, no loops). */
