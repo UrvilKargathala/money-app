@@ -36,6 +36,55 @@ jobs:
       - run: pnpm typecheck
         working-directory: ui
 
+  lint-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+        working-directory: ui
+
+  build-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        working-directory: ui
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [build-ui]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @moneymind/web build
+      - run: (pnpm --filter @moneymind/web start & echo $! > server.pid) && sleep 8
+      - run: pnpm smoke && pnpm smoke:pages
+      - run: kill $(cat server.pid) || true
+        if: always()
+
   vitest:
     runs-on: ubuntu-latest
     services:
@@ -73,3 +122,46 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
         working-directory: api
+
+  migrate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "psycopg[binary]"
+      - run: pnpm install --frozen-lockfile
+      # Fresh schema via db_setup, then the manifest must apply 001-010
+      # idempotently (run twice: second pass must be all-skipped, no errors).
+      - run: python scripts/db_setup.py
+      - run: node scripts/migrate.mjs && node scripts/migrate.mjs
+      - run: node -e "const {Pool}=require('pg');(async()=>{const p=new Pool({connectionString:process.env.DATABASE_URL});const r=await p.query('SELECT count(*)::int AS n FROM schema_migrations');const w=await p.query(\"SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='user_settings' AND column_name='plan_code') AS plan_code, to_regclass('plan_entitlements') IS NOT NULL AS catalog\");console.log(JSON.stringify({migrations:r.rows[0].n,...w.rows[0]}));await p.end();if(r.rows[0].n<9)process.exit(1);})()"
