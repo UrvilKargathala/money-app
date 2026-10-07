@@ -7,12 +7,14 @@ import { csvEscape, isoDate } from "../utils/format";
 import { getEntitlement } from "../queries/entitlements";
 import {
   createExportJob,
+  countModuleRows,
   deleteExportJob,
   getExportJob,
   getPipelineStatus,
   EXPORTABLE_MODULES,
   loadModuleData,
   listExportJobs,
+  MAX_EXPORT_ROWS,
   updateExportJobStatus,
   setExportJobRowCount,
   type ModuleDataRow,
@@ -30,17 +32,28 @@ function toCsv(columns: { key: string; label: string }[], rows: ModuleDataRow[])
   return "\uFEFF" + [header, ...lines].join("\r\n");
 }
 
-/** Generates CSV content for a single module export. */
+/** Generates CSV content for a single module export (capped). */
 async function generateModuleCsv(
   userId: number,
   moduleName: string,
   from: string | null,
   to: string | null
-): Promise<{ csv: string; rowCount: number } | null> {
+): Promise<{ csv: string; rowCount: number } | { capped: true; count: number } | null> {
   const moduleDef = EXPORTABLE_MODULES.find((m) => m.name === moduleName);
   if (!moduleDef) return null;
+  const count = await countModuleRows(userId, moduleName, from, to);
+  if (count > MAX_EXPORT_ROWS) return { capped: true, count };
   const rows = await loadModuleData(userId, moduleName, from, to);
   return { csv: toCsv(moduleDef.columns, rows), rowCount: rows.length };
+}
+
+function capHint(count: number): Record<string, unknown> {
+  return {
+    error: `This export has ${count} rows (limit ${MAX_EXPORT_ROWS}). Narrow the date range and retry.`,
+    hint: "Set date_range_start and date_range_end to export in smaller windows.",
+    count,
+    limit: MAX_EXPORT_ROWS,
+  };
 }
 
 /** Creates a new export job and synchronously generates the output. */
@@ -98,6 +111,7 @@ exportJobs.post("/jobs", requireAuth, async (c) => {
     let rowCount = 0;
     if (exportType === "csv" && moduleName) {
       const generated = await generateModuleCsv(user.user_id, moduleName, dateFrom, dateTo);
+      if (generated && "capped" in generated) return c.json(capHint(generated.count), 400);
       if (generated) rowCount = generated.rowCount;
     }
 
@@ -180,6 +194,11 @@ exportJobs.get("/jobs/:id/download", requireAuth, async (c) => {
 
   try {
     if (job.export_type === "full_archive") {
+      // Cap precheck before loading anything into RAM.
+      for (const mod of EXPORTABLE_MODULES) {
+        const count = await countModuleRows(user.user_id, mod.name, job.date_range_start, job.date_range_end);
+        if (count > MAX_EXPORT_ROWS) return c.json({ ...capHint(count), module: mod.name }, 400);
+      }
       const zip = new JSZip();
       const manifest: Record<string, unknown> = {
         exported_at: new Date().toISOString(),
@@ -214,6 +233,7 @@ exportJobs.get("/jobs/:id/download", requireAuth, async (c) => {
       job.date_range_end
     );
     if (!generated) return c.json({ error: "Unknown module." }, 400);
+    if ("capped" in generated) return c.json(capHint(generated.count), 400);
 
     return new Response(generated.csv, {
       headers: {

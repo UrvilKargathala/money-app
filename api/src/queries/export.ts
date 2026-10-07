@@ -213,13 +213,47 @@ export const EXPORTABLE_MODULES: readonly ExportableModule[] = [
 
 export type ModuleDataRow = Record<string, string | number | null>;
 
-/** Loads all rows for a given exportable module within a date range. */
-export async function loadModuleData(
+/** Soft cap per module: keeps full-archive ZIP generation bounded in RAM. */
+export const MAX_EXPORT_ROWS = 20_000;
+
+/** Row counts for the cap precheck (transactions honors the date range). */
+export async function countModuleRows(
   userId: number,
   moduleName: string,
   from: string | null,
   to: string | null,
   q: Queryable = DB
+): Promise<number> {
+  const range =
+    moduleName === "transactions"
+      ? `AND ($2::date IS NULL OR date >= $2::date) AND ($3::date IS NULL OR date <= $3::date)`
+      : ``;
+  const table =
+    moduleName === "transactions" ? "transactions"
+    : moduleName === "accounts" ? "accounts"
+    : moduleName === "budgets" ? "budgets"
+    : moduleName === "bills" ? "bills"
+    : moduleName === "subscriptions" ? "subscriptions"
+    : moduleName === "goals" ? "goals"
+    : moduleName === "debts" ? "debts"
+    : moduleName === "investments" ? "investments"
+    : null;
+  if (!table) return 0;
+  const result = await q.query<{ n: string }>(
+    `SELECT COUNT(*)::text AS n FROM ${table} WHERE user_id = $1 ${range}`,
+    [userId, from, to]
+  );
+  return Number(result.rows[0]?.n ?? 0);
+}
+
+/** Loads rows for a given exportable module within a date range (capped). */
+export async function loadModuleData(
+  userId: number,
+  moduleName: string,
+  from: string | null,
+  to: string | null,
+  q: Queryable = DB,
+  limit: number = MAX_EXPORT_ROWS
 ): Promise<ModuleDataRow[]> {
   switch (moduleName) {
     case "transactions": {
@@ -233,8 +267,8 @@ export async function loadModuleData(
          WHERE t.user_id = $1
            AND ($2::date IS NULL OR t.date >= $2::date)
            AND ($3::date IS NULL OR t.date <= $3::date)
-         ORDER BY t.date DESC`,
-        [userId, from, to]
+         ORDER BY t.date DESC LIMIT $4::int`,
+        [userId, from, to, limit]
       );
       return result.rows;
     }
@@ -248,8 +282,8 @@ export async function loadModuleData(
          FROM accounts a
          LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
          WHERE a.user_id = $1
-         GROUP BY a.id ORDER BY a.name`,
-        [userId]
+         GROUP BY a.id ORDER BY a.name LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
@@ -257,29 +291,26 @@ export async function loadModuleData(
       const result = await q.query<ModuleDataRow>(
         `SELECT b.month, b.year, COALESCE(c.name,'Overall') AS category_name,
                 b.amount::text AS amount,
-                COALESCE((SELECT SUM(t.amount) FROM transactions t
-                  WHERE t.user_id = b.user_id AND t.category_id = b.category_id
-                    AND EXTRACT(YEAR FROM t.date) = b.year
-                    AND EXTRACT(MONTH FROM t.date) = b.month AND t.type = 'expense'
-                ),0)::text AS spent,
-                (b.amount - COALESCE((SELECT SUM(t.amount) FROM transactions t
-                  WHERE t.user_id = b.user_id AND t.category_id = b.category_id
-                    AND EXTRACT(YEAR FROM t.date) = b.year
-                    AND EXTRACT(MONTH FROM t.date) = b.month AND t.type = 'expense'
-                ),0))::text AS remaining
+                COALESCE(SUM(t.amount),0)::text AS spent,
+                (b.amount - COALESCE(SUM(t.amount),0))::text AS remaining
          FROM budgets b
          LEFT JOIN categories c ON c.id = b.category_id AND (c.user_id = b.user_id OR c.is_system = 1)
+         LEFT JOIN transactions t ON t.user_id = b.user_id AND t.category_id = b.category_id
+           AND t.type = 'expense'
+           AND t.date >= make_date(b.year, b.month, 1)
+           AND t.date < make_date(b.year, b.month, 1) + INTERVAL '1 month'
          WHERE b.user_id = $1 AND b.deleted_at IS NULL
-         ORDER BY b.year DESC, b.month DESC`,
-        [userId]
+         GROUP BY b.month, b.year, c.name, b.amount
+         ORDER BY b.year DESC, b.month DESC LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
     case "bills": {
       const result = await q.query<ModuleDataRow>(
         `SELECT name, amount::text AS amount, due_day, frequency, current_period_status
-         FROM bills WHERE user_id = $1 AND is_active = 1 ORDER BY due_day, name`,
-        [userId]
+         FROM bills WHERE user_id = $1 AND is_active = 1 ORDER BY due_day, name LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
@@ -287,19 +318,20 @@ export async function loadModuleData(
       const result = await q.query<ModuleDataRow>(
         `SELECT service_name, amount::text AS amount, frequency,
                 next_renewal_date::date::text AS next_renewal_date, status
-         FROM subscriptions WHERE user_id = $1 ORDER BY next_renewal_date`,
-        [userId]
+         FROM subscriptions WHERE user_id = $1 ORDER BY next_renewal_date LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
     case "goals": {
       const result = await q.query<ModuleDataRow>(
         `SELECT g.name, g.target::text AS target_amount,
-                COALESCE((SELECT SUM(amount) FROM goal_contributions gc
-                  WHERE gc.goal_id = g.id AND gc.user_id = g.user_id),0)::text AS current_amount,
+                COALESCE(SUM(gc.amount),0)::text AS current_amount,
                 g.target_date::date::text AS target_date, g.status
-         FROM goals g WHERE g.user_id = $1 ORDER BY g.target_date`,
-        [userId]
+         FROM goals g
+         LEFT JOIN goal_contributions gc ON gc.goal_id = g.id AND gc.user_id = g.user_id
+         WHERE g.user_id = $1 GROUP BY g.id ORDER BY g.target_date LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
@@ -308,8 +340,8 @@ export async function loadModuleData(
         `SELECT name, principal_outstanding::text AS principal_outstanding,
                 interest_rate::text AS interest_rate, emi_amount::text AS emi_amount,
                 CASE WHEN is_active = 1 THEN 'Yes' ELSE 'No' END AS is_active_label
-         FROM debts WHERE user_id = $1 ORDER BY principal_outstanding DESC`,
-        [userId]
+         FROM debts WHERE user_id = $1 ORDER BY principal_outstanding DESC LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
@@ -317,8 +349,8 @@ export async function loadModuleData(
       const result = await q.query<ModuleDataRow>(
         `SELECT name, type, units::text AS units,
                 invested_value::text AS invested_value, current_value::text AS current_value
-         FROM investments WHERE user_id = $1 AND is_active = 1 ORDER BY name`,
-        [userId]
+         FROM investments WHERE user_id = $1 AND is_active = 1 ORDER BY name LIMIT $2::int`,
+        [userId, limit]
       );
       return result.rows;
     }
