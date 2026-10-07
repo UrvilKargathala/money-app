@@ -6,12 +6,9 @@ import { WIDGETS } from "@/lib/widgets";
 import { LayoutGrid } from "lucide-react";
 import { useMembership } from "@/components/membership";
 import { LiveWidget, type WidgetSeed } from "./live-widget";
-import { useMemo } from "react";
 
 export function WidgetsGrid({ layout, seeds }: { layout?: unknown[]; seeds?: Record<string, WidgetSeed | null> }) {
   const { premium, loading } = useMembership();
-  // Stable seed identity: server payloads must not retrigger widget effects.
-  const stableSeeds = useMemo(() => seeds, [JSON.stringify(seeds)]);
   if (loading) return null;
   const ids = Array.isArray(layout) && layout.length > 0 ? (layout as string[]) : WIDGETS.map((w) => w.id);
   const items = ids.map((id) => WIDGETS.find((w) => w.id === id)).filter(Boolean) as typeof WIDGETS;
@@ -33,7 +30,7 @@ export function WidgetsGrid({ layout, seeds }: { layout?: unknown[]; seeds?: Rec
                 {w.premium && <Badge className="bg-neutral-900 text-white text-[10px]">Premium</Badge>}
               </div>
               <p className="text-xs text-ink-3 mt-1">{w.description}</p>
-              <div className="mt-3"><LiveWidget id={w.id} seed={stableSeeds?.[w.id] ?? null} /></div>
+              <div className="mt-3"><LiveWidget id={w.id} seed={seeds?.[w.id] ?? null} /></div>
             </div>
           ))}
         </div>
