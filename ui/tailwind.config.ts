@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['"Plus Jakarta Sans"', "sans-serif"],
-        body: ['"Questrial"', "sans-serif"],
+        heading: ["var(--font-heading)", '"Plus Jakarta Sans"', "sans-serif"],
+        body: ["var(--font-body)", '"Questrial"', "sans-serif"],
       },
       colors: {
         surface: "rgb(var(--surface) / <alpha-value>)",
