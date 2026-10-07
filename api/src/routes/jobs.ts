@@ -63,14 +63,29 @@ jobs.get("/run", async (c) => {
 
   if (wanted("accounts") || wanted("budgets") || wanted("debts")) {
     await isolated("fanout", async () => {
-      const userIds = await listUsersWithActivity();
-      const batched: NewNotification[] = [];
-      for (const userId of userIds) {
-        if (wanted("accounts")) batched.push(...(await buildAccountAlerts(userId)));
-        if (wanted("budgets")) batched.push(...(await buildBudgetAlerts(userId, month, year)));
-        if (wanted("debts")) batched.push(...(await buildDebtAlerts(userId)));
+      // Cursor pages bound memory/time per invocation; one bad user can't
+      // abort the rest (per-user isolation inside the page loop).
+      const errors: string[] = [];
+      let after = 0;
+      let inserted = 0;
+      for (;;) {
+        const userIds = await listUsersWithActivity(undefined, after, 100);
+        if (userIds.length === 0) break;
+        const batched: NewNotification[] = [];
+        for (const userId of userIds) {
+          try {
+            if (wanted("accounts")) batched.push(...(await buildAccountAlerts(userId)));
+            if (wanted("budgets")) batched.push(...(await buildBudgetAlerts(userId, month, year)));
+            if (wanted("debts")) batched.push(...(await buildDebtAlerts(userId)));
+          } catch (err) {
+            errors.push(`user ${userId}: ${err instanceof Error ? err.message : "unknown"}`);
+          }
+        }
+        inserted += await insertGeneratedAlerts(batched);
+        after = userIds[userIds.length - 1];
       }
-      return insertGeneratedAlerts(batched);
+      if (errors.length > 0) throw new Error(`${errors.length} user(s) failed: ${errors.slice(0, 3).join("; ")}`);
+      return inserted;
     });
   }
 

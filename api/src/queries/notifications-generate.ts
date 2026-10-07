@@ -479,18 +479,23 @@ export async function insertGeneratedAlerts(
   return insertNotifications(DB, rows);
 }
 
-/** Users owning anything the fan-out triggers inspect (one query). */
-export async function listUsersWithActivity(q: Queryable = DB): Promise<number[]> {
+/** Users owning anything the fan-out triggers inspect (one query). Cursor-paginated: pass last user_id from the previous page, 0 to start. */
+export async function listUsersWithActivity(
+  q: Queryable = DB,
+  afterUserId = 0,
+  limit = 100
+): Promise<number[]> {
   const result = await q.query<{ user_id: number }>(
     `SELECT DISTINCT x.user_id FROM (
-       SELECT user_id FROM bills WHERE is_active = 1
-       UNION SELECT user_id FROM subscriptions WHERE status = 'active'
-       UNION SELECT user_id FROM accounts WHERE is_active = 1 AND deleted_at IS NULL
-       UNION SELECT user_id FROM budgets WHERE is_active = 1
-       UNION SELECT user_id FROM goals WHERE status = 'active'
-       UNION SELECT user_id FROM debts WHERE is_active = 1
-     ) x JOIN users u ON u.user_id = x.user_id AND u.deleted_at IS NULL`,
-    []
+       SELECT user_id FROM bills WHERE is_active = 1 AND user_id > $1
+       UNION SELECT user_id FROM subscriptions WHERE status = 'active' AND user_id > $1
+       UNION SELECT user_id FROM accounts WHERE is_active = 1 AND deleted_at IS NULL AND user_id > $1
+       UNION SELECT user_id FROM budgets WHERE is_active = 1 AND user_id > $1
+       UNION SELECT user_id FROM goals WHERE status = 'active' AND user_id > $1
+       UNION SELECT user_id FROM debts WHERE is_active = 1 AND user_id > $1
+     ) x JOIN users u ON u.user_id = x.user_id AND u.deleted_at IS NULL
+     ORDER BY x.user_id LIMIT $2`,
+    [afterUserId, limit]
   );
   return result.rows.map((r) => r.user_id);
 }
