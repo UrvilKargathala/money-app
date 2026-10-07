@@ -2,6 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson, serverError } from "./helpers";
+import { parseAmount } from "../validation";
 import {
   listActiveSessions,
   revokeSession,
@@ -54,12 +55,32 @@ userLifecycle.patch("/settings", requireAuth, async (c) => {
   const body = await readJson(c);
 
   const fields: Record<string, string | number | null> = {};
-  if (body.currency !== undefined) fields.currency = String(body.currency);
-  if (body.theme !== undefined) fields.theme = String(body.theme);
-  if (body.language !== undefined) fields.language = String(body.language);
-  if (body.monthly_income !== undefined)
-    fields.monthly_income =
-      body.monthly_income === null ? null : Number(body.monthly_income);
+  if (body.currency !== undefined) {
+    const currency = String(body.currency);
+    if (!["INR", "USD", "EUR"].includes(currency)) {
+      return c.json({ fieldErrors: { currency: "Currency must be INR, USD or EUR." } }, 400);
+    }
+    fields.currency = currency;
+  }
+  if (body.theme !== undefined) {
+    const theme = String(body.theme);
+    if (!["light", "dark", "system"].includes(theme)) {
+      return c.json({ fieldErrors: { theme: "Theme must be light, dark or system." } }, 400);
+    }
+    fields.theme = theme;
+  }
+  if (body.language !== undefined) fields.language = String(body.language).slice(0, 16);
+  if (body.monthly_income !== undefined) {
+    if (body.monthly_income === null) {
+      fields.monthly_income = null;
+    } else {
+      const income = parseAmount(body.monthly_income);
+      if (income === null || !Number.isFinite(income) || income < 0) {
+        return c.json({ fieldErrors: { monthly_income: "Enter a valid monthly income." } }, 400);
+      }
+      fields.monthly_income = income;
+    }
+  }
   if (body.notifications_enabled !== undefined)
     fields.notifications_enabled =
       body.notifications_enabled === true || body.notifications_enabled === 1 ? 1 : 0;

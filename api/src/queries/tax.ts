@@ -515,7 +515,7 @@ export async function getUtilization(
     `SELECT t.section_code, t.name, t.max_limit, t.applicable_regime,
             COALESCE((SELECT SUM(i.amount::numeric) FROM tax_investments i
                       WHERE i.user_id = $1 AND i.financial_year = $2
-                        AND i.section_id = t.section_code), 0)::float8 AS invested
+                        AND i.section_id = t.section_code), 0)::numeric(14,2) AS invested
      FROM tax_sections t
      ORDER BY t.sort_order`,
     [userId, financialYear]
