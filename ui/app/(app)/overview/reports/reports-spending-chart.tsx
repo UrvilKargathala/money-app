@@ -38,7 +38,6 @@ export function SpendingDonut({ spendingByCategory }: { spendingByCategory: Cate
                     ))}
                   </Pie>
                   <Tooltip
-                    // eslint-disable-next-line
                     formatter={(value: number, _name: string, item: unknown) => {
                       const payload = (item as { payload?: CategorySlice })?.payload;
                       const label = payload?.category ?? String(_name);

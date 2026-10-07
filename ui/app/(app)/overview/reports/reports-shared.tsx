@@ -17,6 +17,23 @@ export type MerchantRow = { merchant: string; total: number; txn_count: number; 
 export type NetWorthPoint = { date: string; net_worth: number; change_pct: number | null };
 export type IncomeSource = { category_id: string | null; category: string; total: number; count: number; pct: number };
 
+export type ReportsChartsProps = {
+  cashflow: CashflowRow[];
+  spendingByCategory: CategorySlice[];
+  trends: TrendRow[];
+  trendsMonths: number;
+  budgetVsActual: BudgetRow[];
+  budgetMonth: number;
+  budgetYear: number;
+  heatmapDays: HeatmapDay[];
+  heatmapYear: number;
+  heatmapMonth: number;
+  netWorthSeries: NetWorthPoint[];
+  topMerchants: MerchantRow[];
+  incomeSources: IncomeSource[];
+  totalIncome: number;
+};
+
 export function currencyTick(value: number): string {
   if (Math.abs(value) >= 100000) return `₹${(value / 1000).toFixed(0)}k`;
   if (Math.abs(value) >= 1000) return `₹${(value / 1000).toFixed(1)}k`;

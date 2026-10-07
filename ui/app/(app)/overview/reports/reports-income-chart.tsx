@@ -28,7 +28,6 @@ export function IncomeChart({ incomeSources, totalIncome }: { incomeSources: Inc
                   ))}
                 </Pie>
                 <Tooltip
-                  // eslint-disable-next-line
                   formatter={(value: number, _name: string, item: unknown) => {
                     const payload = (item as { payload?: IncomeSource })?.payload;
                     const label = payload?.category ?? String(_name);

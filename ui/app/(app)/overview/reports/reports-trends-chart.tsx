@@ -26,7 +26,6 @@ export function TrendsChart({ trends, trendsMonths }: { trends: TrendRow[]; tren
                 <XAxis dataKey="month" tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} />
                 <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
                 <Tooltip
-                  // eslint-disable-next-line
                   formatter={(value: unknown, name: unknown) => [formatINR(Number(value as number)), String(name)]}
                   contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
                 />

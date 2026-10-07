@@ -17,7 +17,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { formatINR } from "@/lib/format";
 import { BarChart3, Download, TrendingUp, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ReportsChartsLazy as ReportsCharts } from "./reports-charts-lazy";
+import ReportsCharts from "./reports-charts";
 import { PremiumReports } from "@/components/premium-reports";
 import { Paywall, TrialBanner } from "@/components/common/paywall";
 import { ReportsManager } from "./reports-manager";
