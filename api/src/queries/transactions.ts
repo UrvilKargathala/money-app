@@ -90,11 +90,11 @@ const ROW_SELECT = `
          c.color AS category_color, t.date, t.notes,
          a.name AS account_name, a.color AS account_color,
          t.transfer_group_id, t.source, t.needs_review, t.version, ${TAG_AGG}
-  FROM transactions t
-  LEFT JOIN categories c ON c.id = t.category_id
-  LEFT JOIN accounts a ON a.id = t.account_id
-  LEFT JOIN tags_transactions tt ON tt.transaction_id = t.id AND tt.user_id = t.user_id
-  LEFT JOIN tags g ON g.id = tt.tag_id
+   FROM transactions t
+   LEFT JOIN categories c ON c.id = t.category_id AND (c.user_id = t.user_id OR c.is_system = 1)
+   LEFT JOIN accounts a ON a.id = t.account_id AND a.user_id = t.user_id
+   LEFT JOIN tags_transactions tt ON tt.transaction_id = t.id AND tt.user_id = t.user_id
+   LEFT JOIN tags g ON g.id = tt.tag_id AND g.user_id = tt.user_id
 `;
 
 export function filterClause(
@@ -201,7 +201,7 @@ export async function getTransactionById(
   const splitResult = await query<TransactionSplitRow>(
     `SELECT s.id, s.category_id, c.name AS category_name, s.amount, s.notes
      FROM transaction_splits s
-     LEFT JOIN categories c ON c.id = s.category_id
+     LEFT JOIN categories c ON c.id = s.category_id AND (c.user_id = s.user_id OR c.is_system = 1)
      WHERE s.user_id = $1 AND s.transaction_id = $2
      ORDER BY s.id ASC`,
     [userId, transactionId]

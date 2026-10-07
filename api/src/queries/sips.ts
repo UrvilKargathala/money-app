@@ -51,9 +51,9 @@ const SIP_SELECT = `
          s.amount::text AS amount, s.frequency, s.next_date,
          s.account_id, a.name AS account_name,
          s.status, s.start_date, s.end_date, s.notes
-  FROM sip_trackers s
-  JOIN investments i ON i.id = s.investment_id
-  LEFT JOIN accounts a ON a.id = s.account_id
+   FROM sip_trackers s
+   JOIN investments i ON i.id = s.investment_id AND i.user_id = s.user_id
+   LEFT JOIN accounts a ON a.id = s.account_id AND a.user_id = s.user_id
   WHERE s.user_id = $1
 `;
 
@@ -197,7 +197,7 @@ export async function listDueSips(
     `SELECT s.id, i.name AS investment_name, s.amount::text AS amount,
             s.frequency, s.next_date
      FROM sip_trackers s
-     JOIN investments i ON i.id = s.investment_id
+     JOIN investments i ON i.id = s.investment_id AND i.user_id = s.user_id
      WHERE s.user_id = $1 AND s.status = 'active'
        AND s.next_date <= CURRENT_DATE + ($2::int * INTERVAL '1 day')
      ORDER BY s.next_date`,

@@ -124,9 +124,9 @@ const BILL_SELECT = `
          b.reminder_days, b.is_autopay, b.notes,
          b.current_period_status, b.is_active, b.version,
          ph.created_at AS last_paid_date, ph.amount AS last_paid_amount
-  FROM bills b
-  LEFT JOIN accounts a ON a.id = b.account_id
-  LEFT JOIN categories cat ON cat.id = b.category_id
+   FROM bills b
+   LEFT JOIN accounts a ON a.id = b.account_id AND a.user_id = b.user_id
+   LEFT JOIN categories cat ON cat.id = b.category_id AND (cat.user_id = b.user_id OR cat.is_system = 1)
   LEFT JOIN LATERAL (
     SELECT created_at, amount FROM payment_history
     WHERE user_id = b.user_id AND payable_type = 'bill' AND payable_id = b.id

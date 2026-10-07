@@ -75,7 +75,7 @@ const INVESTMENT_SELECT = `
          i.is_active, i.notes, i.closed_date::text AS closed_date,
          i.updated_at::text AS updated_at, i.version
   FROM investments i
-  LEFT JOIN accounts a ON a.id = i.account_id
+   LEFT JOIN accounts a ON a.id = i.account_id AND a.user_id = i.user_id
   WHERE i.user_id = $1
 `;
 
@@ -869,7 +869,7 @@ export async function listDividends(
     `SELECT d.id, d.investment_id, i.name AS investment_name, d.type,
             d.amount::text AS amount, d.date, d.transaction_id, d.notes
      FROM dividend_income d
-     JOIN investments i ON i.id = d.investment_id
+     JOIN investments i ON i.id = d.investment_id AND i.user_id = d.user_id
      WHERE d.user_id = $1 AND ($2::uuid IS NULL OR d.investment_id = $2::uuid)
      ORDER BY d.date DESC`,
     [userId, investmentId]
@@ -886,7 +886,7 @@ export async function getDividendById(
     `SELECT d.id, d.investment_id, i.name AS investment_name, d.type,
             d.amount::text AS amount, d.date, d.transaction_id, d.notes
      FROM dividend_income d
-     JOIN investments i ON i.id = d.investment_id
+     JOIN investments i ON i.id = d.investment_id AND i.user_id = d.user_id
      WHERE d.user_id = $1 AND d.id = $2`,
     [userId, id]
   );

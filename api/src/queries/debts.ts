@@ -138,7 +138,7 @@ const DEBT_SELECT = `
          d.total_interest_paid::text AS total_interest_paid,
          d.is_active, d.notes, d.closed_date::text AS closed_date, d.version
   FROM debts d
-  LEFT JOIN accounts a ON a.id = d.account_id
+   LEFT JOIN accounts a ON a.id = d.account_id AND a.user_id = d.user_id
 `;
 
 export function money(n: number): number {

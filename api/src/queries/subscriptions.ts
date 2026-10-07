@@ -57,9 +57,9 @@ const SUB_SELECT = `
           ph.created_at AS last_paid_date, ph.amount AS last_paid_amount,
           s.last_used_at,
           sn.days AS last_snooze_days, sn.new_renewal_date AS last_snooze_date
-   FROM subscriptions s
-   LEFT JOIN accounts a ON a.id = s.account_id
-   LEFT JOIN categories cat ON cat.id = s.category_id
+    FROM subscriptions s
+    LEFT JOIN accounts a ON a.id = s.account_id AND a.user_id = s.user_id
+    LEFT JOIN categories cat ON cat.id = s.category_id AND (cat.user_id = s.user_id OR cat.is_system = 1)
    LEFT JOIN LATERAL (
      SELECT created_at, amount FROM payment_history
      WHERE user_id = s.user_id AND payable_type = 'subscription' AND payable_id = s.id

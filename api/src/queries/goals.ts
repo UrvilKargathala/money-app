@@ -91,17 +91,17 @@ const GOAL_SELECT = `
          a.type AS account_type, g.color, g.notes, g.template_used,
          g.completed_at::text AS completed_at, g.version,
          c.total AS current_amount, c.avg_monthly
-  FROM goals g
-  LEFT JOIN accounts a ON a.id = g.account_id
-  LEFT JOIN LATERAL (
-    SELECT
-      (SELECT COALESCE(SUM(amount), 0)::numeric(12,2)
-       FROM goal_contributions WHERE goal_id = g.id) AS total,
-      (SELECT ROUND(COALESCE(SUM(amount), 0) / 3.0, 2)
-       FROM goal_contributions
-       WHERE goal_id = g.id
-         AND date >= date_trunc('month', CURRENT_DATE) - INTERVAL '2 months') AS avg_monthly
-  ) c ON true
+   FROM goals g
+   LEFT JOIN accounts a ON a.id = g.account_id AND a.user_id = g.user_id
+   LEFT JOIN LATERAL (
+     SELECT
+       (SELECT COALESCE(SUM(amount), 0)::numeric(12,2)
+        FROM goal_contributions WHERE goal_id = g.id AND user_id = g.user_id) AS total,
+       (SELECT ROUND(COALESCE(SUM(amount), 0) / 3.0, 2)
+        FROM goal_contributions
+        WHERE goal_id = g.id AND user_id = g.user_id
+          AND date >= date_trunc('month', CURRENT_DATE) - INTERVAL '2 months') AS avg_monthly
+   ) c ON true
 `;
 
 function startOfToday(): Date {
@@ -333,7 +333,7 @@ export async function getDashboard(
             COALESCE(SUM(c.total), 0)::numeric(12,2) AS total_saved
      FROM goals g
      LEFT JOIN LATERAL (
-       SELECT SUM(amount) AS total FROM goal_contributions WHERE goal_id = g.id
+       SELECT SUM(amount) AS total FROM goal_contributions WHERE goal_id = g.id AND user_id = g.user_id
      ) c ON true
      WHERE g.user_id = $1 AND g.status = $2`,
     [userId, status]
@@ -684,7 +684,7 @@ export async function distributeSuggestion(
             (g.target - COALESCE(c.total, 0))::numeric(12,2) AS remaining
      FROM goals g
      LEFT JOIN LATERAL (
-       SELECT SUM(amount) AS total FROM goal_contributions WHERE goal_id = g.id
+       SELECT SUM(amount) AS total FROM goal_contributions WHERE goal_id = g.id AND user_id = g.user_id
      ) c ON true
      WHERE g.user_id = $1 AND g.status = 'active'
      ORDER BY g.target_date ASC NULLS LAST`,
