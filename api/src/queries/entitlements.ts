@@ -53,7 +53,7 @@ export type BillingProfile = {
   locks: Record<string, { unlocked: string[]; locked: string[] }>;
 };
 
-async function resolveEffectivePlan(userId: number, q: Queryable = DB): Promise<{ code: PlanCode; source: "paid" | "trial" | "free"; subRow: { plan_code: string; status: string; current_period_end: Date | null; cancel_at_period_end: number; trial_ends_at: Date | null } | null; userCreatedAt: Date }> {
+async function resolveEffectivePlanFresh(userId: number, q: Queryable = DB): Promise<{ code: PlanCode; source: "paid" | "trial" | "free"; subRow: { plan_code: string; status: string; current_period_end: Date | null; cancel_at_period_end: number; trial_ends_at: Date | null } | null; userCreatedAt: Date }> {
   const exec = (q as { query: typeof query }).query
     ? (q as { query: typeof query }).query.bind(q as { query: typeof query })
     : (q as PoolClient).query.bind(q as PoolClient);
@@ -95,13 +95,69 @@ export async function getEffectivePlan(userId: number, q: Queryable = DB): Promi
   return { code: r.code, source: r.source };
 }
 
+/**
+ * Read caches: plan resolution (30s/user) + billing catalog (5min
+ * process-wide). Only the default pool path is cached - explicit Queryable
+ * callers (transactions) always read fresh. Webhook mutations call
+ * invalidatePlanCache(); everything else self-heals via TTL.
+ */
+type ResolvedPlan = Awaited<ReturnType<typeof resolveEffectivePlanFresh>>;
+const PLAN_TTL_MS = 30_000;
+const planCache = new Map<number, { at: number; value: ResolvedPlan }>();
+
+export function invalidatePlanCache(userId?: number): void {
+  if (userId === undefined) planCache.clear();
+  else planCache.delete(userId);
+}
+
+async function resolveEffectivePlan(userId: number, q: Queryable = DB): Promise<ResolvedPlan> {
+  if (q !== DB) return resolveEffectivePlanFresh(userId, q);
+  const hit = planCache.get(userId);
+  if (hit && Date.now() - hit.at < PLAN_TTL_MS) return hit.value;
+  const value = await resolveEffectivePlanFresh(userId, q);
+  planCache.set(userId, { at: Date.now(), value });
+  if (planCache.size > 5000) planCache.clear();
+  return value;
+}
+
+type CatalogSnapshot = {
+  tiers: { code: string; name: string }[];
+  prices: { plan_code: string; price_inr: string; per_text: string; interval: string; stripe_price_id: string | null }[];
+  entitlements: EntitlementRow[];
+};
+const CATALOG_TTL_MS = 5 * 60_000;
+let catalogCache: { at: number; value: CatalogSnapshot } | null = null;
+
+export function invalidateCatalogCache(): void {
+  catalogCache = null;
+}
+
+async function getCatalog(): Promise<CatalogSnapshot> {
+  if (catalogCache && Date.now() - catalogCache.at < CATALOG_TTL_MS) return catalogCache.value;
+  const [tiers, prices, entitlements] = await Promise.all([
+    query<{ code: string; name: string }>(`SELECT code, name FROM plan_tiers ORDER BY sort_order`),
+    query<{ plan_code: string; price_inr: string; per_text: string; interval: string; stripe_price_id: string | null }>(
+      `SELECT plan_code, price_inr::text AS price_inr, per_text, interval, stripe_price_id FROM plan_prices WHERE is_current = 1`
+    ),
+    query<EntitlementRow>(`SELECT plan_code, feature_key, allowed, limit_value, mode FROM plan_entitlements`),
+  ]);
+  const value: CatalogSnapshot = { tiers: tiers.rows, prices: prices.rows, entitlements: entitlements.rows };
+  catalogCache = { at: Date.now(), value };
+  return value;
+}
+
 export async function getEntitlement(userId: number, feature: FeatureKey, q: Queryable = DB): Promise<{ allowed: boolean; limit: number | null; mode: string | null; plan: PlanCode }> {
   const { code } = await resolveEffectivePlan(userId, q);
-  const exec = (q as { query: typeof query }).query
-    ? (q as { query: typeof query }).query.bind(q as { query: typeof query })
-    : (q as PoolClient).query.bind(q as PoolClient);
-  const res = await exec<EntitlementRow>(`SELECT plan_code, feature_key, allowed, limit_value, mode FROM plan_entitlements WHERE plan_code = $1 AND feature_key = $2`, [code, feature]);
-  const row = res.rows[0];
+  const rows =
+    q === DB
+      ? (await getCatalog()).entitlements.filter((r) => r.plan_code === code)
+      : (
+          await (q as { query: typeof query }).query<EntitlementRow>(
+            `SELECT plan_code, feature_key, allowed, limit_value, mode FROM plan_entitlements WHERE plan_code = $1 AND feature_key = $2`,
+            [code, feature]
+          )
+        ).rows;
+  const row = rows.find((r) => r.feature_key === feature);
   if (!row) return { allowed: false, limit: null, mode: null, plan: code };
   return {
     allowed: row.allowed === 1,
@@ -244,20 +300,20 @@ export async function enforceSingleSessionIfFree(userId: number, currentTokenHas
 
 export async function getBillingProfile(userId: number, opts: { month?: number; year?: number } = {}): Promise<BillingProfile> {
   const resolved = await resolveEffectivePlan(userId, DB);
-  const exec = query;
+  const catalog = await getCatalog();
   const planCode = resolved.code;
 
-  const tierRes = await exec<{ code: string; name: string }>(`SELECT code, name FROM plan_tiers WHERE code = $1`, [planCode]);
-  const tierName = tierRes.rows[0]?.name ?? planCode;
+  const tierName = catalog.tiers.find((t) => t.code === planCode)?.name ?? planCode;
 
   // interval + price from plan_prices current row
-  const priceRes = await exec<{ price_inr: string; per_text: string; interval: string; stripe_price_id: string | null }>(
-    `SELECT price_inr::text AS price_inr, per_text, interval, stripe_price_id FROM plan_prices WHERE plan_code = $1 AND is_current = 1 LIMIT 1`,
-    [planCode]
-  );
-  const priceRow = priceRes.rows[0] ?? { price_inr: "0", per_text: "free", interval: "none", stripe_price_id: null };
+  const priceRow = catalog.prices.find((p) => p.plan_code === planCode) ?? {
+    price_inr: "0",
+    per_text: "free",
+    interval: "none",
+    stripe_price_id: null,
+  };
 
-  const entRes = await exec<EntitlementRow>(`SELECT plan_code, feature_key, allowed, limit_value, mode FROM plan_entitlements WHERE plan_code = $1`, [planCode]);
+  const entRows = catalog.entitlements.filter((r) => r.plan_code === planCode);
   const usage = await Promise.all([
     countForFeature(userId, "accounts"),
     countForFeature(userId, "budgets", opts),
@@ -274,7 +330,7 @@ export async function getBillingProfile(userId: number, opts: { month?: number; 
   };
 
   const entitlements: BillingProfile["entitlements"] = {};
-  for (const r of entRes.rows) {
+  for (const r of entRows) {
     entitlements[r.feature_key] = {
       allowed: r.allowed === 1,
       limit: r.limit_value != null ? Number(r.limit_value) : null,
@@ -286,24 +342,22 @@ export async function getBillingProfile(userId: number, opts: { month?: number; 
   const boolKeys: FeatureKey[] = ["investments", "debts", "tax", "reports_widgets", "cross_device_sync", "subscription_audits"];
   for (const k of boolKeys) {
     if (!entitlements[k]) {
-      const row = entRes.rows.find((x) => x.feature_key === k);
+      const row = entRows.find((x) => x.feature_key === k);
       if (row) continue;
     }
   }
 
-  const plansRes = await exec<{ code: string; name: string; price_inr: string; per_text: string; interval: string; stripe_price_id: string | null }>(
-    `SELECT t.code, t.name, p.price_inr::text AS price_inr, p.per_text, p.interval, p.stripe_price_id
-     FROM plan_tiers t LEFT JOIN plan_prices p ON p.plan_code = t.code AND p.is_current = 1
-     ORDER BY t.sort_order`
-  );
-  const plans = plansRes.rows.map((r) => ({
-    code: r.code,
-    name: r.name,
-    priceInr: Number(r.price_inr ?? 0),
-    perText: r.per_text ?? "",
-    interval: r.interval ?? "none",
-    stripePriceId: r.stripe_price_id,
-  }));
+  const plans = catalog.tiers.map((t) => {
+    const p = catalog.prices.find((x) => x.plan_code === t.code);
+    return {
+      code: t.code,
+      name: t.name,
+      priceInr: Number(p?.price_inr ?? 0),
+      perText: p?.per_text ?? "",
+      interval: p?.interval ?? "none",
+      stripePriceId: p?.stripe_price_id ?? null,
+    };
+  });
 
   const trialEndsAt = (() => {
     if (resolved.source === "paid") return resolved.subRow?.trial_ends_at ?? null;
@@ -315,10 +369,12 @@ export async function getBillingProfile(userId: number, opts: { month?: number; 
   const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : 0;
 
   // locks: unlocked newest N per feature where over-limit, else empty locked
+  // (usage + locks stay live queries - only the static catalog is cached).
+  const exec = query;
   const locks: BillingProfile["locks"] = {};
   const lockFeatures: FeatureKey[] = ["accounts", "budgets", "bill_reminders", "tracker_subscriptions", "goals_active"];
   for (const f of lockFeatures) {
-    const ent = entRes.rows.find((r) => r.feature_key === f);
+    const ent = entRows.find((r) => r.feature_key === f);
     const limit = ent?.limit_value != null ? Number(ent.limit_value) : null;
     if (limit == null) {
       locks[f] = { unlocked: [], locked: [] };

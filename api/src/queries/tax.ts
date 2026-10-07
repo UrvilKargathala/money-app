@@ -325,16 +325,30 @@ export function computeSalaryBreakdown(
     recommended_label: recommended === "new" ? "New Regime" : "Old Regime",
   };
 }
-// -- Lookups ------------------------------------------------------------------
+// -- Lookups (static reference data: 5min process-wide cache) ------------------
+const TAX_STATIC_TTL_MS = 5 * 60_000;
+let sectionsCache: { at: number; value: TaxSection[] } | null = null;
+const slabsCache = new Map<string, { at: number; value: TaxSlab[] }>();
+
+export function invalidateTaxStaticCache(): void {
+  sectionsCache = null;
+  slabsCache.clear();
+}
+
 export async function getTaxSections(db: Queryable = DB): Promise<TaxSection[]> {
+  if (db === DB && sectionsCache && Date.now() - sectionsCache.at < TAX_STATIC_TTL_MS) {
+    return sectionsCache.value;
+  }
   const result = await db.query(
     `SELECT section_code, name, description, max_limit, applicable_regime, sort_order
      FROM tax_sections ORDER BY sort_order`
   );
-  return result.rows.map((r) => ({
+  const value = result.rows.map((r) => ({
     ...r,
     max_limit: Number(r.max_limit),
   }) as TaxSection);
+  if (db === DB) sectionsCache = { at: Date.now(), value };
+  return value;
 }
 
 export async function getTaxSlabs(
@@ -342,6 +356,11 @@ export async function getTaxSlabs(
   regime?: string,
   db: Queryable = DB
 ): Promise<TaxSlab[]> {
+  const key = `${financialYear}|${regime ?? ""}`;
+  if (db === DB) {
+    const hit = slabsCache.get(key);
+    if (hit && Date.now() - hit.at < TAX_STATIC_TTL_MS) return hit.value;
+  }
   const params: unknown[] = [financialYear];
   let sql = `SELECT id, financial_year, regime, slab_from, slab_to, rate, cess_rate
              FROM tax_regime_slabs WHERE financial_year = $1`;
@@ -351,13 +370,15 @@ export async function getTaxSlabs(
   }
   sql += ` ORDER BY regime, slab_from`;
   const result = await db.query(sql, params);
-  return result.rows.map((r) => ({
+  const value = result.rows.map((r) => ({
     ...r,
     slab_from: Number(r.slab_from),
     slab_to: r.slab_to === null ? null : Number(r.slab_to),
     rate: Number(r.rate),
     cess_rate: Number(r.cess_rate),
   }) as TaxSlab);
+  if (db === DB) slabsCache.set(key, { at: Date.now(), value });
+  return value;
 }
 
 export async function getSlabsFor(

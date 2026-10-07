@@ -254,11 +254,36 @@ export type PreferenceRow = {
 
 /**
  * Returns the full type × channel matrix. Rows without explicit DB records
- * default to enabled (in_app) / disabled (email).
+ * default to enabled (in_app) / disabled (email). Memoized 5min per user on
+ * the pool path so the nightly triple-generator fan-out reads once per user
+ * per run; upsertPreference invalidates.
  */
+const MATRIX_TTL_MS = 5 * 60_000;
+const matrixCache = new Map<number, { at: number; value: PreferenceRow[] }>();
+
+export function invalidateMatrixCache(userId?: number): void {
+  if (userId === undefined) matrixCache.clear();
+  else matrixCache.delete(userId);
+}
+
 export async function getPreferenceMatrix(
   userId: number,
   q: Queryable = DB
+): Promise<PreferenceRow[]> {
+  if (q === DB) {
+    const hit = matrixCache.get(userId);
+    if (hit && Date.now() - hit.at < MATRIX_TTL_MS) return hit.value;
+    const value = await getPreferenceMatrixFresh(userId, q);
+    matrixCache.set(userId, { at: Date.now(), value });
+    if (matrixCache.size > 5000) matrixCache.clear();
+    return value;
+  }
+  return getPreferenceMatrixFresh(userId, q);
+}
+
+async function getPreferenceMatrixFresh(
+  userId: number,
+  q: Queryable
 ): Promise<PreferenceRow[]> {
   const stored = await q.query<{
     notification_type: string;
@@ -305,6 +330,7 @@ export async function upsertPreference(
      DO UPDATE SET is_enabled = $4, updated_at = CURRENT_TIMESTAMP`,
     [params.userId, params.notificationType, params.channel, params.isEnabled]
   );
+  invalidateMatrixCache(params.userId);
 }
 
 // ---------------------------------------------------------------------------

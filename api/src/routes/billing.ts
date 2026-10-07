@@ -4,6 +4,7 @@ import { withUser } from "../db";
 import { getBillingProfile } from "../queries/entitlements";
 import { getBillingConfig, getStripe, requireStripePrice } from "../billing/config";
 import { findActiveSubscription, markCancelAtPeriodEnd, upsertSubscriptionFromCheckout, handleSubscriptionUpdate, findUserByCustomerId, insertBillingEvent } from "../queries/billing";
+import { invalidatePlanCache } from "../queries/entitlements";
 
 export const billing = new Hono();
 export const billingProfile = new Hono();
@@ -133,12 +134,14 @@ billing.post("/webhook", async (c) => {
     await withUser(userId, async (client) => {
       await upsertSubscriptionFromCheckout(client, { userId, planCode, customerId, subscriptionId });
     });
+    invalidatePlanCache(userId);
   } else if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
     const sub = obj as { id?: string; status?: string; cancel_at_period_end?: boolean; current_period_end?: number; customer?: string };
     if (sub.id) {
       await withUser(userId, async (client) => {
         await handleSubscriptionUpdate(client, { userId, subscriptionId: sub.id as string, status: sub.status, cancelAtPeriodEnd: sub.cancel_at_period_end, currentPeriodEnd: sub.current_period_end });
       });
+      invalidatePlanCache(userId);
     }
   }
 

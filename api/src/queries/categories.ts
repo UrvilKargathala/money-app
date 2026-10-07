@@ -18,6 +18,30 @@ export async function listCategories(
   userId: number,
   q: Queryable = DB
 ): Promise<CategoryRow[]> {
+  // 60s per-user memo (pool path only); CUD below invalidates.
+  if (q === DB) {
+    const hit = catCache.get(userId);
+    if (hit && Date.now() - hit.at < CAT_TTL_MS) return hit.value;
+    const rows = await listCategoriesFresh(userId, q);
+    catCache.set(userId, { at: Date.now(), value: rows });
+    if (catCache.size > 5000) catCache.clear();
+    return rows;
+  }
+  return listCategoriesFresh(userId, q);
+}
+
+const CAT_TTL_MS = 60_000;
+const catCache = new Map<number, { at: number; value: CategoryRow[] }>();
+
+export function invalidateCategoryCache(userId?: number): void {
+  if (userId === undefined) catCache.clear();
+  else catCache.delete(userId);
+}
+
+async function listCategoriesFresh(
+  userId: number,
+  q: Queryable
+): Promise<CategoryRow[]> {
   const result = await q.query<CategoryRow>(
     `SELECT id, name, parent_id, color, icon, is_system, version
      FROM categories
@@ -71,6 +95,7 @@ export async function insertCategory(
      RETURNING id, name, parent_id, color, icon`,
     [params.userId, params.parentId, params.name, params.color, params.icon]
   );
+  invalidateCategoryCache(params.userId);
   return result.rows[0];
 }
 
@@ -90,7 +115,10 @@ export function updateCategory(
      SET name = $3, color = $4, icon = $5, version = version + 1
      WHERE user_id = $1 AND id = $2 AND is_system = 0 AND version = $6`,
     [params.userId, params.id, params.name, params.color, params.icon, params.version]
-  );
+  ).then((r) => {
+    invalidateCategoryCache(params.userId);
+    return r;
+  });
 }
 
 export async function getCategoryUsageCounts(
@@ -121,6 +149,7 @@ export async function getCategoryUsageCounts(
 }
 
 export function deleteCategory(q: Queryable, userId: number, id: string) {
+  invalidateCategoryCache(userId);
   return q.query(
     `DELETE FROM categories WHERE user_id = $1 AND id = $2 AND is_system = 0`,
     [userId, id]
