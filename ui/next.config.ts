@@ -3,6 +3,11 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@moneymind/api"],
+  experimental: {
+    // Per-icon imports for the icon barrel (lucide-react is fully ESM but
+    // the barrel re-exports every icon; this keeps tree-shaking exact).
+    optimizePackageImports: ["lucide-react"],
+  },
 };
 
 // Section-hierarchy migration (P7): every legacy flat path permanently

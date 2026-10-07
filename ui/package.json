@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "browserslist": [
+    "chrome >= 92",
+    "edge >= 92",
+    "firefox >= 90",
+    "safari >= 15.4",
+    "opera >= 78",
+    "not dead"
+  ],
   "scripts": {
     "dev": "next dev -p 3016",
     "build": "next build",
