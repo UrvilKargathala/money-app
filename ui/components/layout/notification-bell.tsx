@@ -189,7 +189,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                   {tab}
                 </button>
               ))}
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={fetchFeed} disabled={loading} title="Refresh">
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={fetchFeed} disabled={loading} title="Refresh" aria-label="Refresh notifications">
                 <Loader2 className={cn("h-4 w-4", loading && "animate-spin")} />
               </Button>
             </div>
@@ -226,11 +226,11 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                       </div>
                       <div className="flex flex-col gap-1 shrink-0">
                         {!n.is_read && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMarkRead(n.id)} title="Mark read" disabled={pendingIds.has(n.id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMarkRead(n.id)} title="Mark read" aria-label={`Mark as read: ${n.title}`} disabled={pendingIds.has(n.id)}>
                             <Check className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-400 hover:text-error" onClick={() => handleDismiss(n.id)} title="Dismiss" disabled={pendingIds.has(n.id)}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-400 hover:text-error" onClick={() => handleDismiss(n.id)} title="Dismiss" aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>

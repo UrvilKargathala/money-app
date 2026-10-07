@@ -207,7 +207,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
           <div className="hidden lg:flex items-center"><GlobalSearch /></div>
 
           {/* Mobile search toggle */}
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSearchOpen((v) => !v)}>
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSearchOpen((v) => !v)} aria-label="Search">
             <Search className="h-5 w-5" />
           </Button>
 
@@ -220,6 +220,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             }}
             className="hidden lg:flex text-ink-3 hover:text-ink-1"
             title="Shortcuts (Cmd+K)"
+            aria-label="Command palette (Cmd+K)"
           >
             <Command className="h-5 w-5" />
           </Button>
@@ -245,7 +246,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             </div>
           </div>
 
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="text-ink-2">
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" aria-label="Log out" className="text-ink-2">
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
