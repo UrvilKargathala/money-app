@@ -22,6 +22,29 @@ settings.patch("/", requireAuth, async (c) => {
   }
   if (body.report_filters !== undefined) {
     if (!Array.isArray(body.report_filters) || body.report_filters.length > 20) return c.json({ error: "You can save up to 20 report filters." }, 400);
+    // Shape allow-list: the UI only writes {name,start,end} (reports-manager).
+    // Rejects prototype keys, nested objects, and oversized strings.
+    for (const entry of body.report_filters) {
+      if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+        return c.json({ fieldErrors: { report_filters: "Each filter must be an object." } }, 400);
+      }
+      const keys = Object.keys(entry);
+      if (keys.length === 0 || keys.length > 3 || keys.some((k) => k !== "name" && k !== "start" && k !== "end")) {
+        return c.json({ fieldErrors: { report_filters: "Filters support only name, start and end." } }, 400);
+      }
+      for (const k of ["name", "start", "end"] as const) {
+        const v = (entry as Record<string, unknown>)[k];
+        if (v !== undefined && (typeof v !== "string" || v.length > 120)) {
+          return c.json({ fieldErrors: { report_filters: `${k} must be a short string.` } }, 400);
+        }
+      }
+      for (const k of ["start", "end"] as const) {
+        const v = (entry as Record<string, unknown>)[k];
+        if (typeof v === "string" && v !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+          return c.json({ fieldErrors: { report_filters: `${k} must be a date.` } }, 400);
+        }
+      }
+    }
     await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET report_filters = $2::jsonb WHERE user_id = $1", [c.get("user").user_id, JSON.stringify(body.report_filters)]));
   }
   return c.json({ success: true });
