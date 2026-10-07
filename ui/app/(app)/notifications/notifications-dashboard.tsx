@@ -257,10 +257,24 @@ export function NotificationsDashboard({
   // (archive / preferences / emails) or a hidden tab performs zero requests.
   useEffect(() => {
     if (mainTab !== "feed") return;
-    const id = setInterval(() => {
+    let id = setInterval(() => {
       if (document.visibilityState === "visible") router.refresh();
     }, 300000);
-    return () => clearInterval(id);
+    // bfcache-friendly: release while stored, re-arm on restore.
+    const onHide = () => clearInterval(id);
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      id = setInterval(() => {
+        if (document.visibilityState === "visible") router.refresh();
+      }, 300000);
+    };
+    window.addEventListener("pagehide", onHide);
+    window.addEventListener("pageshow", onShow);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("pagehide", onHide);
+      window.removeEventListener("pageshow", onShow);
+    };
   }, [mainTab, router]);
 
   // Keep prefs in sync if initial changes after refresh

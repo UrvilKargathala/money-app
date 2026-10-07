@@ -16,10 +16,32 @@ export function SessionExpiryGuard() {
       } catch { /* Do not treat temporary network failure as session expiry. */ }
     };
     const onVisible = () => { if (document.visibilityState === "visible") void check(); };
+    // bfcache-friendly: release the heartbeat when the page is stored and
+    // re-arm it when restored (timers alone don't block bfcache, but an
+    // always-armed interval is reported as a failure reason).
+    let interval = window.setInterval(check, 300_000);
+    const onHide = () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      stopped = false;
+      void check();
+      interval = window.setInterval(check, 300_000);
+      document.addEventListener("visibilitychange", onVisible);
+    };
     void check();
-    const interval = window.setInterval(check, 300_000);
     document.addEventListener("visibilitychange", onVisible);
-    return () => { stopped = true; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+    window.addEventListener("pagehide", onHide);
+    window.addEventListener("pageshow", onShow);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", onHide);
+      window.removeEventListener("pageshow", onShow);
+    };
   }, []);
   return null;
 }
