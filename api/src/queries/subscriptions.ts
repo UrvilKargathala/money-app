@@ -109,7 +109,7 @@ export function toSubscription(row: SubscriptionRow): Subscription {
     next_renewal_date: isoDate(row.next_renewal_date),
     days_until_renewal: daysUntil(row.next_renewal_date),
     last_paid_date:
-      row.last_paid_date === null ? null : row.last_paid_date.toISOString().slice(0, 10),
+      row.last_paid_date === null ? null : isoDate(row.last_paid_date),
     last_paid_amount:
       row.last_paid_amount === null ? null : Number(row.last_paid_amount),
     last_used_at: toISODate(row.last_used_at),

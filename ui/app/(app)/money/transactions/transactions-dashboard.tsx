@@ -89,7 +89,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   const groups = useMemo(() => {
     const map = new Map<string, { date: string; total: number; items: Txn[] }>();
     for (const t of filtered) {
-      const d = new Date(t.date).toISOString().slice(0, 10);
+      const d = String(t.date).slice(0, 10);
       if (!map.has(d)) map.set(d, { date: d, total: 0, items: [] });
       const g = map.get(d)!;
       g.items.push(t);

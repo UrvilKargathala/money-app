@@ -123,7 +123,7 @@ export function TransactionFormDialog({
                 id="txn-date"
                 name="date"
                 type="date"
-                defaultValue={transaction ? new Date(transaction.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)}
+                defaultValue={transaction ? String(transaction.date).slice(0, 10) : new Date().toLocaleDateString("en-CA")}
                 required
               />
               {state?.fieldErrors?.date && <p className="text-xs text-error-dark">{state.fieldErrors.date}</p>}

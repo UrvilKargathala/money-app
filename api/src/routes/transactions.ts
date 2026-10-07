@@ -105,7 +105,7 @@ transactions.get("/export", requireAuth, async (c) => {
 
   const header = ["Date", "Type", "Description", "Category", "Account", "Amount", "Notes", "Tags"];
   const csvRows = rows.map((t) => [
-    t.date.toISOString().slice(0, 10),
+    isoDate(t.date),
     t.type,
     t.description ?? "",
     t.category_name ?? "",

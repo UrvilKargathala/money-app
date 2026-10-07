@@ -20,7 +20,7 @@ import { ACCOUNT_COLOR_PALETTE, ACCOUNT_TYPES } from "../constants";
 import { parseAmount, parseBoolean } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
-import { csvEscape } from "../utils/format";
+import { csvEscape, isoDate } from "../utils/format";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 
 const accounts = new Hono();
@@ -287,7 +287,7 @@ accounts.get("/:id/history", requireAuth, async (c) => {
 
   const history = await getBalanceHistory(user.user_id, id, from, to);
   const points = history.map((h) => ({
-    date: h.date.toISOString().slice(0, 10),
+    date: isoDate(h.date),
     balance: Number(h.balance),
   }));
 
@@ -328,7 +328,7 @@ accounts.post("/:id/snapshots", requireAuth, async (c) => {
   const id = c.req.param("id");
   const body = await readJson(c);
   const balance = Number(body.balance ?? NaN);
-  const date = String(body.date ?? new Date().toISOString().slice(0, 10));
+  const date = String(body.date ?? isoDate(new Date()));
   if (!Number.isFinite(balance)) {
     return c.json({ fieldErrors: { balance: "Enter a valid balance." } }, 400);
   }

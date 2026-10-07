@@ -1,4 +1,5 @@
 import { query } from "../db";
+import { isoDate } from "../utils/format";
 import { round2 } from "../utils/finance";
 
 export type Queryable = { query: typeof query };
@@ -171,5 +172,5 @@ export async function getDateGroups(
 }
 
 function isoDateOf(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return isoDate(d);
 }

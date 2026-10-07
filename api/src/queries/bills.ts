@@ -1,4 +1,5 @@
 import { query } from "../db";
+import { isoDate } from "../utils/format";
 
 export type Queryable = { query: typeof query };
 
@@ -90,7 +91,7 @@ export function toBill(row: BillRow): Bill {
     estimated_amount:
       row.estimated_amount === null ? null : Number(row.estimated_amount),
     last_paid_date:
-      row.last_paid_date === null ? null : row.last_paid_date.toISOString().slice(0, 10),
+      row.last_paid_date === null ? null : isoDate(row.last_paid_date),
     last_paid_amount:
       row.last_paid_amount === null ? null : Number(row.last_paid_amount),
   };

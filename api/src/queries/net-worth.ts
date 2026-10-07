@@ -1,5 +1,5 @@
 ﻿import { query } from "../db";
-import { isoDate } from "../utils/format";
+import { daysBetweenDateOnly, isoDate, todayUTC } from "../utils/format";
 
 export type Queryable = { query: typeof query };
 
@@ -68,7 +68,7 @@ export async function getNetWorthBreakdown(
         SELECT SUM(amount) AS total FROM goal_contributions
         WHERE user_id = $1 AND goal_id = g.id
       ) gc ON true
-      WHERE g.user_id = $1 AND g.status <> 'abandoned'
+      WHERE g.user_id = $1 AND g.status = 'active'
       UNION ALL
       SELECT 'manual_assets', 'Manual assets', 'asset',
              COALESCE(SUM(valuation), 0)::numeric(14,2)
@@ -194,7 +194,7 @@ export async function upsertSnapshotFromComputation(
          SELECT SUM(amount) AS total FROM goal_contributions
          WHERE user_id = $1 AND goal_id = g.id
        ) gc ON true
-       WHERE g.user_id = $1 AND g.status <> 'abandoned'
+        WHERE g.user_id = $1 AND g.status = 'active'
        UNION ALL
        SELECT 'asset', COALESCE(SUM(valuation), 0)
        FROM manual_assets WHERE user_id = $1
@@ -340,12 +340,10 @@ function changeSince(
 ): { current: SnapshotRow | null; previous: SnapshotRow | null } {
   if (snapshots.length === 0) return { current: null, previous: null };
   const current = snapshots[snapshots.length - 1];
-  const refDate = new Date();
-  refDate.setDate(refDate.getDate() - referenceDaysAgo);
-  const refIso = refDate.toISOString().slice(0, 10);
+  const today = todayUTC();
   let previous: SnapshotRow | null = null;
   for (const snap of snapshots) {
-    if (snap.date <= refIso && snap.date !== current.date) previous = snap;
+    if (snap.date !== current.date && daysBetweenDateOnly(snap.date, today) >= referenceDaysAgo) previous = snap;
   }
   return { current, previous };
 }

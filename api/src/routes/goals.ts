@@ -5,7 +5,7 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, isUniqueViolation } from "./helpers";
-import { csvEscape } from "../utils/format";
+import { csvEscape, parseDateOnlyUTC } from "../utils/format";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   addContribution,
@@ -45,10 +45,12 @@ const PRIORITIES = ["high", "medium", "low"];
 const STATUSES = ["active", "paused", "completed"];
 
 function isoDateStr(value: string): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return value;
+  try {
+    parseDateOnlyUTC(value);
+    return value;
+  } catch {
+    return null;
+  }
 }
 
 function validUuid(value: string): boolean {
