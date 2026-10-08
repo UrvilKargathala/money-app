@@ -24,27 +24,7 @@ import { ExportButton } from "@/components/common/export-button";
 import { usePaymentsHistory } from "@/components/common/use-payments-history";
 import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 
-type Sub = {
-  id: string;
-  service_name: string;
-  amount: number;
-  frequency: string;
-  next_renewal_date: string;
-  account_id: string | null;
-  account_name: string | null;
-  category_id: string | null;
-  category_name: string | null;
-  status: string;
-  notes: string | null;
-  version: number;
-  days_until_renewal: number;
-  monthly_equivalent: number;
-  last_paid_date: string | null;
-  last_paid_amount: number | null;
-  last_used_at: string | null;
-  last_snooze_days: number | null;
-  last_snooze_date: string | null;
-};
+import type { Sub } from "@/lib/entities";
 
 type Audit = {
   id: string;

@@ -8,20 +8,7 @@ import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Power, PowerOff, CheckCircle, SkipForward, CreditCard, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-type Bill = {
-  id: string;
-  name: string;
-  amount: number | null;
-  estimated_amount: number | null;
-  due_day: number;
-  frequency: string;
-  account_name: string | null;
-  category_name: string | null;
-  is_autopay: number;
-  current_period_status: string;
-  is_active: number;
-  version: number;
-};
+import type { Bill } from "@/lib/entities";
 
 function statusBadge(status: string) {
   switch (status) {

@@ -10,7 +10,7 @@ import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/enti
 import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createSubscription, updateSubscription } from "./actions";
 
-type Sub = { id: string; service_name: string; amount: number; frequency: string; next_renewal_date: string; account_id: string | null; category_id: string | null; notes: string | null; version: number };
+import type { Sub } from "@/lib/entities";
 
 export function SubscriptionFormDialog({
   open,

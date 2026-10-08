@@ -8,19 +8,7 @@ import { formatINR } from "@/lib/format";
 import { AlarmClock, MoreVertical, Pencil, Trash2, Pause, Play, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-type Sub = {
-  id: string;
-  service_name: string;
-  amount: number;
-  frequency: string;
-  next_renewal_date: string;
-  account_name: string | null;
-  status: string;
-  days_until_renewal: number;
-  version: number;
-  last_snooze_days: number | null;
-  last_snooze_date: string | null;
-};
+import type { Sub } from "@/lib/entities";
 
 function statusBadge(s: string) {
   switch (s) {

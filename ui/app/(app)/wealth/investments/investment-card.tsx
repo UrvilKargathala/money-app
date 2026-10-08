@@ -8,18 +8,7 @@ import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Trash2, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
-type Investment = {
-  id: string;
-  name: string;
-  type: string;
-  category: string;
-  units: string;
-  buy_price: string;
-  current_price: string;
-  updated_at?: string | null;
-  purchase_date: string;
-  version: number;
-};
+import type { Investment } from "@/lib/entities";
 
 export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: { investment: Investment; onEdit: () => void; onDelete: () => void; onUpdatePrice: () => void }) {
   const invested = Number(investment.units) * Number(investment.buy_price);

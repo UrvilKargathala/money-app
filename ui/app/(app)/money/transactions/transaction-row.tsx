@@ -8,21 +8,7 @@ import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, ScanSearch, Tags, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-type Txn = {
-  id: string;
-  type: string;
-  amount: string;
-  description: string | null;
-  merchant_clean: string | null;
-  category_name: string | null;
-  category_color: string | null;
-  date: string;
-  account_name: string;
-  account_color: string | null;
-  source: string;
-  needs_review: number;
-  tags: { id: string; name: string; color: string | null }[];
-};
+import type { Txn } from "@/lib/entities";
 
 export const TransactionRow = memo(
   function TransactionRow({

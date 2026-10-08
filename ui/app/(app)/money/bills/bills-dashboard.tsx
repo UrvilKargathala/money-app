@@ -23,26 +23,7 @@ import { ExportButton } from "@/components/common/export-button";
 import { usePaymentsHistory } from "@/components/common/use-payments-history";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
-type Bill = {
-  id: string;
-  name: string;
-  amount: number | null;
-  estimated_amount: number | null;
-  due_day: number;
-  frequency: string;
-  account_id: string | null;
-  account_name: string | null;
-  category_id: string | null;
-  category_name: string | null;
-  reminder_days: number;
-  is_autopay: number;
-  notes: string | null;
-  current_period_status: string;
-  is_active: number;
-  version: number;
-  last_paid_date: string | null;
-  last_paid_amount: number | null;
-};
+import type { Bill } from "@/lib/entities";
 
 type Overview = { total_monthly_obligation: number; due_this_week: number; overdue_count: number };
 

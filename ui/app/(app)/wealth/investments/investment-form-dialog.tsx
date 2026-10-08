@@ -9,7 +9,7 @@ import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/enti
 import { FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createInvestment, updateInvestment } from "./actions";
 
-type Investment = { id: string; name: string; type: string; category: string; units: string; buy_price: string; current_price: string; purchase_date: string; version: number };
+import type { Investment } from "@/lib/entities";
 
 export function InvestmentFormDialog({
   open,

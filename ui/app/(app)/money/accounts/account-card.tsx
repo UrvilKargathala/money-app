@@ -9,17 +9,7 @@ import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-type Account = {
-  id: string;
-  name: string;
-  type: string;
-  institution: string | null;
-  balance: number;
-  credit_limit: number | null;
-  color: string | null;
-  is_active: number;
-  display_name: string;
-};
+import type { Account } from "@/lib/entities";
 
 export function AccountCard({
   account,

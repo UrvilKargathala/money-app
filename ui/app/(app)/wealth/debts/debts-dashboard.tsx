@@ -23,23 +23,7 @@ import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dia
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-type Debt = {
-  id: string;
-  name: string;
-  type: string;
-  principal_original: string;
-  principal_outstanding: string;
-  interest_rate: string;
-  emi_amount: string;
-  tenure_months: number;
-  start_date: string;
-  version: number;
-  account_id: string | null;
-  months_remaining?: number | null;
-  total_interest_paid?: number | string;
-  remaining_interest?: number | null;
-  progress_pct?: number | null;
-};
+import type { Debt } from "@/lib/entities";
 
 type Dti = {
   monthly_income: number | null;

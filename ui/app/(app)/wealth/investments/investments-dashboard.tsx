@@ -41,18 +41,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-type Investment = {
-  id: string;
-  name: string;
-  type: string;
-  category: string;
-  units: string;
-  buy_price: string;
-  current_price: string;
-  purchase_date: string;
-  maturity_date?: string | null;
-  version: number;
-};
+import type { Investment } from "@/lib/entities";
 
 type Sip = {
   id: string;

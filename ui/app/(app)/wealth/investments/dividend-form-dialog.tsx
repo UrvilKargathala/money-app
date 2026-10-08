@@ -19,7 +19,7 @@ type Dividend = {
   notes: string | null;
 };
 
-type InvestmentOpt = { id: string; name: string };
+import type { InvestmentRef as InvestmentOpt } from "@/lib/entities";
 
 export function DividendFormDialog({
   open,

@@ -8,7 +8,7 @@ import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/enti
 import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createDebt, updateDebt } from "./actions";
 
-type Debt = { id: string; name: string; type: string; principal_original: string; principal_outstanding: string; interest_rate: string; emi_amount: string; tenure_months: number; start_date: string; version: number; account_id: string | null };
+import type { Debt } from "@/lib/entities";
 
 export function DebtFormDialog({
   open,

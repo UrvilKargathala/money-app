@@ -9,7 +9,7 @@ import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/enti
 import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createGoal, updateGoal } from "./actions";
 
-type Goal = { id: string; name: string; target_amount: number; target_date: string; priority: string; notes: string | null; version: number; account_id: string | null };
+import type { Goal } from "@/lib/entities";
 
 export function GoalFormDialog({
   open,

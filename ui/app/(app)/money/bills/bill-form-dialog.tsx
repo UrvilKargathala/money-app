@@ -10,7 +10,7 @@ import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/enti
 import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createBill, updateBill } from "./actions";
 
-type Bill = { id: string; name: string; amount: number | null; estimated_amount: number | null; due_day: number; frequency: string; account_id: string | null; category_id: string | null; reminder_days: number; is_autopay: number; notes: string | null; version: number };
+import type { Bill } from "@/lib/entities";
 
 export function BillFormDialog({
   open,

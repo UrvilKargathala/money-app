@@ -17,21 +17,7 @@ import { deactivateAccountAction, reactivateAccountAction, deleteAccountAction }
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-type Account = {
-  id: string;
-  name: string;
-  type: string;
-  institution: string | null;
-  balance: number;
-  credit_limit: number | null;
-  color: string | null;
-  is_active: number;
-  display_name: string;
-  is_asset: number;
-  version: number;
-  opening_balance: number;
-  notes: string | null;
-};
+import type { Account } from "@/lib/entities";
 
 type Props = {
   accounts: Account[];

@@ -8,18 +8,7 @@ import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import Link from "next/link";
 
-type Debt = {
-  id: string;
-  name: string;
-  type: string;
-  principal_original: string;
-  principal_outstanding: string;
-  interest_rate: string;
-  emi_amount: string;
-  tenure_months: number;
-  start_date: string;
-  version: number;
-};
+import type { Debt } from "@/lib/entities";
 
 export function DebtCard({
   debt,

@@ -20,7 +20,7 @@ type Sip = {
   status: string;
 };
 
-type InvestmentOpt = { id: string; name: string };
+import type { InvestmentRef as InvestmentOpt } from "@/lib/entities";
 
 export function SipFormDialog({
   open,

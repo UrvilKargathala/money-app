@@ -24,19 +24,7 @@ import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/
 import { ExportButton } from "@/components/common/export-button";
 import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 
-type Goal = {
-  id: string;
-  name: string;
-  target_amount: number;
-  target_date: string;
-  priority: string;
-  status: string;
-  current_amount: number;
-  progress_pct: number;
-  version: number;
-  account_id: string | null;
-  notes: string | null;
-};
+import type { Goal } from "@/lib/entities";
 
 type Dashboard = { goal_count: number; total_target: number; total_saved: number; completion_pct: number };
 

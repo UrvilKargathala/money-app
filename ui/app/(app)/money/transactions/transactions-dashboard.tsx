@@ -19,25 +19,7 @@ import { TransactionToolsDialog } from "./transaction-tools-dialog";
 import { MerchantRulesDialog } from "./merchant-rules-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Txn = {
-  id: string;
-  account_id: string;
-  type: string;
-  amount: string;
-  description: string | null;
-  merchant_clean: string | null;
-  category_id: string | null;
-  category_name: string | null;
-  category_color: string | null;
-  date: string;
-  notes: string | null;
-  account_name: string;
-  account_color: string | null;
-  version: number;
-  source: string;
-  needs_review: number;
-  tags: { id: string; name: string; color: string | null }[];
-};
+import type { Txn } from "@/lib/entities";
 
 type Props = {
   transactions: Txn[];

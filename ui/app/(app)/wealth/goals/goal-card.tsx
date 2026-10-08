@@ -9,17 +9,7 @@ import { formatINR } from "@/lib/format";
 import { MoreVertical, Pencil, Trash2, Pause, Play, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
-type Goal = {
-  id: string;
-  name: string;
-  target_amount: number;
-  target_date: string;
-  priority: string;
-  status: string;
-  current_amount: number;
-  progress_pct: number;
-  version: number;
-};
+import type { Goal } from "@/lib/entities";
 
 export function GoalCard({
   goal,
