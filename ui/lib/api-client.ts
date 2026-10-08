@@ -346,37 +346,8 @@ export async function getBillsOverview(): Promise<{
 }
 
 // ---------------------------------------------------------------------------
-// Bills - full wiring: payments, YoY, calendar, upcoming, cashflow, reminders,
-// suggest-recurring + export href helpers
+// Bills - calendar, upcoming, cashflow, suggest-recurring
 // ---------------------------------------------------------------------------
-
-export async function getBillPayments(billId: string): Promise<{
-  payments: {
-    id: string;
-    payable_type: string;
-    payable_id: string;
-    transaction_id: string | null;
-    amount: number;
-    period_label: string;
-    period_month: number;
-    period_year: number;
-    notes: string | null;
-    created_at: string;
-  }[];
-} | null> {
-  return apiJson(`/api/bills/${billId}/payments`);
-}
-
-export async function getBillPaymentsYoY(billId: string): Promise<{
-  current: { year: number; total: number };
-  previous: { year: number; total: number };
-} | null> {
-  return apiJson(`/api/bills/${billId}/payments/yoy`);
-}
-
-export function getBillPaymentsExportHref(billId: string): string {
-  return `/api/bills/${billId}/payments/export`;
-}
 
 export async function getBillsCalendar(): Promise<{
   events: { bill_id: string; name: string; amount: number; due_date: string; days_until: number; status: string }[];
@@ -410,49 +381,6 @@ export async function getBillsCashflowWaterfall(): Promise<{
   return apiJson("/api/bills/cashflow-waterfall");
 }
 
-export async function getBillReminders(billId: string): Promise<{
-  reminders: { id: string; bill_id: string; days_before: number; channel: string; is_enabled: number }[];
-} | null> {
-  return apiJson(`/api/bills/${billId}/reminders`);
-}
-
-export async function createBillReminderApi(
-  billId: string,
-  payload: { days_before: number; channel?: string; is_enabled?: number }
-): Promise<{ success: boolean; reminder: { id: string } } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/bills/${billId}/reminders`, { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; reminder: { id: string } };
-  } catch {
-    return null;
-  }
-}
-
-export async function updateBillReminderApi(
-  billId: string,
-  reminderId: string,
-  payload: { days_before: number; is_enabled?: number }
-): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/bills/${billId}/reminders/${reminderId}`, { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
-}
-
-export async function deleteBillReminderApi(billId: string, reminderId: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/bills/${billId}/reminders/${reminderId}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
-}
-
 export async function suggestRecurringBillsApi(): Promise<{
   suggestions: { description: string; avg_amount: number; occurrence_count: number }[];
 } | null> {
@@ -468,37 +396,6 @@ export async function suggestRecurringBillsApi(): Promise<{
 // ---------------------------------------------------------------------------
 // Subscriptions - payments, snooze, audits
 // ---------------------------------------------------------------------------
-
-export async function getSubscriptionPayments(subscriptionId: string): Promise<{
-  payments: {
-    id: string;
-    payable_type: string;
-    payable_id: string;
-    transaction_id: string | null;
-    amount: number;
-    period_label: string;
-    period_month: number;
-    period_year: number;
-    notes: string | null;
-    created_at: string;
-  }[];
-} | null> {
-  return apiJson(`/api/subscriptions/${subscriptionId}/payments`);
-}
-
-export function getSubscriptionPaymentsExportHref(subscriptionId: string): string {
-  return `/api/subscriptions/${subscriptionId}/payments/export`;
-}
-
-export async function snoozeSubscriptionApi(subscriptionId: string, days = 7): Promise<{ success: boolean; next_renewal_date: string } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/subscriptions/${subscriptionId}/snooze`, { method: "POST", json: { days } });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; next_renewal_date: string };
-  } catch {
-    return null;
-  }
-}
 
 export async function getSubscriptionAudits(): Promise<{
   audits: {
@@ -530,16 +427,6 @@ export async function getSubscriptionAudits(): Promise<{
   return apiJson("/api/subscription-audits");
 }
 
-export async function dismissSubscriptionAuditApi(auditId: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/subscriptions/audits/${auditId}/dismiss`, { method: "POST", json: {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
-}
-
 export async function getSubscriptionsData(): Promise<{
   subscriptions: {
     id: string;
@@ -565,12 +452,6 @@ export async function getSubscriptionsData(): Promise<{
 
 export async function getSubscriptionsMonthlyBurn(): Promise<{ monthly_burn: number } | null> {
   return apiJson("/api/subscriptions/monthly-burn");
-}
-
-export async function getSubscriptionsDueRenewals(): Promise<{
-  renewals: { id: string; service_name: string; amount: number; next_renewal_date: string; days_until_renewal: number }[];
-} | null> {
-  return apiJson("/api/subscriptions/due-renewals");
 }
 
 export async function getTransfersData(): Promise<{ transfers: unknown[] } | null> {
