@@ -58,14 +58,20 @@ jobs.get("/run", async (c) => {
     }
   }
 
-  if (wanted("bills")) await isolated("bills", generateBillAlerts);
-  if (wanted("subscriptions")) await isolated("subscriptions", generateSubscriptionAlerts);
-  if (wanted("goals")) await isolated("goals", generateGoalAlerts);
+  if (wanted("bills") || wanted("subscriptions") || wanted("goals")) {
+    // Global generators are independent: run concurrently, stay isolated.
+    await Promise.all([
+      wanted("bills") ? isolated("bills", generateBillAlerts) : Promise.resolve(),
+      wanted("subscriptions") ? isolated("subscriptions", generateSubscriptionAlerts) : Promise.resolve(),
+      wanted("goals") ? isolated("goals", generateGoalAlerts) : Promise.resolve(),
+    ]);
+  }
 
   if (wanted("accounts") || wanted("budgets") || wanted("debts")) {
     await isolated("fanout", async () => {
-      // Cursor pages bound memory/time per invocation; one bad user can't
-      // abort the rest (per-user isolation inside the page loop).
+      // Cursor pages bound memory/time per invocation; a bounded worker pool
+      // (5 << pool max 10) parallelizes users; one bad user can't abort the
+      // rest (per-user isolation inside the pool).
       const errors: string[] = [];
       let after = 0;
       let inserted = 0;
@@ -73,14 +79,25 @@ jobs.get("/run", async (c) => {
         const userIds = await listUsersWithActivity(undefined, after, 100);
         if (userIds.length === 0) break;
         const batched: NewNotification[] = [];
-        for (const userId of userIds) {
-          try {
-            if (wanted("accounts")) batched.push(...(await buildAccountAlerts(userId)));
-            if (wanted("budgets")) batched.push(...(await buildBudgetAlerts(userId, month, year)));
-            if (wanted("debts")) batched.push(...(await buildDebtAlerts(userId)));
-          } catch (err) {
-            errors.push(`user ${userId}: ${err instanceof Error ? err.message : "unknown"}`);
-          }
+        const CONCURRENCY = 5;
+        for (let i = 0; i < userIds.length; i += CONCURRENCY) {
+          const chunk = userIds.slice(i, i + CONCURRENCY);
+          const results = await Promise.all(
+            chunk.map(async (userId) => {
+              try {
+                const [a, b, d] = await Promise.all([
+                  wanted("accounts") ? buildAccountAlerts(userId) : Promise.resolve([]),
+                  wanted("budgets") ? buildBudgetAlerts(userId, month, year) : Promise.resolve([]),
+                  wanted("debts") ? buildDebtAlerts(userId) : Promise.resolve([]),
+                ]);
+                return [...a, ...b, ...d];
+              } catch (err) {
+                errors.push(`user ${userId}: ${err instanceof Error ? err.message : "unknown"}`);
+                return [];
+              }
+            })
+          );
+          for (const rows of results) batched.push(...rows);
         }
         inserted += await insertGeneratedAlerts(batched);
         after = userIds[userIds.length - 1];
