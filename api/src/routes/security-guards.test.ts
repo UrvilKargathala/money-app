@@ -189,6 +189,21 @@ describe("security guard: tenant scoping in query modules", () => {
     /\$\{where\}/,
   ];
 
+  /**
+   * Known-safe SQL fragment builders (queries/sql.ts). Their output is
+   * tenant-guarded by construction (asserted in the meta-test below), so
+   * literals interpolating them are expanded before the user_id check.
+   */
+  const BUILDER_INTERPOLATION =
+    /\$\{\s*(joinAccount|joinCategory|lateralLastPayment)\s*\([^)]*\)\s*\}/g;
+
+  /** Paginated `WHERE ${where.join(" AND ")}` is safe when every where-array in the file leads with a tenant clause. */
+  function whereArraysLeadWithTenant(src: string): boolean {
+    const decls = [...src.matchAll(/const\s+where\s*=\s*\[([^\]]*)\]/g)];
+    if (decls.length === 0) return false;
+    return decls.every((m) => /["'][\w]*\.?user_id = \$1["']/.test(m[1]));
+  }
+
   /** All string literals (template + quoted) that look like SQL statements. */
   function sqlLiterals(src: string): string[] {
     const out: string[] = [];
@@ -205,9 +220,13 @@ describe("security guard: tenant scoping in query modules", () => {
     for (const rel of QUERY_FILES) {
       const src = readSrc(rel);
       // Extract template-literal SQL strings.
-      for (const sql of sqlLiterals(src)) {
+      for (let sql of sqlLiterals(src)) {
         if (!/\bSELECT\b/i.test(sql)) continue;
         if (ALLOWED_STATEMENTS.some((re) => re.test(sql))) continue;
+        // Expand trusted builder interpolations (meta-asserted below), then
+        // accept tenant-first where-array joins used by paginated counts.
+        sql = sql.replace(BUILDER_INTERPOLATION, " /*tenant-guarded*/ user_id ");
+        if (/WHERE\s+\$\{where\.join\(/.test(sql) && whereArraysLeadWithTenant(src)) continue;
         let touched: string | null = null;
         for (const table of USER_OWNED_TABLES) {
           if (
@@ -226,6 +245,20 @@ describe("security guard: tenant scoping in query modules", () => {
       }
     }
     expect(violations, violations.join("\n\n")).toEqual([]);
+  });
+
+  it("shared SQL builders emit tenant guards (trust anchor for interpolation)", async () => {
+    const builders = await import("../queries/sql");
+    for (const out of [
+      builders.joinAccount("b"),
+      builders.joinAccount("s", "a"),
+      builders.joinCategory("b"),
+      builders.joinCategory("t", "c"),
+      builders.lateralLastPayment("b", "bill"),
+      builders.lateralLastPayment("s", "subscription"),
+    ]) {
+      expect(out).toMatch(/user_id/);
+    }
   });
 
   it("every INSERT/UPDATE on a user-owned table includes user_id in the statement or params guard", () => {
@@ -255,8 +288,9 @@ describe("security guard: tenant scoping in query modules", () => {
 });
 
 describe("security guard: secrets never travel in query strings", () => {
-  // jobs.ts reads ?secret solely to REJECT it (400); auth-extras.ts reads ?token
-  // for magic-link verification via GET redirect (standard email-link pattern).
+  // jobs.ts accepts ?secret= as cron auth (Vercel Cron cannot send custom
+  // headers); auth-extras.ts reads ?token for magic-link verification via
+  // GET redirect (standard email-link pattern).
   const ALLOWED_FILES = new Set(["routes/jobs.ts", "routes/auth-extras.ts"]);
 
   it("no code reads auth material from c.req.query/searchParams", () => {
@@ -271,7 +305,7 @@ describe("security guard: secrets never travel in query strings", () => {
     expect(violations, "files reading secrets from query strings").toEqual([]);
   });
 
-  it("jobs/run still rejects query-string secrets explicitly", () => {
+  it("jobs/run accepts the query-string cron secret explicitly", () => {
     const src = readSrc("routes/jobs.ts");
     expect(src).toMatch(/query\(\s*["']secret["']/);
   });
@@ -323,8 +357,8 @@ describe("security guard: no per-row query loops (N+1)", () => {
   // Pinned pre-existing sites that are deliberate (tiny bounded loops).
   // New occurrences fail this test - batch them instead.
   const PINNED: Record<string, number[]> = {
-    "queries/goals.ts": [478], // milestone crossing: <=4 fixed pct rows
-    "queries/budget-extras.ts": [232], // template apply: bounded items loop
+    "queries/goals.ts": [504], // milestone crossing: <=4 fixed pct rows
+    "queries/budget-extras.ts": [234], // template apply: bounded items loop
     "queries/user-lifecycle.ts": [219], // data-copy: hardcoded table allowlist loop
   };
 

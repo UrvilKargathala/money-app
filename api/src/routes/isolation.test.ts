@@ -126,12 +126,12 @@ describe("lookup endpoints", () => {
 });
 
 describe("cron secret handling", () => {
-  it("rejects query-string secrets and honors the x-cron-secret header only", async () => {
+  it("accepts query-string and header secrets, rejects missing/wrong ones", async () => {
     const prev = process.env.CRON_SECRET;
     process.env.CRON_SECRET = "test-secret";
     try {
       const viaQuery = await requestAs(db.alice, "/api/jobs/run?secret=test-secret");
-      expect(viaQuery.status).toBe(400);
+      expect(viaQuery.status).toBe(200);
       const missing = await requestAs(db.alice, "/api/jobs/run");
       expect(missing.status).toBe(401);
       const wrong = await requestAs(db.alice, "/api/jobs/run", {

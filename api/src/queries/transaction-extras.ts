@@ -123,6 +123,16 @@ export function bulkDeleteTransactions(q: Queryable, userId: number, ids: string
   );
 }
 
+/** Count of ids that are transfer legs (reported as skipped, not updated). */
+export async function countTransferLegs(q: Queryable, userId: number, ids: string[]): Promise<number> {
+  const result = await q.query<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM transactions
+     WHERE user_id = $1 AND id = ANY($2::uuid[]) AND transfer_group_id IS NOT NULL`,
+    [userId, ids]
+  );
+  return result.rows[0]?.n ?? 0;
+}
+
 export type DateGroup = {
   date: string;
   income: number;

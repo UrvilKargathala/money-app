@@ -25,6 +25,7 @@ import {
   bulkAttachTags,
   bulkCategorize,
   bulkDeleteTransactions,
+  countTransferLegs,
   getDateGroups,
   getLastExpenseContext,
   getRecentMerchants,
@@ -291,13 +292,9 @@ transactions.post("/bulk", requireAuth, async (c) => {
     // Transfer legs are excluded server-side (transfer_group_id IS NULL).
     // Report them exactly so the UI can say so instead of "Updated 0".
     const transferCheck = await withUser(user.user_id, (client) =>
-      client.query<{ n: number }>(
-        `SELECT COUNT(*)::int AS n FROM transactions
-         WHERE user_id = $1 AND id = ANY($2::uuid[]) AND transfer_group_id IS NOT NULL`,
-        [user.user_id, ids]
-      )
+      countTransferLegs(client, user.user_id, ids)
     );
-    const skippedTransfers = transferCheck.rows[0]?.n ?? 0;
+    const skippedTransfers = transferCheck ?? 0;
     const skipped = Math.max(0, ids.length - affected);
     return c.json({ success: true, affected, skipped, skipped_transfers: skippedTransfers });
   } catch (err) {

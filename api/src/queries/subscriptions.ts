@@ -142,6 +142,19 @@ export async function getSubscription(
   return result.rows.length === 1 ? toSubscription(result.rows[0]) : null;
 }
 
+export async function touchSubscriptionUsage(
+  q: Queryable,
+  userId: number,
+  id: string,
+  date: string
+): Promise<number> {
+  const result = await q.query(
+    "UPDATE subscriptions SET last_used_at = $1 WHERE user_id = $2 AND id = $3",
+    [date, userId, id]
+  );
+  return result.rowCount ?? 0;
+}
+
 export async function subscriptionExists(
   userId: number,
   id: string,

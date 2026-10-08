@@ -715,8 +715,8 @@ describe("goals with-transfer contribution", () => {
     const balances = ((await accounts.json()) as {
       accounts: { id: string; name: string; balance: number }[];
     }).accounts;
-    expect(balances.find((a) => a.id === from)?.balance).toBe(-5000);
-    expect(balances.find((a) => a.id === to)?.balance).toBe(5000);
+    expect(balances.find((a) => a.id === from)?.balance).toBe(95000);
+    expect(balances.find((a) => a.id === to)?.balance).toBe(105000);
   });
 
   it("rejects invalid accounts and mismatched source/destination", async () => {

@@ -95,10 +95,10 @@ describe("mark read/dismiss/restore lifecycle", () => {
     expect(
       (await postAs(db.alice, `/api/notifications/${n1}/read`, {})).status
     ).toBe(200);
-    // Already read → 404.
+    // Already read → idempotent success.
     expect(
-      (await postAs(db.alice, `/api/notifications/${n1}/read`, {})).status
-    ).toBe(404);
+      (await (await postAs(db.alice, `/api/notifications/${n1}/read`, {})).json()) as { success: boolean; already: boolean }
+    ).toEqual({ success: true, already: true });
 
     // Dismiss n2.
     expect(

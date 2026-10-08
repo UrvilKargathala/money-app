@@ -87,6 +87,20 @@ export async function listImportBatches(
   return result.rows.map(mapBatch);
 }
 
+/** Roll back an import batch: delete its transactions + errors, reset counters. Returns deleted txn count. */
+export async function rollbackImportBatch(q: Queryable, userId: number, batchId: string): Promise<number> {
+  const result = await q.query(
+    "DELETE FROM transactions WHERE user_id = $1 AND import_batch_id = $2::uuid",
+    [userId, batchId]
+  );
+  await q.query("DELETE FROM import_errors WHERE user_id = $1 AND import_batch_id = $2::uuid", [userId, batchId]);
+  await q.query(
+    "UPDATE import_batches SET status = 'rolled_back', imported_rows = 0, duplicate_rows = 0, error_rows = 0 WHERE user_id = $1 AND id = $2::uuid",
+    [userId, batchId]
+  );
+  return result.rowCount ?? 0;
+}
+
 export async function finalizeImportBatch(
   q: Queryable,
   params: {

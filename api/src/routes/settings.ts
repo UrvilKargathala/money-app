@@ -2,6 +2,12 @@ import { Hono } from "hono";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { getSettings, setMonthlyIncome } from "../queries/debts";
+import {
+  getWidgetSettings,
+  setHapticsEnabled,
+  setReportFilters,
+  setWidgetLayout,
+} from "../queries/settings";
 import { readJson } from "./helpers";
 import { withUser } from "../db";
 
@@ -15,10 +21,10 @@ settings.patch("/", requireAuth, async (c) => {
     if (!Array.isArray(layout) || layout.length > ids.length || new Set(layout).size !== layout.length || layout.some((id) => !ids.includes(String(id)))) {
       return c.json({ error: "Choose a unique list of supported widgets." }, 400);
     }
-    await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET widget_layout = $2::jsonb WHERE user_id = $1", [c.get("user").user_id, JSON.stringify(layout)]));
+    await withUser(c.get("user").user_id, (client) => setWidgetLayout(client, c.get("user").user_id, layout));
   }
   if (body.haptics_enabled !== undefined) {
-    await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET haptics_enabled = $2 WHERE user_id = $1", [c.get("user").user_id, body.haptics_enabled ? 1 : 0]));
+    await withUser(c.get("user").user_id, (client) => setHapticsEnabled(client, c.get("user").user_id, body.haptics_enabled));
   }
   if (body.report_filters !== undefined) {
     if (!Array.isArray(body.report_filters) || body.report_filters.length > 20) return c.json({ error: "You can save up to 20 report filters." }, 400);
@@ -45,7 +51,7 @@ settings.patch("/", requireAuth, async (c) => {
         }
       }
     }
-    await withUser(c.get("user").user_id, (client) => client.query("UPDATE user_settings SET report_filters = $2::jsonb WHERE user_id = $1", [c.get("user").user_id, JSON.stringify(body.report_filters)]));
+    await withUser(c.get("user").user_id, (client) => setReportFilters(client, c.get("user").user_id, body.report_filters));
   }
   return c.json({ success: true });
 });
@@ -53,8 +59,8 @@ settings.patch("/", requireAuth, async (c) => {
 settings.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const settings = await getSettings(user.user_id);
-  const extra = await withUser(user.user_id, (client) => client.query("SELECT widget_layout, haptics_enabled, report_filters FROM user_settings WHERE user_id = $1", [user.user_id]));
-  return c.json({ settings: { ...settings, ...extra.rows[0] } });
+  const extra = await withUser(user.user_id, (client) => getWidgetSettings(client, user.user_id));
+  return c.json({ settings: { ...settings, ...extra } });
 });
 
 settings.patch("/monthly-income", requireAuth, async (c) => {

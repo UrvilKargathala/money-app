@@ -100,7 +100,13 @@ export async function getEffectivePlan(userId: number, q: Queryable = DB): Promi
  * process-wide). Only the default pool path is cached - explicit Queryable
  * callers (transactions) always read fresh. Webhook mutations call
  * invalidatePlanCache(); everything else self-heals via TTL.
+ * Tests bypass all caches (VITEST is set by vitest): direct-SQL fixtures
+ * mutate plan/catalog rows between tests, so cached reads would poison
+ * later tests sharing the process.
  */
+function cachesEnabled(): boolean {
+  return !process.env.VITEST && process.env.NODE_ENV !== "test";
+}
 type ResolvedPlan = Awaited<ReturnType<typeof resolveEffectivePlanFresh>>;
 const PLAN_TTL_MS = 30_000;
 const planCache = new Map<number, { at: number; value: ResolvedPlan }>();
@@ -111,7 +117,7 @@ export function invalidatePlanCache(userId?: number): void {
 }
 
 async function resolveEffectivePlan(userId: number, q: Queryable = DB): Promise<ResolvedPlan> {
-  if (q !== DB) return resolveEffectivePlanFresh(userId, q);
+  if (q !== DB || !cachesEnabled()) return resolveEffectivePlanFresh(userId, q);
   const hit = planCache.get(userId);
   if (hit && Date.now() - hit.at < PLAN_TTL_MS) return hit.value;
   const value = await resolveEffectivePlanFresh(userId, q);
@@ -133,6 +139,16 @@ export function invalidateCatalogCache(): void {
 }
 
 async function getCatalog(): Promise<CatalogSnapshot> {
+  if (!cachesEnabled()) {
+    const [tiers, prices, entitlements] = await Promise.all([
+      query<{ code: string; name: string }>(`SELECT code, name FROM plan_tiers ORDER BY sort_order`),
+      query<{ plan_code: string; price_inr: string; per_text: string; interval: string; stripe_price_id: string | null }>(
+        `SELECT plan_code, price_inr::text AS price_inr, per_text, interval, stripe_price_id FROM plan_prices WHERE is_current = 1`
+      ),
+      query<EntitlementRow>(`SELECT plan_code, feature_key, allowed, limit_value, mode FROM plan_entitlements`),
+    ]);
+    return { tiers: tiers.rows, prices: prices.rows, entitlements: entitlements.rows };
+  }
   if (catalogCache && Date.now() - catalogCache.at < CATALOG_TTL_MS) return catalogCache.value;
   const [tiers, prices, entitlements] = await Promise.all([
     query<{ code: string; name: string }>(`SELECT code, name FROM plan_tiers ORDER BY sort_order`),

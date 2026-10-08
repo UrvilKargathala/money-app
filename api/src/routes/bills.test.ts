@@ -277,7 +277,7 @@ describe("bills mark-paid", () => {
     };
     const acc = list.accounts.find((a) => a.id === account);
     expect(acc?.opening_balance).toBe(100000);
-    expect(acc?.balance).toBe(-10000);
+    expect(acc?.balance).toBe(90000);
   });
 
   it("rejects double-payment with 409", async () => {

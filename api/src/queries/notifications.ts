@@ -270,7 +270,9 @@ export async function getPreferenceMatrix(
   userId: number,
   q: Queryable = DB
 ): Promise<PreferenceRow[]> {
-  if (q === DB) {
+  // Tests mutate preference rows directly between cases: bypass the memo
+  // under VITEST so sequential tests can't poison each other.
+  if (q === DB && !process.env.VITEST && process.env.NODE_ENV !== "test") {
     const hit = matrixCache.get(userId);
     if (hit && Date.now() - hit.at < MATRIX_TTL_MS) return hit.value;
     const value = await getPreferenceMatrixFresh(userId, q);

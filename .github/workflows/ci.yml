@@ -165,3 +165,4 @@ jobs:
       - run: python scripts/db_setup.py
       - run: node scripts/migrate.mjs && node scripts/migrate.mjs
       - run: node -e "const {Pool}=require('pg');(async()=>{const p=new Pool({connectionString:process.env.DATABASE_URL});const r=await p.query('SELECT count(*)::int AS n FROM schema_migrations');const w=await p.query(\"SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='user_settings' AND column_name='plan_code') AS plan_code, to_regclass('plan_entitlements') IS NOT NULL AS catalog\");console.log(JSON.stringify({migrations:r.rows[0].n,...w.rows[0]}));await p.end();if(r.rows[0].n<9)process.exit(1);})()"
+        working-directory: api # pg resolves from api/node_modules, not repo root

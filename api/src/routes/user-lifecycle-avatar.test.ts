@@ -33,8 +33,8 @@ describe("avatar upload and serving", () => {
   });
 
   it("re-upload replaces the previous blob under a stable key", async () => {
-    const first = new Uint8Array([1, 2, 3, 4]);
-    const second = new Uint8Array([5, 6, 7, 8, 9]);
+    const first = new Uint8Array([...PNG, 1, 2, 3, 4]);
+    const second = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 5, 6, 7, 8, 9]);
     expect((await upload(db.alice, first)).status).toBe(200);
     expect((await upload(db.alice, second)).status).toBe(200);
     const got = await requestAs(db.alice, "/api/users/me/avatar");
