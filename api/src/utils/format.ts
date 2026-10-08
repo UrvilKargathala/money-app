@@ -38,6 +38,17 @@ export function todayUTC(): string {
   return formatDateOnlyUTC(new Date());
 }
 
+/**
+ * Format a DATE-ish value: pg DATE columns arrive as local-midnight Dates
+ * (use local getters), plain strings pass through sliced. Centralizes the
+ * adapter previously duplicated per query file.
+ */
+export function isoDateOnly(value: Date | string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return isoDate(value);
+  return String(value).slice(0, 10);
+}
+
 export function csvEscape(value: string | number | null): string {
   const s = value == null ? "" : String(value);
   if (/[",\r\n]/.test(s)) {

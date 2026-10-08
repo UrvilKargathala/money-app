@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
-import { formatINR } from "@/lib/format";
+import { formatINR, todayLocalISO } from "@/lib/format";
 import { Scale, Plus, Trash2, Building2 } from "lucide-react";
 import { createManualAsset, deleteManualAssetAction } from "./actions";
 import { toast } from "sonner";
@@ -151,7 +151,7 @@ export function NetWorthDashboard({
             </div>
             <div className="space-y-2">
               <Label htmlFor="asset-date">Acquisition date</Label>
-              <Input id="asset-date" name="acquisition_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+              <Input id="asset-date" name="acquisition_date" type="date" defaultValue={todayLocalISO()} />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>

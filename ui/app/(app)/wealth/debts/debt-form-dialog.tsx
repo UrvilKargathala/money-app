@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
 import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createDebt, updateDebt } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 
 import type { Debt } from "@/lib/entities";
 
@@ -106,7 +107,7 @@ export function DebtFormDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="debt-date">Start date *</Label>
-                  <Input id="debt-date" name="start_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
+                  <Input id="debt-date" name="start_date" type="date" defaultValue={todayLocalISO()} required />
                 </div>
               </FormGrid>
               <div className="space-y-2">

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { formatINR } from "@/lib/format";
+import { formatINR, todayLocalISO } from "@/lib/format";
 import { EmptyState } from "@/components/common/empty-state";
 
 type Account = { name: string; institution: string | null; display_name?: string; type: string; balance: number; opening_balance: number; currency: string; notes: string | null };
@@ -18,7 +18,7 @@ type Transaction = { id: string; date: string; description: string | null; merch
 export function AccountDetail({ id, account, txnCount, points, credit, transactions }: { id: string; account: Account; txnCount: number; points: { date: string; balance: number }[]; credit: { credit_limit: number | null; current_balance: number; utilization_pct: number | null } | null; transactions: Transaction[] }) {
   const router = useRouter();
   const [balance, setBalance] = useState(String(account.balance));
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayLocalISO());
   const [saving, setSaving] = useState(false);
   const saveSnapshot = async () => { setSaving(true); try { const res = await fetch(`/api/accounts/${id}/snapshots`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ balance, date }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Could not save snapshot."); toast.success("Balance snapshot saved"); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Could not save snapshot."); } finally { setSaving(false); } };
   const values = points.map((point) => point.balance); const min = Math.min(...values, 0); const max = Math.max(...values, 1); const span = Math.max(1, max - min);

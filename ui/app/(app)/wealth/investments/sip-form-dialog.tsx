@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
 import { FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createSip, updateSip } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 
 type Sip = {
   id: string;
@@ -110,7 +111,7 @@ export function SipFormDialog({
           <FormGrid>
             <div className="space-y-2">
               <Label htmlFor="sip-next">Next date *</Label>
-              <Input id="sip-next" name="next_date" type="date" defaultValue={sip?.next_date ?? new Date().toISOString().slice(0, 10)} required />
+              <Input id="sip-next" name="next_date" type="date" defaultValue={sip?.next_date ?? todayLocalISO()} required />
               {state?.fieldErrors?.next_date && <p className="text-xs text-error">{state.fieldErrors.next_date}</p>}
             </div>
             <div className="space-y-2">
@@ -123,7 +124,7 @@ export function SipFormDialog({
           {!isEdit && (
             <div className="space-y-2">
               <Label htmlFor="sip-start">Start date</Label>
-              <Input id="sip-start" name="start_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+              <Input id="sip-start" name="start_date" type="date" defaultValue={todayLocalISO()} />
             </div>
           )}
 

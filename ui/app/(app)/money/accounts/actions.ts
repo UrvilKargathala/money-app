@@ -1,5 +1,6 @@
 "use server";
 
+import { todayLocalISO } from "@/lib/format";
 import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
@@ -68,7 +69,7 @@ export async function createTransfer(prev: ActionState, formData: FormData): Pro
   const from_account_id = String(formData.get("from_account_id") ?? "");
   const to_account_id = String(formData.get("to_account_id") ?? "");
   const amount = String(formData.get("amount") ?? "");
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
+  const date = String(formData.get("date") ?? todayLocalISO());
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   if (!from_account_id || !to_account_id) return { fieldErrors: { from_account_id: "Select both accounts." } };

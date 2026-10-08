@@ -1,5 +1,6 @@
 "use server";
 
+import { todayLocalISO } from "@/lib/format";
 import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
@@ -66,7 +67,7 @@ export async function reopenDebtAction(id: string): Promise<ActionState> {
 export async function logPayment(prev: ActionState, formData: FormData): Promise<ActionState> {
   const debtId = String(formData.get("debtId") ?? formData.get("id") ?? "");
   const amount = String(formData.get("amount") ?? "");
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
+  const date = String(formData.get("date") ?? todayLocalISO());
   const notes = String(formData.get("notes") ?? "") || undefined;
   const transaction_id = String(formData.get("transaction_id") ?? "") || undefined;
   const link_transaction = formData.get("link_transaction") === "true" || formData.get("link_transaction") === "1";
@@ -114,7 +115,7 @@ export async function deletePaymentAction(debtId: string, paymentId: string): Pr
 export async function applyPrepayment(prev: ActionState, formData: FormData): Promise<ActionState> {
   const debtId = String(formData.get("debtId") ?? formData.get("id") ?? "");
   const amount = String(formData.get("amount") ?? "");
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
+  const date = String(formData.get("date") ?? todayLocalISO());
   const notes = String(formData.get("notes") ?? "") || undefined;
 
   return mutateAndRevalidate(`/api/debts/${debtId}/prepayments`, {

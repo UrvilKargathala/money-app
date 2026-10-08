@@ -1,5 +1,6 @@
 "use server";
 
+import { todayLocalISO } from "@/lib/format";
 import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
@@ -78,7 +79,7 @@ export async function completeGoalAction(id: string): Promise<ActionState> {
 export async function addContribution(prev: ActionState, formData: FormData): Promise<ActionState> {
   const goalId = String(formData.get("goalId") ?? formData.get("goal_id") ?? formData.get("id") ?? "");
   const amount = String(formData.get("amount") ?? "");
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
+  const date = String(formData.get("date") ?? todayLocalISO());
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const transaction_id = String(formData.get("transaction_id") ?? "") || null;
 
@@ -126,7 +127,7 @@ export async function addContributionWithTransfer(prev: ActionState, formData: F
   const from_account_id = String(formData.get("from_account_id") ?? "");
   const to_account_id = String(formData.get("to_account_id") ?? "");
   const amount = String(formData.get("amount") ?? "");
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
+  const date = String(formData.get("date") ?? todayLocalISO());
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   return mutateAndRevalidate(`/api/goals/${goalId}/contributions/with-transfer`, {

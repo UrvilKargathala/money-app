@@ -13,7 +13,7 @@ import { InvestmentFormDialog } from "./investment-form-dialog";
 import { SipFormDialog } from "./sip-form-dialog";
 import { DividendFormDialog } from "./dividend-form-dialog";
 import dynamic from "next/dynamic";
-import { formatINR, formatDate } from "@/lib/format";
+import { formatINR, formatDate, todayLocalISO } from "@/lib/format";
 import type { Allocation, TrendPoint } from "./investment-charts";
 
 function ChartSkeleton({ height = 300 }: { height?: number }) {
@@ -105,7 +105,7 @@ export function InvestmentsDashboard({
 
   const [installmentOpen, setInstallmentOpen] = useState(false);
   const [installmentSip, setInstallmentSip] = useState<Sip | null>(null);
-  const [installmentDate, setInstallmentDate] = useState(new Date().toISOString().slice(0, 10));
+  const [installmentDate, setInstallmentDate] = useState(todayLocalISO());
   const [installmentPending, setInstallmentPending] = useState(false);
 
   const totalInvested = summary?.total_invested ?? investments.reduce((s, i) => s + Number(i.units) * Number(i.buy_price), 0);
@@ -383,7 +383,7 @@ export function InvestmentsDashboard({
                       size="sm"
                       onClick={() => {
                         setInstallmentSip(sip);
-                        setInstallmentDate(new Date().toISOString().slice(0, 10));
+                        setInstallmentDate(todayLocalISO());
                         setInstallmentOpen(true);
                       }}
                     >

@@ -8,7 +8,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { GoalCard } from "./goal-card";
 import { GoalFormDialog } from "./goal-form-dialog";
-import { formatINR } from "@/lib/format";
+import { formatINR, todayLocalISO } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -94,7 +94,7 @@ function MilestonesDisplay({ milestones, progressPct }: { milestones: Milestone[
 // ---------------------------------------------------------------------------
 
 function SnapshotsTimeline({ snapshots, onCreate }: { snapshots: Snapshot[]; onCreate: (date: string) => void }) {
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayLocalISO());
   const [pending, setPending] = useState(false);
   const handleCreate = async () => {
     setPending(true);
@@ -177,7 +177,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
   const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState("history");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayLocalISO());
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState<Contribution | null>(null);
   const [withTransfer, setWithTransfer] = useState(false);
@@ -211,7 +211,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
       setEditing(null);
       setAmount("");
       setNotes("");
-      setDate(new Date().toISOString().slice(0, 10));
+      setDate(todayLocalISO());
       setWithTransfer(false);
     }
   }, [open, goal, load]);

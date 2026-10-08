@@ -1,5 +1,6 @@
 "use server";
 
+import { todayLocalISO } from "@/lib/format";
 import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
@@ -7,7 +8,7 @@ export async function createManualAsset(prev: ActionState, formData: FormData): 
   const name = String(formData.get("name") ?? "").trim();
   const category = String(formData.get("category") ?? "property");
   const valuation = String(formData.get("valuation") ?? "");
-  const acquisition_date = String(formData.get("acquisition_date") ?? new Date().toISOString().slice(0, 10));
+  const acquisition_date = String(formData.get("acquisition_date") ?? todayLocalISO());
 
   return mutateAndRevalidate("/api/manual-assets", {
     method: "POST",

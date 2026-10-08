@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
 import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { StatCard } from "@/components/common/stat-card";
+import { todayLocalISO } from "@/lib/format";
 import { Calendar, Plus, Trash2, Copy, ChevronLeft, ChevronRight, Clock, TrendingUp, Landmark, Wallet } from "lucide-react";
 import { createCalendarEvent, deleteCalendarEventAction, duplicateCalendarEventAction } from "./actions";
 import { useActionState } from "react";
@@ -117,7 +118,9 @@ function daysInMonth(year: number, month: number): number {
 }
 
 function toISO(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Local calendar day (mirrors api isoDate): toISOString() shifts back a
+  // day in +offset zones for local-midnight Dates.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function CalendarDashboard({
@@ -339,7 +342,7 @@ export function CalendarDashboard({
                   ))}
                   {grid.map((cell) => {
                     const dayEvents = byDate.get(cell.iso) ?? [];
-                    const isToday = cell.iso === new Date().toISOString().slice(0, 10);
+                    const isToday = cell.iso === todayLocalISO();
                     const isSelected = cell.iso === selectedDate;
                     const countFromApi = dayCounts?.[cell.iso] ?? dayEvents.length;
                     return (
@@ -646,7 +649,7 @@ export function CalendarDashboard({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cal-date">Date *</Label>
-                <Input id="cal-date" name="date" type="date" defaultValue={selectedDate ?? new Date().toISOString().slice(0, 10)} required />
+                <Input id="cal-date" name="date" type="date" defaultValue={selectedDate ?? todayLocalISO()} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cal-amount">Amount</Label>

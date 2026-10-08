@@ -1,5 +1,6 @@
 "use server";
 
+import { todayLocalISO } from "@/lib/format";
 import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
@@ -10,7 +11,7 @@ export async function createInvestment(prev: ActionState, formData: FormData): P
   const units = String(formData.get("units") ?? "");
   const buy_price = String(formData.get("buy_price") ?? "");
   const current_price = String(formData.get("current_price") ?? buy_price);
-  const purchase_date = String(formData.get("purchase_date") ?? new Date().toISOString().slice(0, 10));
+  const purchase_date = String(formData.get("purchase_date") ?? todayLocalISO());
 
   return mutateAndRevalidate("/api/investments", {
     method: "POST",
@@ -63,7 +64,7 @@ export async function createSip(prev: ActionState, formData: FormData): Promise<
   const frequency = String(formData.get("frequency") ?? "monthly").trim();
   const next_date = String(formData.get("next_date") ?? "").trim();
   const account_id = String(formData.get("account_id") ?? "").trim() || null;
-  const start_date = String(formData.get("start_date") ?? "").trim() || new Date().toISOString().slice(0, 10);
+  const start_date = String(formData.get("start_date") ?? "").trim() || todayLocalISO();
   const end_date = String(formData.get("end_date") ?? "").trim() || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
@@ -126,7 +127,7 @@ export async function resumeSip(id: string): Promise<ActionState> {
 
 export async function logInstallment(prev: ActionState, formData: FormData): Promise<ActionState> {
   const id = String(formData.get("id") ?? "").trim();
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10)).trim();
+  const date = String(formData.get("date") ?? todayLocalISO()).trim();
   return mutateAndRevalidate(`/api/sips/${id}/installment`, {
     method: "POST",
     json: { date },
@@ -142,7 +143,7 @@ export async function createDividend(prev: ActionState, formData: FormData): Pro
   const investment_id = String(formData.get("investment_id") ?? "").trim();
   const type = String(formData.get("type") ?? "dividend").trim();
   const amount = String(formData.get("amount") ?? "").trim();
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10)).trim();
+  const date = String(formData.get("date") ?? todayLocalISO()).trim();
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   return mutateAndRevalidate("/api/dividends", {

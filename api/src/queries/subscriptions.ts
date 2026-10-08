@@ -1,5 +1,5 @@
 import { query } from "../db";
-import { isoDate } from "../utils/format";
+import { isoDate, isoDateOnly } from "../utils/format";
 import { joinAccount, joinCategory, lateralLastPayment } from "./sql";
 import type { PaymentHistoryRow } from "./bills";
 export type Queryable = { query: typeof query };
@@ -88,15 +88,6 @@ export function monthlyEquivalent(amount: number, frequency: string): number {
   return amount * (multiplier[frequency] ?? 1);
 }
 
-// Local-calendar formatting (same as isoDate): DATE columns arrive as
-// midnight-local Dates, and toISOString() would shift them back a day in
-// positive-offset zones.
-function toISODate(value: Date | string | null): string | null {
-  if (value === null || value === undefined) return null;
-  if (value instanceof Date) return isoDate(value);
-  return String(value).slice(0, 10);
-}
-
 export function toSubscription(row: SubscriptionRow): Subscription {
   const amount = Number(row.amount);
   return {
@@ -109,9 +100,9 @@ export function toSubscription(row: SubscriptionRow): Subscription {
       row.last_paid_date === null ? null : isoDate(row.last_paid_date),
     last_paid_amount:
       row.last_paid_amount === null ? null : Number(row.last_paid_amount),
-    last_used_at: toISODate(row.last_used_at),
+    last_used_at: isoDateOnly(row.last_used_at),
     last_snooze_days: row.last_snooze_days,
-    last_snooze_date: toISODate(row.last_snooze_date),
+    last_snooze_date: isoDateOnly(row.last_snooze_date),
   };
 }
 

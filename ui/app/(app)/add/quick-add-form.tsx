@@ -12,6 +12,7 @@ import { createQuickTransaction } from "./actions";
 import { toast } from "sonner";
 import { Delete, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { todayLocalISO } from "@/lib/format";
 
 type AccountOpt = { id: string; name: string };
 type CategoryOpt = { id: string; name: string; parent_id: string | null };
@@ -31,7 +32,7 @@ export function QuickAddForm({
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [categoryId, setCategoryId] = useState("");
   const [merchant, setMerchant] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayLocalISO());
   const [showMerchantSuggest, setShowMerchantSuggest] = useState(false);
 
   const [state, formAction, isPending] = useActionState(createQuickTransaction, null);

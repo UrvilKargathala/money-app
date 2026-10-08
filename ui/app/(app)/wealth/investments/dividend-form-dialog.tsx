@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EntityFormDialog } from "@/components/common/entity-form-dialog";
 import { FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createDividend, updateDividend } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 import { toast } from "sonner";
 
 type Dividend = {
@@ -114,7 +115,7 @@ export function DividendFormDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="div-date">Date *</Label>
-              <Input id="div-date" name="date" type="date" defaultValue={dividend?.date ?? new Date().toISOString().slice(0, 10)} required />
+              <Input id="div-date" name="date" type="date" defaultValue={dividend?.date ?? todayLocalISO()} required />
               {state?.fieldErrors?.date && <p className="text-xs text-error">{state.fieldErrors.date}</p>}
             </div>
           </FormGrid>

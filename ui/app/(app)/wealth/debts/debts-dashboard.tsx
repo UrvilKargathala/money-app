@@ -7,7 +7,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { DebtCard } from "./debt-card";
 import { DebtFormDialog } from "./debt-form-dialog";
-import { formatINR } from "@/lib/format";
+import { formatINR, todayLocalISO } from "@/lib/format";
 import { Landmark, Plus, Wallet, AlertTriangle, TrendingDown, Download, Calendar, Calculator, History, BarChart3, ShieldAlert, ArrowUpDown, RefreshCw, Info } from "lucide-react";
 import { deleteDebtAction, deletePaymentAction, closeDebtAction, reopenDebtAction, updateMonthlyIncome, regenerateAmortization } from "./actions";
 import { toast } from "sonner";
@@ -327,7 +327,7 @@ function PrepaymentSimulatorDialog({ debt, open, onOpenChange }: { debt: Debt | 
 
   const apply = async () => {
     if (!debt) return;
-    const res = await fetch(`/api/debts/${debt.id}/prepayments`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amount, date: new Date().toISOString().slice(0, 10) }) });
+    const res = await fetch(`/api/debts/${debt.id}/prepayments`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amount, date: todayLocalISO() }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) toast.error(data.error || data.fieldErrors?.amount || "Prepayment failed");
     else {

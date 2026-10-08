@@ -9,6 +9,7 @@ import { CategorySelectWithCreate } from "@/components/common/category-select-wi
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
 import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createSubscription, updateSubscription } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 
 import type { Sub } from "@/lib/entities";
 
@@ -96,7 +97,7 @@ export function SubscriptionFormDialog({
           id="sub-date"
           name="next_renewal_date"
           type="date"
-          defaultValue={subscription ? new Date(subscription.next_renewal_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)}
+          defaultValue={subscription ? String(subscription.next_renewal_date).slice(0, 10) : todayLocalISO()}
           required
         />
         <FieldError message={state?.fieldErrors?.next_renewal_date} />

@@ -69,7 +69,7 @@ export function GoalFormDialog({
         </div>
         <div className="space-y-2">
           <Label htmlFor="goal-date">Target date *</Label>
-          <Input id="goal-date" name="target_date" type="date" defaultValue={goal ? new Date(goal.target_date).toISOString().slice(0, 10) : ""} required />
+          <Input id="goal-date" name="target_date" type="date" defaultValue={goal ? String(goal.target_date).slice(0, 10) : ""} required />
           <FieldError message={state?.fieldErrors?.target_date} />
         </div>
       </FormGrid>

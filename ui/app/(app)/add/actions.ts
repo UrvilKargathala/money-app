@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiFetchRaw } from "@/lib/api-client";
+import { todayLocalISO } from "@/lib/format";
 import type { ActionState } from "@moneymind/api";
 
 export async function createQuickTransaction(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -10,7 +11,7 @@ export async function createQuickTransaction(prev: ActionState, formData: FormDa
   const account_id = String(formData.get("account_id") ?? "");
   const category_id = String(formData.get("category_id") ?? "") || null;
   const merchant_clean = String(formData.get("merchant_clean") ?? "").trim() || null;
-  const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
+  const date = String(formData.get("date") ?? todayLocalISO());
   const description = String(formData.get("description") ?? "").trim() || null;
 
   if (!amount || Number(amount) <= 0) return { fieldErrors: { amount: "Enter an amount greater than zero." } };

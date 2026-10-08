@@ -10,7 +10,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { SubscriptionCard } from "./subscription-card";
 import { SubscriptionFormDialog } from "./subscription-form-dialog";
-import { formatINR } from "@/lib/format";
+import { formatINR, todayLocalISO } from "@/lib/format";
 import { Repeat, Plus, Download, Wallet, History, Pause, AlarmClock, ShieldAlert, Trash2, Clock, X } from "lucide-react";
 import { cancelSubscriptionAction, pauseSubscriptionAction, resumeSubscriptionAction, renewSubscriptionAction, snoozeSubscriptionAction, dismissAuditAction } from "./actions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -418,7 +418,7 @@ function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
               id={`usage-${sub.id}`}
               type="date"
               required
-              max={new Date().toISOString().slice(0, 10)}
+              max={todayLocalISO()}
               value={usageDate}
               onChange={(e) => setUsageDate(e.target.value)}
               className="h-9 text-xs"

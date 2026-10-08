@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { createTransfer } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 import { toast } from "sonner";
 
 type AccountOpt = { id: string; name: string };
@@ -125,7 +126,7 @@ export function TransferDialog({
 
           <div className="space-y-2">
             <Label htmlFor="tr-date">Date</Label>
-            <Input id="tr-date" name="date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+            <Input id="tr-date" name="date" type="date" defaultValue={todayLocalISO()} />
           </div>
 
           <div className="space-y-2">

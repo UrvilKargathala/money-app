@@ -1,5 +1,5 @@
 ﻿import { query } from "../db";
-import { isoDate } from "../utils/format";
+import { isoDate, todayUTC } from "../utils/format";
 import { cagr, round2, xirr } from "../utils/finance";
 
 export type Queryable = { query: typeof query };
@@ -770,7 +770,7 @@ export async function getHoldingReturns(
         ? Number(row.total_amount)
         : -Number(row.total_amount),
   }));
-  flows.push({ date: new Date().toISOString().slice(0, 10), amount: holding.current_value });
+  flows.push({ date: todayUTC(), amount: holding.current_value });
 
   const rate = xirr(flows);
   if (rate !== null) {
@@ -800,7 +800,7 @@ export async function getPortfolioXirr(
       row.type === "sell" ? Number(row.total_amount) : -Number(row.total_amount),
   }));
   flows.push({
-    date: new Date().toISOString().slice(0, 10),
+    date: todayUTC(),
     amount: summary.total_current,
   });
 

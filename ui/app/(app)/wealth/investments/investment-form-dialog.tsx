@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
 import { FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createInvestment, updateInvestment } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 
 import type { Investment } from "@/lib/entities";
 
@@ -117,7 +118,7 @@ export function InvestmentFormDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="inv-date">Purchase date</Label>
-                  <Input id="inv-date" name="purchase_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+                  <Input id="inv-date" name="purchase_date" type="date" defaultValue={todayLocalISO()} />
                 </div>
               </FormGrid>
             </>

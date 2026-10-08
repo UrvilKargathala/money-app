@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EntityFormDialog } from "@/components/common/entity-form-dialog";
 import { FieldError, FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createTaxInvestment, updateTaxInvestment } from "./actions";
+import { todayLocalISO } from "@/lib/format";
 import { toast } from "sonner";
 
 type Investment = { id: string; section: string; name: string; amount: string; investment_date: string; proof_status: string; financial_year: string; version: number };
@@ -103,7 +104,7 @@ export function TaxInvestmentDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="tax-date">Date *</Label>
-              <Input id="tax-date" name="investment_date" type="date" defaultValue={investment ? new Date(investment.investment_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)} required />
+              <Input id="tax-date" name="investment_date" type="date" defaultValue={investment ? String(investment.investment_date).slice(0, 10) : todayLocalISO()} required />
             </div>
           </FormGrid>
 
