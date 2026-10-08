@@ -13,6 +13,8 @@ export type MigrationWatermark = {
   plan_code: boolean;
   bill_reminder_channel: boolean;
   billing_catalog: boolean;
+  parity_tables: boolean;
+  parity_columns: boolean;
 };
 
 export async function checkDatabase(q: Queryable = DB): Promise<void> {
@@ -37,7 +39,19 @@ export async function getMigrationWatermark(
                     WHERE table_name = 'bill_reminders' AND column_name = 'channel') AND
             EXISTS (SELECT 1 FROM information_schema.columns
                     WHERE table_name = 'bill_reminders' AND column_name = 'is_enabled') AS bill_reminder_channel,
-            to_regclass('plan_entitlements') IS NOT NULL AS billing_catalog`
+            to_regclass('plan_entitlements') IS NOT NULL AS billing_catalog,
+            (to_regclass('billing_events') IS NOT NULL AND
+             to_regclass('plan_change_history') IS NOT NULL AND
+             to_regclass('scan_jobs') IS NOT NULL AND
+             to_regclass('scan_cards') IS NOT NULL) AS parity_tables,
+            (EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'bills' AND column_name = 'created_at') AND
+             EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'goals' AND column_name = 'updated_at') AND
+             EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'subscriptions' AND column_name = 'created_at') AND
+             EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'user_settings' AND column_name = 'shortcuts_enabled')) AS parity_columns`
   );
   return result.rows[0];
 }
