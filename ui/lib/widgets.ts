@@ -12,9 +12,3 @@ export const WIDGETS: WidgetDef[] = [
   { id: "cashflow-mini", label: "Cashflow Mini", description: "Income vs expense last 6 months", premium: true },
   { id: "top-merchants", label: "Top Merchants", description: "Ranked by spend", premium: true },
 ];
-
-export const FREE_WIDGET_LIMIT = 2;
-
-export function isWidgetPremium(id: string): boolean {
-  return !!WIDGETS.find((w) => w.id === id)?.premium;
-}

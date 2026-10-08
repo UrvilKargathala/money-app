@@ -1,6 +1,5 @@
 import { capContext } from "./cap-context";
 import { createMiddleware } from "hono/factory";
-import { getPlan, isPremium, PREMIUM_REQUIRED } from "./entitlements";
 import { requireAuth, type AppEnv } from "./middleware";
 
 // Preserve a precise cap error even when older handlers catch database failures.

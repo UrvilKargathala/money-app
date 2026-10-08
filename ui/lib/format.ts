@@ -4,52 +4,17 @@ const inrFmt = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 2,
 });
 
-const inrPlainFmt = new Intl.NumberFormat("en-IN");
-
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
   day: "2-digit",
   month: "short",
   year: "numeric",
 });
 
-const dateTimeFmt = new Intl.DateTimeFormat("en-IN", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
 export function formatINR(amount: number): string {
   return inrFmt.format(amount);
-}
-
-export function formatINRCompact(amount: number): string {
-  return `₹ ${inrPlainFmt.format(amount)}`;
 }
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return dateFmt.format(d);
-}
-
-export function formatDateTime(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return dateTimeFmt.format(d);
-}
-
-export function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
-export function formatRelativeDate(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return formatDate(d);
 }

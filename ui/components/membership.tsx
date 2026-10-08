@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ export function UpgradeCard({ feature = "Premium features" }: { feature?: string
 }
 
 export function MembershipProvider({ children, initialPlan }: { children: React.ReactNode; initialPlan?: Plan | null }) {
-  const pathname = usePathname();
   const [plan, setPlan] = useState<Plan | null>(initialPlan ?? null);
   const [loading, setLoading] = useState(initialPlan ? false : true);
   const [error, setError] = useState(false);
@@ -36,7 +34,6 @@ export function MembershipProvider({ children, initialPlan }: { children: React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPlan]);
   const premium = true; // Plans are informational until billing is enabled.
-  const premiumPage = ["/wealth/investments", "/wealth/debts", "/planning/tax", "/planning/export"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const value = useMemo(() => ({ premium, loading, plan }), [premium, loading, plan]);
   return <MembershipContext.Provider value={value}>
     {children}

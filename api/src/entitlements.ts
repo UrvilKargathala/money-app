@@ -9,8 +9,6 @@ export type Plan = {
   legacy_member_number: number | null;
 };
 export const STARTER_LIMITS = { accounts: 2, budgets: 2, bills: 5, subscriptions: 3, goals: 1 } as const;
-export const isPremium = (plan: Pick<Plan, "plan_type">) => plan.plan_type === "premium";
-export const PREMIUM_REQUIRED = { error: "Upgrade to unlock this feature.", code: "PREMIUM_REQUIRED", upgrade_url: "/pricing" };
 
 export async function getPlan(userId: number): Promise<Plan> {
   const result = await query<Plan>(

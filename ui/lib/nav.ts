@@ -25,27 +25,6 @@ export type NavItem = {
   built: boolean;
 };
 
-export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/overview/dashboard", icon: LayoutDashboard, built: true },
-  { label: "Accounts", href: "/money/accounts", icon: Wallet, built: true },
-  { label: "Transactions", href: "/money/transactions", icon: ArrowLeftRight, built: true },
-  { label: "Budgets", href: "/money/budgets", icon: PiggyBank, built: true },
-  { label: "Bills", href: "/money/bills", icon: Receipt, built: true },
-  { label: "Subscriptions", href: "/money/subscriptions", icon: Repeat, built: true },
-  { label: "Recurring", href: "/money/recurring", icon: Repeat, built: true },
-  { label: "Goals", href: "/wealth/goals", icon: Target, built: true },
-  { label: "Debts", href: "/wealth/debts", icon: Landmark, built: true },
-  { label: "Tax", href: "/planning/tax", icon: Calculator, built: true },
-  { label: "Investments", href: "/wealth/investments", icon: TrendingUp, built: true },
-  { label: "Net Worth", href: "/overview/net-worth", icon: Scale, built: true },
-  { label: "Reports", href: "/overview/reports", icon: BarChart3, built: true },
-  { label: "Notes", href: "/planning/notes", icon: FileText, built: true },
-  { label: "Shared Groups", href: "/planning/shared-groups", icon: Users, built: true },
-  { label: "Calendar", href: "/planning/calendar", icon: Calendar, built: true },
-  { label: "Notifications", href: "/notifications", icon: Bell, built: true },
-  { label: "Settings", href: "/settings", icon: Settings, built: true },
-];
-
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/overview/dashboard", icon: LayoutDashboard, built: true },
   { label: "Accounts", href: "/money/accounts", icon: Wallet, built: true },
