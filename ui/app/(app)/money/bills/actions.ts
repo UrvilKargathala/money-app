@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function createBill(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -19,15 +20,12 @@ export async function createBill(prev: ActionState, formData: FormData): Promise
   const amt = amount ? amount : undefined;
   const est = estimated_amount ? estimated_amount : undefined;
 
-  const res = await apiFetchRaw("/api/bills", {
+  return mutateAndRevalidate("/api/bills", {
     method: "POST",
     json: { name, amount: amt, estimated_amount: est, due_day, frequency, account_id, category_id, reminder_days, is_autopay, notes },
+    fallback: "Could not save the bill.",
+    revalidate: ["/money/bills", "/overview/dashboard"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/money/bills");
-  revalidatePath("/overview/dashboard");
-  return { success: true };
 }
 
 export async function updateBill(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -44,56 +42,56 @@ export async function updateBill(prev: ActionState, formData: FormData): Promise
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const version = Number(formData.get("version") ?? 1);
 
-  const res = await apiFetchRaw(`/api/bills/${id}`, {
+  return mutateAndRevalidate(`/api/bills/${id}`, {
     method: "PATCH",
     json: { name, amount, estimated_amount, due_day, frequency, account_id, category_id, reminder_days, is_autopay, notes, version },
+    fallback: "Could not save the bill.",
+    revalidate: ["/money/bills"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/money/bills");
-  return { success: true };
 }
 
 export async function deactivateBillAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/bills/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not deactivate bill." };
-  revalidatePath("/money/bills");
-  return { success: true };
+  return mutateAndRevalidate(`/api/bills/${id}`, {
+    method: "DELETE",
+    fallback: "Could not deactivate bill.",
+    revalidate: ["/money/bills"],
+  });
 }
 
 export async function reactivateBillAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/bills/${id}/reactivate`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not reactivate." };
-  revalidatePath("/money/bills");
-  return { success: true };
+  return mutateAndRevalidate(`/api/bills/${id}/reactivate`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not reactivate.",
+    revalidate: ["/money/bills"],
+  });
 }
 
 export async function markPaidAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/bills/${id}/mark-paid`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not mark paid." };
-  revalidatePath("/money/bills");
-  revalidatePath("/overview/dashboard");
-  revalidatePath("/money/transactions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/bills/${id}/mark-paid`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not mark paid.",
+    revalidate: ["/money/bills", "/overview/dashboard", "/money/transactions"],
+  });
 }
 
 export async function skipBillAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/bills/${id}/skip`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not skip." };
-  revalidatePath("/money/bills");
-  return { success: true };
+  return mutateAndRevalidate(`/api/bills/${id}/skip`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not skip.",
+    revalidate: ["/money/bills"],
+  });
 }
 
 export async function toggleAutopayAction(id: string, enabled: boolean): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/bills/${id}/autopay`, { method: "PATCH", json: { is_autopay: enabled ? 1 : 0 } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not update autopay." };
-  revalidatePath("/money/bills");
-  return { success: true };
+  return mutateAndRevalidate(`/api/bills/${id}/autopay`, {
+    method: "PATCH",
+    json: { is_autopay: enabled ? 1 : 0 },
+    fallback: "Could not update autopay.",
+    revalidate: ["/money/bills"],
+  });
 }
 
 export async function createReminder(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -106,14 +104,12 @@ export async function createReminder(prev: ActionState, formData: FormData): Pro
   if (!Number.isInteger(days_before) || days_before < 0 || days_before > 90) {
     return { fieldErrors: { days_before: "Days must be between 0 and 90." } };
   }
-  const res = await apiFetchRaw(`/api/bills/${billId}/reminders`, {
+  return mutateAndRevalidate(`/api/bills/${billId}/reminders`, {
     method: "POST",
     json: { days_before, channel, is_enabled },
+    fallback: "Could not create reminder.",
+    revalidate: ["/money/bills"],
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || body.fieldErrors?.days_before || "Could not create reminder.", fieldErrors: body.fieldErrors };
-  revalidatePath("/money/bills");
-  return { success: true };
 }
 
 export async function updateReminder(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -126,23 +122,21 @@ export async function updateReminder(prev: ActionState, formData: FormData): Pro
   if (!Number.isInteger(days_before) || days_before < 0 || days_before > 90) {
     return { fieldErrors: { days_before: "Days must be between 0 and 90." } };
   }
-  const res = await apiFetchRaw(`/api/bills/${billId}/reminders/${reminderId}`, {
+  return mutateAndRevalidate(`/api/bills/${billId}/reminders/${reminderId}`, {
     method: "PATCH",
     json: { days_before, is_enabled },
+    fallback: "Could not update reminder.",
+    revalidate: ["/money/bills"],
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || body.fieldErrors?.days_before || "Could not update reminder.", fieldErrors: body.fieldErrors };
-  revalidatePath("/money/bills");
-  return { success: true };
 }
 
 export async function deleteReminderAction(billId: string, reminderId: string): Promise<ActionState> {
   if (!billId || !reminderId) return { error: "Missing ids." };
-  const res = await apiFetchRaw(`/api/bills/${billId}/reminders/${reminderId}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete reminder." };
-  revalidatePath("/money/bills");
-  return { success: true };
+  return mutateAndRevalidate(`/api/bills/${billId}/reminders/${reminderId}`, {
+    method: "DELETE",
+    fallback: "Could not delete reminder.",
+    revalidate: ["/money/bills"],
+  });
 }
 
 export async function suggestRecurringBills(): Promise<ActionState & { suggestions?: { description: string; avg_amount: number; occurrence_count: number }[] }> {

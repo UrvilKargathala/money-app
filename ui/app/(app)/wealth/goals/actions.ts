@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function createGoal(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -12,15 +11,12 @@ export async function createGoal(prev: ActionState, formData: FormData): Promise
   const account_id = String(formData.get("account_id") ?? "") || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const res = await apiFetchRaw("/api/goals", {
+  return mutateAndRevalidate("/api/goals", {
     method: "POST",
     json: { name, target_amount, target_date, priority, account_id, notes },
+    fallback: "Could not save goal.",
+    revalidate: ["/wealth/goals", "/overview/dashboard"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  revalidatePath("/overview/dashboard");
-  return { success: true };
 }
 
 export async function updateGoal(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -32,46 +28,47 @@ export async function updateGoal(prev: ActionState, formData: FormData): Promise
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const version = Number(formData.get("version") ?? 1);
 
-  const res = await apiFetchRaw(`/api/goals/${id}`, {
+  return mutateAndRevalidate(`/api/goals/${id}`, {
     method: "PATCH",
     json: { name, target_amount, target_date, priority, notes, version },
+    fallback: "Could not save goal.",
+    revalidate: ["/wealth/goals"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
 }
 
 export async function deleteGoalAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/goals/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete goal." };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${id}`, {
+    method: "DELETE",
+    fallback: "Could not delete goal.",
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function pauseGoalAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/goals/${id}/pause`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not pause." };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${id}/pause`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not pause.",
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function resumeGoalAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/goals/${id}/resume`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not resume." };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${id}/resume`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not resume.",
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function completeGoalAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/goals/${id}/complete`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not complete." };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${id}/complete`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not complete.",
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -89,11 +86,11 @@ export async function addContribution(prev: ActionState, formData: FormData): Pr
   if (notes) json.notes = notes;
   if (transaction_id) json.transaction_id = transaction_id;
 
-  const res = await apiFetchRaw(`/api/goals/${goalId}/contributions`, { method: "POST", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${goalId}/contributions`, {
+    method: "POST",
+    json,
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function updateContribution(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -109,19 +106,19 @@ export async function updateContribution(prev: ActionState, formData: FormData):
   if (date) json.date = date;
   if (notes !== undefined) json.notes = notes;
 
-  const res = await apiFetchRaw(`/api/goals/${goalId}/contributions/${contributionId}`, { method: "PATCH", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${goalId}/contributions/${contributionId}`, {
+    method: "PATCH",
+    json,
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function deleteContributionAction(goalId: string, contributionId: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/goals/${goalId}/contributions/${contributionId}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete contribution." };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${goalId}/contributions/${contributionId}`, {
+    method: "DELETE",
+    fallback: "Could not delete contribution.",
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function addContributionWithTransfer(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -132,14 +129,11 @@ export async function addContributionWithTransfer(prev: ActionState, formData: F
   const date = String(formData.get("date") ?? new Date().toISOString().slice(0, 10));
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const res = await apiFetchRaw(`/api/goals/${goalId}/contributions/with-transfer`, {
+  return mutateAndRevalidate(`/api/goals/${goalId}/contributions/with-transfer`, {
     method: "POST",
     json: { from_account_id, to_account_id, amount, date, notes },
+    revalidate: ["/wealth/goals"],
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -153,11 +147,11 @@ export async function createSnapshot(prev: ActionState, formData: FormData): Pro
   const json: Record<string, unknown> = {};
   if (date) json.date = date;
 
-  const res = await apiFetchRaw(`/api/goals/${goalId}/snapshots`, { method: "POST", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/${goalId}/snapshots`, {
+    method: "POST",
+    json,
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -172,14 +166,11 @@ export async function createTemplate(prev: ActionState, formData: FormData): Pro
   const default_timeframe_months = default_timeframe_months_raw ? Number(default_timeframe_months_raw) : null;
   const icon = String(formData.get("icon") ?? "").trim() || null;
 
-  const res = await apiFetchRaw("/api/goals/templates", {
+  return mutateAndRevalidate("/api/goals/templates", {
     method: "POST",
     json: { name, description, default_target_amount, default_timeframe_months, icon },
+    revalidate: ["/wealth/goals"],
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
 }
 
 export async function updateTemplate(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -203,19 +194,19 @@ export async function updateTemplate(prev: ActionState, formData: FormData): Pro
   if (default_timeframe_months !== undefined) json.default_timeframe_months = default_timeframe_months;
   if (icon !== undefined) json.icon = icon;
 
-  const res = await apiFetchRaw(`/api/goals/templates/${id}`, { method: "PATCH", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/templates/${id}`, {
+    method: "PATCH",
+    json,
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 export async function deleteTemplateAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/goals/templates/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete template." };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate(`/api/goals/templates/${id}`, {
+    method: "DELETE",
+    fallback: "Could not delete template.",
+    revalidate: ["/wealth/goals"],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -224,9 +215,9 @@ export async function deleteTemplateAction(id: string): Promise<ActionState> {
 
 export async function distributeWindfall(prev: ActionState, formData: FormData): Promise<ActionState> {
   const amount = String(formData.get("amount") ?? "");
-  const res = await apiFetchRaw("/api/goals/distribute", { method: "POST", json: { amount } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/wealth/goals");
-  return { success: true };
+  return mutateAndRevalidate("/api/goals/distribute", {
+    method: "POST",
+    json: { amount },
+    revalidate: ["/wealth/goals"],
+  });
 }

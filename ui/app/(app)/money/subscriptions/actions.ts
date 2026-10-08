@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function createSubscription(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -13,15 +12,12 @@ export async function createSubscription(prev: ActionState, formData: FormData):
   const category_id = String(formData.get("category_id") ?? "") || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const res = await apiFetchRaw("/api/subscriptions", {
+  return mutateAndRevalidate("/api/subscriptions", {
     method: "POST",
     json: { service_name, amount, frequency, next_renewal_date, account_id, category_id, notes },
+    fallback: "Could not save the subscription.",
+    revalidate: ["/money/subscriptions", "/overview/dashboard"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/money/subscriptions");
-  revalidatePath("/overview/dashboard");
-  return { success: true };
 }
 
 export async function updateSubscription(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -35,47 +31,47 @@ export async function updateSubscription(prev: ActionState, formData: FormData):
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const version = Number(formData.get("version") ?? 1);
 
-  const res = await apiFetchRaw(`/api/subscriptions/${id}`, {
+  return mutateAndRevalidate(`/api/subscriptions/${id}`, {
     method: "PATCH",
     json: { service_name, amount, frequency, next_renewal_date, account_id, category_id, notes, version },
+    fallback: "Could not save the subscription.",
+    revalidate: ["/money/subscriptions"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/money/subscriptions");
-  return { success: true };
 }
 
 export async function cancelSubscriptionAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/subscriptions/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not cancel." };
-  revalidatePath("/money/subscriptions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/subscriptions/${id}`, {
+    method: "DELETE",
+    fallback: "Could not cancel.",
+    revalidate: ["/money/subscriptions"],
+  });
 }
 
 export async function pauseSubscriptionAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/subscriptions/${id}/pause`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not pause." };
-  revalidatePath("/money/subscriptions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/subscriptions/${id}/pause`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not pause.",
+    revalidate: ["/money/subscriptions"],
+  });
 }
 
 export async function resumeSubscriptionAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/subscriptions/${id}/resume`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not resume." };
-  revalidatePath("/money/subscriptions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/subscriptions/${id}/resume`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not resume.",
+    revalidate: ["/money/subscriptions"],
+  });
 }
 
 export async function renewSubscriptionAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/subscriptions/${id}/renew`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not renew." };
-  revalidatePath("/money/subscriptions");
-  revalidatePath("/money/transactions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/subscriptions/${id}/renew`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not renew.",
+    revalidate: ["/money/subscriptions", "/money/transactions"],
+  });
 }
 
 export type SnoozeSource = "preset" | "custom";
@@ -89,11 +85,12 @@ export async function snoozeSubscriptionAction(
   const d = Number(days);
   if (!Number.isInteger(d) || d < 1 || d > 90) return { fieldErrors: { days: "Snooze must be between 1 and 90 days." } };
   if (source !== "preset" && source !== "custom") return { fieldErrors: { source: "Source must be preset or custom." } };
-  const res = await apiFetchRaw(`/api/subscriptions/${id}/snooze`, { method: "POST", json: { days: d, source, ...(attemptId ? { attempt: attemptId } : {}) } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || body.fieldErrors?.days || "Could not snooze.", fieldErrors: body.fieldErrors };
-  revalidatePath("/money/subscriptions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/subscriptions/${id}/snooze`, {
+    method: "POST",
+    json: { days: d, source, ...(attemptId ? { attempt: attemptId } : {}) },
+    fallback: "Could not snooze.",
+    revalidate: ["/money/subscriptions"],
+  });
 }
 
 // alias for tasks spec
@@ -101,11 +98,12 @@ export const snooze = snoozeSubscriptionAction;
 
 export async function dismissAuditAction(auditId: string): Promise<ActionState> {
   if (!auditId) return { error: "Audit id required." };
-  const res = await apiFetchRaw(`/api/subscriptions/audits/${auditId}/dismiss`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not dismiss audit." };
-  revalidatePath("/money/subscriptions");
-  return { success: true };
+  return mutateAndRevalidate(`/api/subscriptions/audits/${auditId}/dismiss`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not dismiss audit.",
+    revalidate: ["/money/subscriptions"],
+  });
 }
 
 export const dismissAudit = dismissAuditAction;

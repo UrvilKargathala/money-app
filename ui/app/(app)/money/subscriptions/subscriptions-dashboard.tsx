@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
+import { usePaymentsHistory } from "@/components/common/use-payments-history";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
 type Sub = {
@@ -59,28 +60,8 @@ type Audit = {
 // Payments history dialog per subscription
 // ---------------------------------------------------------------------------
 
-type PaymentRow = { id: string; amount: number; period_label: string; period_month: number; period_year: number; notes: string | null; created_at: string };
-
 function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [payments, setPayments] = useState<PaymentRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-
-  const loadPayments = useCallback(() => {
-    if (!sub) return;
-    setLoading(true);
-    setLoadError(false);
-    fetch(`/api/subscriptions/${sub.id}/payments`)
-      .then(async (response) => { if (!response.ok) throw new Error(); return response.json(); })
-      .then((data) => setPayments((data.payments ?? []).map((payment: { amount: string | number }) => ({ ...payment, amount: Number(payment.amount) }))))
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false));
-  }, [sub]);
-
-  useEffect(() => {
-    if (!open || !sub) return;
-    loadPayments();
-  }, [open, sub, loadPayments]);
+  const { payments, loading, loadError, reload } = usePaymentsHistory(sub?.id ?? null, open, "/api/subscriptions");
 
   if (!sub) return null;
   return (
@@ -96,7 +77,7 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
             <a href={`/api/subscriptions/${sub.id}/payments/export`} download><Download className="h-3 w-3" /> Export CSV</a>
           </Button>
         </div>
-        {loadError ? <PanelError message="Could not load subscription payments." onRetry={loadPayments} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
+          {loadError ? <PanelError message="Could not load subscription payments." onRetry={reload} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
               <tr><th className="p-2 text-left">Period</th><th className="p-2 text-left">Date</th><th className="p-2 text-right">Amount</th><th className="p-2 text-left">Notes</th></tr>

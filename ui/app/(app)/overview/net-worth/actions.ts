@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function createManualAsset(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -10,28 +9,27 @@ export async function createManualAsset(prev: ActionState, formData: FormData): 
   const valuation = String(formData.get("valuation") ?? "");
   const acquisition_date = String(formData.get("acquisition_date") ?? new Date().toISOString().slice(0, 10));
 
-  const res = await apiFetchRaw("/api/manual-assets", {
+  return mutateAndRevalidate("/api/manual-assets", {
     method: "POST",
     json: { name, category, valuation, acquisition_date },
+    fallback: "Could not save asset.",
+    revalidate: ["/overview/net-worth"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/overview/net-worth");
-  return { success: true };
 }
 
 export async function deleteManualAssetAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/manual-assets/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete." };
-  revalidatePath("/overview/net-worth");
-  return { success: true };
+  return mutateAndRevalidate(`/api/manual-assets/${id}`, {
+    method: "DELETE",
+    fallback: "Could not delete.",
+    revalidate: ["/overview/net-worth"],
+  });
 }
 
 export async function runNetWorthSnapshot(): Promise<ActionState> {
-  const res = await apiFetchRaw("/api/net-worth/snapshots/run", { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not run snapshot." };
-  revalidatePath("/overview/net-worth");
-  return { success: true };
+  return mutateAndRevalidate("/api/net-worth/snapshots/run", {
+    method: "POST",
+    json: {},
+    fallback: "Could not run snapshot.",
+    revalidate: ["/overview/net-worth"],
+  });
 }

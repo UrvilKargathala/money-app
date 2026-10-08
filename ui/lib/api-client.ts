@@ -94,6 +94,17 @@ export async function apiFetchRaw(
   return response;
 }
 
+/** POST/PATCH/DELETE-JSON-or-null: shared shape for pure write wrappers. */
+export async function postOrNull<T>(path: string, json?: unknown, method = "POST"): Promise<T | null> {
+  try {
+    const res = await apiFetchRaw(path, { method, json });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Typed wrappers - each returns null on non-2xx so callers can handle gracefully
 // ---------------------------------------------------------------------------
@@ -384,13 +395,7 @@ export async function getBillsCashflowWaterfall(): Promise<{
 export async function suggestRecurringBillsApi(): Promise<{
   suggestions: { description: string; avg_amount: number; occurrence_count: number }[];
 } | null> {
-  try {
-    const res = await apiFetchRaw("/api/bills/suggest-recurring", { method: "POST", json: {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { suggestions: { description: string; avg_amount: number; occurrence_count: number }[] };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ suggestions: { description: string; avg_amount: number; occurrence_count: number }[]; }>("/api/bills/suggest-recurring", {});
 }
 
 // ---------------------------------------------------------------------------
@@ -531,13 +536,7 @@ export async function createGoalContribution(
   goalId: string,
   payload: { amount: string | number; date: string; notes?: string | null; transaction_id?: string | null }
 ): Promise<{ success: boolean; contribution: { id: string } } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/goals/${goalId}/contributions`, { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; contribution: { id: string } };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; contribution: { id: string } }>(`/api/goals/${goalId}/contributions`, payload);
 }
 
 export async function updateGoalContribution(
@@ -545,36 +544,18 @@ export async function updateGoalContribution(
   contributionId: string,
   payload: { amount?: string | number; date?: string; notes?: string | null }
 ): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/goals/${goalId}/contributions/${contributionId}`, { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/goals/${goalId}/contributions/${contributionId}`, payload, "PATCH");
 }
 
 export async function deleteGoalContribution(goalId: string, contributionId: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/goals/${goalId}/contributions/${contributionId}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/goals/${goalId}/contributions/${contributionId}`, undefined, "DELETE");
 }
 
 export async function createGoalContributionWithTransfer(
   goalId: string,
   payload: { from_account_id: string; to_account_id: string; amount: string | number; date: string; notes?: string | null }
 ): Promise<{ success: boolean; contribution: { id: string } } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/goals/${goalId}/contributions/with-transfer`, { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; contribution: { id: string } };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; contribution: { id: string } }>(`/api/goals/${goalId}/contributions/with-transfer`, payload);
 }
 
 export async function getGoalSnapshots(id: string): Promise<{
@@ -614,13 +595,7 @@ export async function createGoalTemplate(payload: {
   default_timeframe_months?: number | null;
   icon?: string | null;
 }): Promise<{ success: boolean; template: { id: string } } | null> {
-  try {
-    const res = await apiFetchRaw("/api/goals/templates", { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; template: { id: string } };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; template: { id: string } }>("/api/goals/templates", payload);
 }
 
 export async function getGoalTemplate(id: string): Promise<{
@@ -633,35 +608,17 @@ export async function updateGoalTemplate(
   id: string,
   payload: { name?: string; description?: string | null; default_target_amount?: string | number | null; default_timeframe_months?: number | null; icon?: string | null; version: number }
 ): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/goals/templates/${id}`, { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/goals/templates/${id}`, payload, "PATCH");
 }
 
 export async function deleteGoalTemplate(id: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/goals/templates/${id}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/goals/templates/${id}`, undefined, "DELETE");
 }
 
 export async function distributeGoals(amount: number | string): Promise<{
   suggestions: { goal_id: string; name: string; remaining: number; amount: number }[];
 } | null> {
-  try {
-    const res = await apiFetchRaw("/api/goals/distribute", { method: "POST", json: { amount: String(amount) } });
-    if (!res.ok) return null;
-    return (await res.json()) as { suggestions: { goal_id: string; name: string; remaining: number; amount: number }[] };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ suggestions: { goal_id: string; name: string; remaining: number; amount: number }[]; }>("/api/goals/distribute", { amount: String(amount) });
 }
 
 export async function getDebtsData(): Promise<{
@@ -730,13 +687,7 @@ export async function getDebtAmortization(
 export async function regenerateAmortization(
   debtId: string
 ): Promise<{ success: boolean; periods: number } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/debts/${debtId}/amortization/regenerate`, { method: "POST", json: {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; periods: number };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; periods: number }>(`/api/debts/${debtId}/amortization/regenerate`, {});
 }
 
 export async function getDebtCostBreakdown(debtId: string): Promise<{
@@ -772,29 +723,7 @@ export async function simulateDebtPrepayment(
     new_debt_free_date: string | null;
   };
 } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/debts/${debtId}/simulate-prepayment`, {
-      method: "POST",
-      json: { amount: String(amount), strategy },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as {
-      simulation: {
-        strategy: string;
-        prepayment_amount: number;
-        new_emi: number;
-        new_tenure_months: number;
-        months_saved: number;
-        interest_saved: number;
-        original_interest: number;
-        new_interest: number;
-        current_debt_free_date: string | null;
-        new_debt_free_date: string | null;
-      };
-    };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ simulation: { strategy: string; prepayment_amount: number; new_emi: number; new_tenure_months: number; months_saved: number; interest_saved: number; original_interest: number; new_interest: number; current_debt_free_date: string | null; new_debt_free_date: string | null; }; }>(`/api/debts/${debtId}/simulate-prepayment`, { amount: String(amount), strategy });
 }
 
 export async function applyDebtPrepayment(
@@ -803,16 +732,7 @@ export async function applyDebtPrepayment(
   date: string,
   notes?: string
 ): Promise<{ success: boolean; payment: { id: string }; outstanding_after: number } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/debts/${debtId}/prepayments`, {
-      method: "POST",
-      json: { amount: String(amount), date, notes: notes || undefined },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; payment: { id: string }; outstanding_after: number };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; payment: { id: string }; outstanding_after: number }>(`/api/debts/${debtId}/prepayments`, { amount: String(amount), date, notes: notes || undefined });
 }
 
 export async function getDebtPayments(debtId: string): Promise<{
@@ -870,13 +790,7 @@ export async function patchDebtPayment(
 }
 
 export async function deleteDebtPayment(debtId: string, paymentId: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/debts/${debtId}/payments/${paymentId}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/debts/${debtId}/payments/${paymentId}`, undefined, "DELETE");
 }
 
 export async function getDebtPaymentStatus(debtId: string): Promise<{
@@ -899,16 +813,7 @@ export async function getDebtsDti(): Promise<{
 }
 
 export async function patchMonthlyIncome(monthlyIncome: number | null): Promise<{ success: boolean; monthly_income: number | null } | null> {
-  try {
-    const res = await apiFetchRaw("/api/users/me/settings/monthly-income", {
-      method: "PATCH",
-      json: { monthly_income: monthlyIncome === null ? null : String(monthlyIncome) },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; monthly_income: number | null };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; monthly_income: number | null }>("/api/users/me/settings/monthly-income", { monthly_income: monthlyIncome === null ? null : String(monthlyIncome) }, "PATCH");
 }
 
 export async function compareDebtStrategies(extraMonthly: number): Promise<{
@@ -917,21 +822,7 @@ export async function compareDebtStrategies(extraMonthly: number): Promise<{
   avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
   snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
 } | null> {
-  try {
-    const res = await apiFetchRaw("/api/debts/strategies/compare", {
-      method: "POST",
-      json: { extra_monthly: String(extraMonthly) },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as {
-      extra_monthly: number;
-      baseline: { months_to_debt_free: number; total_interest: number };
-      avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-      snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-    };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ extra_monthly: number; baseline: { months_to_debt_free: number; total_interest: number }; avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; }>("/api/debts/strategies/compare", { extra_monthly: String(extraMonthly) });
 }
 
 export async function getDebtsCombinedTimeline(): Promise<{
@@ -953,21 +844,7 @@ export async function compareCombinedStrategies(extraMonthly: number): Promise<{
   avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
   snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
 } | null> {
-  try {
-    const res = await apiFetchRaw("/api/debts/combined/strategies", {
-      method: "POST",
-      json: { extra_monthly: String(extraMonthly) },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as {
-      extra_monthly: number;
-      baseline: { months_to_debt_free: number; total_interest: number };
-      avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-      snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-    };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ extra_monthly: number; baseline: { months_to_debt_free: number; total_interest: number }; avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; }>("/api/debts/combined/strategies", { extra_monthly: String(extraMonthly) });
 }
 
 export async function getDebtsHealthAlerts(): Promise<{
@@ -1040,13 +917,7 @@ export async function createTaxSalary(payload: {
   additional_income?: string | number | null;
   tds_deducted?: string | number | null;
 }): Promise<{ salary: unknown } | null> {
-  try {
-    const res = await apiFetchRaw("/api/tax/salary", { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { salary: unknown };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ salary: unknown }>("/api/tax/salary", payload);
 }
 
 export async function patchTaxSalary(payload: {
@@ -1063,13 +934,7 @@ export async function patchTaxSalary(payload: {
   additional_income?: string | number | null;
   tds_deducted?: string | number | null;
 }): Promise<{ salary: unknown } | null> {
-  try {
-    const res = await apiFetchRaw("/api/tax/salary", { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { salary: unknown };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ salary: unknown }>("/api/tax/salary", payload, "PATCH");
 }
 
 export async function getTaxCompare(fy: string): Promise<{
@@ -1137,46 +1002,22 @@ export async function createTaxItrDocument(payload: {
   status: string;
   notes?: string | null;
 }): Promise<{ document: unknown } | null> {
-  try {
-    const res = await apiFetchRaw("/api/tax/itr", { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { document: unknown };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ document: unknown }>("/api/tax/itr", payload);
 }
 
 export async function updateTaxItrDocument(
   id: string,
   payload: Partial<{ financial_year: string; category: string; document_name: string; status: string; notes: string | null }>
 ): Promise<{ document: unknown } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/tax/itr/${id}`, { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { document: unknown };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ document: unknown }>(`/api/tax/itr/${id}`, payload, "PATCH");
 }
 
 export async function deleteTaxItrDocument(id: string): Promise<{ ok: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/tax/itr/${id}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { ok: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ ok: boolean }>(`/api/tax/itr/${id}`, undefined, "DELETE");
 }
 
 export async function suggestTaxItrDocuments(fy: string): Promise<{ financial_year: string; created: unknown[]; completion: unknown } | null> {
-  try {
-    const res = await apiFetchRaw("/api/tax/itr/suggest", { method: "POST", json: { financial_year: fy } });
-    if (!res.ok) return null;
-    return (await res.json()) as { financial_year: string; created: unknown[]; completion: unknown };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ financial_year: string; created: unknown[]; completion: unknown }>("/api/tax/itr/suggest", { financial_year: fy });
 }
 
 export async function getInvestmentsData(): Promise<{
@@ -1401,23 +1242,11 @@ export async function getNotesTrash(): Promise<{
 }
 
 export async function restoreNoteApi(id: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/notes/${id}/restore`, { method: "POST", json: {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/notes/${id}/restore`, {});
 }
 
 export async function purgeNoteApi(id: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/notes/${id}/purge`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/notes/${id}/purge`, undefined, "DELETE");
 }
 
 export async function getNoteCategories(): Promise<{
@@ -1427,13 +1256,7 @@ export async function getNoteCategories(): Promise<{
 }
 
 export async function patchNoteCategories(payload: { categories: { id?: string; name: string }[] }): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw("/api/notes/categories", { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>("/api/notes/categories", payload, "PATCH");
 }
 
 export async function getNoteTemplates(): Promise<{
@@ -1463,13 +1286,7 @@ export function getNoteAttachmentHref(noteId: string): string {
 }
 
 export async function deleteNoteAttachmentApi(noteId: string, attachmentId: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/notes/${noteId}/attachments/${attachmentId}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/notes/${noteId}/attachments/${attachmentId}`, undefined, "DELETE");
 }
 
 export async function getVaultWrappedKey(): Promise<{ wrapped_key: string | null } | null> {
@@ -1477,13 +1294,7 @@ export async function getVaultWrappedKey(): Promise<{ wrapped_key: string | null
 }
 
 export async function verifyVaultPasswordApi(password: string): Promise<{ valid: boolean } | null> {
-  try {
-    const res = await apiFetchRaw("/api/vault/verify-password", { method: "POST", json: { password } });
-    if (!res.ok) return null;
-    return (await res.json()) as { valid: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ valid: boolean }>("/api/vault/verify-password", { password });
 }
 
 export type CalendarApiEvent = {
@@ -1539,13 +1350,7 @@ export async function getCalendarTaxDeadlines(year?: number): Promise<{
 }
 
 export async function duplicateCalendarEvent(id: string): Promise<{ success: boolean; event: { id: string } } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/calendar/events/${id}/duplicate`, { method: "POST", json: {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; event: { id: string } };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; event: { id: string } }>(`/api/calendar/events/${id}/duplicate`, {});
 }
 
 export async function getCalendarCashflowProjection(days?: number): Promise<{
@@ -1678,29 +1483,14 @@ export function getNotificationsStreamHref(since?: string): string {
 export async function updateNotificationPreferencesApi(payload: {
   preferences: { notification_type: string; channel: string; is_enabled: boolean | number }[];
 }): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw("/api/notification-preferences", { method: "PATCH", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>("/api/notification-preferences", payload, "PATCH");
 }
 
 export async function toggleNotificationPreferenceApi(
   type: string,
   channel: string
 ): Promise<{ success: boolean; is_enabled: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(
-      `/api/notification-preferences/${encodeURIComponent(type)}/${encodeURIComponent(channel)}`,
-      { method: "PATCH", json: {} }
-    );
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; is_enabled: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean; is_enabled: boolean }>(`/api/notification-preferences/${encodeURIComponent(type)}/${encodeURIComponent(channel)}`, {}, "PATCH");
 }
 
 export async function previewNotificationEmailApi(payload: {
@@ -1708,13 +1498,7 @@ export async function previewNotificationEmailApi(payload: {
   title: string;
   message: string;
 }): Promise<{ preview: { subject: string; body_html: string; body_text: string } } | null> {
-  try {
-    const res = await apiFetchRaw("/api/notifications/email/preview", { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { preview: { subject: string; body_html: string; body_text: string } };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ preview: { subject: string; body_html: string; body_text: string } }>("/api/notifications/email/preview", payload);
 }
 
 export async function getSettings(): Promise<unknown | null> {
@@ -1828,13 +1612,7 @@ export async function getSessionsApi(): Promise<{
 }
 
 export async function deleteSessionApi(id: string | number): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/users/me/sessions/${id}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/users/me/sessions/${id}`, undefined, "DELETE");
 }
 
 export async function deactivateAccountApi(): Promise<{ success: boolean; message?: string } | null> {
@@ -1924,43 +1702,19 @@ export async function createExportJob(payload: {
   column_set?: string[] | null;
   [k: string]: unknown;
 }): Promise<{ job: ExportJob; success?: boolean } | ExportJob | null> {
-  try {
-    const res = await apiFetchRaw("/api/export/jobs", { method: "POST", json: payload });
-    if (!res.ok) return null;
-    return (await res.json()) as { job: ExportJob };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ job: ExportJob; success?: boolean } | ExportJob>("/api/export/jobs", payload);
 }
 
 export async function retryExportJob(id: string): Promise<{ job: ExportJob; success?: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/export/jobs/${encodeURIComponent(id)}/retry`, { method: "POST", json: {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { job: ExportJob };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ job: ExportJob; success?: boolean }>(`/api/export/jobs/${encodeURIComponent(id)}/retry`, {});
 }
 
 export async function deleteExportJob(id: string): Promise<{ success: boolean } | null> {
-  try {
-    const res = await apiFetchRaw(`/api/export/jobs/${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ success: boolean }>(`/api/export/jobs/${encodeURIComponent(id)}`, undefined, "DELETE");
 }
 
 export async function createFullArchive(payload?: Record<string, unknown>): Promise<{ job: ExportJob; archive?: unknown; success?: boolean } | null> {
-  try {
-    const res = await apiFetchRaw("/api/export/full-archive", { method: "POST", json: payload ?? {} });
-    if (!res.ok) return null;
-    return (await res.json()) as { job: ExportJob };
-  } catch {
-    return null;
-  }
+  return postOrNull<{ job: ExportJob; archive?: unknown; success?: boolean }>("/api/export/full-archive", payload ?? {});
 }
 
 export function getExportFullArchiveHref(): string {

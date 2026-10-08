@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function createTaxInvestment(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -13,14 +14,12 @@ export async function createTaxInvestment(prev: ActionState, formData: FormData)
   const financial_year = String(formData.get("financial_year") ?? "");
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const res = await apiFetchRaw("/api/tax/investments", {
+  return mutateAndRevalidate("/api/tax/investments", {
     method: "POST",
     json: { section, name, amount, investment_date, proof_status, financial_year, notes },
+    fallback: "Could not save tax investment.",
+    revalidate: ["/planning/tax"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
 }
 
 export async function updateTaxInvestment(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -31,22 +30,20 @@ export async function updateTaxInvestment(prev: ActionState, formData: FormData)
   const proof_status = String(formData.get("proof_status") ?? "pending");
   const version = Number(formData.get("version") ?? 1);
 
-  const res = await apiFetchRaw(`/api/tax/investments/${id}`, {
+  return mutateAndRevalidate(`/api/tax/investments/${id}`, {
     method: "PATCH",
     json: { name, amount, investment_date, proof_status, version },
+    fallback: "Could not save tax investment.",
+    revalidate: ["/planning/tax"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
 }
 
 export async function deleteTaxInvestmentAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/tax/investments/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete." };
-  revalidatePath("/planning/tax");
-  return { success: true };
+  return mutateAndRevalidate(`/api/tax/investments/${id}`, {
+    method: "DELETE",
+    fallback: "Could not delete.",
+    revalidate: ["/planning/tax"],
+  });
 }
 
 export async function upsertSalary(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -75,11 +72,11 @@ export async function upsertSalary(prev: ActionState, formData: FormData): Promi
   if (additional_income !== "") json.additional_income = additional_income;
   if (tds_deducted !== "") json.tds_deducted = tds_deducted;
 
-  const res = await apiFetchRaw("/api/tax/salary", { method: "POST", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
+  return mutateAndRevalidate("/api/tax/salary", {
+    method: "POST",
+    json,
+    revalidate: ["/planning/tax"],
+  });
 }
 
 export async function patchSalary(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -106,11 +103,11 @@ export async function patchSalary(prev: ActionState, formData: FormData): Promis
     else if (formData.has(f)) json[f] = null;
   }
 
-  const res = await apiFetchRaw("/api/tax/salary", { method: "PATCH", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
+  return mutateAndRevalidate("/api/tax/salary", {
+    method: "PATCH",
+    json,
+    revalidate: ["/planning/tax"],
+  });
 }
 
 export async function createItrDoc(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -120,14 +117,11 @@ export async function createItrDoc(prev: ActionState, formData: FormData): Promi
   const status = String(formData.get("status") ?? "pending").trim();
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const res = await apiFetchRaw("/api/tax/itr", {
+  return mutateAndRevalidate("/api/tax/itr", {
     method: "POST",
     json: { financial_year, category, document_name, status, notes },
+    revalidate: ["/planning/tax"],
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
 }
 
 export async function updateItrDoc(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -145,26 +139,26 @@ export async function updateItrDoc(prev: ActionState, formData: FormData): Promi
   if (notes !== undefined) json.notes = notes;
   if (financial_year !== undefined) json.financial_year = financial_year;
 
-  const res = await apiFetchRaw(`/api/tax/itr/${id}`, { method: "PATCH", json });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
+  return mutateAndRevalidate(`/api/tax/itr/${id}`, {
+    method: "PATCH",
+    json,
+    revalidate: ["/planning/tax"],
+  });
 }
 
 export async function deleteItrDocAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/tax/itr/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete document." };
-  revalidatePath("/planning/tax");
-  return { success: true };
+  return mutateAndRevalidate(`/api/tax/itr/${id}`, {
+    method: "DELETE",
+    fallback: "Could not delete document.",
+    revalidate: ["/planning/tax"],
+  });
 }
 
 export async function suggestItrDocs(prev: ActionState, formData: FormData): Promise<ActionState> {
   const financial_year = String(formData.get("financial_year") ?? "").trim();
-  const res = await apiFetchRaw("/api/tax/itr/suggest", { method: "POST", json: { financial_year } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/planning/tax");
-  return { success: true };
+  return mutateAndRevalidate("/api/tax/itr/suggest", {
+    method: "POST",
+    json: { financial_year },
+    revalidate: ["/planning/tax"],
+  });
 }

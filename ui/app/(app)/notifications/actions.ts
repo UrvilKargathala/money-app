@@ -2,46 +2,52 @@
 
 import { revalidatePath } from "next/cache";
 import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function markReadAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/notifications/${id}/read`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not mark read." };
-  revalidatePath("/notifications");
-  return { success: true };
+  return mutateAndRevalidate(`/api/notifications/${id}/read`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not mark read.",
+    revalidate: ["/notifications"],
+  });
 }
 
 export async function markAllReadAction(): Promise<ActionState> {
-  const res = await apiFetchRaw("/api/notifications/read-all", { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not mark all read." };
-  revalidatePath("/notifications");
-  return { success: true };
+  return mutateAndRevalidate("/api/notifications/read-all", {
+    method: "POST",
+    json: {},
+    fallback: "Could not mark all read.",
+    revalidate: ["/notifications"],
+  });
 }
 
 export async function dismissAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/notifications/${id}/dismiss`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not dismiss." };
-  revalidatePath("/notifications");
-  return { success: true };
+  return mutateAndRevalidate(`/api/notifications/${id}/dismiss`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not dismiss.",
+    revalidate: ["/notifications"],
+  });
 }
 
 export async function restoreAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/notifications/${id}/restore`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not restore." };
-  revalidatePath("/notifications");
-  return { success: true };
+  return mutateAndRevalidate(`/api/notifications/${id}/restore`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not restore.",
+    revalidate: ["/notifications"],
+  });
 }
 
 export async function bulkAction(ids: string[], action: "read" | "dismiss"): Promise<ActionState> {
-  const res = await apiFetchRaw("/api/notifications/bulk", { method: "POST", json: { ids, action } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || `Could not bulk ${action}.` };
-  revalidatePath("/notifications");
-  return { success: true };
+  return mutateAndRevalidate("/api/notifications/bulk", {
+    method: "POST",
+    json: { ids, action },
+    fallback: `Could not bulk ${action}.`,
+    revalidate: ["/notifications"],
+  });
 }
 
 function preferenceError(body: { error?: string; fieldErrors?: unknown }): string {
@@ -55,11 +61,12 @@ function preferenceError(body: { error?: string; fieldErrors?: unknown }): strin
 export async function updatePreferencesAction(
   preferences: { notification_type: string; channel: string; is_enabled: boolean | number }[]
 ): Promise<ActionState> {
-  const res = await apiFetchRaw("/api/notification-preferences", { method: "PATCH", json: { preferences } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: preferenceError(body) };
-  revalidatePath("/notifications");
-  return { success: true };
+  return mutateAndRevalidate("/api/notification-preferences", {
+    method: "PATCH",
+    json: { preferences },
+    formatError: preferenceError,
+    revalidate: ["/notifications"],
+  });
 }
 
 export async function togglePreferenceAction(

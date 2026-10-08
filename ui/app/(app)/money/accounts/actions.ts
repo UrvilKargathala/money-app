@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { apiFetchRaw } from "@/lib/api-client";
+import { mutateAndRevalidate } from "@/lib/server-action";
 import type { ActionState } from "@moneymind/api";
 
 export async function createAccount(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -13,17 +12,12 @@ export async function createAccount(prev: ActionState, formData: FormData): Prom
   const color = String(formData.get("color") ?? "").trim() || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const res = await apiFetchRaw("/api/accounts", {
+  return mutateAndRevalidate("/api/accounts", {
     method: "POST",
     json: { name, type, institution, opening_balance, credit_limit, color, notes },
+    fallback: "Could not save account.",
+    revalidate: ["/money/accounts", "/overview/dashboard"],
   });
-  const body = await res.json();
-  if (!res.ok) {
-    return { error: body.error, fieldErrors: body.fieldErrors };
-  }
-  revalidatePath("/money/accounts");
-  revalidatePath("/overview/dashboard");
-  return { success: true };
 }
 
 export async function updateAccount(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -36,40 +30,38 @@ export async function updateAccount(prev: ActionState, formData: FormData): Prom
   const version = formData.get("version") ? Number(formData.get("version")) : 1;
   const type = String(formData.get("type") ?? "");
 
-  const res = await apiFetchRaw(`/api/accounts/${id}`, {
+  return mutateAndRevalidate(`/api/accounts/${id}`, {
     method: "PATCH",
     json: { name, type, institution, color, notes, credit_limit, version },
+    fallback: "Could not save account.",
+    revalidate: ["/money/accounts"],
   });
-  const body = await res.json();
-  if (!res.ok) {
-    return { error: body.error, fieldErrors: body.fieldErrors };
-  }
-  revalidatePath("/money/accounts");
-  return { success: true };
 }
 
 export async function deactivateAccountAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/accounts/${id}/deactivate`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not deactivate." };
-  revalidatePath("/money/accounts");
-  return { success: true };
+  return mutateAndRevalidate(`/api/accounts/${id}/deactivate`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not deactivate.",
+    revalidate: ["/money/accounts"],
+  });
 }
 
 export async function reactivateAccountAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/accounts/${id}/reactivate`, { method: "POST", json: {} });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not reactivate." };
-  revalidatePath("/money/accounts");
-  return { success: true };
+  return mutateAndRevalidate(`/api/accounts/${id}/reactivate`, {
+    method: "POST",
+    json: {},
+    fallback: "Could not reactivate.",
+    revalidate: ["/money/accounts"],
+  });
 }
 
 export async function deleteAccountAction(id: string): Promise<ActionState> {
-  const res = await apiFetchRaw(`/api/accounts/${id}`, { method: "DELETE" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: body.error || "Could not delete." };
-  revalidatePath("/money/accounts");
-  return { success: true };
+  return mutateAndRevalidate(`/api/accounts/${id}`, {
+    method: "DELETE",
+    fallback: "Could not delete.",
+    revalidate: ["/money/accounts"],
+  });
 }
 
 export async function createTransfer(prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -83,13 +75,10 @@ export async function createTransfer(prev: ActionState, formData: FormData): Pro
   if (from_account_id === to_account_id) return { fieldErrors: { to_account_id: "Choose a different account." } };
   if (!amount || Number(amount) <= 0) return { fieldErrors: { amount: "Enter a valid amount." } };
 
-  const res = await apiFetchRaw("/api/transfers", {
+  return mutateAndRevalidate("/api/transfers", {
     method: "POST",
     json: { from_account_id, to_account_id, amount, date, notes },
+    fallback: "Could not save transfer.",
+    revalidate: ["/money/accounts", "/overview/dashboard"],
   });
-  const body = await res.json();
-  if (!res.ok) return { error: body.error, fieldErrors: body.fieldErrors };
-  revalidatePath("/money/accounts");
-  revalidatePath("/overview/dashboard");
-  return { success: true };
 }

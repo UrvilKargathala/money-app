@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
+import { usePaymentsHistory } from "@/components/common/use-payments-history";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
 type Bill = {
@@ -54,32 +55,29 @@ type SuggestionsData = { suggestions: { description: string; avg_amount: number;
 // Payments History Dialog
 // ---------------------------------------------------------------------------
 
-type PaymentRow = { id: string; amount: number; period_label: string; period_month: number; period_year: number; notes: string | null; created_at: string; transaction_id: string | null };
 type YoY = { current: { year: number; total: number }; previous: { year: number; total: number } };
 
 function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const { payments, loading, loadError, reload: reloadPayments } = usePaymentsHistory(bill?.id ?? null, open, "/api/bills");
   const [yoy, setYoy] = useState<YoY | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState(false);
 
-  const loadPayments = useCallback(() => {
+  const loadYoy = useCallback(() => {
     if (!bill) return;
-    setLoading(true);
-    setLoadError(false);
-    Promise.all([
-      fetch(`/api/bills/${bill.id}/payments`).then(async (response) => { if (!response.ok) throw new Error(); return response.json(); }),
-      fetch(`/api/bills/${bill.id}/payments/yoy`).then(async (response) => response.ok ? response.json() : null),
-    ]).then(([paymentsResult, yoyResult]) => {
-      setPayments((paymentsResult.payments ?? []).map((payment: { amount: string | number }) => ({ ...payment, amount: Number(payment.amount) })));
-      setYoy(yoyResult?.current ? yoyResult : null);
-    }).catch(() => setLoadError(true)).finally(() => setLoading(false));
+    fetch(`/api/bills/${bill.id}/payments/yoy`)
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((yoyResult) => setYoy(yoyResult?.current ? yoyResult : null))
+      .catch(() => setYoy(null));
   }, [bill]);
 
   useEffect(() => {
     if (!open || !bill) return;
-    loadPayments();
-  }, [open, bill, loadPayments]);
+    loadYoy();
+  }, [open, bill, loadYoy]);
+
+  const handleRetry = () => {
+    reloadPayments();
+    loadYoy();
+  };
 
   if (!bill) return null;
   return (
@@ -103,7 +101,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                 </a>
               </Button>
             </div>
-            {loadError ? <PanelError message="Could not load bill payments." onRetry={loadPayments} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
+            {loadError ? <PanelError message="Could not load bill payments." onRetry={handleRetry} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
                   <tr>
