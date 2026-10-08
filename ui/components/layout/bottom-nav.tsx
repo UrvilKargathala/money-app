@@ -32,6 +32,7 @@ export function BottomNav() {
       {/* FAB */}
       <Link
         href="/add"
+        aria-label="Add transaction"
         className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-colors -mt-4"
       >
         <Plus className="h-6 w-6" />

@@ -136,7 +136,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             </SheetContent>
           </Sheet>
 
-          <Link href="/overview/dashboard" className="flex items-center gap-2">
+          <Link href="/overview/dashboard" className="flex items-center gap-2" aria-label="MoneyMind home">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
               <Wallet className="h-5 w-5" />
             </div>
