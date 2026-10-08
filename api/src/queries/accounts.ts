@@ -305,12 +305,7 @@ export async function getAccountSummaryTotals(
   const result = await q.query<{ kind: string; total: string }>(
     `WITH per_account AS (
        SELECT a.id, a.opening_balance, COALESCE(at.is_asset, 1) AS is_asset,
-              COALESCE(SUM(CASE
-                WHEN t.type='income' THEN t.amount
-                WHEN t.type='expense' THEN -t.amount
-                WHEN t.type='transfer' AND tf.from_transaction_id = t.id THEN -t.amount
-                WHEN t.type='transfer' AND tf.to_transaction_id = t.id THEN t.amount
-                ELSE 0 END),0) AS txn_sum
+              ${BALANCE_EXPR} AS txn_sum
        FROM accounts a
        LEFT JOIN account_types at ON at.type_code = a.type
        LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id

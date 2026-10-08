@@ -1,5 +1,6 @@
 import { query } from "../db";
 import { isoDate } from "../utils/format";
+import { joinAccount, joinCategory, lateralLastPayment } from "./sql";
 import type { PaymentHistoryRow } from "./bills";
 export type Queryable = { query: typeof query };
 
@@ -58,13 +59,9 @@ const SUB_SELECT = `
           s.last_used_at,
           sn.days AS last_snooze_days, sn.new_renewal_date AS last_snooze_date
     FROM subscriptions s
-    LEFT JOIN accounts a ON a.id = s.account_id AND a.user_id = s.user_id
-    LEFT JOIN categories cat ON cat.id = s.category_id AND (cat.user_id = s.user_id OR cat.is_system = 1)
-   LEFT JOIN LATERAL (
-     SELECT created_at, amount FROM payment_history
-     WHERE user_id = s.user_id AND payable_type = 'subscription' AND payable_id = s.id
-     ORDER BY created_at DESC LIMIT 1
-   ) ph ON true
+    ${joinAccount("s")}
+    ${joinCategory("s")}
+   ${lateralLastPayment("s", "subscription")}
    LEFT JOIN LATERAL (
      SELECT days, new_renewal_date FROM subscription_snoozes
      WHERE user_id = s.user_id AND subscription_id = s.id

@@ -1,5 +1,6 @@
 import { query } from "../db";
 import { isoDate } from "../utils/format";
+import { joinAccount, joinCategory } from "./sql";
 
 export type Queryable = { query: typeof query };
 
@@ -262,8 +263,8 @@ export async function loadModuleData(
                 t.amount::text AS amount, COALESCE(c.name,'') AS category_name,
                 COALESCE(a.name,'') AS account_name, COALESCE(t.notes,'') AS notes
          FROM transactions t
-         LEFT JOIN categories c ON c.id = t.category_id AND (c.user_id = t.user_id OR c.is_system = 1)
-         LEFT JOIN accounts a ON a.id = t.account_id AND a.user_id = t.user_id
+         ${joinCategory("t", "c")}
+         ${joinAccount("t")}
          WHERE t.user_id = $1
            AND ($2::date IS NULL OR t.date >= $2::date)
            AND ($3::date IS NULL OR t.date <= $3::date)
@@ -294,7 +295,7 @@ export async function loadModuleData(
                 COALESCE(SUM(t.amount),0)::text AS spent,
                 (b.amount - COALESCE(SUM(t.amount),0))::text AS remaining
          FROM budgets b
-         LEFT JOIN categories c ON c.id = b.category_id AND (c.user_id = b.user_id OR c.is_system = 1)
+         ${joinCategory("b", "c")}
          LEFT JOIN transactions t ON t.user_id = b.user_id AND t.category_id = b.category_id
            AND t.type = 'expense'
            AND t.date >= make_date(b.year, b.month, 1)
