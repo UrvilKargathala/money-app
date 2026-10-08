@@ -733,7 +733,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
       {showControlCenter && (
         <Card className="p-6 border-dashed">
-          <h3 className="font-semibold font-heading flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" /> Control Center</h3>
+          <h2 className="font-semibold font-heading flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" /> Control Center</h2>
           <p className="text-sm text-ink-3 mt-1">Quick toggles - same as Appearance & Notifications but in one place.</p>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between"><span>Dark mode</span><Badge variant={theme === "dark" ? "success" : "default"}>{theme === "dark" ? "On" : "Off"}</Badge></div>

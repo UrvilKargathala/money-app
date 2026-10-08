@@ -83,7 +83,7 @@ export function NetWorthDashboard({
 
       {trend.length > 0 && (
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-ink-1 mb-4">Trend (last {trend.length} snapshots)</h3>
+          <h2 className="font-semibold font-heading text-ink-1 mb-4">Trend (last {trend.length} snapshots)</h2>
           <div className="flex gap-2 overflow-x-auto">
             {trend.map((p) => (
               <div key={p.date} className="text-center min-w-[80px]">
@@ -96,7 +96,7 @@ export function NetWorthDashboard({
       )}
 
       <Card className="p-6">
-        <h3 className="font-semibold font-heading text-ink-1 mb-4">Manual Assets ({manualAssets.length})</h3>
+        <h2 className="font-semibold font-heading text-ink-1 mb-4">Manual Assets ({manualAssets.length})</h2>
         {manualAssets.length === 0 ? (
           <EmptyState
             icon={<Building2 className="h-6 w-6" />}

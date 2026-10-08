@@ -383,7 +383,7 @@ export function CalendarDashboard({
               {/* Day detail panel */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold font-heading text-ink-1">Day Detail</h3>
+                  <h2 className="font-semibold font-heading text-ink-1">Day Detail</h2>
                   {selectedDate && <span className="text-xs text-ink-3">{new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>}
                 </div>
                 {!selectedDate ? (
@@ -457,9 +457,9 @@ export function CalendarDashboard({
               <div className="space-y-6">
                 {sortedDates.map((d) => (
                   <div key={d}>
-                    <h3 className="text-sm font-semibold font-heading text-ink-2 mb-2">
+                    <h2 className="text-sm font-semibold font-heading text-ink-2 mb-2">
                       {new Date(d).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-                    </h3>
+                    </h2>
                     <div className="space-y-2">
                       {byDate.get(d)!.map((ev, idx) => (
                         <Card key={`${ev.source}-${ev.label}-${idx}-${ev.event_id ?? idx}`} className="p-3 flex items-center justify-between gap-2">
@@ -504,9 +504,9 @@ export function CalendarDashboard({
         {/* Upcoming */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2">
+            <h2 className="font-semibold font-heading text-ink-1 flex items-center gap-2">
               <Clock className="h-4 w-4" /> Upcoming
-            </h3>
+            </h2>
             <div className="flex gap-1">
               <Button variant={upcomingWindow === 7 ? "default" : "outline"} size="sm" onClick={() => setUpcomingWindow(7)} className="h-7 px-2 text-xs">
                 7 days
@@ -568,9 +568,9 @@ export function CalendarDashboard({
 
         {/* Tax deadlines */}
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
+          <h2 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
             <Landmark className="h-4 w-4" /> Tax Deadlines {taxDeadlines ? `• ${taxDeadlines.year}` : ""}
-          </h3>
+          </h2>
           {taxList.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-auto pr-1">
               {taxList.map((t) => (
@@ -596,9 +596,9 @@ export function CalendarDashboard({
 
         {/* Cashflow projection */}
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
+          <h2 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Cashflow Projection
-          </h3>
+          </h2>
           {cashflowProjections.length > 0 ? (
             <div className="space-y-3">
               <p className="text-xs text-ink-3">{cashflowProjections.length} accounts • Daily balances • All from API</p>

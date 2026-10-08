@@ -166,7 +166,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
           <div className="absolute right-0 top-full mt-2 z-40 w-[380px] max-w-[92vw] rounded-2xl border border-line bg-surface shadow-xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-line">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold font-heading text-ink-1">Notifications</h3>
+                <h2 className="text-sm font-semibold font-heading text-ink-1">Notifications</h2>
                 {unread > 0 && <Badge variant="error" className="text-xs">{unread} new</Badge>}
               </div>
               <div className="flex items-center gap-1">

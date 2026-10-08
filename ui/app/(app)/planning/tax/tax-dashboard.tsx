@@ -399,7 +399,7 @@ export function TaxDashboard({
           {/* Regime compare */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Regime Compare</h3>
+              <h2 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Regime Compare</h2>
               {compare?.recommended_label && <Badge variant={compare.recommended === "new" ? "info" : "success"}>{compare.recommended_label} recommended</Badge>}
             </div>
             {!compare || !compare.has_salary || !compare.old_regime || !compare.new_regime ? (
@@ -432,7 +432,7 @@ export function TaxDashboard({
 
           {/* Suggestions */}
           <Card className="p-6">
-            <h3 className="font-semibold font-heading text-ink-1 mb-4 flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Suggestions - unused limits</h3>
+            <h2 className="font-semibold font-heading text-ink-1 mb-4 flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Suggestions - unused limits</h2>
             {suggestions.length === 0 ? (
               <p className="text-sm text-ink-3">No suggestions - all limits utilized or no actionable sections for FY {fy}.</p>
             ) : (
@@ -456,7 +456,7 @@ export function TaxDashboard({
 
           {utilization.length > 0 && (
             <Card className="p-6">
-              <h3 className="font-semibold font-heading text-ink-1 mb-4">Section Utilization</h3>
+              <h2 className="font-semibold font-heading text-ink-1 mb-4">Section Utilization</h2>
               <div className="space-y-4">
                 {utilization.map((u) => (
                   <div key={u.section_code} className="space-y-1">
@@ -525,7 +525,7 @@ export function TaxDashboard({
           <Card className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Salary Structure - FY {fy}</h3>
+                <h2 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Salary Structure - FY {fy}</h2>
                 <p className="text-sm text-ink-3 font-body mt-1">Employment type, gross and deductions feed the Old vs New computation.</p>
               </div>
               <Button onClick={() => setSalaryOpen(true)}><Wallet className="h-4 w-4" /> {salary ? "Edit Salary" : "Add Salary"}</Button>
@@ -565,7 +565,7 @@ export function TaxDashboard({
 
           {salary && compare?.has_salary && compare.old_regime && compare.new_regime && (
             <Card className="p-6">
-              <h3 className="font-semibold font-heading text-ink-1 mb-3">Tax Impact of Salary</h3>
+              <h2 className="font-semibold font-heading text-ink-1 mb-3">Tax Impact of Salary</h2>
               <div className="grid gap-3 md:grid-cols-3">
                 <StatCard label="Old Regime Tax" value={formatINR(compare.old_regime.total_tax)} subtext={`Taxable ${formatINR(compare.old_regime.taxable_income)}`} variant="warning" />
                 <StatCard label="New Regime Tax" value={formatINR(compare.new_regime.total_tax)} subtext={`Taxable ${formatINR(compare.new_regime.taxable_income)}`} variant="teal" />
@@ -579,7 +579,7 @@ export function TaxDashboard({
           <Card className="p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><FileCheck className="h-5 w-5" /> ITR Checklist - FY {fy}</h3>
+                <h2 className="font-semibold font-heading text-ink-1 flex items-center gap-2"><FileCheck className="h-5 w-5" /> ITR Checklist - FY {fy}</h2>
                 <p className="text-sm text-ink-3">{completionTotal} documents • {completionPct.toFixed(1)}% complete • {pendingCount} pending, {collectedCount} collected, {submittedCount} submitted</p>
                 <div className="mt-3 max-w-sm">
                   <Progress value={Math.min(completionPct, 100)} indicatorClassName={completionPct >= 100 ? "bg-success" : completionPct >= 50 ? "bg-primary-600" : "bg-warning"} />

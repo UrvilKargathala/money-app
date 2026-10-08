@@ -181,7 +181,7 @@ export function BudgetsDashboard({
 
       {overview?.unbudgeted && overview.unbudgeted.length > 0 && (
         <Card className="p-6">
-          <h3 className="font-semibold font-heading text-ink-1 mb-3">Unbudgeted Spending</h3>
+          <h2 className="font-semibold font-heading text-ink-1 mb-3">Unbudgeted Spending</h2>
           <div className="space-y-2">
             {overview.unbudgeted.map((u) => (
               <div key={u.category_id} className="flex justify-between text-sm">

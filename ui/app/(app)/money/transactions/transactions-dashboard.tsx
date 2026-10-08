@@ -294,9 +294,9 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           {groups.map((g) => (
             <div key={g.date}>
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-sm font-semibold font-heading text-ink-2">
+                <h2 className="text-sm font-semibold font-heading text-ink-2">
                   {new Date(g.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}
-                </h3>
+                </h2>
                 <span className={`text-sm font-semibold tabular-nums ${g.total >= 0 ? "text-success" : "text-error"}`}>
                   {g.total >= 0 ? "+" : ""}
                   {formatINR(g.total)}
