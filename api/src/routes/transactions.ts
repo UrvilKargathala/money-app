@@ -8,6 +8,7 @@ import { csvResponse, toCsv } from "../utils/csv";
 import { MAX_EXPORT_ROWS, countModuleRows } from "../queries/export";
 import {
   attachTransactionTag,
+  clearTransactionPaymentLinks,
   deleteTransactionById,
   detachTransactionTag,
   getTransactions,
@@ -25,6 +26,7 @@ import {
   bulkAttachTags,
   bulkCategorize,
   bulkDeleteTransactions,
+  clearBulkPaymentLinks,
   countTransferLegs,
   getDateGroups,
   getLastExpenseContext,
@@ -277,9 +279,10 @@ transactions.post("/bulk", requireAuth, async (c) => {
         break;
       }
       case "delete": {
-        const res = await withUser(user.user_id, (client) =>
-          bulkDeleteTransactions(client, user.user_id, ids)
-        );
+        const res = await withUser(user.user_id, async (client) => {
+          await clearBulkPaymentLinks(client, user.user_id, ids);
+          return bulkDeleteTransactions(client, user.user_id, ids);
+        });
         affected = res.rowCount ?? 0;
         break;
       }
@@ -298,6 +301,12 @@ transactions.post("/bulk", requireAuth, async (c) => {
     const skipped = Math.max(0, ids.length - affected);
     return c.json({ success: true, affected, skipped, skipped_transfers: skippedTransfers });
   } catch (err) {
+    if ((err as { code?: string }).code === "23503") {
+      return c.json(
+        { error: "Some transactions are linked to other records and can't be deleted." },
+        409
+      );
+    }
     console.error("[api] bulk edit failed:", err);
     return serverError(c, "transactions_bulk_failed", "Could not apply the bulk edit. Please try again.");
   }
@@ -616,27 +625,39 @@ transactions.delete("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
-  const result = await withUser(user.user_id, async (client) => {
-    const lookup = await getTransactionTransferGroup(user.user_id, id, client);
-    if (!lookup.found) {
-      return { notFound: true as const };
-    }
-    if (lookup.transferGroupId) {
-      return { isTransfer: true as const };
-    }
-    await deleteTransactionById(client, user.user_id, id);
-    return { ok: true as const };
-  });
+  try {
+    const result = await withUser(user.user_id, async (client) => {
+      const lookup = await getTransactionTransferGroup(user.user_id, id, client);
+      if (!lookup.found) {
+        return { notFound: true as const };
+      }
+      if (lookup.transferGroupId) {
+        return { isTransfer: true as const };
+      }
+      await clearTransactionPaymentLinks(client, user.user_id, id);
+      await deleteTransactionById(client, user.user_id, id);
+      return { ok: true as const };
+    });
 
-  if ("notFound" in result) return c.json({ error: "Not found" }, 404);
-  if ("isTransfer" in result) {
-    return c.json(
-      { error: "Transfer transactions can't be deleted here - delete the transfer instead." },
-      409
-    );
+    if ("notFound" in result) return c.json({ error: "Not found" }, 404);
+    if ("isTransfer" in result) {
+      return c.json(
+        { error: "Transfer transactions can't be deleted here - delete the transfer instead." },
+        409
+      );
+    }
+
+    return c.json({ success: true });
+  } catch (err) {
+    if ((err as { code?: string }).code === "23503") {
+      return c.json(
+        { error: "This transaction is linked to other records and can't be deleted." },
+        409
+      );
+    }
+    console.error("[api] delete transaction failed:", err);
+    return serverError(c, "transactions_delete_failed", "Could not delete the transaction. Please try again.");
   }
-
-  return c.json({ success: true });
 });
 
 transactions.post("/:id/tags", requireAuth, async (c) => {

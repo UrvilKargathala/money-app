@@ -113,6 +113,14 @@ export function bulkAttachTags(
   , [params.userId, params.ids, params.tagIds]);
 }
 
+/** Bulk unlink payment receipts before bulk delete (same FK reason). */
+export function clearBulkPaymentLinks(q: Queryable, userId: number, ids: string[]) {
+  return q.query(
+    `UPDATE payment_history SET transaction_id = NULL WHERE user_id = $1 AND transaction_id = ANY($2::uuid[])`,
+    [userId, ids]
+  );
+}
+
 /** Bulk delete: skips transfers like the single delete does. */
 export function bulkDeleteTransactions(q: Queryable, userId: number, ids: string[]) {
   return q.query<{ id: string }>(

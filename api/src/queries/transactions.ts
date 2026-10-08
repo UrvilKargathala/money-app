@@ -306,6 +306,19 @@ export function updateTransactionFields(
   );
 }
 
+/**
+ * Unlink payment_history receipts from a transaction. The receipt rows
+ * (period/amount) survive with NULL transaction_id — all readers and
+ * exports are null-safe — so deleting an expense never orphans audit data
+ * and never trips the bare payment_history FK.
+ */
+export function clearTransactionPaymentLinks(q: Queryable, userId: number, id: string) {
+  return q.query(`UPDATE payment_history SET transaction_id = NULL WHERE user_id = $1 AND transaction_id = $2::uuid`, [
+    userId,
+    id,
+  ]);
+}
+
 export function deleteTransactionById(q: Queryable, userId: number, id: string) {
   return q.query(`DELETE FROM transactions WHERE user_id = $1 AND id = $2`, [
     userId,

@@ -18,7 +18,7 @@ import {
 import { createManualSnapshot } from "../queries/accounts";
 import { ACCOUNT_COLOR_PALETTE, ACCOUNT_TYPES } from "../constants";
 import { parseAmount, parseBoolean } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, serverError } from "./helpers";
 import { requireAuth } from "../middleware";
 import { isoDate } from "../utils/format";
 import { csvResponse, toCsv } from "../utils/csv";
@@ -177,9 +177,14 @@ accounts.post("/:id/deactivate", requireAuth, async (c) => {
   const user = c.get("user");
   const accountId = c.req.param("id");
 
-  await withUser(user.user_id, (client) =>
-    deactivateAccount(client, user.user_id, accountId)
-  );
+  try {
+    await withUser(user.user_id, (client) =>
+      deactivateAccount(client, user.user_id, accountId)
+    );
+  } catch (err) {
+    console.error("[api] deactivate account failed:", err);
+    return serverError(c, "accounts_deactivate_failed", "Could not deactivate the account. Please try again.");
+  }
 
   return c.json({ success: true });
 });
@@ -190,9 +195,14 @@ accounts.post("/:id/reactivate", requireAuth, async (c) => {
   const limitHit = await checkCountLimit(user.user_id, "accounts");
   if (limitHit) return c.json({ error: "plan_limit", feature: "accounts", plan: limitHit.plan, limit: limitHit.limit, used: limitHit.used }, 403);
 
-  await withUser(user.user_id, (client) =>
-    reactivateAccount(client, user.user_id, accountId)
-  );
+  try {
+    await withUser(user.user_id, (client) =>
+      reactivateAccount(client, user.user_id, accountId)
+    );
+  } catch (err) {
+    console.error("[api] reactivate account failed:", err);
+    return serverError(c, "accounts_reactivate_failed", "Could not reactivate the account. Please try again.");
+  }
 
   return c.json({ success: true });
 });
@@ -216,9 +226,23 @@ accounts.delete("/:id", requireAuth, async (c) => {
     );
   }
 
-  await withUser(user.user_id, (client) =>
-    deleteAccountById(client, user.user_id, accountId)
-  );
+  try {
+    await withUser(user.user_id, (client) =>
+      deleteAccountById(client, user.user_id, accountId)
+    );
+  } catch (err) {
+    if ((err as { code?: string }).code === "23503") {
+      return c.json(
+        {
+          error:
+            "This account is still referenced (transfers, bills, or other records) and can't be deleted. Deactivate it instead.",
+        },
+        409
+      );
+    }
+    console.error("[api] delete account failed:", err);
+    return serverError(c, "accounts_delete_failed", "Could not delete the account. Please try again.");
+  }
 
   return c.json({ success: true });
 });
