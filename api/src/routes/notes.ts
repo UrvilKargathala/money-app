@@ -10,7 +10,8 @@ import {
   updateNoteUserTemplate,
 } from "../queries/note-user-templates";
 import { registerNoteAttachmentRoutes } from "./note-attachments";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { NOTE_CATEGORIES } from "../constants";
 import {
   getNoteAnyState,
@@ -156,16 +157,8 @@ notes.get("/export", requireAuth, async (c) => {
     n.is_pinned === 1 ? "yes" : "no",
     n.updated_at.slice(0, 10),
   ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="secure-notes-${isoDate(new Date())}.csv"`,
-    },
-  });
+  const csv = toCsv(header, csvRows);
+  return csvResponse(csv, `secure-notes-${isoDate(new Date())}.csv`);
 });
 
 // ---- User templates (plaintext starters; encryption applies on note creation) ----

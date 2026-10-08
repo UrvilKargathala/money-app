@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, serverError } from "./helpers";
-import { csvEscape, parseDateOnlyUTC } from "../utils/format";
+import { parseDateOnlyUTC } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement } from "../queries/entitlements";
 import {
   addMonths,
@@ -360,11 +361,10 @@ debts.get("/health-alerts", requireAuth, async (c) => {
 debts.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
   const list = await getDebts(user.user_id);
-  const header =
-    "\uFEFFName,Type,Outstanding,Interest Rate,EMI,Tenure Months,Months Remaining,Total Interest Paid";
-  const rows = list.map((d) =>
-    [
-      csvEscape(d.name),
+  const csv = toCsv(
+    ["Name", "Type", "Outstanding", "Interest Rate", "EMI", "Tenure Months", "Months Remaining", "Total Interest Paid"],
+    list.map((d) => [
+      d.name,
       d.type,
       d.principal_outstanding,
       `${d.interest_rate}%`,
@@ -372,15 +372,9 @@ debts.get("/export", requireAuth, async (c) => {
       d.tenure_months ?? "",
       d.months_remaining ?? "",
       d.total_interest_paid,
-    ].join(",")
+    ])
   );
-  const csv = [header, ...rows].join("\r\n");
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="debts.csv"`,
-    },
-  });
+  return csvResponse(csv, "debts.csv");
 });
 
 debts.get("/:id", requireAuth, async (c) => {
@@ -746,24 +740,18 @@ debts.get("/:id/amortization/export", requireAuth, async (c) => {
     return c.json({ error: "Not found" }, 404);
   }
   const schedule = await getScheduleRows(user.user_id, id);
-  const header = "\uFEFFPeriod,EMI,Principal,Interest,Balance,Cumulative Interest";
-  const rows = schedule.map((row) =>
-    [
+  const csv = toCsv(
+    ["Period", "EMI", "Principal", "Interest", "Balance", "Cumulative Interest"],
+    schedule.map((row) => [
       row.period,
       row.emi_amount,
       row.principal_part,
       row.interest_part,
       row.outstanding_after,
       row.cumulative_interest,
-    ].join(",")
+    ])
   );
-  const csv = [header, ...rows].join("\r\n");
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="debts-${id.slice(0, 8)}-amortization.csv"`,
-    },
-  });
+  return csvResponse(csv, `debts-${id.slice(0, 8)}-amortization.csv`);
 });
 
 debts.get("/:id/cost-breakdown", requireAuth, async (c) => {

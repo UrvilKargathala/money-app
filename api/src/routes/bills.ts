@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, serverError } from "./helpers";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   BILL_FREQUENCIES,
@@ -114,13 +115,6 @@ function monthlyObligation(
   return effective * (multiplier[frequency] ?? 1);
 }
 
-function toCsv(header: string[], rows: (string | number)[][]): string {
-  return (
-    "\uFEFF" +
-    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n")
-  );
-}
-
 bills.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   return c.json({ bills: await listBills(user.user_id) });
@@ -229,12 +223,10 @@ bills.get("/export", requireAuth, async (c) => {
     ])
   );
 
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="bills-${new Date().toISOString().slice(0, 10)}.csv"`,
-    },
-  });
+  return csvResponse(
+    csv,
+    `bills-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 bills.get("/calendar", requireAuth, async (c) => {
@@ -742,12 +734,7 @@ bills.get("/:id/payments/export", requireAuth, async (c) => {
     ])
   );
 
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="bill-payments-${id}.csv"`,
-    },
-  });
+  return csvResponse(csv, `bill-payments-${id}.csv`);
 });
 
 // ---- M4 extras: reminders ----

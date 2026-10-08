@@ -20,7 +20,8 @@ import { ACCOUNT_COLOR_PALETTE, ACCOUNT_TYPES } from "../constants";
 import { parseAmount, parseBoolean } from "../validation";
 import { readJson } from "./helpers";
 import { requireAuth } from "../middleware";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 
 const accounts = new Hono();
@@ -253,18 +254,12 @@ accounts.get("/export", requireAuth, async (c) => {
     a.is_active === 1 ? "Active" : "Deactivated",
   ]);
 
-  const csv =
-    "\uFEFF" +
-    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const csv = toCsv(header, rows);
 
-  return new Response(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="moneymind-accounts-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
-    },
-  });
+  return csvResponse(
+    csv,
+    `moneymind-accounts-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 accounts.get("/summary", requireAuth, async (c) => {

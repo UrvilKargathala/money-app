@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement, checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   SUBSCRIPTION_FREQUENCIES,
@@ -74,13 +75,6 @@ function addMonths(date: Date, months: number): Date {
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function toCsv(header: string[], rows: (string | number)[][]): string {
-  return (
-    "\uFEFF" +
-    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n")
-  );
 }
 
 subscriptions.get("/", requireAuth, async (c) => {
@@ -181,12 +175,10 @@ subscriptions.get("/export", requireAuth, async (c) => {
     ])
   );
 
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="subscriptions-${new Date().toISOString().slice(0, 10)}.csv"`,
-    },
-  });
+  return csvResponse(
+    csv,
+    `subscriptions-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 subscriptions.get("/due-renewals", requireAuth, async (c) => {
@@ -467,12 +459,7 @@ subscriptions.get("/:id/payments/export", requireAuth, async (c) => {
     rows.map((row) => [row.period_label, row.date, row.amount.toFixed(2)])
   );
 
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="subscription-payments-${id}.csv"`,
-    },
-  });
+  return csvResponse(csv, `subscription-payments-${id}.csv`);
 });
 
 subscriptions.post("/:id/snooze", requireAuth, async (c) => {

@@ -5,7 +5,7 @@ import { requireAuth } from "../middleware";
 import { readJson, serverError } from "./helpers";
 import { hashToken } from "../session";
 import { normalizeEmail } from "../auth";
-import { csvEscape } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { sendLinkEmail } from "../utils/email";
 import {
   acceptInvite,
@@ -372,16 +372,8 @@ sharedGroups.get("/:id/transactions/export", requireAuth, async (c) => {
     (t.type === "income" ? "" : "-") + t.amount.toFixed(2),
     t.added_by_email,
   ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="group-${groupId.slice(0, 8)}-transactions.csv"`,
-    },
-  });
+  const csv = toCsv(header, csvRows);
+  return csvResponse(csv, `group-${groupId.slice(0, 8)}-transactions.csv`);
 });
 
 sharedGroups.delete("/:id/members/:userId", requireAuth, async (c) => {

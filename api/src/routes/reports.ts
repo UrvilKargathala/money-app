@@ -2,7 +2,7 @@
 import { withUserSingle } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
-import { csvEscape } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { round2 } from "../utils/finance";
 import { getEntitlement } from "../queries/entitlements";
 import {
@@ -53,18 +53,6 @@ function rangeFromQuery(c: {
   const windowDays =
     months && [1, 3, 6, 12].includes(months) ? months : RANGES[c.req.query("range") ?? "6M"] ?? 6;
   return resolveRange(windowDays, null, null);
-}
-
-function csvResponse(header: string[], rows: (string | number)[][], filename: string) {
-  const csv =
-    "\uFEFF" +
-    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="${filename}"`,
-    },
-  });
 }
 
 reports.get("/cashflow", requireAuth, async (c) => {
@@ -213,23 +201,23 @@ reports.get("/summary", requireAuth, async (c) => {
 reports.get("/cashflow/export", requireAuth, async (c) => {
   const user = c.get("user");
   const flow = await getCashflow(user.user_id, rangeFromQuery(c));
-  return csvResponse(
+  const csv = toCsv(
     ["Month", "Income", "Expense", "Net"],
     flow.map((m) => [
       m.month,
       m.income.toFixed(2),
       m.expense.toFixed(2),
       m.net.toFixed(2),
-    ]),
-    `cashflow-${new Date().toISOString().slice(0, 10)}.csv`
+    ])
   );
+  return csvResponse(csv, `cashflow-${new Date().toISOString().slice(0, 10)}.csv`);
 });
 
 reports.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
   const range = rangeFromQuery(c);
   const summary = await getReportsSummary(user.user_id, range);
-  return csvResponse(
+  const csv = toCsv(
     ["Metric", "Value"],
     [
       ["Period start", range.from],
@@ -242,9 +230,9 @@ reports.get("/export", requireAuth, async (c) => {
       ["Budget overruns", summary.budget_overruns],
       ["Net worth (investments)", summary.net_worth.toFixed(2)],
       ["Debt outstanding", summary.debt_outstanding.toFixed(2)],
-    ],
-    `report-${range.from}-to-${range.to}.csv`
+    ]
   );
+  return csvResponse(csv, `report-${range.from}-to-${range.to}.csv`);
 });
 
 /** Creates a report_exports job; the PDF itself regenerates on download. */

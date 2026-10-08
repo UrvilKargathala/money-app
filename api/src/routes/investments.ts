@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, serverError } from "./helpers";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement } from "../queries/entitlements";
 import { sipFutureValue, type SipFrequency } from "../utils/finance";
 import {
@@ -53,18 +54,6 @@ const RANGES: Record<string, number | null> = {
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function csvResponse(header: string[], rows: (string | number)[][], filename: string) {
-  const csv =
-    "\uFEFF" +
-    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="${filename}"`,
-    },
-  });
 }
 
 function parseListParam(raw: string | undefined): string[] | undefined {
@@ -337,9 +326,9 @@ investments.get("/export", requireAuth, async (c) => {
     h.return_pct === null ? "" : h.return_pct.toFixed(2),
     h.status,
   ]);
+  const csv = toCsv(header, csvRows);
   return csvResponse(
-    header,
-    csvRows,
+    csv,
     `portfolio-${new Date().toISOString().slice(0, 10)}.csv`
   );
 });
@@ -735,7 +724,7 @@ investments.get("/:id/transactions/export", requireAuth, async (c) => {
   if (!holding) return c.json({ error: "Not found" }, 404);
 
   const txns = await listHoldingTransactions(user.user_id, id);
-  return csvResponse(
+  const csv = toCsv(
     ["Date", "Type", "Units", "Price", "Amount"],
     [...txns].reverse().map((t) => [
       t.date,
@@ -743,9 +732,9 @@ investments.get("/:id/transactions/export", requireAuth, async (c) => {
       String(t.units),
       t.price_per_unit.toFixed(4),
       t.total_amount.toFixed(2),
-    ]),
-    `investment-${id.slice(0, 8)}-transactions.csv`
+    ])
   );
+  return csvResponse(csv, `investment-${id.slice(0, 8)}-transactions.csv`);
 });
 
 investments.get("/:id/snapshots", requireAuth, async (c) => {

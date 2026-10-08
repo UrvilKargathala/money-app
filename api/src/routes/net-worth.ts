@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import {
   deriveChange,
   getCurrentNetWorth,
@@ -376,25 +377,19 @@ netWorth.get("/export", requireAuth, async (c) => {  const user = c.get("user");
   const from = rangeToDate(c.req.query("range"), "All");
   const rows = await listSnapshots(user.user_id, from, null);
 
-  const header = ["Date", "Assets", "Liabilities", "Net Worth"];
-  const csvRows = rows.map((s) => [
-    s.date,
-    s.assets_total.toFixed(2),
-    s.liabilities_total.toFixed(2),
-    s.net_worth.toFixed(2),
-  ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="net-worth-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
-    },
-  });
+  const csv = toCsv(
+    ["Date", "Assets", "Liabilities", "Net Worth"],
+    rows.map((s) => [
+      s.date,
+      s.assets_total.toFixed(2),
+      s.liabilities_total.toFixed(2),
+      s.net_worth.toFixed(2),
+    ])
+  );
+  return csvResponse(
+    csv,
+    `net-worth-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 export { netWorth };

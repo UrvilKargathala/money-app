@@ -5,7 +5,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, isUniqueViolation } from "./helpers";
-import { csvEscape, parseDateOnlyUTC } from "../utils/format";
+import { parseDateOnlyUTC } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
 import {
   addContribution,
@@ -344,25 +345,19 @@ goals.delete("/templates/:id", requireAuth, async (c) => {
 goals.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
   const list = await getGoals(user.user_id);
-  const header = "\uFEFFName,Target Amount,Current Amount,Progress %,Target Date,Status,Priority";
-  const rows = list.map((g) =>
-    [
-      csvEscape(g.name),
+  const csv = toCsv(
+    ["Name", "Target Amount", "Current Amount", "Progress %", "Target Date", "Status", "Priority"],
+    list.map((g) => [
+      g.name,
       g.target_amount,
       g.current_amount,
       `${g.progress_pct}%`,
       g.target_date,
       g.status,
       g.priority,
-    ].join(",")
+    ])
   );
-  const csv = [header, ...rows].join("\r\n");
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="goals.csv"`,
-    },
-  });
+  return csvResponse(csv, "goals.csv");
 });
 
 goals.post("/distribute", requireAuth, async (c) => {
@@ -840,17 +835,11 @@ goals.get("/:id/contributions/export", requireAuth, async (c) => {
     return c.json({ error: "Not found" }, 404);
   }
   const contributions = await getContributions(user.user_id, goalId);
-  const header = "\uFEFFDate,Amount,Notes";
-  const rows = contributions.map((row) =>
-    [row.date, row.amount, csvEscape(row.notes ?? "")].join(",")
+  const csv = toCsv(
+    ["Date", "Amount", "Notes"],
+    contributions.map((row) => [row.date, row.amount, row.notes ?? ""])
   );
-  const csv = [header, ...rows].join("\r\n");
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="goals-${goalId.slice(0, 8)}-contributions.csv"`,
-    },
-  });
+  return csvResponse(csv, `goals-${goalId.slice(0, 8)}-contributions.csv`);
 });
 
 goals.get("/:id/snapshots", requireAuth, async (c) => {

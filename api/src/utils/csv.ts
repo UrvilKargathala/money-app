@@ -3,6 +3,8 @@
  * alias auto-detection, and row->draft mapping. No dependencies.
  */
 
+import { csvEscape } from "./format";
+
 export type ParsedCsv = {
   headers: string[];
   rows: string[][];
@@ -282,4 +284,26 @@ export function draftHash(draft: ImportDraft): string {
   return `${draft.date}|${draft.amount.toFixed(2)}|${(draft.description ?? "")
     .toLowerCase()
     .trim()}`;
+}
+
+// ---------------------------------------------------------------------------
+// Export direction: shared CSV assembly + download response. Replaces
+// copy-pasted BOM + map/join + Response blocks across export routes.
+// Byte-identical output: BOM prefix, CRLF rows, csvEscape quoting.
+// ---------------------------------------------------------------------------
+
+/** UTF-8 BOM prefix (spelled out: invisible U+FEFF breaks exact-match edits). */
+const BOM = String.fromCharCode(0xfeff);
+
+export function toCsv(header: string[], rows: (string | number | null)[][]): string {
+  return BOM + [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
+}
+
+export function csvResponse(csv: string, filename: string): Response {
+  return new Response(csv, {
+    headers: {
+      "content-type": "text/csv; charset=utf-8",
+      "content-disposition": `attachment; filename="${filename}"`,
+    },
+  });
 }

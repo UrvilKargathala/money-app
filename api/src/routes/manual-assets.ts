@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson } from "./helpers";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import {
   MANUAL_ASSET_CATEGORIES,
   deleteManualAsset,
@@ -99,18 +100,11 @@ manualAssets.get("/export", requireAuth, async (c) => {
     a.depreciation_method ?? "",
     a.notes ?? "",
   ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="manual-assets-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
-    },
-  });
+  const csv = toCsv(header, csvRows);
+  return csvResponse(
+    csv,
+    `manual-assets-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 manualAssets.get("/:id", requireAuth, async (c) => {

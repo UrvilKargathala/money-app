@@ -2,7 +2,6 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { readJson } from "./helpers";
-import { csvEscape } from "../utils/format";
 import {
   deleteImportErrors,
   getBatchAccount,
@@ -16,7 +15,7 @@ import {
   applyMergeFields,
 } from "../queries/import";
 import type { PendingTxnInsert } from "../queries/import";
-import type { ImportDraft } from "../utils/csv";
+import { csvResponse, toCsv, type ImportDraft } from "../utils/csv";
 
 const importBatches = new Hono();
 
@@ -74,16 +73,8 @@ importBatches.get("/:id/errors/export", requireAuth, async (c) => {
     e.error_reason,
     typeof e.raw_data === "string" ? e.raw_data : JSON.stringify(e.raw_data ?? ""),
   ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="import-errors-${batchId.slice(0, 8)}.csv"`,
-    },
-  });
+  const csv = toCsv(header, rows);
+  return csvResponse(csv, `import-errors-${batchId.slice(0, 8)}.csv`);
 });
 
 importBatches.post("/:id/rollback", requireAuth, async (c) => {

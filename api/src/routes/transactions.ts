@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { parseAmount } from "../validation";
 import { readJson, serverError } from "./helpers";
 import { requireAuth } from "../middleware";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import {
   attachTransactionTag,
   deleteTransactionById,
@@ -114,19 +115,11 @@ transactions.get("/export", requireAuth, async (c) => {
     t.notes ?? "",
     t.tags.map((tag) => tag.name).join("; "),
   ]);
-
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="moneymind-transactions-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
-    },
-  });
+  const csv = toCsv(header, csvRows);
+  return csvResponse(
+    csv,
+    `moneymind-transactions-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 transactions.post("/quick-add", requireAuth, async (c) => {

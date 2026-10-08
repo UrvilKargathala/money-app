@@ -3,7 +3,8 @@ import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
 import { readJson, serverError } from "./helpers";
-import { csvEscape, isoDate } from "../utils/format";
+import { isoDate } from "../utils/format";
+import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement } from "../queries/entitlements";
 import {
   SIP_FREQUENCIES,
@@ -158,18 +159,11 @@ sips.get("/export", requireAuth, async (c) => {
     s.account_name ?? "",
     s.status,
   ]);
-  const csv =
-    "\uFEFF" +
-    [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="sips-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
-    },
-  });
+  const csv = toCsv(header, csvRows);
+  return csvResponse(
+    csv,
+    `sips-${new Date().toISOString().slice(0, 10)}.csv`
+  );
 });
 
 sips.get("/:id", requireAuth, async (c) => {
