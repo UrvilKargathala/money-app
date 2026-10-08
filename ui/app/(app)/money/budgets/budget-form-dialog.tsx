@@ -1,14 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
+import { FieldError } from "@/components/common/form-primitives";
 import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { createBudget, updateBudget } from "./actions";
-import { toast } from "sonner";
 
 type BudgetOpt = { id: string; name: string };
 type Budget = { id: string; category_id: string | null; amount: string; version: number; month: number; year: number };
@@ -34,69 +32,47 @@ export function BudgetFormDialog({
   const [categoryId, setCategoryId] = useState(budget?.category_id || "");
   const [state, formAction, isPending] = useActionState(isEdit ? updateBudget : createBudget, null);
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(isEdit ? "Budget updated" : "Budget created");
-      onOpenChange(false);
-      onSuccess?.();
-    }
-  }, [state?.success]);
+  useEntityFormSuccess({ state, isEdit, entityLabel: "Budget", onOpenChange, onSuccess });
 
   useEffect(() => {
     if (open) setCategoryId(budget?.category_id || "");
   }, [open, budget]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit budget" : "Create budget"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Update the budget amount." : `Set a budget for ${month}/${year}.`}
-          </DialogDescription>
-        </DialogHeader>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit budget" : "Create budget"}
+      description={isEdit ? "Update the budget amount." : `Set a budget for ${month}/${year}.`}
+      formKey={budget?.id ?? "new"}
+      formAction={formAction}
+      state={state}
+      isEdit={isEdit}
+      isPending={isPending}
+    >
+      {isEdit && <input type="hidden" name="id" value={budget!.id} />}
+      {isEdit && <input type="hidden" name="version" value={String(budget!.version)} />}
+      {!isEdit && <input type="hidden" name="category_id" value={categoryId === "overall" ? "" : categoryId} />}
+      {!isEdit && <input type="hidden" name="month" value={String(month)} />}
+      {!isEdit && <input type="hidden" name="year" value={String(year)} />}
 
-        <form key={budget?.id ?? "new"} action={formAction} className="space-y-4">
-          {isEdit && <input type="hidden" name="id" value={budget!.id} />}
-          {isEdit && <input type="hidden" name="version" value={String(budget!.version)} />}
-          {!isEdit && <input type="hidden" name="category_id" value={categoryId === "overall" ? "" : categoryId} />}
-          {!isEdit && <input type="hidden" name="month" value={String(month)} />}
-          {!isEdit && <input type="hidden" name="year" value={String(year)} />}
+      {!isEdit && (
+        <div className="space-y-2">
+          <CategorySelectWithCreate
+            value={categoryId || "overall"}
+            onValueChange={(value) => setCategoryId(value === "overall" ? "" : value)}
+            categories={categories}
+            emptyOption={{ value: "overall", label: "Overall (all categories)" }}
+          />
+          <FieldError message={state?.fieldErrors?.category_id} />
+        </div>
+      )}
 
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
-
-          {!isEdit && (
-            <div className="space-y-2">
-              <CategorySelectWithCreate
-                value={categoryId || "overall"}
-                onValueChange={(value) => setCategoryId(value === "overall" ? "" : value)}
-                categories={categories}
-                emptyOption={{ value: "overall", label: "Overall (all categories)" }}
-              />
-              {state?.fieldErrors?.category_id && <p className="text-xs text-error-dark">{state.fieldErrors.category_id}</p>}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="budget-amount">Amount *</Label>
-            <Input id="budget-amount" name="amount" type="number" step="0.01" defaultValue={budget ? String(budget.amount) : ""} placeholder="10000" required />
-            {state?.fieldErrors?.amount && <p className="text-xs text-error-dark">{state.fieldErrors.amount}</p>}
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Save" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <div className="space-y-2">
+        <Label htmlFor="budget-amount">Amount *</Label>
+        <Input id="budget-amount" name="amount" type="number" step="0.01" defaultValue={budget ? String(budget.amount) : ""} placeholder="10000" required />
+        <FieldError message={state?.fieldErrors?.amount} />
+      </div>
+    </EntityFormDialog>
   );
 }

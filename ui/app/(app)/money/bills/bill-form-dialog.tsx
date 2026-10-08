@@ -1,16 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
+import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
+import { FieldError, FormGrid } from "@/components/common/form-primitives";
 import { createBill, updateBill } from "./actions";
-import { toast } from "sonner";
 
 type Bill = { id: string; name: string; amount: number | null; estimated_amount: number | null; due_day: number; frequency: string; account_id: string | null; category_id: string | null; reminder_days: number; is_autopay: number; notes: string | null; version: number };
 
@@ -39,13 +37,7 @@ export function BillFormDialog({
   const [formKey, setFormKey] = useState(0);
   const [state, formAction, isPending] = useActionState(isEdit ? updateBill : createBill, null);
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(isEdit ? "Bill updated" : "Bill created");
-      onOpenChange(false);
-      onSuccess?.();
-    }
-  }, [state?.success]);
+  useEntityFormSuccess({ state, isEdit, entityLabel: "Bill", onOpenChange, onSuccess });
 
   useEffect(() => {
     if (open) {
@@ -83,121 +75,108 @@ export function BillFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit bill" : "Add bill"}</DialogTitle>
-          <DialogDescription>{isEdit ? "Update bill details." : "Track a recurring bill with due date and reminders."}</DialogDescription>
-        </DialogHeader>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit bill" : "Add bill"}
+      description={isEdit ? "Update bill details." : "Track a recurring bill with due date and reminders."}
+      formKey={formKey}
+      formAction={formAction}
+      onSubmit={handleSubmit}
+      state={state}
+      isEdit={isEdit}
+      isPending={isPending}
+    >
+      {isEdit && <input type="hidden" name="id" value={bill!.id} />}
+      {isEdit && <input type="hidden" name="version" value={String(bill!.version)} />}
+      <input type="hidden" name="frequency" value={frequency} />
+      <input type="hidden" name="account_id" value={accountId} />
+      <input type="hidden" name="category_id" value={categoryId} />
 
-        <form key={formKey} action={formAction} onSubmit={handleSubmit} className="space-y-4">
-          {isEdit && <input type="hidden" name="id" value={bill!.id} />}
-          {isEdit && <input type="hidden" name="version" value={String(bill!.version)} />}
-          <input type="hidden" name="frequency" value={frequency} />
-          <input type="hidden" name="account_id" value={accountId} />
-          <input type="hidden" name="category_id" value={categoryId} />
+      <div className="space-y-2">
+        <Label htmlFor="bill-name">Name *</Label>
+        <Input id="bill-name" name="name" defaultValue={bill?.name || ""} placeholder="Rent, Electricity, Gym" required />
+        <FieldError message={localErrors.name ?? state?.fieldErrors?.name} />
+      </div>
 
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
+      <FormGrid>
+        <div className="space-y-2">
+          <Label htmlFor="bill-amount">Amount</Label>
+          <Input id="bill-amount" name="amount" type="number" step="0.01" defaultValue={bill?.amount ?? ""} placeholder="15000" />
+          <FieldError message={localErrors.amount ?? state?.fieldErrors?.amount} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bill-est">Estimated amount</Label>
+          <Input id="bill-est" name="estimated_amount" type="number" step="0.01" defaultValue={bill?.estimated_amount ?? ""} placeholder="For variable bills" />
+          <FieldError message={localErrors.estimated_amount ?? state?.fieldErrors?.estimated_amount} />
+        </div>
+      </FormGrid>
 
-          <div className="space-y-2">
-            <Label htmlFor="bill-name">Name *</Label>
-            <Input id="bill-name" name="name" defaultValue={bill?.name || ""} placeholder="Rent, Electricity, Gym" required />
-            {(localErrors.name ?? state?.fieldErrors?.name) && <p className="text-xs text-error-dark">{localErrors.name ?? state?.fieldErrors?.name}</p>}
-          </div>
+      <FormGrid>
+        <div className="space-y-2">
+          <Label htmlFor="bill-due">Due day *</Label>
+          <Input id="bill-due" name="due_day" type="number" min={1} max={31} defaultValue={bill?.due_day ?? 1} required />
+          <FieldError message={localErrors.due_day ?? state?.fieldErrors?.due_day} />
+        </div>
+        <div className="space-y-2">
+          <Label>Frequency</Label>
+          <Select value={frequency} onValueChange={setFrequency}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="quarterly">Quarterly</SelectItem>
+              <SelectItem value="half_yearly">Half yearly</SelectItem>
+              <SelectItem value="annual">Annual</SelectItem>
+              <SelectItem value="one_time">One time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </FormGrid>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bill-amount">Amount</Label>
-              <Input id="bill-amount" name="amount" type="number" step="0.01" defaultValue={bill?.amount ?? ""} placeholder="15000" />
-              {(localErrors.amount ?? state?.fieldErrors?.amount) && <p className="text-xs text-error-dark">{localErrors.amount ?? state?.fieldErrors?.amount}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bill-est">Estimated amount</Label>
-              <Input id="bill-est" name="estimated_amount" type="number" step="0.01" defaultValue={bill?.estimated_amount ?? ""} placeholder="For variable bills" />
-              {(localErrors.estimated_amount ?? state?.fieldErrors?.estimated_amount) && <p className="text-xs text-error-dark">{localErrors.estimated_amount ?? state?.fieldErrors?.estimated_amount}</p>}
-            </div>
-          </div>
+      <FormGrid>
+        <div className="space-y-2">
+          <Label>Account</Label>
+          <Select value={accountId || "none"} onValueChange={(v) => setAccountId(v === "none" ? "" : v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select account" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No account</SelectItem>
+              {accounts.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <CategorySelectWithCreate
+          value={categoryId || "none"}
+          onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
+          categories={categories}
+        />
+      </FormGrid>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bill-due">Due day *</Label>
-              <Input id="bill-due" name="due_day" type="number" min={1} max={31} defaultValue={bill?.due_day ?? 1} required />
-              {(localErrors.due_day ?? state?.fieldErrors?.due_day) && <p className="text-xs text-error-dark">{localErrors.due_day ?? state?.fieldErrors?.due_day}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Frequency</Label>
-              <Select value={frequency} onValueChange={setFrequency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
-                  <SelectItem value="half_yearly">Half yearly</SelectItem>
-                  <SelectItem value="annual">Annual</SelectItem>
-                  <SelectItem value="one_time">One time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      <FormGrid>
+        <div className="space-y-2">
+          <Label htmlFor="bill-reminder">Reminder days</Label>
+          <Input id="bill-reminder" name="reminder_days" type="number" min={0} max={31} defaultValue={bill?.reminder_days ?? 3} />
+          <FieldError message={localErrors.reminder_days ?? state?.fieldErrors?.reminder_days} />
+        </div>
+        <div className="flex items-center gap-2 pt-6">
+          <input id="bill-autopay" name="is_autopay" type="checkbox" defaultChecked={!!bill?.is_autopay} className="h-4 w-4 rounded border-neutral-300" />
+          <Label htmlFor="bill-autopay" className="font-normal cursor-pointer">
+            Autopay
+          </Label>
+        </div>
+      </FormGrid>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Account</Label>
-              <Select value={accountId || "none"} onValueChange={(v) => setAccountId(v === "none" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No account</SelectItem>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <CategorySelectWithCreate
-              value={categoryId || "none"}
-              onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
-              categories={categories}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bill-reminder">Reminder days</Label>
-              <Input id="bill-reminder" name="reminder_days" type="number" min={0} max={31} defaultValue={bill?.reminder_days ?? 3} />
-              {(localErrors.reminder_days ?? state?.fieldErrors?.reminder_days) && <p className="text-xs text-error-dark">{localErrors.reminder_days ?? state?.fieldErrors?.reminder_days}</p>}
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <input id="bill-autopay" name="is_autopay" type="checkbox" defaultChecked={!!bill?.is_autopay} className="h-4 w-4 rounded border-neutral-300" />
-              <Label htmlFor="bill-autopay" className="font-normal cursor-pointer">
-                Autopay
-              </Label>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bill-notes">Notes</Label>
-            <Textarea id="bill-notes" name="notes" defaultValue={bill?.notes || ""} placeholder="Optional" />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Save" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <div className="space-y-2">
+        <Label htmlFor="bill-notes">Notes</Label>
+        <Textarea id="bill-notes" name="notes" defaultValue={bill?.notes || ""} placeholder="Optional" />
+      </div>
+    </EntityFormDialog>
   );
 }

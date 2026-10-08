@@ -1,12 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EntityFormDialog } from "@/components/common/entity-form-dialog";
+import { FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createDividend, updateDividend } from "./actions";
 import { toast } from "sonner";
 
@@ -56,22 +55,23 @@ export function DividendFormDialog({
   }, [open, dividend, investments]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit payout" : "Add dividend / interest"}</DialogTitle>
-          <DialogDescription>{isEdit ? "Update payout record." : "Record dividend, interest or maturity proceeds."}</DialogDescription>
-        </DialogHeader>
-        <form key={dividend?.id ?? "new"} action={formAction} className="space-y-4">
-          {isEdit && <input type="hidden" name="id" value={dividend!.id} />}
-          <input type="hidden" name="type" value={type} />
-          {!isEdit && <input type="hidden" name="investment_id" value={investmentId} />}
-
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit payout" : "Add dividend / interest"}
+      description={isEdit ? "Update payout record." : "Record dividend, interest or maturity proceeds."}
+      formKey={dividend?.id ?? "new"}
+      formAction={formAction}
+      state={state}
+      isEdit={isEdit}
+      isPending={isPending}
+      footer={
+        <FormFooter onCancel={() => onOpenChange(false)} pending={isPending} isEdit={isEdit} editLabel="Update" />
+      }
+    >
+      {isEdit && <input type="hidden" name="id" value={dividend!.id} />}
+      <input type="hidden" name="type" value={type} />
+      {!isEdit && <input type="hidden" name="investment_id" value={investmentId} />}
 
           {!isEdit && (
             <div className="space-y-2">
@@ -106,7 +106,7 @@ export function DividendFormDialog({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <FormGrid>
             <div className="space-y-2">
               <Label htmlFor="div-amount">Amount *</Label>
               <Input id="div-amount" name="amount" type="number" step="0.01" defaultValue={dividend ? String(dividend.amount) : ""} placeholder="500" required />
@@ -117,23 +117,12 @@ export function DividendFormDialog({
               <Input id="div-date" name="date" type="date" defaultValue={dividend?.date ?? new Date().toISOString().slice(0, 10)} required />
               {state?.fieldErrors?.date && <p className="text-xs text-error">{state.fieldErrors.date}</p>}
             </div>
-          </div>
+          </FormGrid>
 
           <div className="space-y-2">
             <Label htmlFor="div-notes">Notes</Label>
             <Input id="div-notes" name="notes" defaultValue={dividend?.notes ?? ""} placeholder="Optional" />
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </EntityFormDialog>
   );
 }

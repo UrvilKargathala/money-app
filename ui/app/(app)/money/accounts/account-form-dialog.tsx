@@ -1,16 +1,16 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
+import { FieldError } from "@/components/common/form-primitives";
 import { createAccount, updateAccount } from "./actions";
 import { ACCOUNT_TYPES } from "@moneymind/api/constants";
-import { toast } from "sonner";
 
 type AccountFormData = {
   id?: string;
@@ -44,13 +44,7 @@ export function AccountFormDialog({
   // action prevents React from dispatching the mutation in production.
   const [state, formAction, isPending] = useActionState(isEdit ? updateAccount : createAccount, null);
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(isEdit ? "Account updated" : "Account created");
-      onOpenChange(false);
-      onSuccess?.();
-    }
-  }, [state, isEdit, onOpenChange, onSuccess]);
+  useEntityFormSuccess({ state, isEdit, entityLabel: "Account", onOpenChange, onSuccess });
 
   useEffect(() => {
     if (open) {
@@ -60,117 +54,113 @@ export function AccountFormDialog({
   }, [open, account]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit account" : "Add account"}</DialogTitle>
-          <DialogDescription>{isEdit ? "Update the account details below." : "Create a new account to track balances and transactions."}</DialogDescription>
-        </DialogHeader>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit account" : "Add account"}
+      description={isEdit ? "Update the account details below." : "Create a new account to track balances and transactions."}
+      formKey={account?.id ?? "new"}
+      formAction={formAction}
+      state={state}
+      isEdit={isEdit}
+      isPending={isPending}
+      footer={
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Saving..." : isEdit ? "Save changes" : "Create account"}
+          </Button>
+        </DialogFooter>
+      }
+    >
+      {isEdit && <input type="hidden" name="id" value={account!.id} />}
+      {isEdit && <input type="hidden" name="version" value={String(account!.version)} />}
+      <input type="hidden" name="type" value={type} />
 
-        <form key={account?.id ?? "new"} action={formAction} className="space-y-4">
-          {isEdit && <input type="hidden" name="id" value={account!.id} />}
-          {isEdit && <input type="hidden" name="version" value={String(account!.version)} />}
-          <input type="hidden" name="type" value={type} />
+      <div className="space-y-2">
+        <Label htmlFor="acc-name">Account name *</Label>
+        <Input id="acc-name" name="name" defaultValue={account?.name || ""} placeholder="HDFC Savings" required error={!!state?.fieldErrors?.name} />
+        <FieldError message={state?.fieldErrors?.name} />
+      </div>
 
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
+      <div className="space-y-2">
+        <Label>Type *</Label>
+        <Select value={type} onValueChange={setType}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ACCOUNT_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t.replace(/_/g, " ")}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError message={state?.fieldErrors?.type} />
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="acc-name">Account name *</Label>
-            <Input id="acc-name" name="name" defaultValue={account?.name || ""} placeholder="HDFC Savings" required error={!!state?.fieldErrors?.name} />
-            {state?.fieldErrors?.name && <p className="text-xs text-error-dark">{state.fieldErrors.name}</p>}
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="acc-inst">Institution</Label>
+        <Input id="acc-inst" name="institution" defaultValue={account?.institution || ""} placeholder="HDFC Bank" />
+      </div>
 
-          <div className="space-y-2">
-            <Label>Type *</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ACCOUNT_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t.replace(/_/g, " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {state?.fieldErrors?.type && <p className="text-xs text-error-dark">{state.fieldErrors.type}</p>}
-          </div>
+      {!isEdit && (
+        <div className="space-y-2">
+          <Label htmlFor="acc-open">Opening balance</Label>
+          <Input id="acc-open" name="opening_balance" type="number" step="0.01" defaultValue={(account as unknown as { opening_balance?: number })?.opening_balance ?? 0} />
+          <FieldError message={state?.fieldErrors?.opening_balance} />
+        </div>
+      )}
 
-          <div className="space-y-2">
-            <Label htmlFor="acc-inst">Institution</Label>
-            <Input id="acc-inst" name="institution" defaultValue={account?.institution || ""} placeholder="HDFC Bank" />
-          </div>
+      {type === "credit_card" && (
+        <div className="space-y-2">
+          <Label htmlFor="acc-limit">Credit limit</Label>
+          <Input id="acc-limit" name="credit_limit" type="number" step="0.01" defaultValue={account?.credit_limit ?? ""} placeholder="50000" />
+          <FieldError message={state?.fieldErrors?.credit_limit} />
+        </div>
+      )}
 
-          {!isEdit && (
-            <div className="space-y-2">
-              <Label htmlFor="acc-open">Opening balance</Label>
-              <Input id="acc-open" name="opening_balance" type="number" step="0.01" defaultValue={(account as unknown as { opening_balance?: number })?.opening_balance ?? 0} />
-              {state?.fieldErrors?.opening_balance && <p className="text-xs text-error-dark">{state.fieldErrors.opening_balance}</p>}
-            </div>
-          )}
+      <div className="space-y-2">
+        <Label htmlFor="acc-color">Color</Label>
+        <div className="flex items-center gap-3">
+          <input
+            ref={pickerRef}
+            id="acc-color-picker"
+            type="color"
+            tabIndex={-1}
+            aria-hidden="true"
+            value={validColor}
+            onChange={(e) => setColor(e.target.value.toUpperCase())}
+            className="sr-only"
+          />
+          <button
+            type="button"
+            onClick={() => pickerRef.current?.click()}
+            aria-label="Pick account color"
+            title="Pick account color"
+            className="h-11 w-11 shrink-0 rounded-xl border border-line transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            style={{ backgroundColor: validColor }}
+          />
+          <Input
+            id="acc-color"
+            name="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            placeholder="#2563EB"
+            className="flex-1"
+          />
+        </div>
+        <FieldError message={state?.fieldErrors?.color} />
+        <p className="text-xs text-neutral-400">Use the picker or enter a hex color code.</p>
+      </div>
 
-          {type === "credit_card" && (
-            <div className="space-y-2">
-              <Label htmlFor="acc-limit">Credit limit</Label>
-              <Input id="acc-limit" name="credit_limit" type="number" step="0.01" defaultValue={account?.credit_limit ?? ""} placeholder="50000" />
-              {state?.fieldErrors?.credit_limit && <p className="text-xs text-error-dark">{state.fieldErrors.credit_limit}</p>}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="acc-color">Color</Label>
-            <div className="flex items-center gap-3">
-              <input
-                ref={pickerRef}
-                id="acc-color-picker"
-                type="color"
-                tabIndex={-1}
-                aria-hidden="true"
-                value={validColor}
-                onChange={(e) => setColor(e.target.value.toUpperCase())}
-                className="sr-only"
-              />
-              <button
-                type="button"
-                onClick={() => pickerRef.current?.click()}
-                aria-label="Pick account color"
-                title="Pick account color"
-                className="h-11 w-11 shrink-0 rounded-xl border border-line transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-                style={{ backgroundColor: validColor }}
-              />
-              <Input
-                id="acc-color"
-                name="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                placeholder="#2563EB"
-                className="flex-1"
-              />
-            </div>
-            {state?.fieldErrors?.color && <p className="text-xs text-error-dark">{state.fieldErrors.color}</p>}
-            <p className="text-xs text-neutral-400">Use the picker or enter a hex color code.</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="acc-notes">Notes</Label>
-            <Textarea id="acc-notes" name="notes" defaultValue={account?.notes || ""} placeholder="Optional notes" />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Save changes" : "Create account"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <div className="space-y-2">
+        <Label htmlFor="acc-notes">Notes</Label>
+        <Textarea id="acc-notes" name="notes" defaultValue={account?.notes || ""} placeholder="Optional notes" />
+      </div>
+    </EntityFormDialog>
   );
 }

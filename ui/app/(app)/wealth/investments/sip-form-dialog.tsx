@@ -1,14 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
+import { FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createSip, updateSip } from "./actions";
-import { toast } from "sonner";
 
 type Sip = {
   id: string;
@@ -42,13 +40,7 @@ export function SipFormDialog({
   const [investmentId, setInvestmentId] = useState(sip?.investment_id || investments[0]?.id || "");
   const [state, formAction, isPending] = useActionState(isEdit ? updateSip : createSip, null);
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(isEdit ? "SIP updated" : "SIP created");
-      onOpenChange(false);
-      onSuccess?.();
-    }
-  }, [state?.success]);
+  useEntityFormSuccess({ state, isEdit, entityLabel: "SIP", onOpenChange, onSuccess });
 
   useEffect(() => {
     if (open) {
@@ -58,22 +50,23 @@ export function SipFormDialog({
   }, [open, sip, investments]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit SIP" : "Add SIP"}</DialogTitle>
-          <DialogDescription>{isEdit ? "Update SIP installment." : "Schedule a systematic investment plan."}</DialogDescription>
-        </DialogHeader>
-        <form key={sip?.id ?? "new"} action={formAction} className="space-y-4">
-          {isEdit && <input type="hidden" name="id" value={sip!.id} />}
-          <input type="hidden" name="frequency" value={frequency} />
-          {!isEdit && <input type="hidden" name="investment_id" value={investmentId} />}
-
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit SIP" : "Add SIP"}
+      description={isEdit ? "Update SIP installment." : "Schedule a systematic investment plan."}
+      formKey={sip?.id ?? "new"}
+      formAction={formAction}
+      state={state}
+      isEdit={isEdit}
+      isPending={isPending}
+      footer={
+        <FormFooter onCancel={() => onOpenChange(false)} pending={isPending} isEdit={isEdit} editLabel="Update" />
+      }
+    >
+      {isEdit && <input type="hidden" name="id" value={sip!.id} />}
+      <input type="hidden" name="frequency" value={frequency} />
+      {!isEdit && <input type="hidden" name="investment_id" value={investmentId} />}
 
           {!isEdit && (
             <div className="space-y-2">
@@ -94,7 +87,7 @@ export function SipFormDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <FormGrid>
             <div className="space-y-2">
               <Label htmlFor="sip-amount">Amount *</Label>
               <Input id="sip-amount" name="amount" type="number" step="0.01" defaultValue={sip ? String(sip.amount) : ""} placeholder="5000" required />
@@ -112,9 +105,9 @@ export function SipFormDialog({
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </FormGrid>
 
-          <div className="grid grid-cols-2 gap-4">
+          <FormGrid>
             <div className="space-y-2">
               <Label htmlFor="sip-next">Next date *</Label>
               <Input id="sip-next" name="next_date" type="date" defaultValue={sip?.next_date ?? new Date().toISOString().slice(0, 10)} required />
@@ -125,7 +118,7 @@ export function SipFormDialog({
               <Input id="sip-end" name="end_date" type="date" defaultValue={sip?.end_date ?? ""} />
               <p className="text-xs text-neutral-400">Leave empty for an ongoing SIP with no end date.</p>
             </div>
-          </div>
+          </FormGrid>
 
           {!isEdit && (
             <div className="space-y-2">
@@ -138,17 +131,6 @@ export function SipFormDialog({
             <Label htmlFor="sip-notes">Notes</Label>
             <Input id="sip-notes" name="notes" defaultValue="" placeholder="Optional" />
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </EntityFormDialog>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EntityFormDialog } from "@/components/common/entity-form-dialog";
+import { FieldError, FormFooter, FormGrid } from "@/components/common/form-primitives";
 import { createTaxInvestment, updateTaxInvestment } from "./actions";
 import { toast } from "sonner";
 
@@ -49,30 +49,29 @@ export function TaxInvestmentDialog({
   }, [open, investment]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit investment" : "Add tax investment"}</DialogTitle>
-          <DialogDescription>Record an 80C/80D investment for FY {fy}.</DialogDescription>
-        </DialogHeader>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit investment" : "Add tax investment"}
+      description={`Record an 80C/80D investment for FY ${fy}.`}
+      formKey={investment?.id ?? "new"}
+      formAction={formAction}
+      state={state}
+      isEdit={isEdit}
+      isPending={isPending}
+      footer={<FormFooter onCancel={() => onOpenChange(false)} pending={isPending} isEdit={isEdit} createLabel="Add" />}
+    >
+      {isEdit && <input type="hidden" name="id" value={investment!.id} />}
+      {isEdit && <input type="hidden" name="version" value={String(investment!.version)} />}
+      {!isEdit && <input type="hidden" name="financial_year" value={fy} />}
+      <input type="hidden" name="section" value={section} />
+      <input type="hidden" name="proof_status" value={proof} />
 
-        <form key={investment?.id ?? "new"} action={formAction} className="space-y-4">
-          {isEdit && <input type="hidden" name="id" value={investment!.id} />}
-          {isEdit && <input type="hidden" name="version" value={String(investment!.version)} />}
-          {!isEdit && <input type="hidden" name="financial_year" value={fy} />}
-          <input type="hidden" name="section" value={section} />
-          <input type="hidden" name="proof_status" value={proof} />
-
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
-          {state?.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
-            <Alert variant="destructive">
-              <AlertDescription>{Object.values(state.fieldErrors).join(" ")}</AlertDescription>
-            </Alert>
-          )}
+      {state?.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
+        <Alert variant="destructive">
+          <AlertDescription>{Object.values(state.fieldErrors).join(" ")}</AlertDescription>
+        </Alert>
+      )}
 
           <div className="space-y-2">
             <Label>Section *</Label>
@@ -93,20 +92,20 @@ export function TaxInvestmentDialog({
           <div className="space-y-2">
             <Label htmlFor="tax-name">Name *</Label>
             <Input id="tax-name" name="name" defaultValue={investment?.name || ""} placeholder="PPF - SBI, ELSS, LIC" required />
-            {state?.fieldErrors?.name && <p className="text-xs text-error-dark">{state.fieldErrors.name}</p>}
+            <FieldError message={state?.fieldErrors?.name} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <FormGrid>
             <div className="space-y-2">
               <Label htmlFor="tax-amount">Amount *</Label>
               <Input id="tax-amount" name="amount" type="number" step="0.01" defaultValue={investment?.amount ?? ""} placeholder="50000" required />
-              {state?.fieldErrors?.amount && <p className="text-xs text-error-dark">{state.fieldErrors.amount}</p>}
+              <FieldError message={state?.fieldErrors?.amount} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tax-date">Date *</Label>
               <Input id="tax-date" name="investment_date" type="date" defaultValue={investment ? new Date(investment.investment_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)} required />
             </div>
-          </div>
+          </FormGrid>
 
           <div className="space-y-2">
             <Label>Proof status</Label>
@@ -127,17 +126,6 @@ export function TaxInvestmentDialog({
             <Label htmlFor="tax-notes">Notes</Label>
             <Textarea id="tax-notes" name="notes" placeholder="Optional" />
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Save" : "Add"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </EntityFormDialog>
   );
 }

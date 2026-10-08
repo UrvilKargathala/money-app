@@ -21,12 +21,14 @@ export function FormFooter({
   pending,
   isEdit,
   createLabel = "Create",
+  editLabel = "Save",
   savingLabel = "Saving...",
 }: {
   onCancel: () => void;
   pending: boolean;
   isEdit: boolean;
   createLabel?: string;
+  editLabel?: string;
   savingLabel?: string;
 }) {
   return (
@@ -35,7 +37,7 @@ export function FormFooter({
         Cancel
       </Button>
       <Button type="submit" disabled={pending}>
-        {pending ? savingLabel : isEdit ? "Save" : createLabel}
+        {pending ? savingLabel : isEdit ? editLabel : createLabel}
       </Button>
     </DialogFooter>
   );
