@@ -11,7 +11,7 @@ import { TransactionFilters } from "./transaction-filters";
 import { formatINR } from "@/lib/format";
 import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload, WandSparkles, Tags } from "lucide-react";
 import { TransactionImportDialog } from "./transaction-import-dialog";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useConfirm, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { deleteTransactionAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -132,20 +132,18 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     setFormOpen(true);
   };
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
+  // Bulk + merge keep raw useConfirm: their onConfirm runners toast
+  // internally and need no result shaping.
+  const [bulkConfirmState, askBulkConfirm, closeBulkConfirm] = useConfirm();
 
   const handleDelete = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete this transaction?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteTransactionAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Transaction deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteTransactionAction(id),
+      successMsg: "Transaction deleted",
+      onDone: () => router.refresh(),
     });
   };
 
@@ -164,7 +162,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   };
   const bulk = (action: "categorize" | "tag" | "delete") => {
     if (action !== "delete") { void runBulk(action); return; }
-    askConfirm({
+    askBulkConfirm({
       title: `Delete ${selected.size} selected transactions?`,
       description: "This cannot be undone.",
       onConfirm: () => runBulk("delete"),
@@ -176,7 +174,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   };
   const mergeSelected = () => {
     const ids = Array.from(selected); if (ids.length !== 2) return;
-    askConfirm({
+    askBulkConfirm({
       title: "Merge these transactions?",
       description: "The second selected transaction will be merged into the first and removed.",
       confirmLabel: "Merge",
@@ -333,6 +331,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
       <TransactionToolsDialog open={!!toolsTransaction} onOpenChange={(value) => { if (!value) setToolsTransaction(null); }} transaction={toolsTransaction} tags={tags} categories={categories} />
       <MerchantRulesDialog open={rulesOpen} onOpenChange={setRulesOpen} mappings={merchantMappings} categories={categories} />
       <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      <ConfirmDialog state={bulkConfirmState} onOpenChange={closeBulkConfirm} />
     </div>
   );
 }

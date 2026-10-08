@@ -20,8 +20,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
+import { ExportButton } from "@/components/common/export-button";
 import { usePaymentsHistory } from "@/components/common/use-payments-history";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 
 type Sub = {
   id: string;
@@ -73,9 +74,7 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
         </DialogHeader>
         <div className="flex items-center justify-between">
           <p className="text-xs text-ink-3">{payments.length} records</p>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/api/subscriptions/${sub.id}/payments/export`} download><Download className="h-3 w-3" /> Export CSV</a>
-          </Button>
+          <ExportButton href={`/api/subscriptions/${sub.id}/payments/export`} />
         </div>
           {loadError ? <PanelError message="Could not load subscription payments." onRetry={reload} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
@@ -490,21 +489,16 @@ export function SubscriptionsDashboard({
     });
   };
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleCancel = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Cancel this subscription?",
       description: "Renewal tracking stops. You can re-add it later.",
       confirmLabel: "Cancel subscription",
-      onConfirm: async () => {
-        const res = await cancelSubscriptionAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Subscription cancelled");
-          router.refresh();
-        }
-      },
+      onDelete: () => cancelSubscriptionAction(id),
+      successMsg: "Subscription cancelled",
+      onDone: () => router.refresh(),
     });
   };
   const handlePause = async (id: string) => {

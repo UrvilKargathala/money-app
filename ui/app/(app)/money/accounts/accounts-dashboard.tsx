@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { AccountCard } from "./account-card";
 import { AccountFormDialog } from "./account-form-dialog";
 import { TransferDialog } from "./transfer-dialog";
@@ -78,20 +78,15 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
       router.refresh();
     }
   };
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete this account?",
       description: "Only allowed if it has zero transactions and zero balance. This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteAccountAction(id);
-        if (!res || res.error) toast.error(res?.error || "Could not delete.");
-        else {
-          toast.success("Account deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteAccountAction(id),
+      successMsg: "Account deleted",
+      onDone: () => router.refresh(),
     });
   };
 

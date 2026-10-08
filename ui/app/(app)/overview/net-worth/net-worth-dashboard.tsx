@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { formatINR } from "@/lib/format";
 import { Scale, Plus, Trash2, Building2 } from "lucide-react";
 import { createManualAsset, deleteManualAssetAction } from "./actions";
@@ -46,20 +46,15 @@ export function NetWorthDashboard({
     if (state?.error) toast.error(state.error);
   }, [state]);
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete this asset?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteManualAssetAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteManualAssetAction(id),
+      successMsg: "Deleted",
+      onDone: () => router.refresh(),
     });
   };
 

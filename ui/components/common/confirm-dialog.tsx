@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -84,4 +85,49 @@ export function useConfirm(): [
 ] {
   const [state, setState] = useState<ConfirmDialogState>(null);
   return [state, setState, (v: boolean) => { if (!v) setState(null); }];
+}
+
+type DeleteAction = () => Promise<{ error?: string } | null | undefined>;
+
+/**
+ * Delete-flow driver: toast + refresh wiring shared by all 26 askConfirm
+ * delete sites. onDone covers both router.refresh() and local-state updates.
+ */
+export function useDeleteConfirm(): [
+  ConfirmDialogState,
+  (v: boolean) => void,
+  (opts: {
+    title: string;
+    description?: string;
+    confirmLabel?: string;
+    onDelete: DeleteAction;
+    successMsg: string;
+    onDone?: () => void;
+  }) => void,
+] {
+  const [state, askConfirm, closeConfirm] = useConfirm();
+  const confirmDelete = (opts: {
+    title: string;
+    description?: string;
+    confirmLabel?: string;
+    onDelete: DeleteAction;
+    successMsg: string;
+    onDone?: () => void;
+  }) => {
+    askConfirm({
+      title: opts.title,
+      description: opts.description ?? "This cannot be undone.",
+      confirmLabel: opts.confirmLabel,
+      onConfirm: async () => {
+        const res = await opts.onDelete();
+        if (!res || res.error) {
+          toast.error(res?.error || "Could not delete.");
+          return;
+        }
+        toast.success(opts.successMsg);
+        opts.onDone?.();
+      },
+    });
+  };
+  return [state, closeConfirm, confirmDelete];
 }

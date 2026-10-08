@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -278,35 +278,25 @@ export function TaxDashboard({
     if (s?.error) toast.error(String(s.error));
   }, [suggestState, router]);
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete this investment?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteTaxInvestmentAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteTaxInvestmentAction(id),
+      successMsg: "Deleted",
+      onDone: () => router.refresh(),
     });
   };
 
   const handleDeleteItr = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete this document?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteItrDocAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Document deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteItrDocAction(id),
+      successMsg: "Document deleted",
+      onDone: () => router.refresh(),
     });
   };
 

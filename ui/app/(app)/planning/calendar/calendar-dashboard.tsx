@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { StatCard } from "@/components/common/stat-card";
 import { Calendar, Plus, Trash2, Copy, ChevronLeft, ChevronRight, Clock, TrendingUp, Landmark, Wallet } from "lucide-react";
 import { createCalendarEvent, deleteCalendarEventAction, duplicateCalendarEventAction } from "./actions";
@@ -160,20 +160,15 @@ export function CalendarDashboard({
     }
   }, [state, router]);
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete this event?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteCalendarEventAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteCalendarEventAction(id),
+      successMsg: "Deleted",
+      onDone: () => router.refresh(),
     });
   };
 

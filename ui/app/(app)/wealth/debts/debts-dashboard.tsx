@@ -9,7 +9,7 @@ import { DebtCard } from "./debt-card";
 import { DebtFormDialog } from "./debt-form-dialog";
 import { formatINR } from "@/lib/format";
 import { Landmark, Plus, Wallet, AlertTriangle, TrendingDown, Download, Calendar, Calculator, History, BarChart3, ShieldAlert, ArrowUpDown, RefreshCw, Info } from "lucide-react";
-import { deleteDebtAction, closeDebtAction, reopenDebtAction, updateMonthlyIncome, regenerateAmortization } from "./actions";
+import { deleteDebtAction, deletePaymentAction, closeDebtAction, reopenDebtAction, updateMonthlyIncome, regenerateAmortization } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -448,18 +448,16 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
     else { toast.success("Payment updated"); setEditing(null); setAmount(""); setNotes(""); load(); router.refresh(); }
   };
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (pid: string) => {
     if (!debt) return;
-    askConfirm({
+    confirmDelete({
       title: "Delete payment?",
       description: "Outstanding balances recompute without it. This cannot be undone.",
-      onConfirm: async () => {
-        const res = await fetch(`/api/debts/${debt.id}/payments/${pid}`, { method: "DELETE" });
-        if (!res.ok) toast.error("Could not delete");
-        else { toast.success("Payment deleted"); load(); router.refresh(); }
-      },
+      onDelete: () => deletePaymentAction(debt.id, pid),
+      successMsg: "Payment deleted",
+      onDone: () => { load(); router.refresh(); },
     });
   };
 
@@ -681,20 +679,15 @@ export function DebtsDashboard({
   const totalEmi = dashboard?.total_emi ?? dashboard?.total_monthly_emi ?? combinedTimeline?.combined.total_monthly_emi ?? debts.reduce((s, d) => s + Number(d.emi_amount || 0), 0);
   const debtFreeDate = dashboard?.debt_free_date ?? combinedTimeline?.combined.debt_free_date ?? null;
 
-  const [debtConfirmState, askDebtConfirm, closeDebtConfirm] = useConfirm();
+  const [debtConfirmState, closeDebtConfirm, confirmDebtDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askDebtConfirm({
+    confirmDebtDelete({
       title: "Delete this debt?",
       description: "Only allowed when no EMI is recorded. This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteDebtAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Debt deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteDebtAction(id),
+      successMsg: "Debt deleted",
+      onDone: () => router.refresh(),
     });
   };
   const handleClose = async (id: string) => {

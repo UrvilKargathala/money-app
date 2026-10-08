@@ -21,7 +21,8 @@ import { deleteGoalAction, pauseGoalAction, resumeGoalAction, completeGoalAction
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import { ExportButton } from "@/components/common/export-button";
+import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 
 type Goal = {
   id: string;
@@ -281,18 +282,16 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
     }
   };
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
     if (!goal) return;
-    askConfirm({
+    confirmDelete({
       title: "Delete contribution?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteContributionAction(goal.id, id);
-        if (res?.error) toast.error(res.error);
-        else { toast.success("Deleted"); load(); router.refresh(); }
-      },
+      onDelete: () => deleteContributionAction(goal.id, id),
+      successMsg: "Deleted",
+      onDone: () => { load(); router.refresh(); },
     });
   };
 
@@ -321,7 +320,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
           <TabsContent value="history" className="space-y-3">
             <div className="flex justify-between items-center">
               <p className="text-xs text-ink-3">{contributions.length} records</p>
-              <Button variant="outline" size="sm" asChild><a href={`/api/goals/${goal.id}/contributions/export`} download><Download className="h-3 w-3" /> Export CSV</a></Button>
+              <ExportButton href={`/api/goals/${goal.id}/contributions/export`} />
             </div>
             {loadError ? <PanelError message="Could not load goal contributions." onRetry={load} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
@@ -541,17 +540,15 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
     }
   };
 
-  const [confirmState, askConfirm, closeConfirm] = useConfirm();
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askConfirm({
+    confirmDelete({
       title: "Delete template?",
       description: "This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteTemplateAction(id);
-        if (res?.error) toast.error(res.error);
-        else { toast.success("Deleted"); router.refresh(); }
-      },
+      onDelete: () => deleteTemplateAction(id),
+      successMsg: "Deleted",
+      onDone: () => router.refresh(),
     });
   };
 
@@ -746,20 +743,15 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
     return true;
   });
 
-  const [goalConfirmState, askGoalConfirm, closeGoalConfirm] = useConfirm();
+  const [goalConfirmState, closeGoalConfirm, confirmGoalDelete] = useDeleteConfirm();
 
   const handleDelete = (id: string) => {
-    askGoalConfirm({
+    confirmGoalDelete({
       title: "Delete this goal?",
       description: "Contributions, milestones and snapshots go with it. This cannot be undone.",
-      onConfirm: async () => {
-        const res = await deleteGoalAction(id);
-        if (res?.error) toast.error(res.error);
-        else {
-          toast.success("Goal deleted");
-          router.refresh();
-        }
-      },
+      onDelete: () => deleteGoalAction(id),
+      successMsg: "Goal deleted",
+      onDone: () => router.refresh(),
     });
   };
   const handlePause = async (id: string) => {

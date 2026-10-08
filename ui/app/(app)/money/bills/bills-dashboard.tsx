@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
+import { ExportButton } from "@/components/common/export-button";
 import { usePaymentsHistory } from "@/components/common/use-payments-history";
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
@@ -95,11 +96,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
           <TabsContent value="history" className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs text-ink-3">{payments.length} records</p>
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/api/bills/${bill.id}/payments/export`} download>
-                  <Download className="h-3 w-3" /> Export CSV
-                </a>
-              </Button>
+              <ExportButton href={`/api/bills/${bill.id}/payments/export`} />
             </div>
             {loadError ? <PanelError message="Could not load bill payments." onRetry={handleRetry} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
@@ -151,11 +148,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
               <p className="text-sm text-ink-3 py-6 text-center">No YoY data available.</p>
             )}
             <div className="flex justify-end">
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/api/bills/${bill.id}/payments/export`} download>
-                  <Download className="h-3 w-3" /> Export CSV
-                </a>
-              </Button>
+              <ExportButton href={`/api/bills/${bill.id}/payments/export`} />
             </div>
           </TabsContent>
         </Tabs>
