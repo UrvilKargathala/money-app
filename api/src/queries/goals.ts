@@ -178,7 +178,8 @@ export function toGoal(row: GoalRow): Goal {
 export async function getGoals(
   userId: number,
   status?: string,
-  priority?: string
+  priority?: string,
+  opts: { limit?: number; offset?: number } = {}
 ): Promise<Goal[]> {
   const where = ["g.user_id = $1"];
   const params: unknown[] = [userId];
@@ -190,14 +191,40 @@ export async function getGoals(
     params.push(priority);
     where.push(`g.priority = $${params.length}`);
   }
+  const limit = Math.min(1000, Math.max(1, opts.limit ?? 500));
+  const offset = Math.max(0, opts.offset ?? 0);
+  params.push(limit, offset);
   const result = await query<GoalRow>(
     `${GOAL_SELECT}
      WHERE ${where.join(" AND ")}
      ORDER BY g.target_date ASC NULLS LAST,
-              CASE g.priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END`,
+              CASE g.priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END
+     LIMIT $${params.length - 1}::int OFFSET $${params.length}::int`,
     params
   );
   return result.rows.map(toGoal);
+}
+
+export async function countGoals(
+  userId: number,
+  status?: string,
+  priority?: string
+): Promise<number> {
+  const where = ["user_id = $1"];
+  const params: unknown[] = [userId];
+  if (status) {
+    params.push(status);
+    where.push(`status = $${params.length}`);
+  }
+  if (priority) {
+    params.push(priority);
+    where.push(`priority = $${params.length}`);
+  }
+  const result = await query<{ n: string }>(
+    `SELECT COUNT(*)::text AS n FROM goals WHERE ${where.join(" AND ")}`,
+    params
+  );
+  return Number(result.rows[0]?.n ?? 0);
 }
 
 export async function getGoalById(

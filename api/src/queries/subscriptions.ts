@@ -108,14 +108,26 @@ export function toSubscription(row: SubscriptionRow): Subscription {
 
 export async function listSubscriptions(
   userId: number,
-  q: Queryable = DB
+  q: Queryable = DB,
+  opts: { limit?: number; offset?: number } = {}
 ): Promise<Subscription[]> {
+  const limit = Math.min(1000, Math.max(1, opts.limit ?? 500));
+  const offset = Math.max(0, opts.offset ?? 0);
   const result = await q.query<SubscriptionRow>(
     `${SUB_SELECT} WHERE s.user_id = $1
-     ORDER BY s.status, s.next_renewal_date`,
-    [userId]
+     ORDER BY s.status, s.next_renewal_date
+     LIMIT $2::int OFFSET $3::int`,
+    [userId, limit, offset]
   );
   return result.rows.map(toSubscription);
+}
+
+export async function countSubscriptions(userId: number, q: Queryable = DB): Promise<number> {
+  const result = await q.query<{ n: string }>(
+    `SELECT COUNT(*)::text AS n FROM subscriptions WHERE user_id = $1`,
+    [userId]
+  );
+  return Number(result.rows[0]?.n ?? 0);
 }
 
 export async function getSubscription(

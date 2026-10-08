@@ -111,7 +111,8 @@ function mapInvestment(row: InvestmentRowRaw): Investment {
 export async function listInvestments(
   userId: number,
   filters: InvestmentFilters = {},
-  q: Queryable = DB
+  q: Queryable = DB,
+  opts: { limit?: number; offset?: number } = {}
 ): Promise<Investment[]> {
   let sql = INVESTMENT_SELECT;
   const params: unknown[] = [userId];
@@ -133,8 +134,40 @@ export async function listInvestments(
     sql += ` AND i.is_active = 0`;
   }
   sql += ` ORDER BY i.is_active DESC, i.name`;
+  const limit = Math.min(1000, Math.max(1, opts.limit ?? 500));
+  const offset = Math.max(0, opts.offset ?? 0);
+  params.push(limit, offset);
+  sql += ` LIMIT $${params.length - 1}::int OFFSET $${params.length}::int`;
   const result = await q.query<InvestmentRowRaw>(sql, params);
   return result.rows.map(mapInvestment);
+}
+
+export async function countInvestments(
+  userId: number,
+  filters: InvestmentFilters = {},
+  q: Queryable = DB
+): Promise<number> {
+  let sql = `SELECT COUNT(*)::text AS n FROM investments i WHERE i.user_id = $1`;
+  const params: unknown[] = [userId];
+  if (filters.search && filters.search.trim()) {
+    params.push(`%${filters.search.trim()}%`);
+    sql += ` AND (i.name ILIKE $${params.length} OR i.notes ILIKE $${params.length})`;
+  }
+  if (filters.types && filters.types.length > 0) {
+    params.push(filters.types);
+    sql += ` AND i.type = ANY($${params.length}::text[])`;
+  }
+  if (filters.categories && filters.categories.length > 0) {
+    params.push(filters.categories);
+    sql += ` AND i.category = ANY($${params.length}::text[])`;
+  }
+  if (filters.status === undefined || filters.status === "active") {
+    sql += ` AND i.is_active = 1`;
+  } else if (filters.status === "closed") {
+    sql += ` AND i.is_active = 0`;
+  }
+  const result = await q.query<{ n: string }>(sql, params);
+  return Number(result.rows[0]?.n ?? 0);
 }
 
 export async function getInvestmentById(

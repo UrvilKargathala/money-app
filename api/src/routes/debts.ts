@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson, serverError } from "./helpers";
+import { readJson, serverError, readPagination } from "./helpers";
 import { parseDateOnlyUTC } from "../utils/format";
 import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement } from "../queries/entitlements";
@@ -20,6 +20,7 @@ import {
   getDebtReplayTerms,
   getDebtTerms,
   getDebts,
+  countDebts,
   getDebtTypes,
   getLastDebtPaymentDate,
   getDti,
@@ -99,12 +100,14 @@ debts.get("/", requireAuth, async (c) => {
   if (rawStatus && !["active", "closed"].includes(rawStatus)) {
     return c.json({ error: "Invalid status filter." }, 400);
   }
-  const list = await getDebts(
-    user.user_id,
-    types.length > 0 ? types : undefined,
-    rawStatus ? (rawStatus as "active" | "closed") : undefined
-  );
-  return c.json({ debts: list });
+  const { page, pageSize, limit, offset } = readPagination(c);
+  const statusFilter = rawStatus ? (rawStatus as "active" | "closed") : undefined;
+  const typeFilter = types.length > 0 ? types : undefined;
+  const [list, total] = await Promise.all([
+    getDebts(user.user_id, typeFilter, statusFilter, { limit, offset }),
+    countDebts(user.user_id, typeFilter, statusFilter),
+  ]);
+  return c.json({ debts: list, total, page, pageSize });
 });
 
 debts.post("/", requireAuth, async (c) => {
@@ -360,7 +363,7 @@ debts.get("/health-alerts", requireAuth, async (c) => {
 
 debts.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
-  const list = await getDebts(user.user_id);
+  const list = await getDebts(user.user_id, undefined, undefined, { limit: 2000 });
   const csv = toCsv(
     ["Name", "Type", "Outstanding", "Interest Rate", "EMI", "Tenure Months", "Months Remaining", "Total Interest Paid"],
     list.map((d) => [

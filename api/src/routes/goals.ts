@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson, isUniqueViolation } from "./helpers";
+import { readJson, isUniqueViolation, readPagination } from "./helpers";
 import { parseDateOnlyUTC } from "../utils/format";
 import { csvResponse, toCsv } from "../utils/csv";
 import { checkCountLimit, isRowLocked } from "../queries/entitlements";
@@ -22,6 +22,7 @@ import {
   getGoalById,
   getGoals,
   getMilestones,
+  countGoals,
   getSnapshots,
   getTemplateById,
   getTemplates,
@@ -68,12 +69,15 @@ goals.get("/", requireAuth, async (c) => {
   if (priority && !PRIORITIES.includes(priority)) {
     return c.json({ error: "Invalid priority filter." }, 400);
   }
+  const { page, pageSize, limit, offset } = readPagination(c);
   const list = await getGoals(
     user.user_id,
     status || undefined,
-    priority || undefined
+    priority || undefined,
+    { limit, offset }
   );
-  return c.json({ goals: list });
+  const total = await countGoals(user.user_id, status || undefined, priority || undefined);
+  return c.json({ goals: list, total, page, pageSize });
 });
 
 goals.post("/", requireAuth, async (c) => {
@@ -344,7 +348,7 @@ goals.delete("/templates/:id", requireAuth, async (c) => {
 
 goals.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
-  const list = await getGoals(user.user_id);
+  const list = await getGoals(user.user_id, undefined, undefined, { limit: 2000 });
   const csv = toCsv(
     ["Name", "Target Amount", "Current Amount", "Progress %", "Target Date", "Status", "Priority"],
     list.map((g) => [

@@ -2,7 +2,7 @@
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson } from "./helpers";
+import { readJson, readPagination } from "./helpers";
 import { isoDate } from "../utils/format";
 import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement, checkCountLimit, isRowLocked } from "../queries/entitlements";
@@ -21,6 +21,7 @@ import {
   listSubscriptionPayments,
   listSubscriptionPaymentsForExport,
   listSubscriptions,
+  countSubscriptions,
   pauseSubscription,
   resumeSubscription,
   subscriptionExists,
@@ -79,7 +80,12 @@ function isValidDate(value: string): boolean {
 
 subscriptions.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  return c.json({ subscriptions: await listSubscriptions(user.user_id) });
+  const { page, pageSize, limit, offset } = readPagination(c);
+  const [subscriptions, total] = await Promise.all([
+    listSubscriptions(user.user_id, undefined, { limit, offset }),
+    countSubscriptions(user.user_id),
+  ]);
+  return c.json({ subscriptions, total, page, pageSize });
 });
 
 subscriptions.post("/", requireAuth, async (c) => {
@@ -161,7 +167,7 @@ subscriptions.post("/", requireAuth, async (c) => {
 
 subscriptions.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
-  const rows = await listSubscriptions(user.user_id);
+  const rows = await listSubscriptions(user.user_id, undefined, { limit: 2000 });
 
   const csv = toCsv(
     ["Service Name", "Amount", "Frequency", "Monthly Equivalent", "Next Renewal", "Status"],

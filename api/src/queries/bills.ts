@@ -131,14 +131,29 @@ const BILL_SELECT = `
   ${lateralLastPayment("b", "bill")}
 `;
 
-export async function listBills(userId: number, q: Queryable = DB): Promise<Bill[]> {
+export async function listBills(
+  userId: number,
+  q: Queryable = DB,
+  opts: { limit?: number; offset?: number } = {}
+): Promise<Bill[]> {
+  const limit = Math.min(1000, Math.max(1, opts.limit ?? 500));
+  const offset = Math.max(0, opts.offset ?? 0);
   const result = await q.query<BillRow>(
     `${BILL_SELECT}
      WHERE b.user_id = $1
-     ORDER BY b.due_day, b.name`,
-    [userId]
+     ORDER BY b.due_day, b.name
+     LIMIT $2::int OFFSET $3::int`,
+    [userId, limit, offset]
   );
   return result.rows.map(toBill);
+}
+
+export async function countBills(userId: number, q: Queryable = DB): Promise<number> {
+  const result = await q.query<{ n: string }>(
+    `SELECT COUNT(*)::text AS n FROM bills WHERE user_id = $1`,
+    [userId]
+  );
+  return Number(result.rows[0]?.n ?? 0);
 }
 
 export async function getBill(

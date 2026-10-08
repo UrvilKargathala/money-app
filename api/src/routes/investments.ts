@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
 import { parseAmount } from "../validation";
-import { readJson, serverError } from "./helpers";
+import { readJson, serverError, readPagination } from "./helpers";
 import { isoDate } from "../utils/format";
 import { csvResponse, toCsv } from "../utils/csv";
 import { getEntitlement } from "../queries/entitlements";
@@ -28,6 +28,7 @@ import {
   listHoldingSnapshots,
   listHoldingTransactions,
   listInvestments,
+  countInvestments,
   listPortfolioSnapshots,
   listPriceHistory,
   recordPriceUpdate,
@@ -79,8 +80,16 @@ investments.get("/", requireAuth, async (c) => {
   ) {
     return c.json({ error: "Invalid status filter." }, 400);
   }
+  const { page, pageSize, limit, offset } = readPagination(c);
+  const [investments, total] = await Promise.all([
+    listInvestments(user.user_id, filters, undefined, { limit, offset }),
+    countInvestments(user.user_id, filters),
+  ]);
   return c.json({
-    investments: await listInvestments(user.user_id, filters),
+    investments,
+    total,
+    page,
+    pageSize,
   });
 });
 

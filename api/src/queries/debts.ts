@@ -276,7 +276,8 @@ function toDebt(row: DebtRow, remainingInterest: number | null): Debt {
 export async function getDebts(
   userId: number,
   types?: string[],
-  status?: "active" | "closed"
+  status?: "active" | "closed",
+  opts: { limit?: number; offset?: number } = {}
 ): Promise<Debt[]> {
   const where = ["d.user_id = $1"];
   const params: unknown[] = [userId];
@@ -288,15 +289,41 @@ export async function getDebts(
     params.push(types);
     where.push(`d.type = ANY($${params.length}::text[])`);
   }
+  const limit = Math.min(1000, Math.max(1, opts.limit ?? 500));
+  const offset = Math.max(0, opts.offset ?? 0);
+  params.push(limit, offset);
   const result = await query<DebtRow>(
     `${DEBT_SELECT}
      WHERE ${where.join(" AND ")}
-     ORDER BY d.interest_rate DESC, d.months_remaining ASC NULLS LAST, d.name ASC`,
+     ORDER BY d.interest_rate DESC, d.months_remaining ASC NULLS LAST, d.name ASC
+     LIMIT $${params.length - 1}::int OFFSET $${params.length}::int`,
     params
   );
   const ids = result.rows.map((r) => r.id);
   const remaining = ids.length > 0 ? await getRemainingInterest(userId, ids) : new Map();
   return result.rows.map((row) => toDebt(row, remaining.get(row.id) ?? null));
+}
+
+export async function countDebts(
+  userId: number,
+  types?: string[],
+  status?: "active" | "closed"
+): Promise<number> {
+  const where = ["user_id = $1"];
+  const params: unknown[] = [userId];
+  if (status) {
+    params.push(status === "active" ? 1 : 0);
+    where.push(`is_active = $${params.length}`);
+  }
+  if (types && types.length > 0) {
+    params.push(types);
+    where.push(`type = ANY($${params.length}::text[])`);
+  }
+  const result = await query<{ n: string }>(
+    `SELECT COUNT(*)::text AS n FROM debts WHERE ${where.join(" AND ")}`,
+    params
+  );
+  return Number(result.rows[0]?.n ?? 0);
 }
 
 export async function getDebtById(

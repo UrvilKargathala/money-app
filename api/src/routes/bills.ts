@@ -23,6 +23,7 @@ import {
   listBillPayments,
   listBillPaymentsForExport,
   listBills,
+  countBills,
   markBillPeriodPaid,
   reactivateBill,
   setBillAutopay,
@@ -117,7 +118,13 @@ function monthlyObligation(
 
 bills.get("/", requireAuth, async (c) => {
   const user = c.get("user");
-  return c.json({ bills: await listBills(user.user_id) });
+  const page = Math.max(1, Number(c.req.query("page") ?? 1) || 1);
+  const pageSize = Math.min(1000, Math.max(1, Number(c.req.query("pageSize") ?? 500) || 500));
+  const [bills, total] = await Promise.all([
+    listBills(user.user_id, undefined, { limit: pageSize, offset: (page - 1) * pageSize }),
+    countBills(user.user_id),
+  ]);
+  return c.json({ bills, total, page, pageSize });
 });
 
 bills.post("/", requireAuth, async (c) => {
@@ -208,7 +215,7 @@ bills.post("/", requireAuth, async (c) => {
 
 bills.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
-  const rows = await listBills(user.user_id);
+  const rows = await listBills(user.user_id, undefined, { limit: 2000 });
 
   const csv = toCsv(
     ["Name", "Amount", "Due Day", "Frequency", "Account", "Status", "Last Paid Date"],

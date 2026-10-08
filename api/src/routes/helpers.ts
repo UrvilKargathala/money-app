@@ -45,3 +45,14 @@ export function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+/**
+ * Shared list pagination: page/pageSize query params, pageSize clamped to
+ * 1000 (default 500 — generous for entity dashboards, bounded against
+ * pathological growth). Returns limit/offset for queries.
+ */
+export function readPagination(c: Context): { page: number; pageSize: number; limit: number; offset: number } {
+  const page = Math.max(1, Number(c.req.query("page") ?? 1) || 1);
+  const pageSize = Math.min(1000, Math.max(1, Number(c.req.query("pageSize") ?? 500) || 500));
+  return { page, pageSize, limit: pageSize, offset: (page - 1) * pageSize };
+}
