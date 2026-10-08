@@ -5,6 +5,7 @@ import { readJson, serverError } from "./helpers";
 import { requireAuth } from "../middleware";
 import { isoDate } from "../utils/format";
 import { csvResponse, toCsv } from "../utils/csv";
+import { MAX_EXPORT_ROWS, countModuleRows } from "../queries/export";
 import {
   attachTransactionTag,
   deleteTransactionById,
@@ -102,7 +103,19 @@ transactions.get("/summary", requireAuth, async (c) => {
 
 transactions.get("/export", requireAuth, async (c) => {
   const user = c.get("user");
-  const rows = await getTransactions(user.user_id, {}, 100000, 0);
+  const total = await countModuleRows(user.user_id, "transactions", null, null);
+  if (total > MAX_EXPORT_ROWS) {
+    return c.json(
+      {
+        error: `This export has ${total} rows (limit ${MAX_EXPORT_ROWS}). Use the Export Center with a date range instead.`,
+        hint: "POST /api/export/jobs with date_range_start and date_range_end.",
+        count: total,
+        limit: MAX_EXPORT_ROWS,
+      },
+      400
+    );
+  }
+  const rows = await getTransactions(user.user_id, {}, MAX_EXPORT_ROWS, 0);
 
   const header = ["Date", "Type", "Description", "Category", "Account", "Amount", "Notes", "Tags"];
   const csvRows = rows.map((t) => [

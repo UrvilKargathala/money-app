@@ -194,10 +194,16 @@ exportJobs.get("/jobs/:id/download", requireAuth, async (c) => {
 
   try {
     if (job.export_type === "full_archive") {
-      // Cap precheck before loading anything into RAM.
-      for (const mod of EXPORTABLE_MODULES) {
-        const count = await countModuleRows(user.user_id, mod.name, job.date_range_start, job.date_range_end);
-        if (count > MAX_EXPORT_ROWS) return c.json({ ...capHint(count), module: mod.name }, 400);
+      // Cap precheck (parallel COUNTs) before loading anything into RAM.
+      const counts = await Promise.all(
+        EXPORTABLE_MODULES.map((mod) =>
+          countModuleRows(user.user_id, mod.name, job.date_range_start, job.date_range_end)
+        )
+      );
+      for (let i = 0; i < EXPORTABLE_MODULES.length; i++) {
+        if (counts[i] > MAX_EXPORT_ROWS) {
+          return c.json({ ...capHint(counts[i]), module: EXPORTABLE_MODULES[i].name }, 400);
+        }
       }
       const zip = new JSZip();
       const manifest: Record<string, unknown> = {
@@ -207,10 +213,18 @@ exportJobs.get("/jobs/:id/download", requireAuth, async (c) => {
       };
       const manifestModules: string[] = [];
 
-      for (const mod of EXPORTABLE_MODULES) {
-        const data = await loadModuleData(user.user_id, mod.name, job.date_range_start, job.date_range_end);
-        zip.file(`${mod.name}.csv`, toCsv(mod.columns, data));
-        manifestModules.push(mod.name);
+      // Bounded parallel loads (3 << pool max 10); CSV assembly is CPU-cheap.
+      const CONCURRENCY = 3;
+      for (let i = 0; i < EXPORTABLE_MODULES.length; i += CONCURRENCY) {
+        const chunk = EXPORTABLE_MODULES.slice(i, i + CONCURRENCY);
+        const loaded = await Promise.all(
+          chunk.map((mod) => loadModuleData(user.user_id, mod.name, job.date_range_start, job.date_range_end))
+        );
+        loaded.forEach((data, j) => {
+          const mod = chunk[j];
+          zip.file(`${mod.name}.csv`, toCsv(mod.columns, data));
+          manifestModules.push(mod.name);
+        });
       }
       manifest.modules = manifestModules;
       zip.file("manifest.json", JSON.stringify(manifest, null, 2));
