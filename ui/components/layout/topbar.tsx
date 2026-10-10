@@ -8,7 +8,7 @@ import { ChevronDown, Menu, Search, LogOut, User, Wallet, Command } from "lucide
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, STANDALONE_NAV_ITEMS } from "@/lib/nav";
 import { NotificationBell } from "./notification-bell";
-import { CommandPalette, useCommandPaletteHotkey } from "@/components/common/command-palette";
+import { useCommandPaletteHotkey } from "@/components/common/command-palette-hotkey";
 import { triggerHaptic } from "@/lib/haptics";
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { GlobalSearch } from "@/components/common/global-search";
 import { toast } from "sonner";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { useEffect } from "react";
@@ -28,6 +27,18 @@ import { useEffect } from "react";
 const MobileNavSheet = dynamic(
   () => import("@/components/layout/mobile-nav").then((m) => m.MobileNavSheet),
   { ssr: false }
+);
+
+// Command palette is dialog-based and opens on demand — same treatment.
+const CommandPalette = dynamic(
+  () => import("@/components/common/command-palette").then((m) => m.CommandPalette),
+  { ssr: false }
+);
+
+// Search box keeps SSR HTML (desktop instance is visible on load) but its
+// client JS ships in a separate chunk.
+const GlobalSearch = dynamic(
+  () => import("@/components/common/global-search").then((m) => m.GlobalSearch)
 );
 
 function isGroupActive(pathname: string, group: { items: { href: string }[] }) {
@@ -60,6 +71,22 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, onAvatar);
   }, []);
   useCommandPaletteHotkey(() => setPaletteOpen(true));
+
+  // Idle-prefetch the split chunks: zero critical-path cost, no first-open
+  // fetch delay. Each dynamic() above still owns its on-demand load.
+  useEffect(() => {
+    const preload = () => {
+      void import("@/components/layout/mobile-nav");
+      void import("@/components/common/command-palette");
+      void import("@/components/common/global-search");
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(preload);
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(preload, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -207,7 +234,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
           <GlobalSearch mobile onNavigate={() => setSearchOpen(false)} />
         </div>
       )}
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      {paletteOpen ? <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} /> : null}
     </header>
   );
 }
