@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { GoalCard } from "./goal-card";
-import { GoalFormDialog } from "./goal-form-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { formatINR, todayLocalISO } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -22,9 +23,19 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
 import { ExportButton } from "@/components/common/export-button";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 
 import type { Goal } from "@/lib/entities";
+
+// Dialogs are code-split (ssr:false) and mount only when opened. In-file
+// contributions/detail dialogs below stay (out of scope for the split).
+const GoalFormDialog = dynamic(
+  () => import("./goal-form-dialog").then((m) => m.GoalFormDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 type Dashboard = { goal_count: number; total_target: number; total_saved: number; completion_pct: number };
 
@@ -378,7 +389,7 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
         </Tabs>
       </DialogContent>
     </Dialog>
-    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+    {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </>
   );
 }
@@ -652,7 +663,7 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
           onSuccess={() => { router.refresh(); setDraftTemplate(null); }}
         />
       )}
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </>
   );
 }
@@ -846,10 +857,10 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
         </div>
       )}
 
-      <GoalFormDialog open={formOpen} onOpenChange={setFormOpen} goal={editing} accounts={accounts} onSuccess={() => router.refresh()} />
+      {formOpen ? <GoalFormDialog open={formOpen} onOpenChange={setFormOpen} goal={editing} accounts={accounts} onSuccess={() => router.refresh()} /> : null}
       <ContributionsDialog goal={contribGoal} accounts={accounts} open={!!contribGoal} onOpenChange={(v) => !v && setContribGoal(null)} />
       <GoalDetailDialog goal={detailGoal} open={!!detailGoal} onOpenChange={(v) => !v && setDetailGoal(null)} />
-      <ConfirmDialog state={goalConfirmState} onOpenChange={closeGoalConfirm} />
+      {goalConfirmState ? <ConfirmDialog state={goalConfirmState} onOpenChange={closeGoalConfirm} /> : null}
     </div>
   );
 }
