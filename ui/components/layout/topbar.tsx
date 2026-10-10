@@ -230,7 +230,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
           <div className="hidden sm:flex items-center gap-3 border-l border-line ml-1 pl-3">
             {showAvatar ? (
               <Avatar className="h-8 w-8">
-                <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} />
+                <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} width={64} height={64} fetchPriority="high" />
                 <AvatarFallback className="bg-primary-100 text-primary-600 text-xs dark:bg-[#1E1E1E] dark:text-[#BFDBFE]">
                   {(userName ?? "U").trim().slice(0, 1).toUpperCase()}
                 </AvatarFallback>

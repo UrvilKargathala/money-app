@@ -17,6 +17,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { FormSelect } from "@/components/common/form-select";
 import { useTheme, type ThemeChoice } from "@/components/theme-provider";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
+import { prepareAvatarUpload } from "@/lib/avatar-upload";
 import { deviceName } from "@/lib/user-agent";
 
 const PREF_GROUPS: { type: string; label: string; description: string }[] = [
@@ -269,10 +270,13 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
     }
     setAvatarUploading(true);
     try {
+      // Downscale oversized photos client-side (never throws — falls back
+      // to the original file). Server still enforces type + 2MB caps.
+      const prepared = await prepareAvatarUpload(file);
       const res = await fetch("/api/users/me/avatar", {
         method: "POST",
-        headers: { "content-type": file.type || "image/png" },
-        body: file,
+        headers: { "content-type": prepared.type || "image/png" },
+        body: prepared.blob,
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -384,7 +388,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <CardContent className="space-y-5">
           <div className="flex items-center gap-4 pb-1">
             <Avatar className="h-20 w-20 ring-2 ring-primary-100 ring-offset-2">
-              {profile?.avatar_url ? <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt="Profile photo" /> : null}
+              {profile?.avatar_url ? <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt="Profile photo" width={160} height={160} loading="lazy" /> : null}
               <AvatarFallback className="text-lg">{(profile?.full_name ?? user?.full_name ?? user?.email ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-1.5">
