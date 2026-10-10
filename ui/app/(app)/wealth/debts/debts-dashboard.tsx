@@ -256,6 +256,13 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
 
   useEffect(() => { if (open) loadSchedule(); }, [open, loadSchedule]);
   useEffect(() => () => abortRef.current?.abort(), []);
+  // Release schedule bytes when the dialog closes (refetched on next open).
+  useEffect(() => {
+    if (!debt) {
+      setRows([]);
+      setCost(null);
+    }
+  }, [debt]);
 
   const handleRegenerate = async () => {
     if (!debt) return;
