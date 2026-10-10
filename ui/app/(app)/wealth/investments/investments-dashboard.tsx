@@ -6,12 +6,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InvestmentCard } from "./investment-card";
-import { InvestmentFormDialog } from "./investment-form-dialog";
-import { SipFormDialog } from "./sip-form-dialog";
-import { DividendFormDialog } from "./dividend-form-dialog";
 import dynamic from "next/dynamic";
 import { formatINR, formatDate, todayLocalISO } from "@/lib/format";
 import type { Allocation, TrendPoint } from "./investment-charts";
@@ -31,6 +28,19 @@ const PortfolioTrend = dynamic(() => import("./investment-charts").then((m) => m
   loading: () => <ChartSkeleton height={300} />,
 });
 const PriceHistoryDialog = dynamic(() => import("./price-history-dialog").then((m) => m.PriceHistoryDialog), {
+  ssr: false,
+});
+// Form dialogs mount only when opened — same code-split treatment.
+const InvestmentFormDialog = dynamic(() => import("./investment-form-dialog").then((m) => m.InvestmentFormDialog), {
+  ssr: false,
+});
+const SipFormDialog = dynamic(() => import("./sip-form-dialog").then((m) => m.SipFormDialog), {
+  ssr: false,
+});
+const DividendFormDialog = dynamic(() => import("./dividend-form-dialog").then((m) => m.DividendFormDialog), {
+  ssr: false,
+});
+const ConfirmDialog = dynamic(() => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog), {
   ssr: false,
 });
 import { TrendingUp, Plus, Wallet, Calendar, Coins, PieChart, AlertTriangle, LineChartIcon, History, MoreVertical, Pencil, Trash2, Pause, Play } from "lucide-react";
@@ -541,11 +551,11 @@ export function InvestmentsDashboard({
         </TabsContent>
       </Tabs>
 
-      <InvestmentFormDialog open={formOpen} onOpenChange={setFormOpen} investment={editing} onSuccess={() => router.refresh()} />
+      {formOpen ? <InvestmentFormDialog open={formOpen} onOpenChange={setFormOpen} investment={editing} onSuccess={() => router.refresh()} /> : null}
 
-      <SipFormDialog open={sipOpen} onOpenChange={setSipOpen} sip={editingSip} investments={investmentOpts} onSuccess={() => router.refresh()} />
+      {sipOpen ? <SipFormDialog open={sipOpen} onOpenChange={setSipOpen} sip={editingSip} investments={investmentOpts} onSuccess={() => router.refresh()} /> : null}
 
-      <DividendFormDialog open={dividendOpen} onOpenChange={setDividendOpen} dividend={editingDividend} investments={investmentOpts} onSuccess={() => router.refresh()} />
+      {dividendOpen ? <DividendFormDialog open={dividendOpen} onOpenChange={setDividendOpen} dividend={editingDividend} investments={investmentOpts} onSuccess={() => router.refresh()} /> : null}
 
       <PriceHistoryDialog
         open={priceOpen}
@@ -579,7 +589,7 @@ export function InvestmentsDashboard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
