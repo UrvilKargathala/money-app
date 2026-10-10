@@ -8,8 +8,8 @@ import {
   listNoteAttachments,
 } from "../queries/note-attachments";
 import { getNoteById } from "../queries/notes";
-import { getObjectStorage } from "../utils/object-storage";
-import { serverError } from "./helpers";
+import { getObjectStorage, isStorageMisconfigured } from "../utils/object-storage";
+import { requestIdOf, serverError } from "./helpers";
 
 /** Client-encrypted ciphertext only - 5MB cap on the encrypted blob. */
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -61,7 +61,8 @@ export function registerNoteAttachmentRoutes(notes: Hono): void {
       const storage = getObjectStorage();
       const stored = await storage.put(
         `notes/${user.user_id}/${noteId}/${globalThis.crypto.randomUUID()}`,
-        bytes
+        bytes,
+        "application/octet-stream"
       );
       const attachmentId = await withUser(user.user_id, (client) =>
         insertNoteAttachment(client, {
@@ -76,6 +77,12 @@ export function registerNoteAttachmentRoutes(notes: Hono): void {
       return c.json({ success: true, attachment: { id: attachmentId } });
     } catch (err) {
       console.error("[api] attachment upload failed:", err);
+      if (isStorageMisconfigured(err)) {
+        return c.json(
+          { error: "Attachment storage is not configured. Please contact support.", code: "note_attachments_storage_misconfigured", requestId: requestIdOf(c) },
+          503
+        );
+      }
       return c.json(
         { error: "Could not store the attachment. Please try again." },
         500
