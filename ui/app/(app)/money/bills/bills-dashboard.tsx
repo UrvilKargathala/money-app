@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { BillCard } from "./bill-card";
-import { BillFormDialog } from "./bill-form-dialog";
+import { useConfirm } from "@/components/common/confirm-dialog";
 import { formatINR } from "@/lib/format";
 import { Receipt, AlertTriangle, Clock, Plus, Download, History, Bell, Calendar, TrendingUp, Lightbulb, ChevronDown, ChevronUp, Pencil, Trash2, Save, X } from "lucide-react";
 import { deactivateBillAction, reactivateBillAction, markPaidAction, skipBillAction, toggleAutopayAction, deleteReminderAction, suggestRecurringBills } from "./actions";
@@ -21,9 +22,19 @@ import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
 import { ExportButton } from "@/components/common/export-button";
 import { usePaymentsHistory } from "@/components/common/use-payments-history";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
 
 import type { Bill } from "@/lib/entities";
+
+// Dialogs are code-split (ssr:false) and mount only when opened. In-file
+// payments/reminders dialogs below stay (out of scope for the split).
+const BillFormDialog = dynamic(
+  () => import("./bill-form-dialog").then((m) => m.BillFormDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 type Overview = { total_monthly_obligation: number; due_this_week: number; overdue_count: number };
 
@@ -323,7 +334,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
         </div>
       </DialogContent>
     </Dialog>
-    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </>
   );
 }
@@ -712,7 +723,7 @@ export function BillsDashboard({
         </div>
       )}
 
-      <BillFormDialog open={formOpen} onOpenChange={setFormOpen} bill={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
+      {formOpen ? <BillFormDialog open={formOpen} onOpenChange={setFormOpen} bill={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} /> : null}
       <PaymentsHistoryDialog bill={paymentsBill} open={!!paymentsBill} onOpenChange={(v) => !v && setPaymentsBill(null)} />
       <RemindersDialog bill={remindersBill} open={!!remindersBill} onOpenChange={(v) => !v && setRemindersBill(null)} />
     </div>
