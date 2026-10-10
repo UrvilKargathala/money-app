@@ -5,7 +5,8 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "MoneyMind - Personal Finance Manager",
     short_name: "MoneyMind",
     description: "Take control of your finances with MoneyMind",
-    start_url: "/overview/dashboard",
+    // Public entry: the dashboard is auth-gated, so installs must land on /.
+    start_url: "/",
     display: "standalone",
     background_color: "#000000",
     theme_color: "#2563EB",
