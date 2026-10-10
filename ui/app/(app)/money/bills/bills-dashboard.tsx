@@ -392,7 +392,10 @@ const UpcomingPanel = memo(function UpcomingPanel({ data }: { data: UpcomingData
 });
 
 const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { projection: CashflowProjection; waterfall: CashflowWaterfall }) {
-  const proj = projection?.projection ?? waterfall?.projection ?? waterfall?.months ?? [];
+  const proj = useMemo(
+    () => projection?.projection ?? waterfall?.projection ?? waterfall?.months ?? [],
+    [projection, waterfall]
+  );
   const wf = waterfall?.waterfall ?? null;
   const totalProj = useMemo(() => proj.reduce((s, p) => s + (p.total ?? 0), 0), [proj]);
   if ((!proj || proj.length === 0) && !wf) return null;
