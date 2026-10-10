@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { AccountCard } from "./account-card";
-import { AccountFormDialog } from "./account-form-dialog";
-import { TransferDialog } from "./transfer-dialog";
 import { formatINR } from "@/lib/format";
 import { Wallet, CreditCard, Landmark, Plus, ArrowLeftRight, Download, Search } from "lucide-react";
 import { deactivateAccountAction, reactivateAccountAction, deleteAccountAction } from "./actions";
@@ -18,6 +17,20 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 import type { Account } from "@/lib/entities";
+
+// Dialogs are code-split (ssr:false) and mount only when opened.
+const AccountFormDialog = dynamic(
+  () => import("./account-form-dialog").then((m) => m.AccountFormDialog),
+  { ssr: false }
+);
+const TransferDialog = dynamic(
+  () => import("./transfer-dialog").then((m) => m.TransferDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 type Props = {
   accounts: Account[];
@@ -166,6 +179,7 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
         </div>
       )}
 
+      {formOpen ? (
       <AccountFormDialog
         key={`${editing?.id ?? "create"}-${formOpen ? "open" : "closed"}`}
         open={formOpen}
@@ -173,8 +187,9 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
         account={editing}
         onSuccess={() => router.refresh()}
       />
-      <TransferDialog open={transferOpen} onOpenChange={setTransferOpen} accounts={activeAccounts.map((a) => ({ id: a.id, name: a.name }))} onSuccess={() => router.refresh()} />
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      ) : null}
+      {transferOpen ? <TransferDialog open={transferOpen} onOpenChange={setTransferOpen} accounts={activeAccounts.map((a) => ({ id: a.id, name: a.name }))} onSuccess={() => router.refresh()} /> : null}
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
