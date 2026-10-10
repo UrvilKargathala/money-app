@@ -665,7 +665,18 @@ export function NotesDashboard({
         </TabsContent>
       </Tabs>
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog
+        open={formOpen}
+        onOpenChange={(v) => {
+          // Release decrypted plaintext on any close path (Esc, outside,
+          // Cancel) — reopen always loads fresh (see open paths above).
+          if (!v) {
+            setContent("");
+            setNoteTitle("");
+          }
+          setFormOpen(v);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editing ? "Edit note" : "Add note"}</DialogTitle>
