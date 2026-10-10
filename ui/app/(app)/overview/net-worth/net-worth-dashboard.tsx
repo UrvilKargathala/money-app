@@ -9,7 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import dynamic from "next/dynamic";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
+
+// ConfirmDialog mounts only when opened (ssr:false code-split).
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 import { formatINR, todayLocalISO } from "@/lib/format";
 import { Scale, Plus, Trash2, Building2 } from "lucide-react";
 import { createManualAsset, deleteManualAssetAction } from "./actions";
@@ -164,7 +171,7 @@ export function NetWorthDashboard({
           </form>
         </DialogContent>
       </Dialog>
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
