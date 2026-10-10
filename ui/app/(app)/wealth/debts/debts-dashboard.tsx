@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useActionState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { DebtCard } from "./debt-card";
-import { DebtFormDialog } from "./debt-form-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { formatINR, todayLocalISO } from "@/lib/format";
 import { Landmark, Plus, Wallet, AlertTriangle, TrendingDown, Download, Calendar, Calculator, History, BarChart3, ShieldAlert, ArrowUpDown, RefreshCw, Info } from "lucide-react";
 import { deleteDebtAction, deletePaymentAction, closeDebtAction, reopenDebtAction, updateMonthlyIncome, regenerateAmortization } from "./actions";
@@ -19,11 +20,21 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import type { Debt } from "@/lib/entities";
+
+// Dialogs are code-split (ssr:false) and mount only when opened. In-file
+// amortization/prepay/payments/status dialogs below stay (out of scope).
+const DebtFormDialog = dynamic(
+  () => import("./debt-form-dialog").then((m) => m.DebtFormDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 type Dti = {
   monthly_income: number | null;
@@ -507,7 +518,7 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
         </Tabs>
       </DialogContent>
     </Dialog>
-    <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+    {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </>
   );
 }
@@ -785,12 +796,12 @@ export function DebtsDashboard({
         </div>
       )}
 
-      <DebtFormDialog open={formOpen} onOpenChange={setFormOpen} debt={editing} accounts={accounts} onSuccess={() => router.refresh()} />
+      {formOpen ? <DebtFormDialog open={formOpen} onOpenChange={setFormOpen} debt={editing} accounts={accounts} onSuccess={() => router.refresh()} /> : null}
       <AmortizationDialog debt={amortDebt} open={!!amortDebt} onOpenChange={(v) => !v && setAmortDebt(null)} />
       <PrepaymentSimulatorDialog debt={prepayDebt} open={!!prepayDebt} onOpenChange={(v) => !v && setPrepayDebt(null)} />
       <PaymentsHistoryDialog debt={historyDebt} open={!!historyDebt} onOpenChange={(v) => !v && setHistoryDebt(null)} />
       <PaymentStatusDialog debt={statusDebt} open={!!statusDebt} onOpenChange={(v) => !v && setStatusDebt(null)} />
-      <ConfirmDialog state={debtConfirmState} onOpenChange={closeDebtConfirm} />
+      {debtConfirmState ? <ConfirmDialog state={debtConfirmState} onOpenChange={closeDebtConfirm} /> : null}
     </div>
   );
 }
