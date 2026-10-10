@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronDown, Menu, Search, LogOut, User, Wallet, Command } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, STANDALONE_NAV_ITEMS } from "@/lib/nav";
@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
-import { useEffect } from "react";
 
 // Mobile drawer is code-split (ssr:false): the Radix Dialog chain leaves the
 // shared initial chunk and loads on first open.
@@ -70,7 +69,10 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
     window.addEventListener(AVATAR_UPDATED_EVENT, onAvatar);
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, onAvatar);
   }, []);
-  useCommandPaletteHotkey(() => setPaletteOpen(true));
+  // Stable open callback: the hotkey hook subscribes once instead of
+  // re-subscribing keydown on every Topbar render.
+  const openPalette = useCallback(() => setPaletteOpen(true), []);
+  useCommandPaletteHotkey(openPalette);
 
   // Idle-prefetch the split chunks: zero critical-path cost, no first-open
   // fetch delay. Each dynamic() above still owns its on-demand load.
