@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useMembership, UpgradeCard } from "@/components/membership";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { SubscriptionCard } from "./subscription-card";
-import { SubscriptionFormDialog } from "./subscription-form-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { formatINR, todayLocalISO } from "@/lib/format";
 import { Repeat, Plus, Download, Wallet, History, Pause, AlarmClock, ShieldAlert, Trash2, Clock, X } from "lucide-react";
 import { cancelSubscriptionAction, pauseSubscriptionAction, resumeSubscriptionAction, renewSubscriptionAction, snoozeSubscriptionAction, dismissAuditAction } from "./actions";
@@ -22,7 +23,17 @@ import { useRouter } from "next/navigation";
 import { PanelError, TableLoadingRows } from "@/components/common/async-panel-state";
 import { ExportButton } from "@/components/common/export-button";
 import { usePaymentsHistory } from "@/components/common/use-payments-history";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+
+// Dialogs are code-split (ssr:false) and mount only when opened. In-file
+// payments/snooze dialogs below stay (out of scope for the split).
+const SubscriptionFormDialog = dynamic(
+  () => import("./subscription-form-dialog").then((m) => m.SubscriptionFormDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 import type { Sub } from "@/lib/entities";
 
@@ -586,10 +597,10 @@ export function SubscriptionsDashboard({
         </div>
       )}
 
-      <SubscriptionFormDialog open={formOpen} onOpenChange={setFormOpen} subscription={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
+      {formOpen ? <SubscriptionFormDialog open={formOpen} onOpenChange={setFormOpen} subscription={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} /> : null}
       <SubscriptionPaymentsDialog sub={paymentsSub} open={!!paymentsSub} onOpenChange={(v) => !v && setPaymentsSub(null)} />
       <SnoozeDialog sub={snoozeSub} open={!!snoozeSub} onOpenChange={(v) => !v && setSnoozeSub(null)} />
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
