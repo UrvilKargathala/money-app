@@ -703,7 +703,14 @@ export function NotificationsDashboard({
         </TabsContent>
       </Tabs>
 
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+      <Dialog
+        open={previewOpen}
+        onOpenChange={(v) => {
+          // Release the rendered HTML string on close (refetched on preview).
+          if (!v) setPreviewResult(null);
+          setPreviewOpen(v);
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Email preview - {previewResult?.subject ?? ""}</DialogTitle>
