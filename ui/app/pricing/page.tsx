@@ -2,7 +2,16 @@ import Link from "next/link";
 import { PricingPlans } from "./pricing-plans";
 import "./pricing.css";
 
-export const metadata = { title: "Plans & Pricing | MoneyMind" };
+export const metadata = {
+  title: "Plans & Pricing",
+  description: "MoneyMind plans for every budget: track accounts, budgets, bills, subscriptions and investments. Compare features and start free.",
+  alternates: { canonical: "/pricing" },
+  openGraph: {
+    title: "Plans & Pricing | MoneyMind",
+    description: "MoneyMind plans for every budget: track accounts, budgets, bills, subscriptions and investments.",
+    url: "/pricing",
+  },
+};
 export default function PricingPage() {
   return <main id="main-content" className="pricing-page min-h-screen px-5 py-8 sm:px-10">
     <nav className="mx-auto flex max-w-6xl items-center justify-between"><Link href="/overview/dashboard" className="text-xl font-extrabold tracking-tight">MoneyMind<span className="text-indigo-600">.</span></Link><Link href="/settings" className="text-sm text-indigo-700 underline underline-offset-4">Back to app</Link></nav>
