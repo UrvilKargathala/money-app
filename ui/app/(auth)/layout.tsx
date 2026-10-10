@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { Wallet } from "lucide-react";
 import Link from "next/link";
+
+// Segment default: utility + token pages (forgot/reset/verify/magic-link)
+// stay out of the index. Login + signup override back to indexed with
+// unique titles via their own page metadata. Link equity still flows.
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+};
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
