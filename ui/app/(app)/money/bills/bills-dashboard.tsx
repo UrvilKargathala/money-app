@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -343,7 +343,9 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
 // Panels: calendar / upcoming / cashflow / waterfall / suggestions
 // ---------------------------------------------------------------------------
 
-function CalendarPanel({ data }: { data: CalendarData }) {
+// Pure panels: props are stable server data — memo so tab/expand/dialog
+// churn in the parent doesn't re-render them.
+const CalendarPanel = memo(function CalendarPanel({ data }: { data: CalendarData }) {
   if (!data || data.events.length === 0) return null;
   return (
     <Card className="p-6">
@@ -364,9 +366,9 @@ function CalendarPanel({ data }: { data: CalendarData }) {
       </div>
     </Card>
   );
-}
+});
 
-function UpcomingPanel({ data }: { data: UpcomingData }) {
+const UpcomingPanel = memo(function UpcomingPanel({ data }: { data: UpcomingData }) {
   if (!data || data.items.length === 0) return null;
   return (
     <Card className="p-6">
@@ -387,13 +389,13 @@ function UpcomingPanel({ data }: { data: UpcomingData }) {
       </div>
     </Card>
   );
-}
+});
 
-function CashflowPanel({ projection, waterfall }: { projection: CashflowProjection; waterfall: CashflowWaterfall }) {
+const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { projection: CashflowProjection; waterfall: CashflowWaterfall }) {
   const proj = projection?.projection ?? waterfall?.projection ?? waterfall?.months ?? [];
   const wf = waterfall?.waterfall ?? null;
+  const totalProj = useMemo(() => proj.reduce((s, p) => s + (p.total ?? 0), 0), [proj]);
   if ((!proj || proj.length === 0) && !wf) return null;
-  const totalProj = proj.reduce((s, p) => s + (p.total ?? 0), 0);
   return (
     <Card className="p-6">
       <CardHeader className="p-0 mb-3">
@@ -428,7 +430,7 @@ function CashflowPanel({ projection, waterfall }: { projection: CashflowProjecti
       )}
     </Card>
   );
-}
+});
 
 function SuggestRecurringPanel() {
   const [suggestions, setSuggestions] = useState<{ description: string; avg_amount: number; occurrence_count: number }[]>([]);
@@ -522,64 +524,88 @@ export function BillsDashboard({
   const [remindersBill, setRemindersBill] = useState<Bill | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const filtered = bills.filter((b) => {
-    if (!showInactive && b.is_active !== 1) return false;
-    if (activeTab === "all") return true;
-    if (activeTab === "upcoming") return ["upcoming", "due_soon"].includes(b.current_period_status);
-    if (activeTab === "overdue") return b.current_period_status === "overdue";
-    if (activeTab === "paid") return b.current_period_status === "paid";
-    return true;
-  });
+  const filtered = useMemo(
+    () =>
+      bills.filter((b) => {
+        if (!showInactive && b.is_active !== 1) return false;
+        if (activeTab === "all") return true;
+        if (activeTab === "upcoming") return ["upcoming", "due_soon"].includes(b.current_period_status);
+        if (activeTab === "overdue") return b.current_period_status === "overdue";
+        if (activeTab === "paid") return b.current_period_status === "paid";
+        return true;
+      }),
+    [bills, showInactive, activeTab]
+  );
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = useCallback((id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
-  const handleDeactivate = async (id: string) => {
-    const res = await deactivateBillAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Bill deactivated");
-      router.refresh();
-    }
-  };
-  const handleReactivate = async (id: string) => {
-    const res = await reactivateBillAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Bill reactivated");
-      router.refresh();
-    }
-  };
-  const handleMarkPaid = async (id: string) => {
-    const res = await markPaidAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Bill marked as paid");
-      router.refresh();
-    }
-  };
-  const handleSkip = async (id: string) => {
-    const res = await skipBillAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Bill skipped for this period");
-      router.refresh();
-    }
-  };
-  const handleToggleAutopay = async (bill: Bill) => {
-    const res = await toggleAutopayAction(bill.id, !bill.is_autopay);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success(bill.is_autopay ? "Autopay disabled" : "Autopay enabled");
-      router.refresh();
-    }
-  };
+  const handleEdit = useCallback((b: Bill) => {
+    setEditing(b);
+    setFormOpen(true);
+  }, []);
+
+  const handleDeactivate = useCallback(
+    async (b: Bill) => {
+      const res = await deactivateBillAction(b.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Bill deactivated");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleReactivate = useCallback(
+    async (b: Bill) => {
+      const res = await reactivateBillAction(b.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Bill reactivated");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleMarkPaid = useCallback(
+    async (b: Bill) => {
+      const res = await markPaidAction(b.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Bill marked as paid");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleSkip = useCallback(
+    async (b: Bill) => {
+      const res = await skipBillAction(b.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Bill skipped for this period");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleToggleAutopay = useCallback(
+    async (bill: Bill) => {
+      const res = await toggleAutopayAction(bill.id, !bill.is_autopay);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success(bill.is_autopay ? "Autopay disabled" : "Autopay enabled");
+        router.refresh();
+      }
+    },
+    [router]
+  );
 
   return (
     <div className="space-y-6">
@@ -678,15 +704,12 @@ export function BillsDashboard({
             <div key={b.id} className="space-y-2">
               <BillCard
                 bill={b}
-                onEdit={() => {
-                  setEditing(b);
-                  setFormOpen(true);
-                }}
-                onDeactivate={() => handleDeactivate(b.id)}
-                onReactivate={() => handleReactivate(b.id)}
-                onMarkPaid={() => handleMarkPaid(b.id)}
-                onSkip={() => handleSkip(b.id)}
-                onToggleAutopay={() => handleToggleAutopay(b)}
+                onEdit={handleEdit}
+                onDeactivate={handleDeactivate}
+                onReactivate={handleReactivate}
+                onMarkPaid={handleMarkPaid}
+                onSkip={handleSkip}
+                onToggleAutopay={handleToggleAutopay}
               />
               <div className="grid grid-cols-3 gap-2">
                 <Button variant="outline" size="sm" onClick={() => setPaymentsBill(b)}>

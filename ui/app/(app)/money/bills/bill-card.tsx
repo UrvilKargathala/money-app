@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,9 @@ function statusBadge(status: string) {
   }
 }
 
-export function BillCard({
+// Memoized: parent passes the stable bill object + stable (bill)-param
+// callbacks, so rows re-render only when their own data changes.
+export const BillCard = memo(function BillCard({
   bill,
   onEdit,
   onDeactivate,
@@ -37,12 +40,12 @@ export function BillCard({
   onToggleAutopay,
 }: {
   bill: Bill;
-  onEdit: () => void;
-  onDeactivate: () => void;
-  onReactivate: () => void;
-  onMarkPaid: () => void;
-  onSkip: () => void;
-  onToggleAutopay: () => void;
+  onEdit: (bill: Bill) => void;
+  onDeactivate: (bill: Bill) => void;
+  onReactivate: (bill: Bill) => void;
+  onMarkPaid: (bill: Bill) => void;
+  onSkip: (bill: Bill) => void;
+  onToggleAutopay: (bill: Bill) => void;
 }) {
   const displayAmount = bill.amount ?? bill.estimated_amount;
   const isActive = bill.is_active === 1;
@@ -68,26 +71,26 @@ export function BillCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild><Link href={`/money/bills/${bill.id}`}>View details</Link></DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={() => onEdit(bill)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
               {isActive ? (
-                <DropdownMenuItem onClick={onDeactivate}>
+                <DropdownMenuItem onClick={() => onDeactivate(bill)}>
                   <PowerOff className="h-4 w-4" /> Deactivate
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={onReactivate}>
+                <DropdownMenuItem onClick={() => onReactivate(bill)}>
                   <Power className="h-4 w-4" /> Reactivate
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onMarkPaid} disabled={isPaid}>
+              <DropdownMenuItem onClick={() => onMarkPaid(bill)} disabled={isPaid}>
                 <CheckCircle className="h-4 w-4" /> {isPaid ? "Paid this period" : "Mark paid"}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSkip} disabled={isPaid}>
+              <DropdownMenuItem onClick={() => onSkip(bill)} disabled={isPaid}>
                 <SkipForward className="h-4 w-4" /> Skip
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onToggleAutopay}>
+              <DropdownMenuItem onClick={() => onToggleAutopay(bill)}>
                 <CreditCard className="h-4 w-4" /> Toggle autopay
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -102,10 +105,10 @@ export function BillCard({
         </div>
         {isActive && (
           <div className="flex gap-2">
-            <Button size="sm" onClick={onMarkPaid} disabled={isPaid} variant={isPaid ? "outline" : "default"}>
+            <Button size="sm" onClick={() => onMarkPaid(bill)} disabled={isPaid} variant={isPaid ? "outline" : "default"}>
               <CheckCircle className="h-4 w-4" /> {isPaid ? "Paid" : "Pay"}
             </Button>
-            <Button size="sm" variant="outline" onClick={onSkip} disabled={isPaid}>
+            <Button size="sm" variant="outline" onClick={() => onSkip(bill)} disabled={isPaid}>
               Skip
             </Button>
           </div>
@@ -113,4 +116,4 @@ export function BillCard({
       </div>
     </Card>
   );
-}
+});
