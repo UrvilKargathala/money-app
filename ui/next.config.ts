@@ -2,11 +2,20 @@ import type { NextConfig } from "next";
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
+  // Self-host gzip (Vercel edge compresses regardless — no-op there).
+  compress: true,
+  // Drop the X-Powered-By fingerprint header (pages + API routes).
+  poweredByHeader: false,
+  // Optimizer output preference (no next/image usage today — future-proofing).
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
   transpilePackages: ["@moneymind/api"],
   experimental: {
     // Per-icon imports for the icon barrel (lucide-react is fully ESM but
     // the barrel re-exports every icon; this keeps tree-shaking exact).
-    optimizePackageImports: ["lucide-react"],
+    // recharts is the heaviest dep (10 importers) — same treatment.
+    optimizePackageImports: ["lucide-react", "recharts"],
   },
 };
 
@@ -50,5 +59,28 @@ export default (phase: string): NextConfig => ({
       destination,
       permanent: true,
     }));
+  },
+  async headers() {
+    // Next immutably caches /_next/static/* by default — only our generated
+    // icon/manifest/OG routes need an explicit policy. Content changes only
+    // on redeploy, so a day-long public cache is safe.
+    // Next immutably caches /_next/static/* by default — only our generated
+    // icon/manifest/OG routes need an explicit policy. Content changes only
+    // on redeploy, so a day-long public cache is safe.
+    const cacheableGeneratedAsset = (source: string) => ({
+      source,
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=86400, stale-while-revalidate=86400",
+        },
+      ],
+    });
+    return [
+      cacheableGeneratedAsset("/icon"),
+      cacheableGeneratedAsset("/apple-icon"),
+      cacheableGeneratedAsset("/manifest.webmanifest"),
+      cacheableGeneratedAsset("/opengraph-image"),
+    ];
   },
 });
