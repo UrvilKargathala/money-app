@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getObjectStorage, resolveStorageKind } from "./object-storage";
+import { getObjectStorage, isStorageMisconfigured, resolveStorageKind } from "./object-storage";
 
 const ENV_KEYS = ["BLOB_READ_WRITE_TOKEN", "NODE_ENV", "VERCEL"] as const;
 const saved: Record<string, string | undefined> = {};
@@ -59,5 +59,15 @@ describe("storage provider selection", () => {
 
     await storage.delete(stored.path);
     await expect(storage.get(stored.path)).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("flags missing-token errors as misconfigured", () => {
+    expect(
+      isStorageMisconfigured(
+        new Error("Attachment storage is not configured: set the BLOB_READ_WRITE_TOKEN ...")
+      )
+    ).toBe(true);
+    expect(isStorageMisconfigured(new Error("NOT_FOUND"))).toBe(false);
+    expect(isStorageMisconfigured(null)).toBe(false);
   });
 });
