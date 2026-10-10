@@ -9,7 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import dynamic from "next/dynamic";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
+
+// ConfirmDialog mounts only when opened (ssr:false code-split).
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 import { StatCard } from "@/components/common/stat-card";
 import { todayLocalISO } from "@/lib/format";
 import { Calendar, Plus, Trash2, Copy, ChevronLeft, ChevronRight, Clock, TrendingUp, Landmark, Wallet } from "lucide-react";
@@ -672,7 +679,7 @@ export function CalendarDashboard({
           </form>
         </DialogContent>
       </Dialog>
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
