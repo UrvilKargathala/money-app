@@ -1,7 +1,7 @@
 ﻿import { Hono } from "hono";
 import { withUser } from "../db";
 import { requireAuth } from "../middleware";
-import { readJson, serverError } from "./helpers";
+import { readJson, requestIdOf, serverError } from "./helpers";
 import { parseAmount } from "../validation";
 import {
   listActiveSessions,
@@ -18,7 +18,7 @@ import {
   getAuditLogs,
   loadAllUserData,
 } from "../queries/user-lifecycle";
-import { getObjectStorage } from "../utils/object-storage";
+import { getObjectStorage, isStorageMisconfigured } from "../utils/object-storage";
 import { sniffImageKind } from "../ocr/preprocess";
 
 const userLifecycle = new Hono();
@@ -143,7 +143,7 @@ userLifecycle.post("/avatar", requireAuth, async (c) => {
     const ext = sniffed === "webp" ? "webp" : sniffed === "jpeg" ? "jpg" : "png";
     const key = `avatars/${user.user_id}/avatar.${ext}`;
     const previous = (await getProfile(user.user_id))?.avatar_url ?? null;
-    const stored = await storage.put(key, bytes);
+    const stored = await storage.put(key, bytes, `image/${sniffed}`);
     await withUser(user.user_id, (client) => {
       setAvatarUrl(client, user.user_id, stored.path);
       return Promise.resolve();
@@ -154,6 +154,12 @@ userLifecycle.post("/avatar", requireAuth, async (c) => {
     return c.json({ success: true, avatar_url: "/api/users/me/avatar" });
   } catch (err) {
     console.error("[api] avatar upload failed:", err);
+    if (isStorageMisconfigured(err)) {
+      return c.json(
+        { error: "Avatar storage is not configured. Please contact support.", code: "user_lifecycle_avatar_storage_misconfigured", requestId: requestIdOf(c) },
+        503
+      );
+    }
     return serverError(c, "user_lifecycle_upload_avatar_failed", "Could not upload the avatar. Please try again.");
   }
 });
