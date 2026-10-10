@@ -17,10 +17,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow static assets
+  // Allow static assets (incl. generated icon/manifest/OG routes, which
+  // carry no dot in the path but must serve for logged-out users + crawlers)
   if (
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon") ||
+    pathname === "/icon" ||
+    pathname === "/apple-icon" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/opengraph-image" ||
     pathname.includes(".")
   ) {
     return NextResponse.next();

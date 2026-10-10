@@ -17,16 +17,41 @@ const questrial = Questrial({
   variable: "--font-body",
 });
 
+// Absolute base for OG/Twitter image URLs. Explicit site URL wins, then the
+// Vercel production domain, then local APP_URL; localhost is dev-only.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : null) ??
+  process.env.APP_URL ??
+  "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "MoneyMind - Personal Finance Manager",
   description: "Take control of your finances with MoneyMind",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent" },
+  openGraph: {
+    title: "MoneyMind - Personal Finance Manager",
+    description: "Take control of your finances with MoneyMind",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MoneyMind - Personal Finance Manager",
+    description: "Take control of your finances with MoneyMind",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#2563EB",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#2563EB" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export default function RootLayout({
