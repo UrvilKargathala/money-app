@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { filterShortcuts, SHORTCUTS } from "@/lib/shortcuts";
 import { triggerHaptic } from "@/lib/haptics";
 
+export { useCommandPaletteHotkey } from "./command-palette-hotkey";
+
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -150,16 +152,5 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   );
 }
 
-// Global hotkey hook - call from Topbar or layout
-export function useCommandPaletteHotkey(onOpen: () => void) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        onOpen();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onOpen]);
-}
+// Global hotkey hook lives in ./command-palette-hotkey (re-exported above)
+// so eager callers don't pull the Dialog chain into their bundle.
