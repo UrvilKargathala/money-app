@@ -11,7 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileArchive, RefreshCw, Trash2, RotateCcw, Package, Activity, FileSpreadsheet } from "lucide-react";
 import { StatCard } from "@/components/common/stat-card";
-import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
+import dynamic from "next/dynamic";
+import { useConfirm } from "@/components/common/confirm-dialog";
+
+// ConfirmDialog mounts only when opened (ssr:false code-split).
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 import { toast } from "sonner";
 
 type ModuleColumn = { key: string; label: string };
@@ -426,7 +433,7 @@ export function ExportDashboard({
           )}
         </CardContent>
       </Card>
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
