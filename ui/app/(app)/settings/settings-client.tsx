@@ -280,7 +280,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(j.error || "Could not upload avatar.");
+        // requestId joins this toast to the server log line for support.
+        const ref = typeof j.requestId === "string" && j.requestId !== "" ? ` (ref ${j.requestId})` : "";
+        toast.error(`${j.error || "Could not upload avatar."}${ref}`);
         return;
       }
       toast.success("Avatar updated.");
