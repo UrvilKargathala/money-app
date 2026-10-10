@@ -1,19 +1,30 @@
 "use client";
 
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { BudgetCard } from "./budget-card";
-import { BudgetFormDialog } from "./budget-form-dialog";
 import { formatINR } from "@/lib/format";
 import { PiggyBank, Plus, ChevronLeft, ChevronRight, AlertTriangle, Download } from "lucide-react";
 import { deleteBudgetAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Dialogs are code-split (ssr:false) and mount only when opened. The inline
+// breakdown Dialog below stays (in-file, out of scope for the split).
+const BudgetFormDialog = dynamic(
+  () => import("./budget-form-dialog").then((m) => m.BudgetFormDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 type Budget = {
   id: string;
@@ -188,7 +199,7 @@ export function BudgetsDashboard({
         </Card>
       )}
 
-      <BudgetFormDialog open={formOpen} onOpenChange={setFormOpen} budget={editing} categories={categories} month={month} year={year} onSuccess={() => router.refresh()} />
+      {formOpen ? <BudgetFormDialog open={formOpen} onOpenChange={setFormOpen} budget={editing} categories={categories} month={month} year={year} onSuccess={() => router.refresh()} /> : null}
 
       <Dialog open={!!breakdown} onOpenChange={() => setBreakdown(null)}>
         <DialogContent>
@@ -209,7 +220,7 @@ export function BudgetsDashboard({
           </div>
         </DialogContent>
       </Dialog>
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
