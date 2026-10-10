@@ -15,6 +15,7 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader className="pb-4">
+        <h1 className="sr-only">Reset your MoneyMind password</h1>
         <CardTitle>Reset your password</CardTitle>
         <CardDescription>Enter your email and we&apos;ll send you a reset link.</CardDescription>
       </CardHeader>

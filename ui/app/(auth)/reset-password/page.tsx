@@ -33,6 +33,7 @@ function ResetForm() {
   return (
     <Card>
       <CardHeader className="pb-4">
+        <h1 className="sr-only">Set a new MoneyMind password</h1>
         <CardTitle>Set a new password</CardTitle>
         <CardDescription>Enter your new password below.</CardDescription>
       </CardHeader>

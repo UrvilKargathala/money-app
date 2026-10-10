@@ -17,6 +17,7 @@ export default function LoginForm() {
   return (
     <Card>
       <CardHeader className="pb-4">
+        <h1 className="sr-only">Sign in to MoneyMind</h1>
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>Sign in to your MoneyMind account</CardDescription>
       </CardHeader>

@@ -15,6 +15,7 @@ export default function SignupForm() {
   return (
     <Card>
       <CardHeader className="pb-4">
+        <h1 className="sr-only">Create your MoneyMind account</h1>
         <CardTitle>Create your account</CardTitle>
         <CardDescription>Start managing your finances today</CardDescription>
       </CardHeader>

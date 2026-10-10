@@ -14,6 +14,7 @@ export default function MagicLinkPage() {
   return (
     <Card>
       <CardHeader className="pb-4">
+        <h1 className="sr-only">MoneyMind magic link sign-in</h1>
         <CardTitle>Magic link sign-in</CardTitle>
         <CardDescription>We&apos;ll email you a one-time login link (15 min expiry).</CardDescription>
       </CardHeader>
