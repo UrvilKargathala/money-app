@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -35,16 +36,18 @@ function getBadgeVariant(pct: number) {
   return "success" as const;
 }
 
-export function BudgetCard({
+// Memoized: parent passes the stable budget object + stable id-keyed
+// callbacks, so cards re-render only when their own data changes.
+export const BudgetCard = memo(function BudgetCard({
   budget,
   onEdit,
   onDelete,
   onBreakdown,
 }: {
   budget: Budget;
-  onEdit: () => void;
-  onDelete: () => void;
-  onBreakdown: () => void;
+  onEdit: (budget: { id: string }) => void;
+  onDelete: (budget: { id: string }) => void;
+  onBreakdown: (budget: { id: string }) => void;
 }) {
   const amount = Number(budget.amount);
   const pct = Math.min(budget.utilization_pct, 100);
@@ -66,13 +69,13 @@ export function BudgetCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={() => onEdit(budget)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onBreakdown}>
+              <DropdownMenuItem onClick={() => onBreakdown(budget)}>
                 <PieChart className="h-4 w-4" /> Breakdown
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="text-error">
+              <DropdownMenuItem onClick={() => onDelete(budget)} className="text-error">
                 <Trash2 className="h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -92,4 +95,4 @@ export function BudgetCard({
       </div>
     </Card>
   );
-}
+});

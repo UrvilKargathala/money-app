@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -72,18 +72,28 @@ export function BudgetsDashboard({
 
   const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
-  const handleDelete = (id: string) => {
-    confirmDelete({
-      title: "Delete this budget?",
-      description: "Rollovers and alerts for this budget go with it. This cannot be undone.",
-      onDelete: () => deleteBudgetAction(id),
-      successMsg: "Budget deleted",
-      onDone: () => router.refresh(),
-    });
-  };
+  const handleEditBudget = useCallback((b: { id: string }) => {
+    const found = budgets.find((x) => x.id === b.id) ?? null;
+    setEditing(found);
+    setFormOpen(true);
+  }, [budgets]);
+
+  const handleDelete = useCallback(
+    (b: { id: string }) => {
+      confirmDelete({
+        title: "Delete this budget?",
+        description: "Rollovers and alerts for this budget go with it. This cannot be undone.",
+        onDelete: () => deleteBudgetAction(b.id),
+        successMsg: "Budget deleted",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmDelete, router]
+  );
 
   const breakdownReq = useRef(0);
-  const handleBreakdown = async (id: string) => {
+  const handleBreakdown = useCallback(async (b: { id: string }) => {
+    const id = b.id;
     const reqId = ++breakdownReq.current;
     try {
       const res = await fetch(`/api/budgets/${id}/breakdown`);
@@ -94,7 +104,7 @@ export function BudgetsDashboard({
     } catch {
       if (breakdownReq.current === reqId) toast.error("Could not load breakdown");
     }
-  };
+  }, []);
 
   const prevMonth = () => {
     let m = month - 1, y = year;
@@ -107,7 +117,10 @@ export function BudgetsDashboard({
     router.push(`/money/budgets?month=${m}&year=${y}`);
   };
 
-  const monthName = new Date(year, month - 1).toLocaleString("en-IN", { month: "long", year: "numeric" });
+  const monthName = useMemo(
+    () => new Date(year, month - 1).toLocaleString("en-IN", { month: "long", year: "numeric" }),
+    [year, month]
+  );
 
   return (
     <div className="space-y-6">
@@ -174,12 +187,9 @@ export function BudgetsDashboard({
             <BudgetCard
               key={b.id}
               budget={b}
-              onEdit={() => {
-                setEditing(b);
-                setFormOpen(true);
-              }}
-              onDelete={() => handleDelete(b.id)}
-              onBreakdown={() => handleBreakdown(b.id)}
+              onEdit={handleEditBudget}
+              onDelete={handleDelete}
+              onBreakdown={handleBreakdown}
             />
           ))}
         </div>
