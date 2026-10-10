@@ -1,23 +1,43 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { TransactionRow } from "./transaction-row";
-import { TransactionFormDialog } from "./transaction-form-dialog";
 import { TransactionFilters } from "./transaction-filters";
 import { formatINR } from "@/lib/format";
 import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload, WandSparkles, Tags } from "lucide-react";
-import { TransactionImportDialog } from "./transaction-import-dialog";
-import { ConfirmDialog, useConfirm, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import { useConfirm, useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { deleteTransactionAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { TransactionToolsDialog } from "./transaction-tools-dialog";
-import { MerchantRulesDialog } from "./merchant-rules-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Dialogs are code-split (ssr:false) and mount only when opened — the Radix
+// Dialog chain stays out of this page's initial chunk.
+const TransactionFormDialog = dynamic(
+  () => import("./transaction-form-dialog").then((m) => m.TransactionFormDialog),
+  { ssr: false }
+);
+const TransactionImportDialog = dynamic(
+  () => import("./transaction-import-dialog").then((m) => m.TransactionImportDialog),
+  { ssr: false }
+);
+const TransactionToolsDialog = dynamic(
+  () => import("./transaction-tools-dialog").then((m) => m.TransactionToolsDialog),
+  { ssr: false }
+);
+const MerchantRulesDialog = dynamic(
+  () => import("./merchant-rules-dialog").then((m) => m.MerchantRulesDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 
 import type { Txn } from "@/lib/entities";
 
@@ -308,12 +328,12 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
         </div>
       )}
 
-      <TransactionFormDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
-      <TransactionImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} />
-      <TransactionToolsDialog open={!!toolsTransaction} onOpenChange={(value) => { if (!value) setToolsTransaction(null); }} transaction={toolsTransaction} tags={tags} categories={categories} />
-      <MerchantRulesDialog open={rulesOpen} onOpenChange={setRulesOpen} mappings={merchantMappings} categories={categories} />
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
-      <ConfirmDialog state={bulkConfirmState} onOpenChange={closeBulkConfirm} />
+      {formOpen ? <TransactionFormDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} /> : null}
+      {importOpen ? <TransactionImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} categories={categories} onSuccess={() => router.refresh()} /> : null}
+      {toolsTransaction ? <TransactionToolsDialog open onOpenChange={(value) => { if (!value) setToolsTransaction(null); }} transaction={toolsTransaction} tags={tags} categories={categories} /> : null}
+      {rulesOpen ? <MerchantRulesDialog open={rulesOpen} onOpenChange={setRulesOpen} mappings={merchantMappings} categories={categories} /> : null}
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
+      {bulkConfirmState ? <ConfirmDialog state={bulkConfirmState} onOpenChange={closeBulkConfirm} /> : null}
     </div>
   );
 }
