@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,9 @@ import Link from "next/link";
 
 import type { Debt } from "@/lib/entities";
 
-export function DebtCard({
+// Memoized: parent passes the stable debt object + stable (debt)-param
+// callbacks, so cards re-render only when their own data changes.
+export const DebtCard = memo(function DebtCard({
   debt,
   onEdit,
   onDelete,
@@ -18,10 +21,10 @@ export function DebtCard({
   onReopen,
 }: {
   debt: Debt;
-  onEdit: () => void;
-  onDelete: () => void;
-  onClose: () => void;
-  onReopen: () => void;
+  onEdit: (debt: Debt) => void;
+  onDelete: (debt: Debt) => void;
+  onClose: (debt: Debt) => void;
+  onReopen: (debt: Debt) => void;
 }) {
   const outstanding = Number(debt.principal_outstanding);
   const emi = Number(debt.emi_amount);
@@ -45,17 +48,17 @@ export function DebtCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild><Link href={`/wealth/debts/${debt.id}`}>View details</Link></DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
+            <DropdownMenuItem onClick={() => onEdit(debt)}>
               <Pencil className="h-4 w-4" /> Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onClose}>
+            <DropdownMenuItem onClick={() => onClose(debt)}>
               <Archive className="h-4 w-4" /> Close
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onReopen}>
+            <DropdownMenuItem onClick={() => onReopen(debt)}>
               <ArchiveRestore className="h-4 w-4" /> Reopen
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onDelete} className="text-error">
+            <DropdownMenuItem onClick={() => onDelete(debt)} className="text-error">
               <Trash2 className="h-4 w-4" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -74,4 +77,4 @@ export function DebtCard({
       </div>
     </Card>
   );
-}
+});

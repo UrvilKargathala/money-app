@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useActionState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useActionState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -670,37 +670,66 @@ export function DebtsDashboard({
   const [historyDebt, setHistoryDebt] = useState<Debt | null>(null);
   const [statusDebt, setStatusDebt] = useState<Debt | null>(null);
 
-  const totalOutstanding = dashboard?.total_outstanding ?? combinedTimeline?.combined.total_outstanding ?? debts.reduce((s, d) => s + Number(d.principal_outstanding), 0);
-  const totalEmi = dashboard?.total_emi ?? dashboard?.total_monthly_emi ?? combinedTimeline?.combined.total_monthly_emi ?? debts.reduce((s, d) => s + Number(d.emi_amount || 0), 0);
+  // Fallback reduces rerun only when source data changes (were recomputed
+  // on every dialog/selection state change). Exact ?? chains preserved.
+  const totalOutstanding = useMemo(
+    () =>
+      dashboard?.total_outstanding ??
+      combinedTimeline?.combined.total_outstanding ??
+      debts.reduce((s, d) => s + Number(d.principal_outstanding), 0),
+    [dashboard, combinedTimeline, debts]
+  );
+  const totalEmi = useMemo(
+    () =>
+      dashboard?.total_emi ??
+      dashboard?.total_monthly_emi ??
+      combinedTimeline?.combined.total_monthly_emi ??
+      debts.reduce((s, d) => s + Number(d.emi_amount || 0), 0),
+    [dashboard, combinedTimeline, debts]
+  );
   const debtFreeDate = dashboard?.debt_free_date ?? combinedTimeline?.combined.debt_free_date ?? null;
 
   const [debtConfirmState, closeDebtConfirm, confirmDebtDelete] = useDeleteConfirm();
 
-  const handleDelete = (id: string) => {
-    confirmDebtDelete({
-      title: "Delete this debt?",
-      description: "Only allowed when no EMI is recorded. This cannot be undone.",
-      onDelete: () => deleteDebtAction(id),
-      successMsg: "Debt deleted",
-      onDone: () => router.refresh(),
-    });
-  };
-  const handleClose = async (id: string) => {
-    const res = await closeDebtAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Debt closed");
-      router.refresh();
-    }
-  };
-  const handleReopen = async (id: string) => {
-    const res = await reopenDebtAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Debt reopened");
-      router.refresh();
-    }
-  };
+  const handleEditDebt = useCallback((d: Debt) => {
+    setEditing(d);
+    setFormOpen(true);
+  }, []);
+
+  const handleDelete = useCallback(
+    (d: Debt) => {
+      confirmDebtDelete({
+        title: "Delete this debt?",
+        description: "Only allowed when no EMI is recorded. This cannot be undone.",
+        onDelete: () => deleteDebtAction(d.id),
+        successMsg: "Debt deleted",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmDebtDelete, router]
+  );
+  const handleClose = useCallback(
+    async (d: Debt) => {
+      const res = await closeDebtAction(d.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Debt closed");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleReopen = useCallback(
+    async (d: Debt) => {
+      const res = await reopenDebtAction(d.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Debt reopened");
+        router.refresh();
+      }
+    },
+    [router]
+  );
 
   return (
     <div className="space-y-6">
@@ -777,13 +806,10 @@ export function DebtsDashboard({
             <div key={d.id} className="space-y-2">
               <DebtCard
                 debt={d}
-                onEdit={() => {
-                  setEditing(d);
-                  setFormOpen(true);
-                }}
-                onDelete={() => handleDelete(d.id)}
-                onClose={() => handleClose(d.id)}
-                onReopen={() => handleReopen(d.id)}
+                onEdit={handleEditDebt}
+                onDelete={handleDelete}
+                onClose={handleClose}
+                onReopen={handleReopen}
               />
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" onClick={() => setHistoryDebt(d)}><History className="h-3 w-3" /> Payments</Button>
