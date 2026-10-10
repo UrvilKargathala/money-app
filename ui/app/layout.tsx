@@ -29,18 +29,27 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "MoneyMind - Personal Finance Manager",
-  description: "Take control of your finances with MoneyMind",
+  title: {
+    default: "MoneyMind - Personal Finance Manager",
+    template: "%s | MoneyMind",
+  },
+  description:
+    "MoneyMind tracks budgets, bills, subscriptions, investments, debts and goals in one secure personal finance app.",
+  robots: { index: true, follow: true },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent" },
   openGraph: {
     title: "MoneyMind - Personal Finance Manager",
-    description: "Take control of your finances with MoneyMind",
+    description:
+      "MoneyMind tracks budgets, bills, subscriptions, investments, debts and goals in one secure personal finance app.",
     type: "website",
+    siteName: "MoneyMind",
+    locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
     title: "MoneyMind - Personal Finance Manager",
-    description: "Take control of your finances with MoneyMind",
+    description:
+      "MoneyMind tracks budgets, bills, subscriptions, investments, debts and goals in one secure personal finance app.",
   },
 };
 
