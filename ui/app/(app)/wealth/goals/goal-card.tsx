@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -11,7 +12,9 @@ import Link from "next/link";
 
 import type { Goal } from "@/lib/entities";
 
-export function GoalCard({
+// Memoized: parent passes the stable goal object + stable (goal)-param
+// callbacks, so cards re-render only when their own data changes.
+export const GoalCard = memo(function GoalCard({
   goal,
   onEdit,
   onDelete,
@@ -20,11 +23,11 @@ export function GoalCard({
   onComplete,
 }: {
   goal: Goal;
-  onEdit: () => void;
-  onDelete: () => void;
-  onPause: () => void;
-  onResume: () => void;
-  onComplete: () => void;
+  onEdit: (goal: Goal) => void;
+  onDelete: (goal: Goal) => void;
+  onPause: (goal: Goal) => void;
+  onResume: (goal: Goal) => void;
+  onComplete: (goal: Goal) => void;
 }) {
   const pct = Math.min(goal.progress_pct, 100);
   const isCompleted = goal.status === "completed";
@@ -49,25 +52,25 @@ export function GoalCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild><Link href={`/wealth/goals/${goal.id}`}>View details</Link></DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={() => onEdit(goal)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
               {isPaused ? (
-                <DropdownMenuItem onClick={onResume}>
+                <DropdownMenuItem onClick={() => onResume(goal)}>
                   <Play className="h-4 w-4" /> Resume
                 </DropdownMenuItem>
               ) : !isCompleted ? (
-                <DropdownMenuItem onClick={onPause}>
+                <DropdownMenuItem onClick={() => onPause(goal)}>
                   <Pause className="h-4 w-4" /> Pause
                 </DropdownMenuItem>
               ) : null}
               {!isCompleted && (
-                <DropdownMenuItem onClick={onComplete}>
+                <DropdownMenuItem onClick={() => onComplete(goal)}>
                   <CheckCircle className="h-4 w-4" /> Complete
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-error">
+              <DropdownMenuItem onClick={() => onDelete(goal)} className="text-error">
                 <Trash2 className="h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -83,4 +86,4 @@ export function GoalCard({
       </div>
     </Card>
   );
-}
+});

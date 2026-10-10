@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -483,7 +483,7 @@ function GoalDetailDialog({ goal, open, onOpenChange }: { goal: Goal | null; ope
 // Templates section
 // ---------------------------------------------------------------------------
 
-function TemplatesSection({ templates, accounts }: { templates: Template[]; accounts: { id: string; name: string }[] }) {
+const TemplatesSection = memo(function TemplatesSection({ templates, accounts }: { templates: Template[]; accounts: { id: string; name: string }[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Template | null>(null);
@@ -557,21 +557,27 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
   };
 
   // Prepare initial values for GoalFormDialog when applying template
-  const applyGoal = draftTemplate ? {
-    id: "",
-    name: draftTemplate.name,
-    target_amount: draftTemplate.default_target_amount ?? 0,
-    target_date: (() => {
-      const d = new Date();
-      const m = draftTemplate.default_timeframe_months ?? 12;
-      d.setMonth(d.getMonth() + m);
-      return d.toISOString().slice(0,10);
-    })(),
-    priority: "medium",
-    notes: draftTemplate.description,
-    version: 1,
-    account_id: null,
-  } as unknown as Goal : null;
+  const applyGoal = useMemo(
+    () =>
+      draftTemplate
+        ? ({
+            id: "",
+            name: draftTemplate.name,
+            target_amount: draftTemplate.default_target_amount ?? 0,
+            target_date: (() => {
+              const d = new Date();
+              const m = draftTemplate.default_timeframe_months ?? 12;
+              d.setMonth(d.getMonth() + m);
+              return d.toISOString().slice(0, 10);
+            })(),
+            priority: "medium",
+            notes: draftTemplate.description,
+            version: 1,
+            account_id: null,
+          } as unknown as Goal)
+        : null,
+    [draftTemplate]
+  );
 
   return (
     <>
@@ -666,13 +672,13 @@ function TemplatesSection({ templates, accounts }: { templates: Template[]; acco
       {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Distribute windfall
 // ---------------------------------------------------------------------------
 
-function DistributeCard({ goals }: { goals: Goal[] }) {
+const DistributeCard = memo(function DistributeCard({ goals }: { goals: Goal[] }) {
   const [amount, setAmount] = useState("10000");
   const [suggestions, setSuggestions] = useState<{ goal_id: string; name: string; remaining: number; amount: number }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -688,6 +694,12 @@ function DistributeCard({ goals }: { goals: Goal[] }) {
     } catch (e) { toast.error(String(e)); }
     finally { setLoading(false); }
   };
+
+  const suggestionsTotal = useMemo(
+    () => suggestions.reduce((a, b) => a + b.amount, 0),
+    [suggestions]
+  );
+  const activeGoalsCount = useMemo(() => goals.filter((g) => g.status === "active").length, [goals]);
 
   return (
     <Card className="p-6">
@@ -713,13 +725,13 @@ function DistributeCard({ goals }: { goals: Goal[] }) {
               <p className="text-sm font-bold">{formatINR(s.amount)}</p>
             </div>
           ))}
-          <p className="text-xs text-neutral-400">Total {formatINR(suggestions.reduce((a,b)=>a+b.amount,0))} across {suggestions.length} goals</p>
+          <p className="text-xs text-neutral-400">Total {formatINR(suggestionsTotal)} across {suggestions.length} goals</p>
         </div>
       )}
-      {goals.filter((g)=>g.status==='active').length===0 && <p className="text-sm text-ink-3 mt-2">No active goals to distribute to.</p>}
+      {activeGoalsCount === 0 && <p className="text-sm text-ink-3 mt-2">No active goals to distribute to.</p>}
     </Card>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Main Dashboard
@@ -734,49 +746,70 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null);
   const [contribGoal, setContribGoal] = useState<Goal | null>(null);
 
-  const filtered = goals.filter((g) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "active") return g.status === "active";
-    if (activeTab === "paused") return g.status === "paused";
-    if (activeTab === "completed") return g.status === "completed";
-    return true;
-  });
+  const filtered = useMemo(
+    () =>
+      goals.filter((g) => {
+        if (activeTab === "all") return true;
+        if (activeTab === "active") return g.status === "active";
+        if (activeTab === "paused") return g.status === "paused";
+        if (activeTab === "completed") return g.status === "completed";
+        return true;
+      }),
+    [goals, activeTab]
+  );
 
   const [goalConfirmState, closeGoalConfirm, confirmGoalDelete] = useDeleteConfirm();
 
-  const handleDelete = (id: string) => {
-    confirmGoalDelete({
-      title: "Delete this goal?",
-      description: "Contributions, milestones and snapshots go with it. This cannot be undone.",
-      onDelete: () => deleteGoalAction(id),
-      successMsg: "Goal deleted",
-      onDone: () => router.refresh(),
-    });
-  };
-  const handlePause = async (id: string) => {
-    const res = await pauseGoalAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Goal paused");
-      router.refresh();
-    }
-  };
-  const handleResume = async (id: string) => {
-    const res = await resumeGoalAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Goal resumed");
-      router.refresh();
-    }
-  };
-  const handleComplete = async (id: string) => {
-    const res = await completeGoalAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Goal completed");
-      router.refresh();
-    }
-  };
+  const handleEditGoal = useCallback((g: Goal) => {
+    setEditing(g);
+    setFormOpen(true);
+  }, []);
+
+  const handleDelete = useCallback(
+    (g: Goal) => {
+      confirmGoalDelete({
+        title: "Delete this goal?",
+        description: "Contributions, milestones and snapshots go with it. This cannot be undone.",
+        onDelete: () => deleteGoalAction(g.id),
+        successMsg: "Goal deleted",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmGoalDelete, router]
+  );
+  const handlePause = useCallback(
+    async (g: Goal) => {
+      const res = await pauseGoalAction(g.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Goal paused");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleResume = useCallback(
+    async (g: Goal) => {
+      const res = await resumeGoalAction(g.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Goal resumed");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleComplete = useCallback(
+    async (g: Goal) => {
+      const res = await completeGoalAction(g.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Goal completed");
+        router.refresh();
+      }
+    },
+    [router]
+  );
 
   return (
     <div className="space-y-6">
@@ -838,14 +871,11 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
             <div key={g.id} className="space-y-2">
               <GoalCard
                 goal={g}
-                onEdit={() => {
-                  setEditing(g);
-                  setFormOpen(true);
-                }}
-                onDelete={() => handleDelete(g.id)}
-                onPause={() => handlePause(g.id)}
-                onResume={() => handleResume(g.id)}
-                onComplete={() => handleComplete(g.id)}
+                onEdit={handleEditGoal}
+                onDelete={handleDelete}
+                onPause={handlePause}
+                onResume={handleResume}
+                onComplete={handleComplete}
               />
               <div className="grid grid-cols-3 gap-2">
                 <Button variant="outline" size="sm" onClick={() => setContribGoal(g)}><PiggyBank className="h-3 w-3" /> Contribute</Button>
