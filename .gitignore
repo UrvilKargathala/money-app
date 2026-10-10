@@ -9,6 +9,7 @@
 !/api/
 !/ui/
 !/scripts/
+!/DOCS/
 !/.githooks/
 !/vercel.json
 !/pnpm-workspace.yaml
