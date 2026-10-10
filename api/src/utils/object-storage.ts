@@ -127,8 +127,9 @@ class VercelBlobProvider implements ObjectStorage {
     const blob = await this.#blob();
     // Real Blob (not a cast): the store is private, so uploads must use
     // access "private" — "public" is rejected with
-    // "Cannot use public access on a private store".
-    const body = new Blob([bytes], contentType ? { type: contentType } : undefined);
+    // "Cannot use public access on a private store". slice() copies the view
+    // into an exact-length ArrayBuffer (satisfies BlobPart on all TS libs).
+    const body = new Blob([bytes.slice().buffer as ArrayBuffer], contentType ? { type: contentType } : undefined);
     const result = await blob.put(key, body, {
       access: "private",
       addRandomSuffix: false,
