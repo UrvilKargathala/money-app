@@ -315,9 +315,20 @@ export function NotesDashboard({
       if (!res.ok) throw new Error();
       const clear = await decryptVaultBytes(vaultKey, new Uint8Array(await res.arrayBuffer()));
       const url = URL.createObjectURL(new Blob([clear], { type: item.file_type || "application/octet-stream" }));
-      if (preview) window.open(url, "_blank", "noopener,noreferrer");
-      else { const anchor = document.createElement("a"); anchor.href = url; anchor.download = item.file_name; anchor.click(); }
-      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      // revokeObjectURL is idempotent — scheduling twice is safe.
+      const revoke = () => URL.revokeObjectURL(url);
+      if (preview) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        // New tab fetches async: keep the original 30s window for previews.
+        window.setTimeout(revoke, 30_000);
+      } else {
+        const anchor = document.createElement("a"); anchor.href = url; anchor.download = item.file_name; anchor.click();
+        // Download captures the URL synchronously: release promptly instead
+        // of holding megabytes for 30s. Short fallback covers edge cases.
+        if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(revoke);
+        else window.setTimeout(revoke, 1000);
+        window.setTimeout(revoke, 5_000);
+      }
     } catch { toast.error("Could not decrypt this attachment."); }
   }
 
