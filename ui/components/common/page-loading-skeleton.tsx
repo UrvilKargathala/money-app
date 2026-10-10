@@ -80,7 +80,8 @@ export function AppPageSkeleton() {
 
 export function AuthPageSkeleton() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sunken p-6" aria-label="Loading authentication page">
+    <div className="flex min-h-screen items-center justify-center bg-sunken p-6" role="status" aria-label="Loading authentication page">
+      <span className="sr-only">Loading authentication page</span>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 pb-4">
           <Skeleton className="mx-auto h-12 w-12 rounded-2xl" />
@@ -100,7 +101,8 @@ export function AuthPageSkeleton() {
 
 export function PricingPageSkeleton() {
   return (
-    <div className="min-h-screen bg-sunken p-6" aria-label="Loading pricing page">
+    <div className="min-h-screen bg-sunken p-6" role="status" aria-label="Loading pricing page">
+      <span className="sr-only">Loading pricing page</span>
       <div className="mx-auto max-w-6xl space-y-10">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-40" />
