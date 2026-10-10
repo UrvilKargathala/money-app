@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -118,51 +118,90 @@ export function InvestmentsDashboard({
   const [installmentDate, setInstallmentDate] = useState(todayLocalISO());
   const [installmentPending, setInstallmentPending] = useState(false);
 
-  const totalInvested = summary?.total_invested ?? investments.reduce((s, i) => s + Number(i.units) * Number(i.buy_price), 0);
-  const totalCurrent = summary?.total_current ?? investments.reduce((s, i) => s + Number(i.units) * Number(i.current_price), 0);
-  const totalReturn = summary?.total_return ?? totalCurrent - totalInvested;
-  const returnPct = summary?.return_pct ?? (totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0);
+  // Portfolio totals in one pass (were 2 full Number()-coercing reduces +
+  // derived chains rerun on every tab/dialog state change).
+  const totals = useMemo(() => {
+    if (summary) {
+      return {
+        invested: summary.total_invested,
+        current: summary.total_current,
+        ret: summary.total_return,
+        pct: summary.return_pct,
+      };
+    }
+    let invested = 0;
+    let current = 0;
+    for (const i of investments) {
+      invested += Number(i.units) * Number(i.buy_price);
+      current += Number(i.units) * Number(i.current_price);
+    }
+    const ret = current - invested;
+    return { invested, current, ret, pct: invested > 0 ? (ret / invested) * 100 : 0 };
+  }, [summary, investments]);
+  const totalInvested = totals.invested;
+  const totalCurrent = totals.current;
+  const totalReturn = totals.ret;
+  const returnPct = totals.pct;
 
-  const investmentOpts = investments.map((i) => ({ id: i.id, name: i.name }));
+  const investmentOpts = useMemo(() => investments.map((i) => ({ id: i.id, name: i.name })), [investments]);
+
+  const dividendsTotal = useMemo(() => dividends.reduce((s, d) => s + Number(d.amount), 0), [dividends]);
 
   const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
-  const handleDelete = (id: string) => {
-    confirmDelete({
-      title: "Delete this holding?",
-      description: "Its price history and payouts stay in reports. This cannot be undone.",
-      onDelete: () => deleteInvestmentAction(id),
-      successMsg: "Deleted",
-      onDone: () => router.refresh(),
-    });
-  };
+  const handleEditInvestment = useCallback((inv: Investment) => {
+    setEditing(inv);
+    setFormOpen(true);
+  }, []);
 
-  const handleDeleteSip = (id: string) => {
-    confirmDelete({
-      title: "Delete this SIP?",
-      description: "Scheduled installments stop. Past installments are kept. This cannot be undone.",
-      onDelete: () => deleteSipAction(id),
-      successMsg: "SIP deleted",
-      onDone: () => router.refresh(),
-    });
-  };
+  const handleDelete = useCallback(
+    (inv: Investment) => {
+      confirmDelete({
+        title: "Delete this holding?",
+        description: "Its price history and payouts stay in reports. This cannot be undone.",
+        onDelete: () => deleteInvestmentAction(inv.id),
+        successMsg: "Deleted",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmDelete, router]
+  );
 
-  const handlePause = async (id: string) => {
-    const res = await pauseSip(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("SIP paused");
-      router.refresh();
-    }
-  };
-  const handleResume = async (id: string) => {
-    const res = await resumeSip(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("SIP resumed");
-      router.refresh();
-    }
-  };
+  const handleDeleteSip = useCallback(
+    (id: string) => {
+      confirmDelete({
+        title: "Delete this SIP?",
+        description: "Scheduled installments stop. Past installments are kept. This cannot be undone.",
+        onDelete: () => deleteSipAction(id),
+        successMsg: "SIP deleted",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmDelete, router]
+  );
+
+  const handlePause = useCallback(
+    async (id: string) => {
+      const res = await pauseSip(id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("SIP paused");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleResume = useCallback(
+    async (id: string) => {
+      const res = await resumeSip(id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("SIP resumed");
+        router.refresh();
+      }
+    },
+    [router]
+  );
 
   const handleInstallment = async () => {
     if (!installmentSip) return;
@@ -262,15 +301,9 @@ export function InvestmentsDashboard({
                 <div key={inv.id} className="space-y-2">
                   <InvestmentCard
                     investment={inv}
-                    onEdit={() => {
-                      setEditing(inv);
-                      setFormOpen(true);
-                    }}
-                    onDelete={() => handleDelete(inv.id)}
-                    onUpdatePrice={() => {
-                      setEditing(inv);
-                      setFormOpen(true);
-                    }}
+                    onEdit={handleEditInvestment}
+                    onDelete={handleDelete}
+                    onUpdatePrice={handleEditInvestment}
                   />
                   <Button
                     variant="ghost"
@@ -444,7 +477,7 @@ export function InvestmentsDashboard({
               <Card className="p-3 flex items-center justify-between">
                 <span className="text-sm text-ink-3">Total payouts</span>
                 <span className="text-sm font-bold font-heading">
-                  {formatINR(dividends.reduce((s, d) => s + Number(d.amount), 0))} • {dividends.length} records
+                  {formatINR(dividendsTotal)} • {dividends.length} records
                 </span>
               </Card>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

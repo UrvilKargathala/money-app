@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,9 @@ import Link from "next/link";
 
 import type { Investment } from "@/lib/entities";
 
-export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: { investment: Investment; onEdit: () => void; onDelete: () => void; onUpdatePrice: () => void }) {
+// Memoized: parent passes the stable investment object + stable
+// (investment)-param callbacks, so cards re-render only on data change.
+export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: { investment: Investment; onEdit: (investment: Investment) => void; onDelete: (investment: Investment) => void; onUpdatePrice: (investment: Investment) => void }) {
   const invested = Number(investment.units) * Number(investment.buy_price);
   const current = Number(investment.units) * Number(investment.current_price);
   const pnl = current - invested;
@@ -46,13 +49,13 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild><Link href={`/wealth/investments/${investment.id}`}>View details</Link></DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
+            <DropdownMenuItem onClick={() => onEdit(investment)}>
               <Pencil className="h-4 w-4" /> Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onUpdatePrice}>
+            <DropdownMenuItem onClick={() => onUpdatePrice(investment)}>
               <TrendingUp className="h-4 w-4" /> Update price
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete} className="text-error">
+            <DropdownMenuItem onClick={() => onDelete(investment)} className="text-error">
               <Trash2 className="h-4 w-4" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -79,4 +82,4 @@ export function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: 
       </div>
     </Card>
   );
-}
+});
