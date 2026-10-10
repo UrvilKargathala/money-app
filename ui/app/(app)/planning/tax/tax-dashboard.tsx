@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useActionState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,14 +9,24 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog, useDeleteConfirm } from "@/components/common/confirm-dialog";
+import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TaxInvestmentDialog } from "./tax-investment-dialog";
 import { formatINR } from "@/lib/format";
+
+// Dialogs are code-split (ssr:false) and mount only when opened. In-file
+// salary/ITR dialogs below stay (out of scope for the split).
+const TaxInvestmentDialog = dynamic(
+  () => import("./tax-investment-dialog").then((m) => m.TaxInvestmentDialog),
+  { ssr: false }
+);
+const ConfirmDialog = dynamic(
+  () => import("@/components/common/confirm-dialog").then((m) => m.ConfirmDialog),
+  { ssr: false }
+);
 import { Calculator, Plus, Download, Trash2, Pencil, Wallet, TrendingUp, Lightbulb, FileCheck, Briefcase } from "lucide-react";
 import { deleteTaxInvestmentAction, upsertSalary, patchSalary, createItrDoc, updateItrDoc, deleteItrDocAction, suggestItrDocs } from "./actions";
 import { toast } from "sonner";
@@ -643,10 +654,10 @@ export function TaxDashboard({
         </TabsContent>
       </Tabs>
 
-      <TaxInvestmentDialog open={formOpen} onOpenChange={setFormOpen} investment={editing} sections={sections} fy={fy} onSuccess={() => router.refresh()} />
+      {formOpen ? <TaxInvestmentDialog open={formOpen} onOpenChange={setFormOpen} investment={editing} sections={sections} fy={fy} onSuccess={() => router.refresh()} /> : null}
       <SalaryDialog open={salaryOpen} onOpenChange={setSalaryOpen} salary={salary} fy={fy} onSuccess={() => router.refresh()} />
       <ItrDialog open={itrOpen} onOpenChange={setItrOpen} doc={itrEditing} fy={fy} onSuccess={() => router.refresh()} />
-      <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} />
+      {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );
 }
