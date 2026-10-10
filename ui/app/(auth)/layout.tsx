@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         <span className="text-xl font-bold font-heading text-ink-1">MoneyMind</span>
       </Link>
-      <div className="w-full max-w-[420px]">{children}</div>
+      <div className="w-full max-w-[420px]"><main id="main-content">{children}</main></div>
       <p className="mt-8 text-center text-xs text-neutral-400 font-body">
         Secure personal finance management • Your data, your control
       </p>
