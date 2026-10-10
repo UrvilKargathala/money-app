@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,54 +49,81 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
   const [editing, setEditing] = useState<Account | null>(initialEdit);
   const [transferOpen, setTransferOpen] = useState(false);
 
-  const filtered = accounts.filter((a) => {
-    if (!showInactive && a.is_active !== 1) return false;
-    if (filterType !== "all" && a.type !== filterType) return false;
-    if (search && !a.name.toLowerCase().includes(search.toLowerCase()) && !a.institution?.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  // Lowered once per render (was recomputed per account in the filter).
+  const loweredSearch = search.toLowerCase();
+  const filtered = useMemo(
+    () =>
+      accounts.filter((a) => {
+        if (!showInactive && a.is_active !== 1) return false;
+        if (filterType !== "all" && a.type !== filterType) return false;
+        if (search && !a.name.toLowerCase().includes(loweredSearch) && !a.institution?.toLowerCase().includes(loweredSearch)) return false;
+        return true;
+      }),
+    [accounts, showInactive, filterType, search, loweredSearch]
+  );
 
-  const activeAccounts = accounts.filter((a) => a.is_active === 1);
-  const totalAssets = activeAccounts.filter((a) => a.is_asset === 1).reduce((s, a) => s + a.balance, 0);
-  const totalLiabilities = activeAccounts.filter((a) => a.is_asset === 0).reduce((s, a) => s + Math.abs(a.balance), 0);
-  const net = totalAssets - totalLiabilities;
-
-  const handleDeactivate = async (id: string) => {
-    const res = await deactivateAccountAction(id);
-    if (!res || res.error) toast.error(res?.error || "Could not deactivate.");
-    else {
-      toast.success("Account deactivated");
-      router.refresh();
+  const activeAccounts = useMemo(() => accounts.filter((a) => a.is_active === 1), [accounts]);
+  const totals = useMemo(() => {
+    let assets = 0;
+    let liabilities = 0;
+    for (const a of activeAccounts) {
+      if (a.is_asset === 1) assets += a.balance;
+      else liabilities += Math.abs(a.balance);
     }
-  };
-  const handleReactivate = async (id: string) => {
-    const res = await reactivateAccountAction(id);
-    if (!res || res.error) toast.error(res?.error || "Could not reactivate.");
-    else {
-      toast.success("Account reactivated");
-      router.refresh();
-    }
-  };
-  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
+    return { assets, liabilities, net: assets - liabilities };
+  }, [activeAccounts]);
+  const totalAssets = totals.assets;
+  const totalLiabilities = totals.liabilities;
+  const net = totals.net;
+  // Stable transfer options (were a new array+objects every render).
+  const transferOpts = useMemo(() => activeAccounts.map((a) => ({ id: a.id, name: a.name })), [activeAccounts]);
 
-  const handleDelete = (id: string) => {
-    confirmDelete({
-      title: "Delete this account?",
-      description: "Only allowed if it has zero transactions and zero balance. This cannot be undone.",
-      onDelete: () => deleteAccountAction(id),
-      successMsg: "Account deleted",
-      onDone: () => router.refresh(),
-    });
-  };
-
-  const openCreate = () => {
-    setEditing(null);
-    setFormOpen(true);
-  };
-  const openEdit = (a: Account) => {
+  const handleEditAccount = useCallback((a: Account) => {
     setEditing(a);
     setFormOpen(true);
-  };
+  }, []);
+
+  const handleDeactivate = useCallback(
+    async (a: Account) => {
+      const res = await deactivateAccountAction(a.id);
+      if (!res || res.error) toast.error(res?.error || "Could not deactivate.");
+      else {
+        toast.success("Account deactivated");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleReactivate = useCallback(
+    async (a: Account) => {
+      const res = await reactivateAccountAction(a.id);
+      if (!res || res.error) toast.error(res?.error || "Could not reactivate.");
+      else {
+        toast.success("Account reactivated");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
+
+  const handleDelete = useCallback(
+    (a: Account) => {
+      confirmDelete({
+        title: "Delete this account?",
+        description: "Only allowed if it has zero transactions and zero balance. This cannot be undone.",
+        onDelete: () => deleteAccountAction(a.id),
+        successMsg: "Account deleted",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmDelete, router]
+  );
+
+  const openCreate = useCallback(() => {
+    setEditing(null);
+    setFormOpen(true);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -170,10 +197,10 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
             <AccountCard
               key={a.id}
               account={a}
-              onEdit={() => openEdit(a)}
-              onDeactivate={() => handleDeactivate(a.id)}
-              onReactivate={() => handleReactivate(a.id)}
-              onDelete={() => handleDelete(a.id)}
+              onEdit={handleEditAccount}
+              onDeactivate={handleDeactivate}
+              onReactivate={handleReactivate}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -188,7 +215,7 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
         onSuccess={() => router.refresh()}
       />
       ) : null}
-      {transferOpen ? <TransferDialog open={transferOpen} onOpenChange={setTransferOpen} accounts={activeAccounts.map((a) => ({ id: a.id, name: a.name }))} onSuccess={() => router.refresh()} /> : null}
+      {transferOpen ? <TransferDialog open={transferOpen} onOpenChange={setTransferOpen} accounts={transferOpts} onSuccess={() => router.refresh()} /> : null}
       {confirmState ? <ConfirmDialog state={confirmState} onOpenChange={closeConfirm} /> : null}
     </div>
   );

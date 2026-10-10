@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,9 @@ import Link from "next/link";
 
 import type { Account } from "@/lib/entities";
 
-export function AccountCard({
+// Memoized: parent passes the stable account object + stable (account)-param
+// callbacks, so rows re-render only when their own data changes.
+export const AccountCard = memo(function AccountCard({
   account,
   creditUtilization,
   onEdit,
@@ -21,10 +24,10 @@ export function AccountCard({
 }: {
   account: Account;
   creditUtilization?: number | null;
-  onEdit: () => void;
-  onDeactivate: () => void;
-  onReactivate: () => void;
-  onDelete: () => void;
+  onEdit: (account: Account) => void;
+  onDeactivate: (account: Account) => void;
+  onReactivate: (account: Account) => void;
+  onDelete: (account: Account) => void;
 }) {
   const isActive = account.is_active === 1;
   const isCredit = account.type === "credit_card";
@@ -48,20 +51,20 @@ export function AccountCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={() => onEdit(account)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
               {isActive ? (
-                <DropdownMenuItem onClick={onDeactivate}>
+                <DropdownMenuItem onClick={() => onDeactivate(account)}>
                   <PowerOff className="h-4 w-4" /> Deactivate
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={onReactivate}>
+                <DropdownMenuItem onClick={() => onReactivate(account)}>
                   <Power className="h-4 w-4" /> Reactivate
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-error">
+              <DropdownMenuItem onClick={() => onDelete(account)} className="text-error">
                 <Trash2 className="h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -96,4 +99,4 @@ export function AccountCard({
       <Button variant="outline" size="sm" asChild className="mt-auto"><Link href={`/money/accounts/${account.id}`}>View details and history</Link></Button>
     </Card>
   );
-}
+});
