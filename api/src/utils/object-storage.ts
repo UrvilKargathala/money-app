@@ -21,7 +21,7 @@ export type StoredObject = {
 };
 
 export interface ObjectStorage {
-  put(key: string, bytes: Uint8Array): Promise<StoredObject>;
+  put(key: string, bytes: Uint8Array, contentType?: string): Promise<StoredObject>;
   get(path: string): Promise<Uint8Array>;
   delete(path: string): Promise<void>;
 }
@@ -105,22 +105,47 @@ class LocalFileProvider implements ObjectStorage {
 }
 
 class VercelBlobProvider implements ObjectStorage {
+  // Server-only token read: this module is imported by API routes alone,
+  // never by client components, so the secret never reaches the browser.
+  #token(): string {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
+      throw new Error(
+        "Attachment storage is not configured: set the BLOB_READ_WRITE_TOKEN " +
+          "environment variable in your Vercel project (Storage → Blob → connect)."
+      );
+    }
+    return token;
+  }
+
   async #blob(): Promise<typeof import("@vercel/blob")> {
     return import("@vercel/blob");
   }
 
-  async put(key: string, bytes: Uint8Array): Promise<StoredObject> {
+  async put(key: string, bytes: Uint8Array, contentType?: string): Promise<StoredObject> {
+    const token = this.#token();
     const blob = await this.#blob();
-    const result = await blob.put(key, bytes as unknown as Blob, {
-      access: "public",
+    // Real Blob (not a cast): the store is private, so uploads must use
+    // access "private" — "public" is rejected with
+    // "Cannot use public access on a private store".
+    const body = new Blob([bytes], contentType ? { type: contentType } : undefined);
+    const result = await blob.put(key, body, {
+      access: "private",
       addRandomSuffix: false,
+      ...(contentType ? { contentType } : {}),
+      token,
     });
     // Persist the full URL - get()/delete() need nothing else.
     return { path: result.url };
   }
 
   async get(path: string): Promise<Uint8Array> {
-    const res = await fetch(path);
+    // Private blobs 403 anonymous reads: our download endpoints run
+    // server-side and proxy the bytes through authed routes, so Bearer here
+    // never leaks to the client.
+    const res = await fetch(path, {
+      headers: { authorization: `Bearer ${this.#token()}` },
+    });
     if (!res.ok) throw new Error("NOT_FOUND");
     return new Uint8Array(await res.arrayBuffer());
   }
@@ -129,6 +154,14 @@ class VercelBlobProvider implements ObjectStorage {
     const blob = await this.#blob();
     await blob.del(path);
   }
+}
+
+/** True when err is the missing-token misconfiguration (deserves a 503, not a 500). */
+export function isStorageMisconfigured(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    err.message.includes("BLOB_READ_WRITE_TOKEN")
+  );
 }
 
 let memoryProvider: MemoryProvider | null = null;
