@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,9 @@ function statusBadge(s: string) {
   }
 }
 
-export function SubscriptionCard({
+// Memoized: parent passes the stable sub object + stable (sub)-param
+// callbacks, so rows re-render only when their own data changes.
+export const SubscriptionCard = memo(function SubscriptionCard({
   sub,
   onEdit,
   onCancel,
@@ -32,11 +35,11 @@ export function SubscriptionCard({
   onRenew,
 }: {
   sub: Sub;
-  onEdit: () => void;
-  onCancel: () => void;
-  onPause: () => void;
-  onResume: () => void;
-  onRenew: () => void;
+  onEdit: (sub: Sub) => void;
+  onCancel: (sub: Sub) => void;
+  onPause: (sub: Sub) => void;
+  onResume: (sub: Sub) => void;
+  onRenew: (sub: Sub) => void;
 }) {
   const isActive = sub.status === "active";
   const isPaused = sub.status === "paused";
@@ -55,24 +58,24 @@ export function SubscriptionCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild><Link href={`/money/subscriptions/${sub.id}`}>View details</Link></DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={() => onEdit(sub)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
               {isActive && (
-                <DropdownMenuItem onClick={onPause}>
+                <DropdownMenuItem onClick={() => onPause(sub)}>
                   <Pause className="h-4 w-4" /> Pause
                 </DropdownMenuItem>
               )}
               {isPaused && (
-                <DropdownMenuItem onClick={onResume}>
+                <DropdownMenuItem onClick={() => onResume(sub)}>
                   <Play className="h-4 w-4" /> Resume
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={onRenew}>
+              <DropdownMenuItem onClick={() => onRenew(sub)}>
                 <RefreshCw className="h-4 w-4" /> Renew
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onCancel} className="text-error">
+              <DropdownMenuItem onClick={() => onCancel(sub)} className="text-error">
                 <Trash2 className="h-4 w-4" /> Cancel
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -99,16 +102,16 @@ export function SubscriptionCard({
           <p className="text-lg font-bold font-heading text-ink-1">{formatINR(sub.amount)}</p>
         </div>
         {isActive && (
-          <Button size="sm" onClick={onRenew}>
+          <Button size="sm" onClick={() => onRenew(sub)}>
             <RefreshCw className="h-4 w-4" /> Renew
           </Button>
         )}
         {isPaused && (
-          <Button size="sm" variant="outline" onClick={onResume}>
+          <Button size="sm" variant="outline" onClick={() => onResume(sub)}>
             <Play className="h-4 w-4" /> Resume
           </Button>
         )}
       </div>
     </Card>
   );
-}
+});

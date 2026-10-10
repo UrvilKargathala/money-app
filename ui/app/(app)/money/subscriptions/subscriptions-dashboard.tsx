@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useMembership, UpgradeCard } from "@/components/membership";
 import { Button } from "@/components/ui/button";
@@ -266,11 +266,24 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
     }
   }, [initialAudits, premium]);
 
-  const filtered = audits.filter((a) => {
-    if (a.is_dismissed === 1) return false;
-    if (filter === "all") return true;
-    return a.audit_type === filter;
-  });
+  // Filter + aggregates in one pass (were 3 separate scans per render).
+  const auditStats = useMemo(() => {
+    const visible: Audit[] = [];
+    let totalPotential = 0;
+    let activeCount = 0;
+    for (const a of audits) {
+      if (!a.is_dismissed) {
+        activeCount += 1;
+        totalPotential += a.potential_savings ?? 0;
+      } else continue;
+      if (filter !== "all" && a.audit_type !== filter) continue;
+      visible.push(a);
+    }
+    return { visible, totalPotential, activeCount };
+  }, [audits, filter]);
+  const filtered = auditStats.visible;
+  const totalPotential = auditStats.totalPotential;
+  const activeCount = auditStats.activeCount;
 
   const handleDismiss = async (auditId: string) => {
     // optimistic
@@ -288,9 +301,6 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
       setAudits(initialAudits ?? []);
     }
   };
-
-  const totalPotential = audits.filter((a) => !a.is_dismissed).reduce((s, a) => s + (a.potential_savings ?? 0), 0);
-  const activeCount = audits.filter((a) => !a.is_dismissed).length;
 
   if (planLoading) return <p role="status">Loading audits…</p>;
   if (!premium) return <UpgradeCard feature="Subscription audits" />;
@@ -463,66 +473,99 @@ export function SubscriptionsDashboard({
   const [snoozeSub, setSnoozeSub] = useState<Sub | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const filtered = subscriptions.filter((s) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "active") return s.status === "active";
-    if (activeTab === "paused") return s.status === "paused";
-    if (activeTab === "cancelled") return s.status === "cancelled";
-    return true;
-  });
+  const filtered = useMemo(
+    () =>
+      subscriptions.filter((s) => {
+        if (activeTab === "all") return true;
+        if (activeTab === "active") return s.status === "active";
+        if (activeTab === "paused") return s.status === "paused";
+        if (activeTab === "cancelled") return s.status === "cancelled";
+        return true;
+      }),
+    [subscriptions, activeTab]
+  );
 
-  const toggleExpand = (id: string) => {
+  // Header stats in one pass (were 3 separate full scans per render).
+  const headerStats = useMemo(() => {
+    let active = 0;
+    let dueSoon = 0;
+    for (const s of subscriptions) {
+      if (s.status !== "active") continue;
+      active += 1;
+      if (s.days_until_renewal >= 0 && s.days_until_renewal <= 7) dueSoon += 1;
+    }
+    return { active, dueSoon };
+  }, [subscriptions]);
+
+  const toggleExpand = useCallback((id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
-  const handleCancel = (id: string) => {
-    confirmDelete({
-      title: "Cancel this subscription?",
-      description: "Renewal tracking stops. You can re-add it later.",
-      confirmLabel: "Cancel subscription",
-      onDelete: () => cancelSubscriptionAction(id),
-      successMsg: "Subscription cancelled",
-      onDone: () => router.refresh(),
-    });
-  };
-  const handlePause = async (id: string) => {
-    const res = await pauseSubscriptionAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Paused");
-      router.refresh();
-    }
-  };
-  const handleResume = async (id: string) => {
-    const res = await resumeSubscriptionAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Resumed");
-      router.refresh();
-    }
-  };
-  const handleRenew = async (id: string) => {
-    const res = await renewSubscriptionAction(id);
-    if (res?.error) toast.error(res.error);
-    else {
-      toast.success("Renewed");
-      router.refresh();
-    }
-  };
+  const handleEdit = useCallback((s: Sub) => {
+    setEditing(s);
+    setFormOpen(true);
+  }, []);
+
+  const handleCancel = useCallback(
+    (s: Sub) => {
+      confirmDelete({
+        title: "Cancel this subscription?",
+        description: "Renewal tracking stops. You can re-add it later.",
+        confirmLabel: "Cancel subscription",
+        onDelete: () => cancelSubscriptionAction(s.id),
+        successMsg: "Subscription cancelled",
+        onDone: () => router.refresh(),
+      });
+    },
+    [confirmDelete, router]
+  );
+  const handlePause = useCallback(
+    async (s: Sub) => {
+      const res = await pauseSubscriptionAction(s.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Paused");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleResume = useCallback(
+    async (s: Sub) => {
+      const res = await resumeSubscriptionAction(s.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Resumed");
+        router.refresh();
+      }
+    },
+    [router]
+  );
+  const handleRenew = useCallback(
+    async (s: Sub) => {
+      const res = await renewSubscriptionAction(s.id);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Renewed");
+        router.refresh();
+      }
+    },
+    [router]
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold font-heading text-ink-1">Subscriptions</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">{subscriptions.filter((s) => s.status === "active").length} active • {formatINR(monthlyBurn)}/mo</p>
+          <p className="text-sm text-ink-3 font-body mt-1">{headerStats.active} active • {formatINR(monthlyBurn)}/mo</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -543,8 +586,8 @@ export function SubscriptionsDashboard({
 
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label="Monthly Burn" value={formatINR(monthlyBurn)} subtext="Active subscriptions" icon={<Wallet className="h-5 w-5" />} variant="rose" />
-        <StatCard label="Active" value={String(subscriptions.filter((s) => s.status === "active").length)} icon={<Repeat className="h-5 w-5" />} variant="success" />
-        <StatCard label="Due Soon" value={String(subscriptions.filter((s) => s.days_until_renewal >= 0 && s.days_until_renewal <= 7 && s.status === "active").length)} subtext="Within 7 days" icon={<Repeat className="h-5 w-5" />} variant="amber" />
+        <StatCard label="Active" value={String(headerStats.active)} icon={<Repeat className="h-5 w-5" />} variant="success" />
+        <StatCard label="Due Soon" value={String(headerStats.dueSoon)} subtext="Within 7 days" icon={<Repeat className="h-5 w-5" />} variant="amber" />
       </div>
 
       {audits !== undefined && <AuditsPanel audits={audits ?? []} />}
@@ -577,14 +620,11 @@ export function SubscriptionsDashboard({
             <div key={s.id} className="space-y-2">
               <SubscriptionCard
                 sub={s}
-                onEdit={() => {
-                  setEditing(s);
-                  setFormOpen(true);
-                }}
-                onCancel={() => handleCancel(s.id)}
-                onPause={() => handlePause(s.id)}
-                onResume={() => handleResume(s.id)}
-                onRenew={() => handleRenew(s.id)}
+                onEdit={handleEdit}
+                onCancel={handleCancel}
+                onPause={handlePause}
+                onResume={handleResume}
+                onRenew={handleRenew}
               />
               <div className="grid grid-cols-3 gap-2">
                 <Button variant="outline" size="sm" onClick={() => setPaymentsSub(s)}><History className="h-3 w-3" /> Payments</Button>
