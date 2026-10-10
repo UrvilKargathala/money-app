@@ -10,7 +10,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-[5rem] items-center justify-around border-t border-line bg-surface px-2 pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Primary" className="fixed bottom-0 left-0 right-0 z-40 flex h-[5rem] items-center justify-around border-t border-line bg-surface px-2 pb-[env(safe-area-inset-bottom)] lg:hidden">
       {BOTTOM_NAV_ITEMS.slice(0, 2).map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
         const Icon = item.icon;
@@ -18,12 +18,13 @@ export function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors min-w-[60px]",
               isActive ? "text-primary-600 dark:text-[#BFDBFE]" : "text-ink-3"
             )}
           >
-            <Icon className={cn("h-5 w-5", isActive && "text-primary-600 dark:text-[#BFDBFE]")} />
+            <Icon aria-hidden="true" className={cn("h-5 w-5", isActive && "text-primary-600 dark:text-[#BFDBFE]")} />
             <span>{item.label}</span>
           </Link>
         );
@@ -35,7 +36,7 @@ export function BottomNav() {
         aria-label="Add transaction"
         className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-colors -mt-4"
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-6 w-6" aria-hidden="true" />
       </Link>
 
       {BOTTOM_NAV_ITEMS.slice(2).map((item) => {
@@ -45,12 +46,13 @@ export function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors min-w-[60px]",
               isActive ? "text-primary-600 dark:text-[#BFDBFE]" : "text-ink-3"
             )}
           >
-            <Icon className={cn("h-5 w-5", isActive && "text-primary-600 dark:text-[#BFDBFE]")} />
+            <Icon aria-hidden="true" className={cn("h-5 w-5", isActive && "text-primary-600 dark:text-[#BFDBFE]")} />
             <span>{item.label}</span>
           </Link>
         );
