@@ -87,8 +87,8 @@ function MilestonesDisplay({ milestones, progressPct }: { milestones: Milestone[
           const m = milestones.find((x) => x.milestone_pct === pct);
           const isReached = reached.has(pct);
           return (
-            <div key={pct} className={`rounded-lg border p-3 text-center ${isReached ? "border-success/30 bg-success-soft/50 dark:bg-[#064E3B]/30" : "border-edge bg-deep"}`}>
-              <p className={`text-lg font-bold font-heading ${isReached ? "text-success-dark" : "text-neutral-400"}`}>{pct}%</p>
+            <div key={pct} className={`rounded-lg border p-3 text-center ${isReached ? "border-success/30 bg-success-soft/50 dark:border-[#064E3B] dark:bg-[#064E3B]/30" : "border-edge bg-deep"}`}>
+              <p className={`text-lg font-bold font-heading ${isReached ? "text-success-dark dark:text-[#A7F3D0]" : "text-faint"}`}>{pct}%</p>
               <p className="text-xs text-faint">{isReached ? m?.reached_date ?? "-" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
               {isReached && <Badge variant="success" className="mt-1 text-[10px]">reached</Badge>}
             </div>
