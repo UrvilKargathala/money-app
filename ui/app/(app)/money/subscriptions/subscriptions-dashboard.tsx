@@ -347,17 +347,17 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
               <div className="flex items-center gap-2">
                 <Badge variant={a.audit_type === "price_change" ? "warning" : a.audit_type === "duplicate" ? "error" : a.audit_type === "unused" ? "info" : "secondary"}>{a.audit_type.replace("_"," ")}</Badge>
                 {a.potential_savings != null && a.potential_savings > 0 && <span className="text-xs font-medium text-success">{formatINR(a.potential_savings)}/mo</span>}
-                <span className="text-xs text-neutral-400">{new Date(a.created_at).toLocaleDateString("en-IN")}</span>
+                <span className="text-xs text-faint">{new Date(a.created_at).toLocaleDateString("en-IN")}</span>
               </div>
               <p className="text-sm font-medium font-heading">{a.finding ?? "Finding not provided"}</p>
               <p className="text-xs text-faint">{a.recommendation ?? "-"}</p>
-              <p className="text-[11px] text-neutral-400">Subscription {a.subscription_id.slice(0,8)}…</p>
+              <p className="text-[11px] text-faint">Subscription {a.subscription_id.slice(0,8)}…</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => handleDismiss(a.id)} className="shrink-0"><X className="h-3 w-3" /> Dismiss</Button>
           </div>
         ))}
       </div>
-      {filtered.length > 0 && <p className="text-xs text-neutral-400 mt-3">Total potential monthly savings {formatINR(totalPotential)} across {activeCount} audits</p>}
+      {filtered.length > 0 && <p className="text-xs text-faint mt-3">Total potential monthly savings {formatINR(totalPotential)} across {activeCount} audits</p>}
     </Card>
   );
 }
@@ -428,7 +428,7 @@ function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
         <form onSubmit={saveUsage} className="space-y-1.5 border-t border-edge pt-3">
           <div className="flex items-baseline justify-between">
             <Label htmlFor={`usage-${sub.id}`}>Last used</Label>
-            <p className="text-[11px] text-neutral-400">
+            <p className="text-[11px] text-faint">
               {sub.last_used_at
                 ? `Recorded ${new Date(sub.last_used_at).toLocaleDateString("en-IN")}`
                 : "Not recorded"}
