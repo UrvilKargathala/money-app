@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
-import { FieldError, FormGrid } from "@/components/common/form-primitives";
+import { FieldError, FormGrid, toOptionalSelect, fromOptionalSelect } from "@/components/common/form-primitives";
 import { createTransaction, updateTransaction } from "./actions";
 
 type AccountOpt = { id: string; name: string };
@@ -103,9 +103,9 @@ export function TransactionFormDialog({
             <SelectValue placeholder="Select account" />
           </SelectTrigger>
           <SelectContent>
-            {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name}
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={account.id}>
+                {account.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -133,8 +133,8 @@ export function TransactionFormDialog({
       </FormGrid>
 
       <CategorySelectWithCreate
-        value={categoryId || "none"}
-        onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
+        value={toOptionalSelect(categoryId)}
+        onValueChange={(value) => setCategoryId(fromOptionalSelect(value))}
         categories={categories}
         placeholder="Select category (optional)"
       />

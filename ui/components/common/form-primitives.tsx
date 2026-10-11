@@ -15,6 +15,19 @@ export function FormGrid({ children, className }: { children: React.ReactNode; c
   return <div className={cn("grid grid-cols-2 gap-4", className)}>{children}</div>;
 }
 
+/** "No selection" sentinel for optional Selects (empty string is falsy). */
+export const NONE_OPTION = "none";
+
+/** Select value for optional fields: "" renders as the "none" option. */
+export function toOptionalSelect(value: string): string {
+  return value || NONE_OPTION;
+}
+
+/** State setter input: maps the "none" option back to "". */
+export function fromOptionalSelect(value: string): string {
+  return value === NONE_OPTION ? "" : value;
+}
+
 /** Shared dialog footer: Cancel + submit with pending state. */
 export function FormFooter({
   onCancel,
