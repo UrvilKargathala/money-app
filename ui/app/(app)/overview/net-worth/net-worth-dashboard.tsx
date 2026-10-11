@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import dynamic from "next/dynamic";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
@@ -67,15 +68,15 @@ export function NetWorthDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Net Worth</h1>
-          <p className="text-sm text-faint font-body mt-1">Assets minus liabilities</p>
-        </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Asset
-        </Button>
-      </div>
+      <PageHeader
+        title="Net Worth"
+        description="Assets minus liabilities"
+        actions={
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4" /> Add Asset
+          </Button>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label="Net Worth" value={netWorth != null ? formatINR(netWorth) : "-"} icon={<Scale className="h-5 w-5" />} variant="primary" />
