@@ -38,7 +38,7 @@ export const DebtCard = memo(function DebtCard({
           <p className="text-xs text-faint">
             {debt.type.replace(/_/g, " ")} • {rate}% • {debt.tenure_months}m
           </p>
-          <p className="text-xs text-neutral-400">Start {new Date(debt.start_date).toLocaleDateString("en-IN")}</p>
+          <p className="text-xs text-faint">Start {new Date(debt.start_date).toLocaleDateString("en-IN")}</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
