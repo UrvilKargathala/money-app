@@ -24,12 +24,12 @@ export function WidgetsGrid({ layout, seeds }: { layout?: unknown[]; seeds?: Rec
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2">
           {items.map((w) => (
-            <div key={w.id} className="rounded-xl border border-line p-4 bg-surface">
+            <div key={w.id} className="rounded-xl border border-edge p-4 bg-base">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">{w.label}</p>
                 {w.premium && <Badge className="bg-neutral-900 text-white text-[10px]">Premium</Badge>}
               </div>
-              <p className="text-xs text-ink-3 mt-1">{w.description}</p>
+              <p className="text-xs text-faint mt-1">{w.description}</p>
               <div className="mt-3"><LiveWidget id={w.id} seed={seeds?.[w.id] ?? null} /></div>
             </div>
           ))}
