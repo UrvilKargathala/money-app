@@ -132,7 +132,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                           <p className="text-sm font-medium font-heading truncate">{s.label}</p>
                           {s.description && <p className="text-xs text-faint truncate">{s.description}</p>}
                         </div>
-                        {s.premium && <Badge className="bg-neutral-900 text-white border-0">Premium</Badge>}
+                        {s.premium && <Badge className="bg-neutral-900 text-white dark:bg-[#EAF1FF] dark:text-[#111111] border-0">Premium</Badge>}
                         {s.recommended && !query && <span className="hidden" />}
                       </button>
                     );
