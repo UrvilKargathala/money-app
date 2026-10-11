@@ -30,18 +30,18 @@ export const TransactionRow = memo(
   const isExpense = txn.type === "expense";
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface p-3 hover:bg-sunken transition-colors">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-edge bg-base p-3 hover:bg-sunken transition-colors">
       <input type="checkbox" checked={selected} onChange={(event) => onSelectedChange?.(event.target.checked)} aria-label={`Select ${txn.merchant_clean || txn.description || "transaction"}`} className="h-4 w-4 rounded border-neutral-300" />
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="h-9 w-9 rounded-[10px] flex items-center justify-center shrink-0 text-xs font-bold" style={{ backgroundColor: (txn.account_color || "#2563EB") + "15", color: txn.account_color || "#2563EB" }}>
           {txn.account_name.slice(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium font-heading text-ink-1 truncate">
+          <p className="text-sm font-medium font-heading text-foreground truncate">
             {txn.merchant_clean || txn.description || (txn.type === "transfer" ? "Transfer" : "Untitled")}
           </p>
           {txn.needs_review ? <Badge variant="secondary" className="mb-1 gap-1 text-[10px]"><ScanSearch className="h-3 w-3" />Needs review</Badge> : txn.source === "import" ? <Badge variant="outline" className="mb-1 text-[10px]">Imported</Badge> : null}
-          <div className="flex items-center gap-2 text-xs text-ink-3">
+          <div className="flex items-center gap-2 text-xs text-faint">
             <span>{txn.category_name || "Uncategorized"}</span>
             <span>•</span>
             <span>{txn.account_name}</span>
@@ -61,7 +61,7 @@ export const TransactionRow = memo(
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-sm font-semibold font-heading tabular-nums ${isIncome ? "text-success" : isExpense ? "text-error" : "text-ink-2"}`}>
+        <span className={`text-sm font-semibold font-heading tabular-nums ${isIncome ? "text-success" : isExpense ? "text-error" : "text-muted-foreground"}`}>
           {isIncome ? "+" : isExpense ? "-" : ""}
           {formatINR(Number(txn.amount))}
         </span>
