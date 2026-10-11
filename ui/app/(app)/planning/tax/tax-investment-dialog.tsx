@@ -81,9 +81,9 @@ export function TaxInvestmentDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {sections.map((s) => (
-                  <SelectItem key={s.section_code} value={s.section_code}>
-                    {s.section_code} - {s.section_name}
+                {sections.map((option) => (
+                  <SelectItem key={option.section_code} value={option.section_code}>
+                    {option.section_code} - {option.section_name}
                   </SelectItem>
                 ))}
               </SelectContent>
