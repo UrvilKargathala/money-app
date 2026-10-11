@@ -81,8 +81,8 @@ export const GoalCard = memo(function GoalCard({
       <Progress value={pct} indicatorClassName={isCompleted ? "bg-success" : "bg-primary-600"} />
 
       <div className="flex justify-between text-xs">
-        <span className="text-muted-foreground">{formatINR(goal.current_amount)} saved</span>
-        <span className={pct >= 100 ? "text-success font-medium" : "text-neutral-500"}>{pct.toFixed(1)}%</span>
+        <span className="text-faint">{formatINR(goal.current_amount)} saved</span>
+        <span className={pct >= 100 ? "text-success font-medium" : "text-faint"}>{pct.toFixed(1)}%</span>
       </div>
     </Card>
   );
