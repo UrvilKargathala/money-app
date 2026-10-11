@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FieldError } from "@/components/common/form-primitives";
 import { loginAction } from "./actions";
 import { useSearchParams } from "next/navigation";
 
@@ -45,7 +44,7 @@ export default function LoginForm() {
               error={!!state?.fieldErrors?.email}
             />
             {state?.fieldErrors?.email && (
-              <FieldError message={state.fieldErrors.email} />
+              <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.email}</p>
             )}
           </div>
 
@@ -66,7 +65,7 @@ export default function LoginForm() {
               error={!!state?.fieldErrors?.password}
             />
             {state?.fieldErrors?.password && (
-              <FieldError message={state.fieldErrors.password} />
+              <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.password}</p>
             )}
           </div>
 
