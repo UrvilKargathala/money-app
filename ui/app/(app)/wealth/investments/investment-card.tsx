@@ -67,9 +67,9 @@ export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit,
           <p className="text-xs text-faint">Invested</p>
           <p className="text-base font-bold font-heading text-foreground">{formatINR(invested)}</p>
         </div>
-        <div className="rounded-lg border border-primary-200 bg-info-soft p-3 dark:bg-[#1E1E1E]/40">
-          <p className="text-xs text-primary-700">Current</p>
-          <p className="text-base font-bold font-heading text-primary-700">{formatINR(current)}</p>
+        <div className="rounded-lg border border-primary-200 bg-info-soft p-3 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40">
+          <p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Current</p>
+          <p className="text-base font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{formatINR(current)}</p>
         </div>
       </div>
 
