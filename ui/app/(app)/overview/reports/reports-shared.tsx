@@ -5,7 +5,7 @@ import { formatINR } from "@/lib/format";
 export const PIE_COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#EC4899", "#14B8A6", "#F97316", "#6366F1", "#0EA5E9", "#A855F7"];
 
 export function EmptyState({ message }: { message: string }) {
-  return <p className="text-sm text-ink-3 py-8 text-center">{message}</p>;
+  return <p className="text-sm text-faint py-8 text-center">{message}</p>;
 }
 
 export type CashflowRow = { month: string; income: number; expense: number; net?: number };
