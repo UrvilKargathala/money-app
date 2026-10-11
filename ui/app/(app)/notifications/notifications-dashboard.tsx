@@ -81,7 +81,7 @@ function SseIndicator() {
         <Radio className="h-3 w-3" /> {status === "idle" ? "Not checked" : status === "live" ? "Up to date" : status === "checking" ? "Checking" : "Offline"}
       </span>
       {latestCount !== null && <span className="text-faint">{latestCount} new since 1m</span>}
-      {lastChecked && <span className="hidden sm:inline text-neutral-400">{new Date(lastChecked).toLocaleTimeString("en-IN")}</span>}
+      {lastChecked && <span className="hidden sm:inline text-faint">{new Date(lastChecked).toLocaleTimeString("en-IN")}</span>}
       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={poll} disabled={status === "checking"}>
         {status === "checking" ? "Checking…" : "Check for new"}
       </Button>
@@ -416,7 +416,7 @@ export function NotificationsDashboard({
                         {n.is_dismissed ? <Badge variant="default">Dismissed</Badge> : null}
                       </p>
                       <p className="text-sm text-muted-foreground font-body mt-1">{n.message}</p>
-                      <p className="text-xs text-neutral-400 mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
+                      <p className="text-xs text-faint mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
@@ -453,7 +453,7 @@ export function NotificationsDashboard({
 
             <div className="grid gap-3 sm:grid-cols-[1fr_200px_auto]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-faint" />
                 <Input
                   placeholder="Search title or message…"
                   value={archiveSearch}
@@ -525,7 +525,7 @@ export function NotificationsDashboard({
                         {!n.is_read ? <Badge variant="error">unread</Badge> : <Badge variant="outline">read</Badge>}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">{n.message}</p>
-                      <p className="text-xs text-neutral-400 mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
+                      <p className="text-xs text-faint mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
                       {!n.is_read && !n.is_dismissed && (
@@ -572,7 +572,7 @@ export function NotificationsDashboard({
                         <th key={ch} className="p-3 text-center font-medium">
                           <span className="inline-flex items-center gap-1 justify-center">
                             {ch}
-                            {ch === "email" && emailLocked && <Lock className="h-3 w-3 text-neutral-400" />}
+                            {ch === "email" && emailLocked && <Lock className="h-3 w-3 text-faint" />}
                           </span>
                         </th>
                       ))}
