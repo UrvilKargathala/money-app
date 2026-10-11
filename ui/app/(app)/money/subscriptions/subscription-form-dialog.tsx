@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CategorySelectWithCreate } from "@/components/common/category-select-with-create";
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
-import { FieldError, FormGrid } from "@/components/common/form-primitives";
+import { FieldError, FormGrid, toOptionalSelect, fromOptionalSelect } from "@/components/common/form-primitives";
 import { createSubscription, updateSubscription } from "./actions";
 import { todayLocalISO } from "@/lib/format";
 
@@ -106,23 +106,23 @@ export function SubscriptionFormDialog({
       <FormGrid>
         <div className="space-y-2">
           <Label>Account</Label>
-          <Select value={accountId || "none"} onValueChange={(v) => setAccountId(v === "none" ? "" : v)}>
+          <Select value={toOptionalSelect(accountId)} onValueChange={(value) => setAccountId(fromOptionalSelect(value))}>
             <SelectTrigger>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No account</SelectItem>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.name}
+              {accounts.map((account) => (
+                <SelectItem key={account.id} value={account.id}>
+                  {account.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <CategorySelectWithCreate
-          value={categoryId || "none"}
-          onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
+          value={toOptionalSelect(categoryId)}
+          onValueChange={(value) => setCategoryId(fromOptionalSelect(value))}
           categories={categories}
         />
       </FormGrid>
