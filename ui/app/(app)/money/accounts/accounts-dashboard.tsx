@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { AccountCard } from "./account-card";
 import { formatINR } from "@/lib/format";
@@ -127,20 +128,20 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Accounts</h1>
-          <p className="text-sm text-faint font-body mt-1">{activeAccounts.length} active • Net {formatINR(net)}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setTransferOpen(true)}>
-            <ArrowLeftRight className="h-4 w-4" /> Transfer
-          </Button>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4" /> Add Account
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Accounts"
+        description={<>{activeAccounts.length} active • Net {formatINR(net)}</>}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setTransferOpen(true)}>
+              <ArrowLeftRight className="h-4 w-4" /> Transfer
+            </Button>
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" /> Add Account
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label="Total Assets" value={formatINR(totalAssets)} icon={<Wallet className="h-5 w-5" />} variant="success" />
