@@ -39,21 +39,21 @@ type Job = {
 };
 type StatusInfo = { total_jobs: number; completed: number; failed: number; processing: number; [k: string]: unknown };
 
-function statusVariant(s: string): "success" | "warning" | "error" | "default" | "info" {
-  const v = s.toLowerCase();
-  if (["completed", "done", "success", "ready"].includes(v)) return "success";
-  if (["failed", "error", "cancelled", "canceled"].includes(v)) return "error";
-  if (["processing", "running", "queued", "pending"].includes(v)) return "warning";
-  if (v === "healthy" || v === "ok") return "success";
+function statusVariant(status: string): "success" | "warning" | "error" | "default" | "info" {
+  const normalized = status.toLowerCase();
+  if (["completed", "done", "success", "ready"].includes(normalized)) return "success";
+  if (["failed", "error", "cancelled", "canceled"].includes(normalized)) return "error";
+  if (["processing", "running", "queued", "pending"].includes(normalized)) return "warning";
+  if (normalized === "healthy" || normalized === "ok") return "success";
   return "default";
 }
 
-function formatProgress(j: Job): number {
-  if (typeof j.progress_pct === "number") return Math.max(0, Math.min(100, j.progress_pct));
-  if (typeof j.progress === "number") return j.progress > 1 ? Math.min(100, j.progress) : Math.round(j.progress * 100);
-  const s = (j.status || "").toLowerCase();
-  if (s === "completed" || s === "done") return 100;
-  if (s === "failed") return 100;
+function formatProgress(job: Job): number {
+  if (typeof job.progress_pct === "number") return Math.max(0, Math.min(100, job.progress_pct));
+  if (typeof job.progress === "number") return job.progress > 1 ? Math.min(100, job.progress) : Math.round(job.progress * 100);
+  const normalized = (job.status || "").toLowerCase();
+  if (normalized === "completed" || normalized === "done") return 100;
+  if (normalized === "failed") return 100;
   return 0;
 }
 
@@ -191,7 +191,7 @@ export function ExportDashboard({
             return;
           }
           toast.success("Job deleted");
-          setJobs((prev) => prev.filter((x) => x.id !== id));
+          setJobs((prev) => prev.filter((job) => job.id !== id));
           router.refresh();
         } finally {
           setBusyId(null);
@@ -258,24 +258,24 @@ export function ExportDashboard({
               <p className="text-sm text-faint">No modules returned from API. Backend may be pending.</p>
             ) : (
               <div className="space-y-3 max-h-[360px] overflow-auto pr-1">
-                {modules.map((m) => (
+                {modules.map((module) => (
                   <div
-                    key={m.name}
-                    className={`rounded-lg border p-3 ${selectedModule === m.name ? "border-primary-600 bg-info-soft/40 dark:border-[#60A5FA] dark:bg-[#1E1E1E]/40" : "border-edge"}`}
+                    key={module.name}
+                    className={`rounded-lg border p-3 ${selectedModule === module.name ? "border-primary-600 bg-info-soft/40 dark:border-[#60A5FA] dark:bg-[#1E1E1E]/40" : "border-edge"}`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium text-sm font-heading">{m.label ?? m.name}</p>
-                      <Badge variant="outline" className="text-[10px]">{m.name}</Badge>
+                      <p className="font-medium text-sm font-heading">{module.label ?? module.name}</p>
+                      <Badge variant="outline" className="text-[10px]">{module.name}</Badge>
                     </div>
-                    {m.description && <p className="text-xs text-faint mt-1">{m.description}</p>}
-                    {(m.columns?.length ?? 0) > 0 && <p className="text-xs text-faint mt-1">Columns: {m.columns!.slice(0, 6).map((c) => c.label).join(", ")}{m.columns!.length > 6 ? ` +${m.columns!.length - 6} more` : ""}</p>}
+                    {module.description && <p className="text-xs text-faint mt-1">{module.description}</p>}
+                    {(module.columns?.length ?? 0) > 0 && <p className="text-xs text-faint mt-1">Columns: {module.columns!.slice(0, 6).map((col) => col.label).join(", ")}{module.columns!.length > 6 ? ` +${module.columns!.length - 6} more` : ""}</p>}
                     <Button
-                      variant={selectedModule === m.name ? "default" : "outline"}
+                      variant={selectedModule === module.name ? "default" : "outline"}
                       size="sm"
                       className="mt-2 h-7 text-xs"
-                      onClick={() => setSelectedModule((prev) => (prev === m.name ? "" : m.name))}
+                      onClick={() => setSelectedModule((prev) => (prev === module.name ? "" : module.name))}
                     >
-                      {selectedModule === m.name ? "Selected" : "Select"}
+                      {selectedModule === module.name ? "Selected" : "Select"}
                     </Button>
                   </div>
                 ))}
@@ -303,8 +303,8 @@ export function ExportDashboard({
                       <SelectValue placeholder="Select module" />
                     </SelectTrigger>
                     <SelectContent>
-                      {modules.map((m) => (
-                        <SelectItem key={m.name} value={m.name}>{m.label ?? m.name}</SelectItem>
+                      {modules.map((module) => (
+                        <SelectItem key={module.name} value={module.name}>{module.label ?? module.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -381,41 +381,41 @@ export function ExportDashboard({
             <div className="space-y-3">
               <p className="text-xs text-faint">{jobs.length} jobs • status reflects completed exports • actions: download / retry / delete</p>
               <div className="space-y-3 max-h-[560px] overflow-auto pr-1">
-                {jobs.map((j) => {
-                  const pct = formatProgress(j);
-                  const est = j.file_size ?? null;
-                  const s = (j.status || "unknown").toLowerCase();
-                  const canDownload = ["completed", "done", "success", "ready"].includes(s);
-                  const canRetry = ["failed", "error"].includes(s);
+                {jobs.map((job) => {
+                  const pct = formatProgress(job);
+                  const est = job.file_size ?? null;
+                  const normalized = (job.status || "unknown").toLowerCase();
+                  const canDownload = ["completed", "done", "success", "ready"].includes(normalized);
+                  const canRetry = ["failed", "error"].includes(normalized);
                   return (
-                    <div key={j.id} className="rounded-lg border border-edge p-4 flex flex-col gap-3">
+                    <div key={job.id} className="rounded-lg border border-edge p-4 flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold font-heading flex items-center gap-2 flex-wrap">
-                            <span className="truncate">{j.module_name ?? j.id.slice(0, 8)}</span>
-                            <Badge variant={statusVariant(j.status)} className="shrink-0">{j.status}</Badge>
-                            {j.export_type && <Badge variant="outline" className="text-[10px]">{String(j.export_type).toUpperCase()}</Badge>}
-                            {j.scope && <Badge variant="outline" className="text-[10px]">{j.scope}</Badge>}
+                            <span className="truncate">{job.module_name ?? job.id.slice(0, 8)}</span>
+                            <Badge variant={statusVariant(job.status)} className="shrink-0">{job.status}</Badge>
+                            {job.export_type && <Badge variant="outline" className="text-[10px]">{String(job.export_type).toUpperCase()}</Badge>}
+                            {job.scope && <Badge variant="outline" className="text-[10px]">{job.scope}</Badge>}
                           </p>
                           <p className="text-xs text-faint mt-1">
-                            {j.created_at ? new Date(j.created_at).toLocaleString("en-IN") : ""}{est != null ? ` • ~${Number(est).toLocaleString("en-IN")} bytes` : ""}
-                            {j.error ? ` • ${j.error}` : ""}
+                            {job.created_at ? new Date(job.created_at).toLocaleString("en-IN") : ""}{est != null ? ` • ~${Number(est).toLocaleString("en-IN")} bytes` : ""}
+                            {job.error ? ` • ${job.error}` : ""}
                           </p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {canDownload && (
                             <Button size="sm" asChild>
-                              <a href={`/api/export/jobs/${encodeURIComponent(j.id)}/download`} download>
+                              <a href={`/api/export/jobs/${encodeURIComponent(job.id)}/download`} download>
                                 <Download className="h-3 w-3" /> Download
                               </a>
                             </Button>
                           )}
                           {canRetry && (
-                            <Button variant="outline" size="sm" onClick={() => handleRetry(j.id)} disabled={busyId === j.id}>
-                              <RotateCcw className="h-3 w-3" /> {busyId === j.id ? "Retrying..." : "Retry"}
+                            <Button variant="outline" size="sm" onClick={() => handleRetry(job.id)} disabled={busyId === job.id}>
+                              <RotateCcw className="h-3 w-3" /> {busyId === job.id ? "Retrying..." : "Retry"}
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(j.id)} disabled={busyId === j.id} title="Delete job" aria-label="Delete export job">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(job.id)} disabled={busyId === job.id} title="Delete job" aria-label="Delete export job">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
