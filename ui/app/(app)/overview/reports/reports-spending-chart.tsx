@@ -63,14 +63,14 @@ export function SpendingDonut({ spendingByCategory }: { spendingByCategory: Cate
                   <span className="flex items-center gap-2 min-w-0">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <span className="truncate font-medium text-muted-foreground">{c.category}</span>
-                    <span className="text-neutral-400">({c.count})</span>
+                    <span className="text-faint">({c.count})</span>
                   </span>
                   <span className="shrink-0 font-semibold text-foreground">{formatINR(c.total)} · {c.pct}%</span>
                 </div>
               ))}
             </div>
             {spendingByCategory.length > 6 && (
-              <p className="text-center text-xs text-neutral-400">
+              <p className="text-center text-xs text-faint">
                 +{spendingByCategory.length - 6} more categories
               </p>
             )}
