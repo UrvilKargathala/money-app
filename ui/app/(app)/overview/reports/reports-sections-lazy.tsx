@@ -12,7 +12,7 @@ import type { IncomeChart } from "./reports-income-chart";
 import type { NetWorthChart } from "./reports-networth-chart";
 
 function Skeleton() {
-  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-wash" />;
+  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-soft" />;
 }
 
 const opts = { ssr: false, loading: Skeleton } as const;
