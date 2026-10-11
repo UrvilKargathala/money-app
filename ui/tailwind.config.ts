@@ -87,7 +87,9 @@ const config: Config = {
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          // rgb(): --muted-foreground holds RGB channels (deprecated hsl()
+          // here computed white — see fix commit).
+          foreground: "rgb(var(--muted-foreground) / <alpha-value>)",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
