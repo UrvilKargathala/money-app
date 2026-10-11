@@ -158,7 +158,7 @@ function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasi
             </div>
             <Badge variant={feasibilityColor(feasibility.status) as never}>{feasibilityLabel(feasibility.status)}</Badge>
           </div>
-          <p className="text-xs text-neutral-400 mt-2">Projected {feasibility.projected_date ?? "-"} • Target {projection?.target_date ?? "-"}</p>
+          <p className="text-xs text-faint mt-2">Projected {feasibility.projected_date ?? "-"} • Target {projection?.target_date ?? "-"}</p>
         </Card>
       )}
       {projection && (
@@ -170,7 +170,7 @@ function ProjectionFeasibility({ feasibility, projection }: { feasibility: Feasi
             <div><p className="text-xs text-faint">Avg monthly</p><p className="font-semibold">{formatINR(projection.avg_monthly)}</p></div>
             <div><p className="text-xs text-faint">Months to finish</p><p className="font-semibold">{projection.months_to_finish ?? "-"}</p></div>
           </div>
-          <p className="text-xs text-neutral-400 mt-2">Projected completion {projection.projected_date ?? "-"}</p>
+          <p className="text-xs text-faint mt-2">Projected completion {projection.projected_date ?? "-"}</p>
         </Card>
       )}
     </div>
@@ -725,7 +725,7 @@ const DistributeCard = memo(function DistributeCard({ goals }: { goals: Goal[] }
               <p className="text-sm font-bold">{formatINR(s.amount)}</p>
             </div>
           ))}
-          <p className="text-xs text-neutral-400">Total {formatINR(suggestionsTotal)} across {suggestions.length} goals</p>
+          <p className="text-xs text-faint">Total {formatINR(suggestionsTotal)} across {suggestions.length} goals</p>
         </div>
       )}
       {activeGoalsCount === 0 && <p className="text-sm text-faint mt-2">No active goals to distribute to.</p>}
