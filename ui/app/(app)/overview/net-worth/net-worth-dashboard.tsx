@@ -88,10 +88,10 @@ export function NetWorthDashboard({
         <Card className="p-6">
           <h2 className="font-semibold font-heading text-foreground mb-4">Trend (last {trend.length} snapshots)</h2>
           <div className="flex gap-2 overflow-x-auto">
-            {trend.map((p) => (
-              <div key={p.date} className="text-center min-w-[80px]">
-                <p className="text-xs text-faint">{new Date(p.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</p>
-                <p className="text-sm font-semibold">{formatINR(p.value)}</p>
+            {trend.map((point) => (
+              <div key={point.date} className="text-center min-w-[80px]">
+                <p className="text-xs text-faint">{new Date(point.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</p>
+                <p className="text-sm font-semibold">{formatINR(point.value)}</p>
               </div>
             ))}
           </div>
@@ -110,15 +110,15 @@ export function NetWorthDashboard({
           />
         ) : (
           <div className="space-y-3">
-            {manualAssets.map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-lg border border-edge p-3">
+            {manualAssets.map((asset) => (
+              <div key={asset.id} className="flex items-center justify-between rounded-lg border border-edge p-3">
                 <div>
-                  <p className="text-sm font-medium font-heading">{a.name}</p>
+                  <p className="text-sm font-medium font-heading">{asset.name}</p>
                   <p className="text-xs text-faint">
-                    {a.category} • {formatINR(Number(a.valuation))} • {new Date(a.acquisition_date).toLocaleDateString("en-IN")}
+                    {asset.category} • {formatINR(Number(asset.valuation))} • {new Date(asset.acquisition_date).toLocaleDateString("en-IN")}
                   </p>
                 </div>
-                <Button variant="ghost" size="icon" aria-label={`Delete asset ${a.name}`} onClick={() => handleDelete(a.id)}>
+                <Button variant="ghost" size="icon" aria-label={`Delete asset ${asset.name}`} onClick={() => handleDelete(asset.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
