@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /** Shared field-error line (was 46 copy-pasted `text-xs text-error-dark` paragraphs). */
 export function FieldError({ message, className }: { message?: string | null; className?: string }) {
   if (!message) return null;
-  return <p className={cn("text-xs text-error-dark", className)}>{message}</p>;
+  return <p className={cn("text-xs text-error-dark dark:text-[#FCA5A5]", className)}>{message}</p>;
 }
 
 /** Shared two-column form grid (was `grid grid-cols-2 gap-4` ×27). */
