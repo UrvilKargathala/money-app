@@ -493,7 +493,7 @@ export function InvestmentsDashboard({
                       <Badge variant="info">{div.type}</Badge>
                     </div>
                     <p className="text-lg font-bold font-heading">{formatINR(Number(div.amount))}</p>
-                    {div.notes && <p className="text-xs text-neutral-400">{div.notes}</p>}
+                    {div.notes && <p className="text-xs text-faint">{div.notes}</p>}
                     <div className="flex gap-2 pt-1">
                       <Button
                         variant="ghost"
