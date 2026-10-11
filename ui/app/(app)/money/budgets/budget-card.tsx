@@ -54,11 +54,11 @@ export const BudgetCard = memo(function BudgetCard({
   const isOver = budget.is_over_budget === 1 || budget.utilization_pct > 100;
 
   return (
-      <Card className={`p-5 space-y-3 ${isOver ? "border-error/20 bg-tint-error/50 dark:bg-[#7F1D1D]/30" : ""}`}>
+      <Card className={`p-5 space-y-3 ${isOver ? "border-error/20 bg-error-soft/50 dark:bg-[#7F1D1D]/30" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-semibold font-heading text-ink-1">{budget.category_name || "Overall Budget"}</p>
-          <p className="text-xs text-ink-3">Monthly • {formatINR(amount)} budgeted</p>
+          <p className="text-sm font-semibold font-heading text-foreground">{budget.category_name || "Overall Budget"}</p>
+          <p className="text-xs text-faint">Monthly • {formatINR(amount)} budgeted</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={getBadgeVariant(budget.utilization_pct)}>{budget.utilization_pct.toFixed(1)}%</Badge>
