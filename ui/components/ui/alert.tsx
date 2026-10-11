@@ -7,7 +7,7 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-surface text-ink-2 border-line",
+        default: "bg-base text-muted-foreground border-edge",
         info: "bg-info-light text-info-dark border-info/20 dark:bg-[#1E1E1E] dark:text-[#BFDBFE]",
         success: "bg-success-light text-success-dark border-success/20 dark:bg-[#064E3B] dark:text-[#A7F3D0]",
         warning: "bg-warning-light text-warning-dark border-warning/20 dark:bg-[#78350F] dark:text-[#FDE68A]",
