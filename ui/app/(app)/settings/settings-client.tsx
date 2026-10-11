@@ -15,7 +15,7 @@ import { CommandPalette } from "@/components/common/command-palette";
 import { EmptyState } from "@/components/common/empty-state";
 import { Toggle } from "@/components/ui/toggle";
 import { FormSelect } from "@/components/common/form-select";
-import { useTheme, type ThemeChoice } from "@/components/theme-provider";
+import { useTheme, type ThemeChoice } from "@/components/common/theme-provider";
 import { AVATAR_UPDATED_EVENT, AVATAR_URL } from "@/lib/avatar";
 import { prepareAvatarUpload } from "@/lib/avatar-upload";
 import { deviceName } from "@/lib/user-agent";
@@ -29,7 +29,7 @@ const PREF_GROUPS: { type: string; label: string; description: string }[] = [
   { type: "info", label: "Informational", description: "Product updates and general notices." },
 ];
 import { ConfirmDialog, useConfirm } from "@/components/common/confirm-dialog";
-import { useMembership } from "@/components/membership";
+import { useMembership } from "@/components/common/membership";
 import { WIDGETS } from "@/lib/widgets";
 import Link from "next/link";
 

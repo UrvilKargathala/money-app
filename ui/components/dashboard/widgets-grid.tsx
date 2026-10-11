@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { WIDGETS } from "@/lib/widgets";
 import { LayoutGrid } from "lucide-react";
-import { useMembership } from "@/components/membership";
+import { useMembership } from "@/components/common/membership";
 import { LiveWidget, type WidgetSeed } from "./live-widget";
 
 export function WidgetsGrid({ layout, seeds }: { layout?: unknown[]; seeds?: Record<string, WidgetSeed | null> }) {

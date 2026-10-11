@@ -3,7 +3,7 @@ import { getApiUser, getMyPlan, getMyProfile, getNotificationsUnreadCount } from
 import { Topbar } from "@/components/layout/topbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Toaster } from "@/components/ui/sonner";
-import { MembershipProvider } from "@/components/membership";
+import { MembershipProvider } from "@/components/common/membership";
 import { SessionExpiryGuard } from "@/components/common/session-expiry-guard";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
