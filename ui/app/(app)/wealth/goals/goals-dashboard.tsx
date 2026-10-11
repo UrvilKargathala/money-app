@@ -79,18 +79,18 @@ function feasibilityLabel(status: string) {
 
 function MilestonesDisplay({ milestones, progressPct }: { milestones: Milestone[]; progressPct: number }) {
   const all = [25, 50, 75, 100];
-  const reached = new Set(milestones.map((m) => m.milestone_pct));
+  const reached = new Set(milestones.map((milestone) => milestone.milestone_pct));
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium font-heading">Milestones • {milestones.length} / 4 reached</p>
       <div className="grid grid-cols-4 gap-2">
         {all.map((pct) => {
-          const m = milestones.find((x) => x.milestone_pct === pct);
+          const hit = milestones.find((milestone) => milestone.milestone_pct === pct);
           const isReached = reached.has(pct);
           return (
             <div key={pct} className={`rounded-lg border p-3 text-center ${isReached ? "border-success/30 bg-success-soft/50 dark:border-[#064E3B] dark:bg-[#064E3B]/30" : "border-edge bg-deep"}`}>
               <p className={`text-lg font-bold font-heading ${isReached ? "text-success-dark dark:text-[#A7F3D0]" : "text-faint"}`}>{pct}%</p>
-              <p className="text-xs text-faint">{isReached ? m?.reached_date ?? "-" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
+              <p className="text-xs text-faint">{isReached ? hit?.reached_date ?? "-" : `${pct > progressPct ? `${(pct - progressPct).toFixed(0)}% to go` : "pending"}`}</p>
               {isReached && <Badge variant="success" className="mt-1 text-[10px]">reached</Badge>}
             </div>
           );
@@ -129,13 +129,13 @@ function SnapshotsTimeline({ snapshots, onCreate }: { snapshots: Snapshot[]; onC
         <EmptyState icon={<Camera className="h-6 w-6" />} title="No snapshots yet" description="Contributions automatically create snapshots." />
       ) : (
         <div className="relative border-l border-edge ml-4 space-y-4">
-          {snapshots.map((s) => (
-            <div key={s.date} className="relative pl-6">
-              <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-primary-600" />
-              <p className="text-sm font-medium font-heading">{s.date}</p>
-              <p className="text-sm text-muted-foreground">{formatINR(s.current_amount)}</p>
-            </div>
-          ))}
+              {snapshots.map((snapshot) => (
+                <div key={snapshot.date} className="relative pl-6">
+                  <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-primary-600" />
+                  <p className="text-sm font-medium font-heading">{snapshot.date}</p>
+                  <p className="text-sm text-muted-foreground">{formatINR(snapshot.current_amount)}</p>
+                </div>
+              ))}
         </div>
       )}
     </div>
@@ -328,14 +328,14 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
                   <tr><th className="p-2 text-left">Date</th><th className="p-2 text-right">Amount</th><th className="p-2 text-left">Notes</th><th className="p-2 text-center">Actions</th></tr>
                 </thead>
                 <tbody>
-                  {loading ? <TableLoadingRows columns={4} /> : contributions.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-faint">No contributions yet</td></tr> : contributions.map((c) => (
-                    <tr key={c.id} className="border-t text-xs">
-                      <td className="p-2">{c.date}</td>
-                      <td className="p-2 text-right font-medium">{formatINR(c.amount)}</td>
-                      <td className="p-2 max-w-[20ch] truncate">{c.notes ?? "-"}</td>
+                  {loading ? <TableLoadingRows columns={4} /> : contributions.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-faint">No contributions yet</td></tr> : contributions.map((contribution) => (
+                    <tr key={contribution.id} className="border-t text-xs">
+                      <td className="p-2">{contribution.date}</td>
+                      <td className="p-2 text-right font-medium">{formatINR(contribution.amount)}</td>
+                      <td className="p-2 max-w-[20ch] truncate">{contribution.notes ?? "-"}</td>
                       <td className="p-2 flex gap-1 justify-center">
-                        <Button variant="ghost" size="sm" onClick={() => startEdit(c)}><Edit className="h-3 w-3" /> Edit</Button>
-                        <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDelete(c.id)}><Trash2 className="h-3 w-3" /> Delete</Button>
+                        <Button variant="ghost" size="sm" onClick={() => startEdit(contribution)}><Edit className="h-3 w-3" /> Edit</Button>
+                        <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDelete(contribution.id)}><Trash2 className="h-3 w-3" /> Delete</Button>
                       </td>
                     </tr>
                   ))}
@@ -420,12 +420,12 @@ function GoalDetailDialog({ goal, open, onOpenChange }: { goal: Goal | null; ope
       fetch(`/api/goals/${goal.id}/projection`).then(async (response) => response.ok ? response.json() : null),
       fetch(`/api/goals/${goal.id}/progress`).then(async (response) => response.ok ? response.json() : null),
     ])
-      .then(([snap, mile, feas, proj, prog]) => {
-        setSnapshots((snap.snapshots ?? []).map((s: { current_amount: string | number }) => ({ ...s, current_amount: Number((s as { current_amount: string | number }).current_amount) })));
-        setMilestones(mile.milestones ?? []);
-        setFeasibility(feas);
-        setProjection(proj);
-        setProgress(prog ? { progress_pct: prog.progress_pct } : null);
+      .then(([snapshotsRes, milestonesRes, feasibilityRes, projectionRes, progressRes]) => {
+        setSnapshots((snapshotsRes.snapshots ?? []).map((row: { current_amount: string | number }) => ({ ...row, current_amount: Number((row as { current_amount: string | number }).current_amount) })));
+        setMilestones(milestonesRes.milestones ?? []);
+        setFeasibility(feasibilityRes);
+        setProjection(projectionRes);
+        setProgress(progressRes ? { progress_pct: progressRes.progress_pct } : null);
       })
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
@@ -566,10 +566,10 @@ const TemplatesSection = memo(function TemplatesSection({ templates, accounts }:
             name: draftTemplate.name,
             target_amount: draftTemplate.default_target_amount ?? 0,
             target_date: (() => {
-              const d = new Date();
-              const m = draftTemplate.default_timeframe_months ?? 12;
-              d.setMonth(d.getMonth() + m);
-              return d.toISOString().slice(0, 10);
+              const target = new Date();
+              const monthsOut = draftTemplate.default_timeframe_months ?? 12;
+              target.setMonth(target.getMonth() + monthsOut);
+              return target.toISOString().slice(0, 10);
             })(),
             priority: "medium",
             notes: draftTemplate.description,
@@ -596,24 +596,24 @@ const TemplatesSection = memo(function TemplatesSection({ templates, accounts }:
           <p className="text-sm text-faint">No templates. Create one or use system templates.</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <div key={t.id} className="rounded-lg border border-edge p-4 space-y-2 bg-base">
+            {templates.map((template) => (
+              <div key={template.id} className="rounded-lg border border-edge p-4 space-y-2 bg-base">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-semibold font-heading">{t.icon ? `${t.icon} ` : ""}{t.name}</p>
-                    <p className="text-xs text-faint">{t.description ?? "-"}</p>
+                    <p className="text-sm font-semibold font-heading">{template.icon ? `${template.icon} ` : ""}{template.name}</p>
+                    <p className="text-xs text-faint">{template.description ?? "-"}</p>
                   </div>
-                  <Badge variant={t.is_system ? "info" : "secondary"}>{t.is_system ? "system" : "custom"}</Badge>
+                  <Badge variant={template.is_system ? "info" : "secondary"}>{template.is_system ? "system" : "custom"}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t.default_target_amount != null ? formatINR(t.default_target_amount) : "No amount"} • {t.default_timeframe_months != null ? `${t.default_timeframe_months} months` : "no timeframe"}
+                  {template.default_target_amount != null ? formatINR(template.default_target_amount) : "No amount"} • {template.default_timeframe_months != null ? `${template.default_timeframe_months} months` : "no timeframe"}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleApply(t)}><Flag className="h-3 w-3" /> Apply</Button>
-                  {!t.is_system && (
+                  <Button size="sm" variant="outline" onClick={() => handleApply(template)}><Flag className="h-3 w-3" /> Apply</Button>
+                  {!template.is_system && (
                     <>
-                      <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>Edit</Button>
-                      <Button size="sm" variant="ghost" className="text-error" onClick={() => handleDelete(t.id)}>Delete</Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setEditing(template); setOpen(true); }}>Edit</Button>
+                      <Button size="sm" variant="ghost" className="text-error" onClick={() => handleDelete(template.id)}>Delete</Button>
                     </>
                   )}
                 </div>
@@ -868,10 +868,10 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((g) => (
-            <div key={g.id} className="space-y-2">
+          {filtered.map((goal) => (
+            <div key={goal.id} className="space-y-2">
               <GoalCard
-                goal={g}
+                goal={goal}
                 onEdit={handleEditGoal}
                 onDelete={handleDelete}
                 onPause={handlePause}
@@ -879,9 +879,9 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
                 onComplete={handleComplete}
               />
               <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" size="sm" onClick={() => setContribGoal(g)}><PiggyBank className="h-3 w-3" /> Contribute</Button>
-                <Button variant="outline" size="sm" onClick={() => setDetailGoal(g)}><BarChart3 className="h-3 w-3" /> Details</Button>
-                <Button variant="outline" size="sm" onClick={() => setDetailGoal(g)}><Calendar className="h-3 w-3" /> Timeline</Button>
+                <Button variant="outline" size="sm" onClick={() => setContribGoal(goal)}><PiggyBank className="h-3 w-3" /> Contribute</Button>
+                <Button variant="outline" size="sm" onClick={() => setDetailGoal(goal)}><BarChart3 className="h-3 w-3" /> Details</Button>
+                <Button variant="outline" size="sm" onClick={() => setDetailGoal(goal)}><Calendar className="h-3 w-3" /> Timeline</Button>
               </div>
             </div>
           ))}
