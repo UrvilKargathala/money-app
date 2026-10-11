@@ -68,7 +68,7 @@ export default async function DashboardPage() {
   const attentionItems = [
     ...(bills?.overdue_count ? [{ label: "Overdue bills", value: String(bills.overdue_count), href: "/money/bills", tone: "text-error" }] : []),
     ...(budget && budget.utilization_pct >= 80 ? [{ label: "Budget used", value: `${Math.round(budget.utilization_pct)}%`, href: "/money/budgets", tone: budget.utilization_pct >= 100 ? "text-error" : "text-warning" }] : []),
-    ...(bills?.upcoming?.slice(0, 2).map((item) => ({ label: item.label, value: formatINR(item.amount), href: "/money/bills", tone: "text-ink-1" })) ?? []),
+    ...(bills?.upcoming?.slice(0, 2).map((item) => ({ label: item.label, value: formatINR(item.amount), href: "/money/bills", tone: "text-foreground" })) ?? []),
     ...lowBalanceAccounts.map((account) => ({ label: `${account.name} low balance`, value: formatINR(account.balance), href: "/money/accounts", tone: "text-warning" })),
   ].slice(0, 5);
 
@@ -87,8 +87,8 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Dashboard</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">Month-to-date financial control center</p>
+          <h1 className="text-3xl font-bold font-heading text-foreground">Dashboard</h1>
+          <p className="text-sm text-faint font-body mt-1">Month-to-date financial control center</p>
         </div>
         <Button asChild>
           <Link href="/add"><Plus className="h-4 w-4" /> Quick Add</Link>
@@ -138,18 +138,18 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {attentionItems.length === 0 ? (
-              <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-line text-center text-sm text-ink-3">
+              <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-edge text-center text-sm text-faint">
                 No urgent money tasks right now.
               </div>
             ) : (
               <div className="space-y-3">
                 {attentionItems.map((item) => (
-                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-line bg-surface p-3 transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-[#60A5FA] dark:hover:bg-[#1E1E1E]/40">
+                  <Link key={`${item.label}-${item.value}`} href={item.href} className="flex items-center justify-between rounded-lg border border-edge bg-base p-3 transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-[#60A5FA] dark:hover:bg-[#1E1E1E]/40">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
                         <CalendarClock className="h-4 w-4" />
                       </div>
-                      <p className="truncate text-sm font-medium text-ink-1">{item.label}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{item.label}</p>
                     </div>
                     <p className={`text-sm font-semibold ${item.tone}`}>{item.value}</p>
                   </Link>
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
           <CardContent>
             {recent.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-ink-3">No transactions yet.</p>
+                <p className="text-sm text-faint">No transactions yet.</p>
                 <Button asChild className="mt-4">
                   <Link href="/money/transactions">Add transaction</Link>
                 </Button>
@@ -186,20 +186,20 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {recent.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-line p-3">
+                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-edge p-3">
                     <div>
-                      <p className="text-sm font-medium font-heading text-ink-1">
+                      <p className="text-sm font-medium font-heading text-foreground">
                         {t.merchant_clean || t.description || "Transfer"}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-3">
-                        <span className="rounded-full bg-wash px-2 py-0.5">{t.category_name || "Uncategorized"}</span>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-faint">
+                        <span className="rounded-full bg-soft px-2 py-0.5">{t.category_name || "Uncategorized"}</span>
                         <span>{t.account_name}</span>
                         <span>{new Date(t.date).toLocaleDateString("en-IN")}</span>
                       </div>
                     </div>
                     <span
                       className={`text-sm font-semibold font-heading ${
-                        t.type === "income" ? "text-success" : t.type === "expense" ? "text-error" : "text-ink-2"
+                        t.type === "income" ? "text-success" : t.type === "expense" ? "text-error" : "text-muted-foreground"
                       }`}
                     >
                       {t.type === "income" ? "+" : t.type === "expense" ? "- " : ""}
@@ -233,7 +233,7 @@ export default async function DashboardPage() {
           <CardContent>
             {accounts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-ink-3">No accounts yet.</p>
+                <p className="text-sm text-faint">No accounts yet.</p>
                 <Button asChild className="mt-4">
                   <Link href="/money/accounts">Manage accounts</Link>
                 </Button>
@@ -241,37 +241,37 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="rounded-lg bg-tint-success p-3 dark:bg-[#064E3B]/40">
+                    <div className="rounded-lg bg-success-soft p-3 dark:bg-[#064E3B]/40">
                     <p className="text-xs text-success-dark dark:text-[#A7F3D0] font-medium">Assets</p>
                     <p className="text-sm font-bold font-heading text-success-dark dark:text-[#A7F3D0]">{formatINR(totalAssets)}</p>
                   </div>
-                    <div className="rounded-lg bg-tint-error p-3 dark:bg-[#7F1D1D]/40">
+                    <div className="rounded-lg bg-error-soft p-3 dark:bg-[#7F1D1D]/40">
                     <p className="text-xs text-error-dark dark:text-[#FCA5A5] font-medium">Liabilities</p>
                     <p className="text-sm font-bold font-heading text-error-dark dark:text-[#FCA5A5]">{formatINR(totalLiabilities)}</p>
                   </div>
-                    <div className="rounded-lg bg-tint-info p-3 dark:bg-[#1E1E1E]/40">
+                    <div className="rounded-lg bg-info-soft p-3 dark:bg-[#1E1E1E]/40">
                     <p className="text-xs text-primary-700 dark:text-[#BFDBFE] font-medium">Net</p>
                     <p className="text-sm font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{formatINR(netWorth)}</p>
                   </div>
                 </div>
                 <div className="space-y-2">
                   {accounts.slice(0, 4).map((a) => (
-                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-line p-3">
+                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-edge p-3">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ backgroundColor: (a.color || "#2563EB") + "15", color: a.color || "#2563EB" }}>
                           {a.name.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-medium font-heading text-ink-1">{a.name}</p>
-                          <p className="text-xs text-ink-3">{a.display_name}</p>
+                          <p className="text-sm font-medium font-heading text-foreground">{a.name}</p>
+                          <p className="text-xs text-faint">{a.display_name}</p>
                         </div>
                       </div>
-                      <span className={`text-sm font-semibold font-heading ${a.balance >= 0 ? "text-ink-1" : "text-error"}`}>
+                      <span className={`text-sm font-semibold font-heading ${a.balance >= 0 ? "text-foreground" : "text-error"}`}>
                         {formatINR(a.balance)}
                       </span>
                     </div>
                   ))}
-                  {accounts.length > 4 && <p className="text-xs text-center text-ink-3">+ {accounts.length - 4} more accounts</p>}
+                  {accounts.length > 4 && <p className="text-xs text-center text-faint">+ {accounts.length - 4} more accounts</p>}
                 </div>
               </div>
             )}
@@ -285,31 +285,31 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {!budget ? (
-              <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-line text-sm text-ink-3">
+              <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-edge text-sm text-faint">
                 Create a budget to track monthly control.
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-sunken p-3">
-                    <p className="text-xs text-ink-3">Budgeted</p>
-                    <p className="text-sm font-bold text-ink-1">{formatINR(budget.total_budgeted)}</p>
+                  <div className="rounded-lg bg-deep p-3">
+                    <p className="text-xs text-faint">Budgeted</p>
+                    <p className="text-sm font-bold text-foreground">{formatINR(budget.total_budgeted)}</p>
                   </div>
-                  <div className="rounded-lg bg-sunken p-3">
-                    <p className="text-xs text-ink-3">Spent</p>
-                    <p className="text-sm font-bold text-ink-1">{formatINR(budget.total_spent)}</p>
+                  <div className="rounded-lg bg-deep p-3">
+                    <p className="text-xs text-faint">Spent</p>
+                    <p className="text-sm font-bold text-foreground">{formatINR(budget.total_spent)}</p>
                   </div>
-                  <div className="rounded-lg bg-sunken p-3">
-                    <p className="text-xs text-ink-3">Over</p>
-                    <p className="text-sm font-bold text-ink-1">{budget.over_budget_count}</p>
+                  <div className="rounded-lg bg-deep p-3">
+                    <p className="text-xs text-faint">Over</p>
+                    <p className="text-sm font-bold text-foreground">{budget.over_budget_count}</p>
                   </div>
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-medium text-ink-2">Utilization</span>
-                    <span className="font-semibold text-ink-1">{Math.round(budget.utilization_pct)}%</span>
+                    <span className="font-medium text-muted-foreground">Utilization</span>
+                    <span className="font-semibold text-foreground">{Math.round(budget.utilization_pct)}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-wash">
+                  <div className="h-2 overflow-hidden rounded-full bg-soft">
                     <div className="h-full rounded-full bg-primary-600" style={{ width: `${Math.min(100, budget.utilization_pct)}%` }} />
                   </div>
                 </div>
