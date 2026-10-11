@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EntityFormDialog } from "@/components/common/entity-form-dialog";
-import { FormFooter, FormGrid } from "@/components/common/form-primitives";
+import { FormFooter, FormGrid, FieldError } from "@/components/common/form-primitives";
 import { createDividend, updateDividend } from "./actions";
 import { todayLocalISO } from "@/lib/format";
 import { toast } from "sonner";
@@ -89,7 +89,7 @@ export function DividendFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {state?.fieldErrors?.investment_id && <p className="text-xs text-error">{state.fieldErrors.investment_id}</p>}
+              {state?.fieldErrors?.investment_id && <FieldError message={state.fieldErrors.investment_id} />}
             </div>
           )}
 
@@ -111,12 +111,12 @@ export function DividendFormDialog({
             <div className="space-y-2">
               <Label htmlFor="div-amount">Amount *</Label>
               <Input id="div-amount" name="amount" type="number" step="0.01" defaultValue={dividend ? String(dividend.amount) : ""} placeholder="500" required />
-              {state?.fieldErrors?.amount && <p className="text-xs text-error">{state.fieldErrors.amount}</p>}
+              {state?.fieldErrors?.amount && <FieldError message={state.fieldErrors.amount} />}
             </div>
             <div className="space-y-2">
               <Label htmlFor="div-date">Date *</Label>
               <Input id="div-date" name="date" type="date" defaultValue={dividend?.date ?? todayLocalISO()} required />
-              {state?.fieldErrors?.date && <p className="text-xs text-error">{state.fieldErrors.date}</p>}
+              {state?.fieldErrors?.date && <FieldError message={state.fieldErrors.date} />}
             </div>
           </FormGrid>
 
