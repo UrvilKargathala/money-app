@@ -5,7 +5,7 @@
  * The tax module's `Investment` is a different entity and keeps its own type.
  */
 
-export type TxnTag = { id: string; name: string; color: string | null };
+type TxnTag = { id: string; name: string; color: string | null };
 
 export type Txn = {
   id: string;
