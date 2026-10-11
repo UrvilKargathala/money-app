@@ -103,7 +103,7 @@ export function QuickAddForm({
 
           {/* Amount display */}
           <div className="text-center py-4">
-            <p className="text-sm text-ink-3 font-heading">Amount</p>
+            <p className="text-sm text-faint font-heading">Amount</p>
             <p className={`text-5xl font-extrabold font-heading tracking-tight ${type === "expense" ? "text-error" : "text-success"}`}>
               <span className="text-2xl align-super">₹</span> {displayAmount}
             </p>
@@ -160,7 +160,7 @@ export function QuickAddForm({
               autoComplete="off"
             />
             {showMerchantSuggest && filteredMerchants.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-surface border border-line rounded-md shadow-lg max-h-32 overflow-auto">
+              <div className="absolute z-10 w-full mt-1 bg-base border border-edge rounded-md shadow-lg max-h-32 overflow-auto">
                 {filteredMerchants.map((m) => (
                   <button
                     key={m}
