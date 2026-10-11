@@ -8,6 +8,8 @@ type PageHeaderProps = {
    * selects, navigators, status indicators) without prop sprawl.
    */
   actions?: React.ReactNode;
+  /** Override the actions wrapper (default "flex gap-2"). Rarely needed. */
+  actionsClassName?: string;
 };
 
 /**
@@ -16,7 +18,7 @@ type PageHeaderProps = {
  * breadcrumbs, or badges (ResourceDetail, account-detail, notifications)
  * stay bespoke — see DOCS/frontend/05-duplication.md intentional list.
  */
-export function PageHeader({ title, description, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, actions, actionsClassName = "flex gap-2" }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -25,7 +27,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
           <p className="text-sm text-faint font-body mt-1">{description}</p>
         )}
       </div>
-      {actions === undefined ? null : <div className="flex gap-2">{actions}</div>}
+      {actions === undefined ? null : <div className={actionsClassName}>{actions}</div>}
     </div>
   );
 }
