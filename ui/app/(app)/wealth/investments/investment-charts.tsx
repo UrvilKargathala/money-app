@@ -13,10 +13,10 @@ export type TrendPoint = { date: string; invested: number; value: number };
 
 export const PIE_COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#EC4899", "#14B8A6", "#F97316", "#6366F1"];
 
-export function currencyTick(v: number): string {
-  if (Math.abs(v) >= 100000) return `₹${(v / 1000).toFixed(0)}k`;
-  if (Math.abs(v) >= 1000) return `₹${(v / 1000).toFixed(1)}k`;
-  return `₹${v}`;
+export function currencyTick(value: number): string {
+  if (Math.abs(value) >= 100000) return `₹${(value / 1000).toFixed(0)}k`;
+  if (Math.abs(value) >= 1000) return `₹${(value / 1000).toFixed(1)}k`;
+  return `₹${value}`;
 }
 
 export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
@@ -29,14 +29,14 @@ export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
       <ResponsiveContainer width="100%" height="100%">
         <RePieChart>
           <Pie data={allocation} dataKey="value" nameKey="category" cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={2}>
-            {allocation.map((_, idx) => (
-              <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+            {allocation.map((_, index) => (
+              <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number, _name: string, item: unknown) => {
+            formatter={(value: number, name: string, item: unknown) => {
               const payload = (item as { payload?: Allocation })?.payload;
-              const label = payload?.category ?? String(_name);
+              const label = payload?.category ?? String(name);
               const pct = payload?.pct != null ? ` (${payload.pct}%)` : "";
               return [formatINR(Number(value)) + pct, label];
             }}
@@ -47,14 +47,14 @@ export function AllocationDonut({ allocation }: { allocation: Allocation[] }) {
         </RePieChart>
       </ResponsiveContainer>
       <div className="mt-2 space-y-1">
-        {allocation.slice(0, 6).map((a, i) => (
-          <div key={a.category} className="flex items-center justify-between text-xs">
+        {allocation.slice(0, 6).map((alloc, index) => (
+          <div key={alloc.category} className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-              {a.category}
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
+              {alloc.category}
             </span>
             <span className="font-medium">
-              {formatINR(a.value)} · {a.pct}%
+              {formatINR(alloc.value)} · {alloc.pct}%
             </span>
           </div>
         ))}
@@ -73,11 +73,11 @@ export function PortfolioTrend({ trend }: { trend: TrendPoint[] }) {
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={trend} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
-          <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(dateStr: string) => new Date(dateStr).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
           <YAxis tickFormatter={currencyTick} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={80} />
           <Tooltip
             formatter={(value: number, name: string) => [formatINR(Number(value)), name === "value" ? "Current" : "Invested"]}
-            labelFormatter={(l: string) => formatDate(l)}
+            labelFormatter={(label: string) => formatDate(label)}
             labelStyle={{ color: t.tooltipText }}
             contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }}
             itemStyle={{ color: t.tooltipText }}
