@@ -73,18 +73,18 @@ export function BudgetsDashboard({
 
   const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
-  const handleEditBudget = useCallback((b: { id: string }) => {
-    const found = budgets.find((x) => x.id === b.id) ?? null;
+  const handleEditBudget = useCallback((budget: { id: string }) => {
+    const found = budgets.find((candidate) => candidate.id === budget.id) ?? null;
     setEditing(found);
     setFormOpen(true);
   }, [budgets]);
 
   const handleDelete = useCallback(
-    (b: { id: string }) => {
+    (budget: { id: string }) => {
       confirmDelete({
         title: "Delete this budget?",
         description: "Rollovers and alerts for this budget go with it. This cannot be undone.",
-        onDelete: () => deleteBudgetAction(b.id),
+        onDelete: () => deleteBudgetAction(budget.id),
         successMsg: "Budget deleted",
         onDone: () => router.refresh(),
       });
@@ -93,8 +93,8 @@ export function BudgetsDashboard({
   );
 
   const breakdownReq = useRef(0);
-  const handleBreakdown = useCallback(async (b: { id: string }) => {
-    const id = b.id;
+  const handleBreakdown = useCallback(async (budget: { id: string }) => {
+    const id = budget.id;
     const reqId = ++breakdownReq.current;
     try {
       const res = await fetch(`/api/budgets/${id}/breakdown`);
@@ -107,16 +107,12 @@ export function BudgetsDashboard({
     }
   }, []);
 
-  const prevMonth = () => {
-    let m = month - 1, y = year;
-    if (m < 1) { m = 12; y--; }
-    router.push(`/money/budgets?month=${m}&year=${y}`);
+  const shiftMonth = (delta: number) => {
+    const shifted = new Date(year, month - 1 + delta);
+    router.push(`/money/budgets?month=${shifted.getMonth() + 1}&year=${shifted.getFullYear()}`);
   };
-  const nextMonth = () => {
-    let m = month + 1, y = year;
-    if (m > 12) { m = 1; y++; }
-    router.push(`/money/budgets?month=${m}&year=${y}`);
-  };
+  const prevMonth = () => shiftMonth(-1);
+  const nextMonth = () => shiftMonth(1);
 
   const monthName = useMemo(
     () => new Date(year, month - 1).toLocaleString("en-IN", { month: "long", year: "numeric" }),
@@ -184,10 +180,10 @@ export function BudgetsDashboard({
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {budgets.map((b) => (
+          {budgets.map((budget) => (
             <BudgetCard
-              key={b.id}
-              budget={b}
+              key={budget.id}
+              budget={budget}
               onEdit={handleEditBudget}
               onDelete={handleDelete}
               onBreakdown={handleBreakdown}
@@ -200,10 +196,10 @@ export function BudgetsDashboard({
         <Card className="p-6">
           <h2 className="font-semibold font-heading text-foreground mb-3">Unbudgeted Spending</h2>
           <div className="space-y-2">
-            {overview.unbudgeted.map((u) => (
-              <div key={u.category_id} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{u.name}</span>
-                <span className="font-medium text-error">{formatINR(u.spent)}</span>
+            {overview.unbudgeted.map((entry) => (
+              <div key={entry.category_id} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{entry.name}</span>
+                <span className="font-medium text-error">{formatINR(entry.spent)}</span>
               </div>
             ))}
           </div>
