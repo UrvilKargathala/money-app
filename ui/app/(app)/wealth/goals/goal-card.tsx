@@ -34,11 +34,11 @@ export const GoalCard = memo(function GoalCard({
   const isPaused = goal.status === "paused";
 
   return (
-      <Card className={`p-5 space-y-3 ${isCompleted ? "border-success/30 bg-tint-success/50 dark:bg-[#064E3B]/30" : isPaused ? "opacity-60" : ""}`}>
+      <Card className={`p-5 space-y-3 ${isCompleted ? "border-success/30 bg-success-soft/50 dark:bg-[#064E3B]/30" : isPaused ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-semibold font-heading text-ink-1">{goal.name}</p>
-          <p className="text-xs text-ink-3">
+          <p className="text-sm font-semibold font-heading text-foreground">{goal.name}</p>
+          <p className="text-xs text-faint">
             Target {formatINR(goal.target_amount)} • {new Date(goal.target_date).toLocaleDateString("en-IN")} • {goal.priority}
           </p>
         </div>
@@ -81,7 +81,7 @@ export const GoalCard = memo(function GoalCard({
       <Progress value={pct} indicatorClassName={isCompleted ? "bg-success" : "bg-primary-600"} />
 
       <div className="flex justify-between text-xs">
-        <span className="text-ink-2">{formatINR(goal.current_amount)} saved</span>
+        <span className="text-muted-foreground">{formatINR(goal.current_amount)} saved</span>
         <span className={pct >= 100 ? "text-success font-medium" : "text-neutral-500"}>{pct.toFixed(1)}%</span>
       </div>
     </Card>
