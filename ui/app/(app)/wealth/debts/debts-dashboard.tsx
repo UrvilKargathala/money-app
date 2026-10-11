@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { DebtCard } from "./debt-card";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
@@ -740,27 +741,27 @@ export function DebtsDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Debts</h1>
-          <p className="text-sm text-faint font-body mt-1">{debts.length} debts • Total EMI {formatINR(totalEmi)} {debtFreeDate ? `• Debt-free ${debtFreeDate}` : ""}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href="/api/debts/export" download>
-              <Download className="h-4 w-4" /> Export Debts
-            </a>
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Debt
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Debts"
+        description={<>{debts.length} debts • Total EMI {formatINR(totalEmi)} {debtFreeDate ? `• Debt-free ${debtFreeDate}` : ""}</>}
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <a href="/api/debts/export" download>
+                <Download className="h-4 w-4" /> Export Debts
+              </a>
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Debt
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label="Total Outstanding" value={formatINR(totalOutstanding)} icon={<Landmark className="h-5 w-5" />} variant="rose" />
