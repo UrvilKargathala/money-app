@@ -34,7 +34,7 @@ export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit,
     <Card className="p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 space-y-1.5">
-          <p className="truncate text-sm font-semibold font-heading text-ink-1">{investment.name}</p>
+          <p className="truncate text-sm font-semibold font-heading text-foreground">{investment.name}</p>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="default">{investment.type}</Badge>
             <Badge variant="default">{investment.category}</Badge>
@@ -63,11 +63,11 @@ export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit,
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-center">
-        <div className="rounded-lg border border-line bg-sunken p-3">
-          <p className="text-xs text-ink-3">Invested</p>
-          <p className="text-base font-bold font-heading text-ink-1">{formatINR(invested)}</p>
+        <div className="rounded-lg border border-edge bg-deep p-3">
+          <p className="text-xs text-faint">Invested</p>
+          <p className="text-base font-bold font-heading text-foreground">{formatINR(invested)}</p>
         </div>
-        <div className="rounded-lg border border-primary-200 bg-tint-info p-3 dark:bg-[#1E1E1E]/40">
+        <div className="rounded-lg border border-primary-200 bg-info-soft p-3 dark:bg-[#1E1E1E]/40">
           <p className="text-xs text-primary-700">Current</p>
           <p className="text-base font-bold font-heading text-primary-700">{formatINR(current)}</p>
         </div>
