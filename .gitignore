@@ -1,8 +1,8 @@
-# ---- MoneyMind: backend-only repository ----
-# This repo intentionally tracks ONLY the backend (`api/`) plus the canonical
-# schema/seed scripts (`scripts/`). Everything else in the monorepo working
-# tree (frontend `src/`, `app/`, docs, Android shell, workspace manifests) is
-# permanently ignored — run `git status` before committing to confirm.
+# ---- MoneyMind monorepo ----
+# Tracks `api/` (backend), `ui/` (frontend), `scripts/` (schema/seed),
+# `DOCS/` (documentation) plus workspace manifests. Everything else in the
+# working tree is permanently ignored — run `git status` before committing
+# to confirm.
 
 # whitelist: ignore everything at the top level, then re-include the backend + frontend
 /*
