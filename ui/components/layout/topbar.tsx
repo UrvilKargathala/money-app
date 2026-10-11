@@ -104,7 +104,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
   };
 
   return (
-      <header className="sticky top-0 z-40 w-full border-b border-line bg-surface">
+      <header className="sticky top-0 z-40 w-full border-b border-edge bg-base">
       <div className="flex h-16 items-center justify-between gap-4 px-4 lg:px-6">
         {/* Left: logo + mobile hamburger (drawer code-split, mounts on open) */}
         <div className="flex items-center gap-3 shrink-0">
@@ -118,13 +118,13 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="hidden sm:inline text-lg font-bold font-heading text-ink-1">MoneyMind</span>
+            <span className="hidden sm:inline text-lg font-bold font-heading text-foreground">MoneyMind</span>
           </Link>
         </div>
 
         {/* Center: pill nav (desktop only) */}
         <nav className="hidden lg:flex items-center justify-center flex-1">
-          <div className="flex items-center gap-1 rounded-full bg-surface border border-line px-1.5 py-1.5 shadow-sm">
+          <div className="flex items-center gap-1 rounded-full bg-base border border-edge px-1.5 py-1.5 shadow-sm">
             {NAV_GROUPS.map((group) => {
               const groupActive = isGroupActive(pathname, group);
               return (
@@ -132,7 +132,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   <DropdownMenuTrigger
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
-                      groupActive ? "bg-ink-1 text-surface shadow-sm" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
+                      groupActive ? "bg-foreground text-base shadow-sm" : "text-muted-foreground hover:bg-deep hover:text-foreground"
                     )}
                   >
                     {group.label}
@@ -146,7 +146,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                         <DropdownMenuItem
                           key={item.href}
                           asChild
-                          className={cn("rounded-lg", active && "bg-tint-info text-primary-600 focus:bg-tint-info focus:text-primary-600 dark:text-[#BFDBFE]")}
+                          className={cn("rounded-lg", active && "bg-info-soft text-primary-600 focus:bg-info-soft focus:text-primary-600 dark:text-[#BFDBFE]")}
                         >
                           <Link href={item.href} className="flex items-center gap-2.5 w-full">
                             <Icon className="h-4 w-4 shrink-0" />
@@ -169,7 +169,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   href={item.href}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                      active ? "bg-ink-1 text-surface shadow-sm" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
+                      active ? "bg-foreground text-base shadow-sm" : "text-muted-foreground hover:bg-deep hover:text-foreground"
                     )}
                 >
                   {item.label}
@@ -196,7 +196,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
               triggerHaptic("light");
               setPaletteOpen(true);
             }}
-            className="hidden lg:flex text-ink-3 hover:text-ink-1"
+            className="hidden lg:flex text-faint hover:text-foreground"
             title="Shortcuts (Cmd+K)"
             aria-label="Command palette (Cmd+K)"
           >
@@ -205,7 +205,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
 
           <NotificationBell initialUnread={initialUnread} />
 
-          <div className="hidden sm:flex items-center gap-3 border-l border-line ml-1 pl-3">
+          <div className="hidden sm:flex items-center gap-3 border-l border-edge ml-1 pl-3">
             {showAvatar ? (
               <Avatar className="h-8 w-8">
                 <AvatarImage src={avatarBust > 0 ? `${AVATAR_URL}?t=${avatarBust}` : AVATAR_URL} alt={userName ?? "Profile photo"} width={64} height={64} fetchPriority="high" />
@@ -219,12 +219,12 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
               </div>
             )}
             <div className="hidden lg:flex flex-col">
-              <span className="text-sm font-medium font-heading text-ink-1 leading-none">{userName || "User"}</span>
-              <span className="text-xs text-ink-3 leading-none mt-0.5">{userEmail || ""}</span>
+              <span className="text-sm font-medium font-heading text-foreground leading-none">{userName || "User"}</span>
+              <span className="text-xs text-faint leading-none mt-0.5">{userEmail || ""}</span>
             </div>
           </div>
 
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" aria-label="Log out" className="text-ink-2">
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" aria-label="Log out" className="text-muted-foreground">
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
@@ -232,7 +232,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
 
       {/* Mobile search bar */}
       {searchOpen && (
-        <div className="border-t border-line px-4 py-3 lg:hidden bg-surface">
+        <div className="border-t border-edge px-4 py-3 lg:hidden bg-base">
           <GlobalSearch mobile onNavigate={() => setSearchOpen(false)} />
         </div>
       )}
