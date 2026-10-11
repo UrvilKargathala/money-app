@@ -6,7 +6,7 @@
  * original file so the upload is never blocked by this step.
  */
 
-export const AVATAR_MAX_EDGE = 256;
+const AVATAR_MAX_EDGE = 256;
 
 export type PreparedAvatar = { blob: Blob; type: string };
 
