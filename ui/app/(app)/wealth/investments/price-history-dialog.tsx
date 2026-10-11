@@ -38,7 +38,7 @@ export function PriceHistoryDialog({
     setError(false);
     setPoints(null);
     fetchHistory(investmentId)
-      .then((p) => { if (reqRef.current === reqId) setPoints(p); })
+      .then((pricePoints) => { if (reqRef.current === reqId) setPoints(pricePoints); })
       .catch(() => { if (reqRef.current === reqId) setError(true); })
       .finally(() => { if (reqRef.current === reqId) setLoading(false); });
   }, [fetchHistory, investmentId]);
@@ -74,9 +74,9 @@ export function PriceHistoryDialog({
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={points} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
-                  <YAxis tickFormatter={(v: number) => `₹${v}`} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={70} />
-                  <Tooltip formatter={(v: number) => [formatINR(Number(v)), "Price"]} labelFormatter={(l: string) => formatDate(l)} labelStyle={{ color: t.tooltipText }} contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }} itemStyle={{ color: t.tooltipText }} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.tick }} stroke={t.tick} tickFormatter={(dateStr: string) => new Date(dateStr).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} />
+                  <YAxis tickFormatter={(price: number) => `₹${price}`} tick={{ fontSize: 12, fill: t.tick }} stroke={t.tick} width={70} />
+                  <Tooltip formatter={(price: number) => [formatINR(Number(price)), "Price"]} labelFormatter={(label: string) => formatDate(label)} labelStyle={{ color: t.tooltipText }} contentStyle={{ borderRadius: 12, borderColor: t.tooltipBorder, backgroundColor: t.tooltipBg, color: t.tooltipText }} itemStyle={{ color: t.tooltipText }} />
                   <Line type="monotone" dataKey="price" stroke="#2563EB" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -91,10 +91,10 @@ export function PriceHistoryDialog({
                   </tr>
                 </thead>
                 <tbody>
-                  {points.map((p) => (
-                    <tr key={`${p.date}-${p.price}`} className="border-t border-edge">
-                      <td className="px-3 py-2">{formatDate(p.date)}</td>
-                      <td className="px-3 py-2 text-right font-medium">{formatINR(p.price)}</td>
+                  {points.map((point) => (
+                    <tr key={`${point.date}-${point.price}`} className="border-t border-edge">
+                      <td className="px-3 py-2">{formatDate(point.date)}</td>
+                      <td className="px-3 py-2 text-right font-medium">{formatINR(point.price)}</td>
                     </tr>
                   ))}
                 </tbody>
