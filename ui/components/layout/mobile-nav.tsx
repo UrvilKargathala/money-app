@@ -27,7 +27,7 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
         <nav className="p-4 space-y-6" aria-label="Mobile">
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="px-2 mb-2 text-[11px] font-semibold tracking-widest text-neutral-400 uppercase">{group.label}</p>
+              <p className="px-2 mb-2 text-[11px] font-semibold tracking-widest text-faint uppercase">{group.label}</p>
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const active = isItemActive(pathname, item.href);
