@@ -154,7 +154,7 @@ export function AccountFormDialog({
           />
         </div>
         <FieldError message={state?.fieldErrors?.color} />
-        <p className="text-xs text-neutral-400">Use the picker or enter a hex color code.</p>
+        <p className="text-xs text-faint">Use the picker or enter a hex color code.</p>
       </div>
 
       <div className="space-y-2">
