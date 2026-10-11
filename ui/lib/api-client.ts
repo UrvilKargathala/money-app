@@ -62,11 +62,6 @@ export async function apiFetchRaw(
   path: string,
   opts?: { method?: string; json?: unknown; body?: BodyInit | Uint8Array; headers?: Record<string, string>; contentType?: string }
 ): Promise<Response> {
-  if (opts?.body !== undefined || opts?.headers !== undefined || opts?.contentType !== undefined) {
-    const response = await apiFetch(path, opts as never);
-    if (response.status >= 500) reportClientError(new Error(`API ${response.status}: ${path}`), { path, status: response.status, method: opts?.method });
-    return response;
-  }
   const response = await apiFetch(path, opts);
   if (response.status >= 500) reportClientError(new Error(`API ${response.status}: ${path}`), { path, status: response.status, method: opts?.method });
   return response;
