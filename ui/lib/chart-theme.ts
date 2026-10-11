@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/common/theme-provider";
 
 /**
  * Chart chrome theming (axes, grid, tooltip, legend). Data series colors
