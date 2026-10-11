@@ -25,7 +25,7 @@ export function HeatmapCard({ heatmapDays, heatmapYear, heatmapMonth }: { heatma
           <>
             <div className="grid grid-cols-7 gap-1.5">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                <div key={d} className="text-[11px] text-center font-medium text-ink-3 py-1">
+                <div key={d} className="text-[11px] text-center font-medium text-faint py-1">
                   {d}
                 </div>
               ))}
@@ -33,7 +33,7 @@ export function HeatmapCard({ heatmapDays, heatmapYear, heatmapMonth }: { heatma
                 const firstWeekday = new Date(heatmapYear, heatmapMonth - 1, 1).getDay();
                 const cells: ReactNode[] = [];
                 for (let i = 0; i < firstWeekday; i++) {
-                  cells.push(<div key={`pad-${i}`} className="h-9 rounded-md bg-sunken" />);
+                  cells.push(<div key={`pad-${i}`} className="h-9 rounded-md bg-deep" />);
                 }
                 for (let day = 1; day <= daysInMonth; day++) {
                   const iso = `${heatmapYear}-${String(heatmapMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -44,7 +44,7 @@ export function HeatmapCard({ heatmapDays, heatmapYear, heatmapMonth }: { heatma
                   cells.push(
                     <div
                       key={iso}
-                      className="h-9 rounded-md border border-line flex flex-col items-center justify-center text-[11px] font-medium"
+                      className="h-9 rounded-md border border-edge flex flex-col items-center justify-center text-[11px] font-medium"
                       style={{ backgroundColor: bg, color: textColor }}
                       title={total > 0 ? `${iso}: ${formatINR(total)}` : `${iso}: no spend`}
                     >
@@ -56,11 +56,11 @@ export function HeatmapCard({ heatmapDays, heatmapYear, heatmapMonth }: { heatma
                 return cells;
               })()}
             </div>
-            <div className="mt-3 flex items-center justify-between text-xs text-ink-3">
+            <div className="mt-3 flex items-center justify-between text-xs text-faint">
               <span>Less</span>
               <div className="flex gap-1">
                 {[0.15, 0.35, 0.6, 0.9].map((o) => (
-                  <div key={o} className="h-3 w-6 rounded-sm border border-line" style={{ backgroundColor: `rgba(37,99,235,${o})` }} />
+                  <div key={o} className="h-3 w-6 rounded-sm border border-edge" style={{ backgroundColor: `rgba(37,99,235,${o})` }} />
                 ))}
               </div>
               <span>More</span>
