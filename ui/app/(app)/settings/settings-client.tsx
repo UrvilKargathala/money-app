@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { Toggle } from "@/components/ui/toggle";
 import { FormSelect } from "@/components/common/form-select";
 import { useTheme, type ThemeChoice } from "@/components/common/theme-provider";
@@ -339,10 +340,10 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold font-heading text-foreground">Settings</h1>
-        <p className="text-sm text-faint font-body mt-1">Manage your account, security, notifications, and data.</p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Manage your account, security, notifications, and data."
+      />
 
       <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/40 dark:from-[#111111] dark:to-[#1E1E1E]">
         <CardContent className="space-y-4 p-6">
