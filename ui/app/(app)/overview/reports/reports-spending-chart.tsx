@@ -57,15 +57,15 @@ export function SpendingDonut({ spendingByCategory }: { spendingByCategory: Cate
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="rounded-xl border border-line bg-sunken/70 divide-y divide-line overflow-hidden">
+            <div className="rounded-xl border border-edge bg-deep/70 divide-y divide-edge overflow-hidden">
               {spendingByCategory.slice(0, 6).map((c, i) => (
                 <div key={c.category_id ?? c.category} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs">
                   <span className="flex items-center gap-2 min-w-0">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <span className="truncate font-medium text-ink-2">{c.category}</span>
+                    <span className="truncate font-medium text-muted-foreground">{c.category}</span>
                     <span className="text-neutral-400">({c.count})</span>
                   </span>
-                  <span className="shrink-0 font-semibold text-ink-1">{formatINR(c.total)} · {c.pct}%</span>
+                  <span className="shrink-0 font-semibold text-foreground">{formatINR(c.total)} · {c.pct}%</span>
                 </div>
               ))}
             </div>
