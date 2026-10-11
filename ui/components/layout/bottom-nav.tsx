@@ -10,7 +10,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Primary" className="fixed bottom-0 left-0 right-0 z-40 flex h-[5rem] items-center justify-around border-t border-line bg-surface px-2 pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Primary" className="fixed bottom-0 left-0 right-0 z-40 flex h-[5rem] items-center justify-around border-t border-edge bg-base px-2 pb-[env(safe-area-inset-bottom)] lg:hidden">
       {BOTTOM_NAV_ITEMS.slice(0, 2).map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
         const Icon = item.icon;
@@ -21,7 +21,7 @@ export function BottomNav() {
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors min-w-[60px]",
-              isActive ? "text-primary-600 dark:text-[#BFDBFE]" : "text-ink-3"
+              isActive ? "text-primary-600 dark:text-[#BFDBFE]" : "text-faint"
             )}
           >
             <Icon aria-hidden="true" className={cn("h-5 w-5", isActive && "text-primary-600 dark:text-[#BFDBFE]")} />
@@ -49,7 +49,7 @@ export function BottomNav() {
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors min-w-[60px]",
-              isActive ? "text-primary-600 dark:text-[#BFDBFE]" : "text-ink-3"
+              isActive ? "text-primary-600 dark:text-[#BFDBFE]" : "text-faint"
             )}
           >
             <Icon aria-hidden="true" className={cn("h-5 w-5", isActive && "text-primary-600 dark:text-[#BFDBFE]")} />
