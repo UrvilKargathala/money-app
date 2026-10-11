@@ -12,13 +12,3 @@ export async function setSessionCookie(token: string, maxAge: number) {
     maxAge,
   });
 }
-
-export async function clearSessionCookie() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
-}
-
-export async function getSessionToken(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value;
-}
