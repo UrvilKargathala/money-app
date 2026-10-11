@@ -14,7 +14,7 @@ import { formatINR, formatDate, todayLocalISO } from "@/lib/format";
 import type { Allocation, TrendPoint } from "./investment-charts";
 
 function ChartSkeleton({ height = 300 }: { height?: number }) {
-  return <div aria-hidden className="w-full animate-pulse rounded-lg bg-wash" style={{ height }} />;
+  return <div aria-hidden className="w-full animate-pulse rounded-lg bg-soft" style={{ height }} />;
 }
 
 // Recharts ships in deferred chunks: the allocation donut, the trend chart
@@ -248,8 +248,8 @@ export function InvestmentsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Investments</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">
+          <h1 className="text-3xl font-bold font-heading text-foreground">Investments</h1>
+          <p className="text-sm text-faint font-body mt-1">
             {investments.length} holdings • {formatINR(totalInvested)} invested • {sips.length} SIPs • {dividends.length} payouts
           </p>
         </div>
@@ -341,7 +341,7 @@ export function InvestmentsDashboard({
           </div>
 
           {sipsDue.length > 0 && (
-            <Card className="p-4 border-warning/20 bg-tint-warning/30 dark:bg-[#78350F]/30">
+            <Card className="p-4 border-warning/20 bg-warning-soft/30 dark:bg-[#78350F]/30">
               <p className="text-sm font-medium font-heading text-warning-dark dark:text-[#FDE68A] flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> Due in next 7 days - {sipsDue.length}
               </p>
@@ -376,7 +376,7 @@ export function InvestmentsDashboard({
                 <Card key={sip.id} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 space-y-1.5">
-                      <p className="truncate text-sm font-semibold font-heading text-ink-1">{sip.investment_name}</p>
+                      <p className="truncate text-sm font-semibold font-heading text-foreground">{sip.investment_name}</p>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <Badge variant="default">{sip.frequency}</Badge>
                         <Badge variant="default">{formatINR(Number(sip.amount))}</Badge>
@@ -475,7 +475,7 @@ export function InvestmentsDashboard({
           ) : (
             <div className="space-y-3">
               <Card className="p-3 flex items-center justify-between">
-                <span className="text-sm text-ink-3">Total payouts</span>
+                <span className="text-sm text-faint">Total payouts</span>
                 <span className="text-sm font-bold font-heading">
                   {formatINR(dividendsTotal)} • {dividends.length} records
                 </span>
@@ -485,8 +485,8 @@ export function InvestmentsDashboard({
                   <Card key={div.id} className="p-4 space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-semibold font-heading text-ink-1">{div.investment_name}</p>
-                        <p className="text-xs text-ink-3">
+                        <p className="text-sm font-semibold font-heading text-foreground">{div.investment_name}</p>
+                        <p className="text-xs text-faint">
                           {div.type} • {formatDate(div.date)}
                         </p>
                       </div>
@@ -538,10 +538,10 @@ export function InvestmentsDashboard({
                 <CardDescription>Portfolio XIRR & maturity alerts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="rounded-lg bg-tint-info p-4 text-center dark:bg-[#1E1E1E]/50">
+                <div className="rounded-lg bg-info-soft p-4 text-center dark:bg-[#1E1E1E]/50">
                   <p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Portfolio XIRR</p>
                   <p className="text-2xl font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{portfolioXirr != null ? `${portfolioXirr.toFixed(2)}%` : "-"}</p>
-                  <p className="text-xs text-ink-3 mt-1">Annualized return • {returnPct.toFixed(1)}% absolute</p>
+                  <p className="text-xs text-faint mt-1">Annualized return • {returnPct.toFixed(1)}% absolute</p>
                 </div>
 
                 <div>
@@ -549,14 +549,14 @@ export function InvestmentsDashboard({
                     <AlertTriangle className="h-4 w-4" /> Maturity alerts
                   </p>
                   {alerts.length === 0 ? (
-                    <p className="text-xs text-ink-3 mt-2">No maturities in next 30 days.</p>
+                    <p className="text-xs text-faint mt-2">No maturities in next 30 days.</p>
                   ) : (
                     <div className="mt-2 space-y-2">
                       {alerts.map((al) => (
-                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-tint-warning/20 px-3 py-2 text-sm dark:bg-[#78350F]/30">
+                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-soft/20 px-3 py-2 text-sm dark:bg-[#78350F]/30">
                           <div>
                             <p className="font-medium font-heading">{al.name}</p>
-                            <p className="text-xs text-ink-3">
+                            <p className="text-xs text-faint">
                               {al.type} • {formatDate(al.maturity_date)}
                             </p>
                           </div>
