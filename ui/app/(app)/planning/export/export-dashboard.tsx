@@ -339,7 +339,7 @@ export function ExportDashboard({
               <Button onClick={handleCreate} disabled={creating || !selectedModule} className="w-full sm:w-auto">
                 {creating ? "Creating..." : `Create ${format.toUpperCase()} job`}
               </Button>
-              <p className="text-xs text-neutral-400">Jobs generate instantly and appear under Recent Exports with a download link.</p>
+              <p className="text-xs text-faint">Jobs generate instantly and appear under Recent Exports with a download link.</p>
             </div>
           </CardContent>
         </Card>
@@ -371,7 +371,7 @@ export function ExportDashboard({
         <CardContent>
           {jobs.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
-              <Package className="h-6 w-6 mx-auto text-neutral-400 mb-2" />
+              <Package className="h-6 w-6 mx-auto text-faint mb-2" />
               <p className="text-sm font-medium text-muted-foreground">No exports yet</p>
               <p className="text-xs text-faint mt-1">Create a job above and it shows up here with its download link.</p>
             </div>
