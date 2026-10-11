@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FieldError } from "@/components/common/form-primitives";
 import { resetAction } from "./actions";
 import { Suspense } from "react";
 
@@ -80,12 +81,12 @@ function ResetForm() {
           <div className="space-y-2">
             <Label htmlFor="new_password">New password</Label>
             <Input id="new_password" name="new_password" type="password" placeholder="••••••••" autoComplete="new-password" required error={!!state?.fieldErrors?.new_password} />
-            {state?.fieldErrors?.new_password && <p className="text-xs text-error-dark">{state.fieldErrors.new_password}</p>}
+            {state?.fieldErrors?.new_password && <FieldError message={state.fieldErrors.new_password} />}
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirm">Confirm password</Label>
             <Input id="confirm" name="confirm" type="password" placeholder="••••••••" autoComplete="new-password" required error={!!state?.fieldErrors?.confirm} />
-            {state?.fieldErrors?.confirm && <p className="text-xs text-error-dark">{state.fieldErrors.confirm}</p>}
+            {state?.fieldErrors?.confirm && <FieldError message={state.fieldErrors.confirm} />}
           </div>
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Resetting..." : "Reset password"}
