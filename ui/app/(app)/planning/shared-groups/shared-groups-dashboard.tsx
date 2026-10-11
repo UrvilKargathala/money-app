@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Download, MailPlus, Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
@@ -23,7 +24,7 @@ export function SharedGroupsDashboard({ initialGroups }:{ initialGroups:SharedGr
   async function reloadDetails(id=selected){ if(!id)return; const [m,i,t]=await Promise.all([json(`/api/shared-groups/${id}/members`), group?.is_owner?json(`/api/shared-groups/${id}/invites`):Promise.resolve({invites:[]}),json(`/api/shared-groups/${id}/transactions`)]); setMembers(m.members??[]);setInvites(i.invites??[]);setTransactions(t.transactions??[]); }
   useEffect(()=>{reloadDetails().catch(e=>setMessage(e.message));},[selected]);
   async function action(path:string,init:RequestInit,success:string){try{setMessage("");await json(path,init);setMessage(success);router.refresh();await reloadDetails();}catch(e){setMessage(e instanceof Error?e.message:"Something went wrong.");}}
-  return <div className="space-y-6"><div><h1 className="font-heading text-3xl font-bold text-foreground">Shared finance</h1><p className="mt-1 text-sm text-faint">Collaborate with trusted people while keeping ownership and permissions clear.</p></div>
+  return <div className="space-y-6"><PageHeader title="Shared finance" description="Collaborate with trusted people while keeping ownership and permissions clear." />
     <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
       <div className="space-y-4"><Card><CardHeader className="pb-4"><CardTitle>Create a group</CardTitle><CardDescription>For a household, trip, project, or shared goal.</CardDescription></CardHeader><CardContent className="space-y-3"><Input value={name} onChange={e=>setName(e.target.value)} placeholder="Group name"/><Button className="w-full" onClick={async()=>{if(!name.trim())return;await action("/api/shared-groups",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name})},"Group created.");setName("");}}><Plus className="mr-2 h-4 w-4"/>Create group</Button></CardContent></Card>
       <Card><CardHeader className="pb-4"><CardTitle>Your groups</CardTitle></CardHeader><CardContent className="space-y-2">{initialGroups.length===0&&<p className="text-sm text-faint">Create your first shared group.</p>}{initialGroups.map(g=><button key={g.id} onClick={()=>setSelected(g.id)} className={`w-full rounded-xl border border-edge bg-base p-3 text-left ${selected===g.id?"border-primary-500 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50":"hover:bg-deep"}`}><div className="font-medium">{g.name}</div><div className="text-xs text-faint">{g.member_count} members · {g.is_owner?"Owner":g.my_role}</div></button>)}</CardContent></Card></div>
