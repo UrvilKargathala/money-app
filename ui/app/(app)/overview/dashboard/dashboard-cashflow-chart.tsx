@@ -28,7 +28,7 @@ export function CashflowTrendCard({ cashflow }: { cashflow: CashflowRow[] }) {
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
-          <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-line text-sm text-ink-3">
+          <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-edge text-sm text-faint">
             Add transactions to see your cashflow trend.
           </div>
         ) : (

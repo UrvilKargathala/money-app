@@ -22,7 +22,7 @@ export function SpendingBreakdownCard({ categories }: { categories: CategoryRow[
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
-          <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-line text-sm text-ink-3">
+          <div className="flex h-[270px] items-center justify-center rounded-lg border border-dashed border-edge text-sm text-faint">
             Categorize transactions to see this chart.
           </div>
         ) : (
@@ -43,13 +43,13 @@ export function SpendingBreakdownCard({ categories }: { categories: CategoryRow[
               {rows.map((category, index) => (
                 <div key={category.category_id ?? category.category} className="space-y-1">
                   <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="flex min-w-0 items-center gap-2 font-medium text-ink-1">
+                    <span className="flex min-w-0 items-center gap-2 font-medium text-foreground">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }} />
                       <span className="truncate">{category.category}</span>
                     </span>
                     <span className="font-semibold">{formatINR(category.total)}</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-wash">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-soft">
                     <div className="h-full rounded-full" style={{ width: `${total > 0 ? Math.min(100, (category.total / total) * 100) : 0}%`, backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }} />
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import type { CashflowTrendCard as CashflowCard } from "./dashboard-cashflow-cha
 import type { SpendingBreakdownCard as SpendingCard } from "./dashboard-spending-chart";
 
 function Skeleton() {
-  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-wash" />;
+  return <div aria-hidden className="h-[300px] w-full animate-pulse rounded-xl bg-soft" />;
 }
 
 const LazyCashflow = nextDynamic(() => import("./dashboard-cashflow-chart").then((m) => m.CashflowTrendCard), {
