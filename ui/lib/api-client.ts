@@ -505,151 +505,9 @@ export async function getDebtsDashboard(): Promise<{
   return apiJson("/api/debts/dashboard");
 }
 
-export async function getDebtTypes(): Promise<{ debt_types: { type_code: string; display_name: string }[] } | null> {
-  return apiJson("/api/debt-types");
-}
-
 // ---------------------------------------------------------------------------
-// Debts - full wiring: amortization, cost-breakdown, prepayment, payments, DTI, strategies, health
+// Debts - live wiring: data, dashboard, DTI, combined timeline, health
 // ---------------------------------------------------------------------------
-
-export async function getDebtAmortization(
-  debtId: string,
-  year?: number
-): Promise<{
-  debt_id: string;
-  schedule_length: number;
-  schedule: {
-    period: number;
-    emi_amount: number;
-    principal_part: number;
-    interest_part: number;
-    outstanding_after: number;
-    cumulative_interest: number;
-    scheduled_date: string | null;
-  }[];
-  year_summary?: { year: number; total_emi: number; total_principal: number; total_interest: number } | null;
-} | null> {
-  const qs = year ? `?year=${year}` : "";
-  return apiJson(`/api/debts/${debtId}/amortization${qs}`);
-}
-
-export async function regenerateAmortization(
-  debtId: string
-): Promise<{ success: boolean; periods: number } | null> {
-  return postOrNull<{ success: boolean; periods: number }>(`/api/debts/${debtId}/amortization/regenerate`, {});
-}
-
-export async function getDebtCostBreakdown(debtId: string): Promise<{
-  debt_id: string;
-  name: string;
-  original_principal: number;
-  outstanding_principal: number;
-  principal_paid: number;
-  interest_paid: number;
-  remaining_interest: number;
-  total_cost: number;
-  principal_pct: number;
-  interest_pct: number;
-} | null> {
-  return apiJson(`/api/debts/${debtId}/cost-breakdown`);
-}
-
-export async function simulateDebtPrepayment(
-  debtId: string,
-  amount: number,
-  strategy: "reduce_emi" | "reduce_tenure"
-): Promise<{
-  simulation: {
-    strategy: string;
-    prepayment_amount: number;
-    new_emi: number;
-    new_tenure_months: number;
-    months_saved: number;
-    interest_saved: number;
-    original_interest: number;
-    new_interest: number;
-    current_debt_free_date: string | null;
-    new_debt_free_date: string | null;
-  };
-} | null> {
-  return postOrNull<{ simulation: { strategy: string; prepayment_amount: number; new_emi: number; new_tenure_months: number; months_saved: number; interest_saved: number; original_interest: number; new_interest: number; current_debt_free_date: string | null; new_debt_free_date: string | null; }; }>(`/api/debts/${debtId}/simulate-prepayment`, { amount: String(amount), strategy });
-}
-
-export async function applyDebtPrepayment(
-  debtId: string,
-  amount: number,
-  date: string,
-  notes?: string
-): Promise<{ success: boolean; payment: { id: string }; outstanding_after: number } | null> {
-  return postOrNull<{ success: boolean; payment: { id: string }; outstanding_after: number }>(`/api/debts/${debtId}/prepayments`, { amount: String(amount), date, notes: notes || undefined });
-}
-
-export async function getDebtPayments(debtId: string): Promise<{
-  payments: {
-    id: string;
-    debt_id: string;
-    type: string;
-    amount: number;
-    principal_part: number;
-    interest_part: number;
-    outstanding_after: number;
-    date: string;
-    transaction_id: string | null;
-    notes: string | null;
-  }[];
-} | null> {
-  return apiJson(`/api/debts/${debtId}/payments`);
-}
-
-export async function createDebtPayment(
-  debtId: string,
-  payload: { amount?: number; date?: string; transaction_id?: string; notes?: string; link_transaction?: boolean }
-): Promise<{ success: boolean; payment: { id: string }; outstanding_after: number; is_active: number } | null> {
-  try {
-    const json: Record<string, unknown> = {};
-    if (payload.amount != null) json.amount = String(payload.amount);
-    if (payload.date) json.date = payload.date;
-    if (payload.transaction_id) json.transaction_id = payload.transaction_id;
-    if (payload.notes) json.notes = payload.notes;
-    if (payload.link_transaction) json.link_transaction = true;
-    const res = await apiFetchRaw(`/api/debts/${debtId}/payments`, { method: "POST", json });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean; payment: { id: string }; outstanding_after: number; is_active: number };
-  } catch {
-    return null;
-  }
-}
-
-export async function patchDebtPayment(
-  debtId: string,
-  paymentId: string,
-  payload: { amount?: number; date?: string; notes?: string }
-): Promise<{ success: boolean } | null> {
-  try {
-    const json: Record<string, unknown> = {};
-    if (payload.amount != null) json.amount = String(payload.amount);
-    if (payload.date) json.date = payload.date;
-    if (payload.notes !== undefined) json.notes = payload.notes;
-    const res = await apiFetchRaw(`/api/debts/${debtId}/payments/${paymentId}`, { method: "PATCH", json });
-    if (!res.ok) return null;
-    return (await res.json()) as { success: boolean };
-  } catch {
-    return null;
-  }
-}
-
-export async function deleteDebtPayment(debtId: string, paymentId: string): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>(`/api/debts/${debtId}/payments/${paymentId}`, undefined, "DELETE");
-}
-
-export async function getDebtPaymentStatus(debtId: string): Promise<{
-  debt_id: string;
-  missed_count: number;
-  months: { month: string; status: string; scheduled_emi: number | null; amount: number | null; period: number | null }[];
-} | null> {
-  return apiJson(`/api/debts/${debtId}/payment-status`);
-}
 
 export async function getDebtsDti(): Promise<{
   monthly_income: number | null;
@@ -660,19 +518,6 @@ export async function getDebtsDti(): Promise<{
   income_missing: boolean;
 } | null> {
   return apiJson("/api/debts/dti");
-}
-
-export async function patchMonthlyIncome(monthlyIncome: number | null): Promise<{ success: boolean; monthly_income: number | null } | null> {
-  return postOrNull<{ success: boolean; monthly_income: number | null }>("/api/users/me/settings/monthly-income", { monthly_income: monthlyIncome === null ? null : String(monthlyIncome) }, "PATCH");
-}
-
-export async function compareDebtStrategies(extraMonthly: number): Promise<{
-  extra_monthly: number;
-  baseline: { months_to_debt_free: number; total_interest: number };
-  avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-  snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-} | null> {
-  return postOrNull<{ extra_monthly: number; baseline: { months_to_debt_free: number; total_interest: number }; avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; }>("/api/debts/strategies/compare", { extra_monthly: String(extraMonthly) });
 }
 
 export async function getDebtsCombinedTimeline(): Promise<{
@@ -686,15 +531,6 @@ export async function getDebtsCombinedTimeline(): Promise<{
   timeline: { debt_id: string; name: string; type: string; outstanding: number; emi_amount: number | null; interest_rate: number; months_remaining: number | null; payoff_date: string | null }[];
 } | null> {
   return apiJson("/api/debts/combined-timeline");
-}
-
-export async function compareCombinedStrategies(extraMonthly: number): Promise<{
-  extra_monthly: number;
-  baseline: { months_to_debt_free: number; total_interest: number };
-  avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-  snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] };
-} | null> {
-  return postOrNull<{ extra_monthly: number; baseline: { months_to_debt_free: number; total_interest: number }; avalanche: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; snowball: { strategy: string; months_to_debt_free: number; total_interest: number; interest_saved: number; debt_free_date: string | null; payoff_order: string[] }; }>("/api/debts/combined/strategies", { extra_monthly: String(extraMonthly) });
 }
 
 export async function getDebtsHealthAlerts(): Promise<{
