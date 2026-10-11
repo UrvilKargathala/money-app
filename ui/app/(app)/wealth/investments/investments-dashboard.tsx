@@ -151,9 +151,9 @@ export function InvestmentsDashboard({
     }
     let invested = 0;
     let current = 0;
-    for (const i of investments) {
-      invested += Number(i.units) * Number(i.buy_price);
-      current += Number(i.units) * Number(i.current_price);
+    for (const investment of investments) {
+      invested += Number(investment.units) * Number(investment.buy_price);
+      current += Number(investment.units) * Number(investment.current_price);
     }
     const ret = current - invested;
     return { invested, current, ret, pct: invested > 0 ? (ret / invested) * 100 : 0 };
@@ -163,23 +163,23 @@ export function InvestmentsDashboard({
   const totalReturn = totals.ret;
   const returnPct = totals.pct;
 
-  const investmentOpts = useMemo(() => investments.map((i) => ({ id: i.id, name: i.name })), [investments]);
+  const investmentOpts = useMemo(() => investments.map((investment) => ({ id: investment.id, name: investment.name })), [investments]);
 
-  const dividendsTotal = useMemo(() => dividends.reduce((s, d) => s + Number(d.amount), 0), [dividends]);
+  const dividendsTotal = useMemo(() => dividends.reduce((sum, dividend) => sum + Number(dividend.amount), 0), [dividends]);
 
   const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
-  const handleEditInvestment = useCallback((inv: Investment) => {
-    setEditing(inv);
+  const handleEditInvestment = useCallback((investment: Investment) => {
+    setEditing(investment);
     setFormOpen(true);
   }, []);
 
   const handleDelete = useCallback(
-    (inv: Investment) => {
+    (investment: Investment) => {
       confirmDelete({
         title: "Delete this holding?",
         description: "Its price history and payouts stay in reports. This cannot be undone.",
-        onDelete: () => deleteInvestmentAction(inv.id),
+        onDelete: () => deleteInvestmentAction(investment.id),
         successMsg: "Deleted",
         onDone: () => router.refresh(),
       });
@@ -282,9 +282,9 @@ export function InvestmentsDashboard({
       const res = await fetch(`/api/investments/${id}/price-history`);
       if (!res.ok) return [];
       const data = await res.json();
-      return (data.price_history ?? []).map((p: { price: string | number; date: string }) => ({
-        price: Number(p.price),
-        date: p.date,
+      return (data.price_history ?? []).map((entry: { price: string | number; date: string }) => ({
+        price: Number(entry.price),
+        date: entry.date,
       }));
     } catch {
       return [];
@@ -346,10 +346,10 @@ export function InvestmentsDashboard({
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {investments.map((inv) => (
-                <div key={inv.id} className="space-y-2">
+              {investments.map((investment) => (
+                <div key={investment.id} className="space-y-2">
                   <InvestmentCard
-                    investment={inv}
+                    investment={investment}
                     onEdit={handleEditInvestment}
                     onDelete={handleDelete}
                     onUpdatePrice={handleEditInvestment}
@@ -359,7 +359,7 @@ export function InvestmentsDashboard({
                     size="sm"
                     className="w-full text-xs"
                     onClick={() => {
-                      setPriceInv(inv);
+                      setPriceInv(investment);
                       setPriceOpen(true);
                     }}
                   >
