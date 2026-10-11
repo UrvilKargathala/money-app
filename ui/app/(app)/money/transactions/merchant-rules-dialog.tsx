@@ -29,8 +29,8 @@ export function MerchantRulesDialog({
   categories: { id: string; name: string }[];
 }) {
   const router = useRouter();
-  const [raw, setRaw] = useState("");
-  const [clean, setClean] = useState("");
+  const [rawText, setRawText] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [categoryId, setCategoryId] = useState("none");
   const [busy, setBusy] = useState(false);
   const save = async () => {
@@ -40,16 +40,16 @@ export function MerchantRulesDialog({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          merchant_raw: raw,
-          merchant_clean: clean || null,
+          merchant_raw: rawText,
+          merchant_clean: displayName || null,
           category_id: categoryId === "none" ? null : categoryId,
         }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0]);
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || Object.values(responseBody.fieldErrors || {})[0]);
       toast.success("Merchant rule saved");
-      setRaw("");
-      setClean("");
+      setRawText("");
+      setDisplayName("");
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save rule.");
@@ -69,11 +69,11 @@ export function MerchantRulesDialog({
         <div className="grid gap-3">
           <div>
             <Label>Statement text *</Label>
-            <Input value={raw} onChange={(event) => setRaw(event.target.value)} placeholder="AMZN Mktp IN*..." />
+            <Input value={rawText} onChange={(event) => setRawText(event.target.value)} placeholder="AMZN Mktp IN*..." />
           </div>
           <div>
             <Label>Display name</Label>
-            <Input value={clean} onChange={(event) => setClean(event.target.value)} placeholder="Amazon" />
+            <Input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Amazon" />
           </div>
           <div>
             <Label>Default category</Label>
@@ -91,7 +91,7 @@ export function MerchantRulesDialog({
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={() => void save()} disabled={!raw.trim() || busy}>
+          <Button onClick={() => void save()} disabled={!rawText.trim() || busy}>
             {busy ? "Saving..." : "Save rule"}
           </Button>
         </div>
