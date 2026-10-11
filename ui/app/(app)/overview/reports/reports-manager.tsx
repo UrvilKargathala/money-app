@@ -90,11 +90,11 @@ export function ReportsManager({ templates, exports: jobs, initialFilters = [] }
       </div>
     </CardContent></Card>
     <Card><CardHeader className="pb-4"><CardTitle>Generate and download</CardTitle><CardDescription>Create a PDF and keep it in your report history.</CardDescription></CardHeader><CardContent className="space-y-4">
-      <select aria-label="Report template" className="h-10 w-full rounded-md border bg-surface px-3 text-sm" value={templateId} onChange={e=>setTemplateId(e.target.value)}><option value="">Standard report</option>{templates.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select>
+      <select aria-label="Report template" className="h-10 w-full rounded-md border bg-base px-3 text-sm" value={templateId} onChange={e=>setTemplateId(e.target.value)}><option value="">Standard report</option>{templates.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select>
       <div className="grid gap-3 sm:grid-cols-2"><Input type="date" aria-label="Report start date" value={start} onChange={e=>setStart(e.target.value)} /><Input type="date" aria-label="Report end date" value={end} onChange={e=>setEnd(e.target.value)} /></div>
       <div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={saveFilter}>Save filter</Button>{savedFilters.map((item) => <Button key={item.name} type="button" variant="ghost" size="sm" onClick={() => { setStart(item.start); setEnd(item.end); }}>{item.name}</Button>)}</div>
       <Button onClick={generate} disabled={busy}><FileBarChart className="mr-2 h-4 w-4"/>Generate PDF</Button>
-      {message && <p role="status" className="text-sm text-ink-2">{message}</p>}
+      {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
       <div className="divide-y rounded-xl border">{jobs.length === 0 && <p className="p-4 text-sm text-ink-3">Generated reports will appear here.</p>}{jobs.map(j=><div key={j.id} className="flex items-center justify-between p-4"><div><p className="text-sm font-medium">PDF report</p><p className="text-xs text-ink-3">{new Date(j.created_at).toLocaleString()} · {j.status}</p></div><Button asChild size="sm" variant="outline"><a href={`/api/report-exports/${j.id}/download`}><Download className="mr-2 h-4 w-4"/>Download</a></Button></div>)}</div>
     </CardContent></Card>
     <Dialog open={nameOpen} onOpenChange={setNameOpen}>
