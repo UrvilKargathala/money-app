@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { BudgetCard } from "./budget-card";
 import { formatINR } from "@/lib/format";
@@ -124,27 +125,27 @@ export function BudgetsDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Budgets</h1>
-          <p className="text-sm text-faint font-body mt-1">Track spending vs plan for {monthName}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href={`/api/budgets/export?month=${month}&year=${year}`} download>
-              <Download className="h-4 w-4" /> Export
-            </a>
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Budget
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Budgets"
+        description={<>Track spending vs plan for {monthName}</>}
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <a href={`/api/budgets/export?month=${month}&year=${year}`} download>
+                <Download className="h-4 w-4" /> Export
+              </a>
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Budget
+            </Button>
+          </>
+        }
+      />
 
       <Card className="p-4 flex items-center justify-between">
         <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month">
