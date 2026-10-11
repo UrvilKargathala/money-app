@@ -74,7 +74,7 @@ function ResetForm() {
                   {showToken ? "Hide" : "Show"}
                 </button>
               </div>
-              <p className="text-xs text-neutral-400">No link? Paste the token from your email.</p>
+              <p className="text-xs text-faint">No link? Paste the token from your email.</p>
             </div>
           )}
           <div className="space-y-2">
