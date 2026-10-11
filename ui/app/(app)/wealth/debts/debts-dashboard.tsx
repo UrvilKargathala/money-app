@@ -635,14 +635,14 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
             <p className="text-sm font-semibold">{data.baseline.months_to_debt_free} months</p>
             <p className="text-xs text-faint">Interest {formatINR(data.baseline.total_interest)}</p>
           </div>
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-            <p className="text-xs text-green-700">Avalanche (high rate first)</p>
+<div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-[#064E3B] dark:bg-[#064E3B]/30">
+<p className="text-xs text-green-700 dark:text-[#A7F3D0]">Avalanche (high rate first)</p>
             <p className="text-sm font-semibold">{data.avalanche.months_to_debt_free} months • Saved {formatINR(data.avalanche.interest_saved)}</p>
             <p className="text-xs text-faint">Interest {formatINR(data.avalanche.total_interest)}</p>
             <p className="text-xs text-neutral-400 break-all">Order: {data.avalanche.payoff_order.join(" → ") || "-"}</p>
           </div>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <p className="text-xs text-blue-700">Snowball (small balance first)</p>
+<div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40">
+<p className="text-xs text-blue-700 dark:text-[#BFDBFE]">Snowball (small balance first)</p>
             <p className="text-sm font-semibold">{data.snowball.months_to_debt_free} months • Saved {formatINR(data.snowball.interest_saved)}</p>
             <p className="text-xs text-faint">Interest {formatINR(data.snowball.total_interest)}</p>
             <p className="text-xs text-neutral-400 break-all">Order: {data.snowball.payoff_order.join(" → ") || "-"}</p>
