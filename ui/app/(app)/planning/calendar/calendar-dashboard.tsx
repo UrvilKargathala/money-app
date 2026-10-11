@@ -194,13 +194,13 @@ export function CalendarDashboard({
 
   // Group events by date
   const byDate = useMemo(() => {
-    const m = new Map<string, CalendarEvent[]>();
-    for (const e of events) {
-      const d = e.date.slice(0, 10);
-      if (!m.has(d)) m.set(d, []);
-      m.get(d)!.push(e);
+    const grouped = new Map<string, CalendarEvent[]>();
+    for (const event of events) {
+      const dateKey = event.date.slice(0, 10);
+      if (!grouped.has(dateKey)) grouped.set(dateKey, []);
+      grouped.get(dateKey)!.push(event);
     }
-    return m;
+    return grouped;
   }, [events]);
 
   const sortedDates = useMemo(() => Array.from(byDate.keys()).sort(), [byDate]);
@@ -213,9 +213,9 @@ export function CalendarDashboard({
     const total = Math.ceil((startWeekday + dim) / 7) * 7;
     const cells: { date: Date; iso: string; inMonth: boolean }[] = [];
     for (let i = 0; i < total; i++) {
-      const d = new Date(year, month - 1, 1 - startWeekday + i);
-      const iso = toISO(d);
-      cells.push({ date: d, iso, inMonth: d.getMonth() === month - 1 });
+      const cellDate = new Date(year, month - 1, 1 - startWeekday + i);
+      const iso = toISO(cellDate);
+      cells.push({ date: cellDate, iso, inMonth: cellDate.getMonth() === month - 1 });
     }
     return cells;
   }, [month, year]);
@@ -223,16 +223,16 @@ export function CalendarDashboard({
   const monthLabel = new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
   const navigateMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) {
-      m = 12;
-      y -= 1;
-    } else if (m > 12) {
-      m = 1;
-      y += 1;
+    let nextMonth = month + delta;
+    let nextYear = year;
+    if (nextMonth < 1) {
+      nextMonth = 12;
+      nextYear -= 1;
+    } else if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear += 1;
     }
-    router.push(`/planning/calendar?month=${m}&year=${y}`);
+    router.push(`/planning/calendar?month=${nextMonth}&year=${nextYear}`);
   };
 
   const selectedEvents = useMemo(() => (selectedDate ? byDate.get(selectedDate) ?? [] : []), [selectedDate, byDate]);
@@ -241,9 +241,9 @@ export function CalendarDashboard({
   const selectedTotals = useMemo(() => {
     let inflow = 0;
     let outflow = 0;
-    for (const ev of selectedEvents) {
-      if (ev.kind === "inflow") inflow += ev.amount ?? 0;
-      else if (ev.kind === "outflow") outflow += ev.amount ?? 0;
+    for (const event of selectedEvents) {
+      if (event.kind === "inflow") inflow += event.amount ?? 0;
+      else if (event.kind === "outflow") outflow += event.amount ?? 0;
     }
     return { inflow, outflow };
   }, [selectedEvents]);
@@ -258,7 +258,7 @@ export function CalendarDashboard({
       horizon.setDate(horizon.getDate() + 7);
       const horizonIso = toISO(horizon);
       const todayIso = toISO(cutoff);
-      return upcoming.days.filter((d) => d.date >= todayIso && d.date <= horizonIso);
+      return upcoming.days.filter((day) => day.date >= todayIso && day.date <= horizonIso);
     }
     return upcoming.days;
   }, [upcoming, upcomingWindow]);
@@ -270,7 +270,14 @@ export function CalendarDashboard({
   const taxList = taxDeadlines?.deadlines ?? [];
 
   const totalEvents = events.length;
-  const upcomingCount = upcoming ? upcoming.days.reduce((a, d) => a + d.events.length, 0) : legacyUp.reduce((a, d) => a + d.events.length, 0);
+  const upcomingCount = useMemo(
+    () => (upcoming ? upcoming.days.reduce((total, day) => total + day.events.length, 0) : legacyUp.reduce((total, day) => total + day.events.length, 0)),
+    [upcoming, legacyUp]
+  );
+  const negativeAccountsCount = useMemo(
+    () => cashflowProjections.filter((proj) => proj.negative_days.length > 0).length,
+    [cashflowProjections]
+  );
   const netCashflow = upcoming?.net_cashflow ?? 0;
 
   return (
@@ -305,7 +312,7 @@ export function CalendarDashboard({
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Events this month" value={String(totalEvents)} subtext={`${sortedDates.length} days with events`} icon={<Calendar className="h-5 w-5" />} variant="primary" />
         <StatCard label="Upcoming" value={String(upcomingCount)} subtext={`${upcoming?.window_days ?? upcomingWindow} days • Net ${formatINR(netCashflow)}`} icon={<Clock className="h-5 w-5" />} variant="amber" />
-        <StatCard label="Cashflow accounts" value={String(cashflowProjections.length)} subtext={cashflowProjections.some((p) => p.negative_days.length > 0) ? `${cashflowProjections.filter((p) => p.negative_days.length > 0).length} with negative days` : "All positive"} icon={<Wallet className="h-5 w-5" />} variant="teal" />
+        <StatCard label="Cashflow accounts" value={String(cashflowProjections.length)} subtext={negativeAccountsCount > 0 ? `${negativeAccountsCount} with negative days` : "All positive"} icon={<Wallet className="h-5 w-5" />} variant="teal" />
       </div>
 
       {/* Legend */}
@@ -322,9 +329,9 @@ export function CalendarDashboard({
             { label: "Debt EMI", cls: "bg-red-600" },
             { label: "Maturity", cls: "bg-emerald-500" },
             { label: "Recurring", cls: "bg-teal-500" },
-          ].map((l) => (
-            <span key={l.label} className="inline-flex items-center gap-1.5 text-xs">
-              <span className={`h-2.5 w-2.5 rounded-full ${l.cls}`} /> {l.label}
+          ].map((legend) => (
+            <span key={legend.label} className="inline-flex items-center gap-1.5 text-xs">
+              <span className={`h-2.5 w-2.5 rounded-full ${legend.cls}`} /> {legend.label}
             </span>
           ))}
         </div>
@@ -346,9 +353,9 @@ export function CalendarDashboard({
               {/* Month grid */}
               <div>
                 <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-edge bg-edge">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                    <div key={d} className="bg-deep py-2 text-center text-xs font-semibold text-faint">
-                      {d}
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((weekday) => (
+                    <div key={weekday} className="bg-deep py-2 text-center text-xs font-semibold text-faint">
+                      {weekday}
                     </div>
                   ))}
                   {grid.map((cell) => {
@@ -369,11 +376,11 @@ export function CalendarDashboard({
                           {countFromApi > 0 && <span className="text-[10px] font-medium text-faint">{countFromApi}</span>}
                         </div>
                         <div className="mt-1 space-y-0.5">
-                          {dayEvents.slice(0, 3).map((ev, idx) => (
-                            <div key={`${ev.source}-${ev.label}-${idx}`} className="flex items-center gap-1 truncate">
-                              <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${sourceDot(ev.source)}`} />
-                              <span className="text-[11px] truncate text-muted-foreground">{ev.label}</span>
-                              {ev.amount != null && <span className="text-[10px] text-faint truncate ml-auto">{formatINR(ev.amount).replace("₹", "").trim().slice(0, 6)}</span>}
+                          {dayEvents.slice(0, 3).map((event, index) => (
+                            <div key={`${event.source}-${event.label}-${index}`} className="flex items-center gap-1 truncate">
+                              <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${sourceDot(event.source)}`} />
+                              <span className="text-[11px] truncate text-muted-foreground">{event.label}</span>
+                              {event.amount != null && <span className="text-[10px] text-faint truncate ml-auto">{formatINR(event.amount).replace("₹", "").trim().slice(0, 6)}</span>}
                             </div>
                           ))}
                           {dayEvents.length > 3 && <p className="text-[10px] text-faint">+{dayEvents.length - 3} more</p>}
@@ -425,27 +432,27 @@ export function CalendarDashboard({
                       </div>
                     </Card>
                     <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
-                      {selectedEvents.map((ev, i) => (
-                        <Card key={`${ev.source}-${ev.label}-${ev.date}-${i}`} className="p-3 flex items-start justify-between gap-2">
+                      {selectedEvents.map((event, index) => (
+                        <Card key={`${event.source}-${event.label}-${event.date}-${index}`} className="p-3 flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`h-2 w-2 rounded-full ${sourceDot(ev.source)}`} />
-                              <p className="text-sm font-medium font-heading truncate">{ev.label}</p>
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(ev.kind)}`}>{ev.kind}</span>
+                              <span className={`h-2 w-2 rounded-full ${sourceDot(event.source)}`} />
+                              <p className="text-sm font-medium font-heading truncate">{event.label}</p>
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(event.source)}`}>{event.source}</span>
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(event.kind)}`}>{event.kind}</span>
                             </div>
                             <p className="text-xs text-faint mt-1">
-                              {ev.amount != null ? formatINR(ev.amount) : "No amount"} {ev.status ? `• ${ev.status}` : ""}
+                              {event.amount != null ? formatINR(event.amount) : "No amount"} {event.status ? `• ${event.status}` : ""}
                             </p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(ev.event_id!)} title="Duplicate" aria-label={`Duplicate event ${ev.label}`}>
+                            {event.source === "custom" && event.event_id && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(event.event_id!)} title="Duplicate" aria-label={`Duplicate event ${event.label}`}>
                                 <Copy className="h-4 w-4" />
                               </Button>
                             )}
-                            {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light dark:hover:bg-[#7F1D1D]/40">
+                            {event.source === "custom" && event.event_id && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(event.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light dark:hover:bg-[#7F1D1D]/40">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
@@ -464,33 +471,33 @@ export function CalendarDashboard({
               <EmptyState icon={<Calendar className="h-6 w-6" />} title="No events" description="Add a custom event or view derived events from bills, subscriptions and SIPs." actionLabel="Add Event" onAction={() => setFormOpen(true)} />
             ) : (
               <div className="space-y-6">
-                {sortedDates.map((d) => (
-                  <div key={d}>
+                {sortedDates.map((dateStr) => (
+                  <div key={dateStr}>
                     <h2 className="text-sm font-semibold font-heading text-muted-foreground mb-2">
-                      {new Date(d).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                      {new Date(dateStr).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                     </h2>
                     <div className="space-y-2">
-                      {byDate.get(d)!.map((ev, idx) => (
-                        <Card key={`${ev.source}-${ev.label}-${idx}-${ev.event_id ?? idx}`} className="p-3 flex items-center justify-between gap-2">
+                      {byDate.get(dateStr)!.map((event, index) => (
+                        <Card key={`${event.source}-${event.label}-${index}-${event.event_id ?? index}`} className="p-3 flex items-center justify-between gap-2">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`h-2 w-2 rounded-full ${sourceDot(ev.source)}`} />
-                              <p className="text-sm font-medium font-heading truncate">{ev.label}</p>
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(ev.kind)}`}>{ev.kind}</span>
+                              <span className={`h-2 w-2 rounded-full ${sourceDot(event.source)}`} />
+                              <p className="text-sm font-medium font-heading truncate">{event.label}</p>
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(event.source)}`}>{event.source}</span>
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(event.kind)}`}>{event.kind}</span>
                             </div>
                             <p className="text-xs text-faint">
-                              {ev.amount != null ? formatINR(ev.amount) : "No amount"} {ev.status ? `• ${ev.status}` : ""}
+                              {event.amount != null ? formatINR(event.amount) : "No amount"} {event.status ? `• ${event.status}` : ""}
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
-                            {ev.source === "custom" && ev.event_id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(ev.event_id!)} title="Duplicate" aria-label={`Duplicate event ${ev.label}`}>
+                            {event.source === "custom" && event.event_id && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDuplicate(event.event_id!)} title="Duplicate" aria-label={`Duplicate event ${event.label}`}>
                                 <Copy className="h-4 w-4" />
                               </Button>
                             )}
-                            {ev.source === "custom" && ev.event_id ? (
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light dark:hover:bg-[#7F1D1D]/40">
+                            {event.source === "custom" && event.event_id ? (
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(event.event_id!)} title="Delete event" aria-label="Delete event" className="text-error hover:text-error-dark hover:bg-error-light dark:hover:bg-[#7F1D1D]/40">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             ) : (
@@ -529,22 +536,22 @@ export function CalendarDashboard({
             <div className="space-y-3">
               <p className="text-xs text-faint">Window {upcoming.window_days} days • Net {formatINR(upcoming.net_cashflow)} • Showing {upcomingDays.length} days • All from API</p>
               <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
-                {upcomingDays.map((u) => (
-                  <div key={u.date} className="border-b last:border-0 pb-3 last:pb-0">
+                {upcomingDays.map((day) => (
+                  <div key={day.date} className="border-b last:border-0 pb-3 last:pb-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
+                      <p className="text-sm font-medium">{new Date(day.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
                       <span className="text-xs text-faint">
-                        In {formatINR(u.inflow_total)} • Out {formatINR(u.outflow_total)}
+                        In {formatINR(day.inflow_total)} • Out {formatINR(day.outflow_total)}
                       </span>
                     </div>
                     <div className="space-y-1 mt-1">
-                      {u.events.map((ev, i) => (
-                        <div key={i} className="flex justify-between text-xs text-muted-foreground gap-2">
+                      {day.events.map((event, index) => (
+                        <div key={index} className="flex justify-between text-xs text-muted-foreground gap-2">
                           <span className="flex items-center gap-1.5 truncate">
-                            <span className={`h-1.5 w-1.5 rounded-full ${sourceDot(ev.source)}`} /> {ev.label}
-                            <span className={`inline-flex px-1 py-0 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
+                            <span className={`h-1.5 w-1.5 rounded-full ${sourceDot(event.source)}`} /> {event.label}
+                            <span className={`inline-flex px-1 py-0 rounded text-[10px] font-medium ${sourceBadgeVariant(event.source)}`}>{event.source}</span>
                           </span>
-                          {ev.amount != null && <span className="shrink-0 font-medium">{formatINR(ev.amount)}</span>}
+                          {event.amount != null && <span className="shrink-0 font-medium">{formatINR(event.amount)}</span>}
                         </div>
                       ))}
                     </div>
@@ -554,16 +561,16 @@ export function CalendarDashboard({
             </div>
           ) : legacyUp.length > 0 ? (
             <div className="space-y-3">
-              {legacyUp.slice(0, 5).map((u) => (
-                <div key={u.date} className="border-b last:border-0 pb-3 last:pb-0">
-                  <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} - {formatINR(u.total)}</p>
+              {legacyUp.slice(0, 5).map((day) => (
+                <div key={day.date} className="border-b last:border-0 pb-3 last:pb-0">
+                  <p className="text-sm font-medium">{new Date(day.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} - {formatINR(day.total)}</p>
                   <div className="space-y-1 mt-1">
-                    {u.events.map((ev, i) => (
-                      <div key={i} className="flex justify-between text-xs text-muted-foreground">
+                    {day.events.map((event, index) => (
+                      <div key={index} className="flex justify-between text-xs text-muted-foreground">
                         <span>
-                          {ev.title} <Badge variant="default" className="ml-1 text-[10px]">{ev.type}</Badge>
+                          {event.title} <Badge variant="default" className="ml-1 text-[10px]">{event.type}</Badge>
                         </span>
-                        {ev.amount != null && <span>{formatINR(ev.amount)}</span>}
+                        {event.amount != null && <span>{formatINR(event.amount)}</span>}
                       </div>
                     ))}
                   </div>
@@ -582,18 +589,18 @@ export function CalendarDashboard({
           </h2>
           {taxList.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-auto pr-1">
-              {taxList.map((t) => (
-                <div key={t.date} className={`rounded-lg border p-3 ${t.past ? "bg-deep border-edge opacity-70" : "bg-purple-50/50 border-purple-100"}`}>
+              {taxList.map((deadline) => (
+                <div key={deadline.date} className={`rounded-lg border p-3 ${deadline.past ? "bg-deep border-edge opacity-70" : "bg-purple-50/50 border-purple-100"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium font-heading">{t.label}</p>
-                      <p className="text-xs text-faint">{t.description}</p>
+                      <p className="text-sm font-medium font-heading">{deadline.label}</p>
+                      <p className="text-xs text-faint">{deadline.description}</p>
                     </div>
-                    <Badge variant={t.past ? "default" : "secondary"} className="shrink-0 text-[10px]">
-                      {t.past ? "past" : "upcoming"}
+                    <Badge variant={deadline.past ? "default" : "secondary"} className="shrink-0 text-[10px]">
+                      {deadline.past ? "past" : "upcoming"}
                     </Badge>
                   </div>
-                  <p className="text-xs font-medium mt-1 text-muted-foreground">{new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  <p className="text-xs font-medium mt-1 text-muted-foreground">{new Date(deadline.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </div>
               ))}
               <p className="text-xs text-faint">{taxList.length} deadlines • Registry from API</p>
@@ -612,27 +619,27 @@ export function CalendarDashboard({
             <div className="space-y-3">
               <p className="text-xs text-faint">{cashflowProjections.length} accounts • Daily balances • All from API</p>
               <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
-                {cashflowProjections.map((p) => (
-                  <div key={p.account_id} className="rounded-lg border border-edge p-3 space-y-2">
-                    <p className="text-sm font-medium font-heading">{p.account_name}</p>
+                {cashflowProjections.map((proj) => (
+                  <div key={proj.account_id} className="rounded-lg border border-edge p-3 space-y-2">
+                    <p className="text-sm font-medium font-heading">{proj.account_name}</p>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div>
                         <p className="text-faint">Today</p>
-                        <p className="font-semibold">{formatINR(p.balance_today)}</p>
+                        <p className="font-semibold">{formatINR(proj.balance_today)}</p>
                       </div>
                       <div>
                         <p className="text-faint">+7 days</p>
-                        <p className={`font-semibold ${p.balance_plus7 < 0 ? "text-error" : ""}`}>{formatINR(p.balance_plus7)}</p>
+                        <p className={`font-semibold ${proj.balance_plus7 < 0 ? "text-error" : ""}`}>{formatINR(proj.balance_plus7)}</p>
                       </div>
                       <div>
                         <p className="text-faint">+30 days</p>
-                        <p className={`font-semibold ${p.balance_plus30 < 0 ? "text-error" : ""}`}>{formatINR(p.balance_plus30)}</p>
+                        <p className={`font-semibold ${proj.balance_plus30 < 0 ? "text-error" : ""}`}>{formatINR(proj.balance_plus30)}</p>
                       </div>
                     </div>
-                    {p.negative_days.length > 0 ? (
+                    {proj.negative_days.length > 0 ? (
                       <div className="rounded bg-error-soft/50 p-2 dark:bg-[#7F1D1D]/40">
-                        <p className="text-xs font-medium text-error-dark">Negative on {p.negative_days.length} days</p>
-                        <p className="text-[11px] text-error-dark/80 break-all">{p.negative_days.slice(0, 5).join(", ")}{p.negative_days.length > 5 ? ` +${p.negative_days.length - 5} more` : ""}</p>
+                        <p className="text-xs font-medium text-error-dark">Negative on {proj.negative_days.length} days</p>
+                        <p className="text-[11px] text-error-dark/80 break-all">{proj.negative_days.slice(0, 5).join(", ")}{proj.negative_days.length > 5 ? ` +${proj.negative_days.length - 5} more` : ""}</p>
                       </div>
                     ) : (
                       <p className="text-xs text-success">No negative balances in projection</p>
