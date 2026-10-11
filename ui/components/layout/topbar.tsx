@@ -132,7 +132,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   <DropdownMenuTrigger
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
-                      groupActive ? "bg-foreground text-base shadow-sm" : "text-muted-foreground hover:bg-deep hover:text-foreground"
+                      groupActive ? "bg-foreground text-white dark:text-[#0F172A] shadow-sm" : "text-muted-foreground hover:bg-deep hover:text-foreground"
                     )}
                   >
                     {group.label}
@@ -169,7 +169,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                   href={item.href}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                      active ? "bg-foreground text-base shadow-sm" : "text-muted-foreground hover:bg-deep hover:text-foreground"
+                      active ? "bg-foreground text-white dark:text-[#0F172A] shadow-sm" : "text-muted-foreground hover:bg-deep hover:text-foreground"
                     )}
                 >
                   {item.label}
