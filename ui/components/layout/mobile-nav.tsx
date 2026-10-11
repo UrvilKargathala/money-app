@@ -18,11 +18,11 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
   return (
     <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent side="left" className="w-[320px] p-0 overflow-y-auto">
-        <div className="flex h-16 items-center gap-2 border-b border-line px-6">
+        <div className="flex h-16 items-center gap-2 border-b border-edge px-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
             <Wallet className="h-5 w-5" />
           </div>
-          <span className="text-lg font-bold font-heading text-ink-1">MoneyMind</span>
+          <span className="text-lg font-bold font-heading text-foreground">MoneyMind</span>
         </div>
         <nav className="p-4 space-y-6" aria-label="Mobile">
           {NAV_GROUPS.map((group) => (
@@ -40,7 +40,7 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
                       aria-current={active ? "page" : undefined}
                       className={cn(
                         "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                        active ? "bg-tint-info text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken hover:text-ink-1"
+                        active ? "bg-info-soft text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-muted-foreground hover:bg-deep hover:text-foreground"
                       )}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
@@ -51,7 +51,7 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           ))}
-          <div className="border-t border-line pt-4 space-y-1">
+          <div className="border-t border-edge pt-4 space-y-1">
             {[NOTIFICATION_NAV_ITEM, ...STANDALONE_NAV_ITEMS].map((item) => {
               const active = isItemActive(pathname, item.href);
               const Icon = item.icon;
@@ -63,7 +63,7 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                        active ? "bg-tint-info text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-ink-2 hover:bg-sunken"
+                        active ? "bg-info-soft text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-muted-foreground hover:bg-deep"
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
