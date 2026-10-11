@@ -88,8 +88,8 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
     setHistoryBusy(true);
     try {
       const res = await fetch("/api/import-batches");
-      const body = await res.json().catch(() => ({}));
-      if (res.ok) setBatches(body.batches ?? []);
+      const responseBody = await res.json().catch(() => ({}));
+      if (res.ok) setBatches(responseBody.batches ?? []);
     } finally {
       setHistoryBusy(false);
     }
@@ -118,11 +118,11 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ csv: text }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Could not preview statement.");
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || "Could not preview statement.");
       setCsvText(text);
-      setPreview(body);
-      setMapping(body.detected_mapping);
+      setPreview(responseBody);
+      setMapping(responseBody.detected_mapping);
       setResult(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not preview statement.");
@@ -141,9 +141,9 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ csv: csvText, mapping: nextMapping }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Could not validate mapping.");
-      setPreview((current) => current ? { ...current, valid_rows: body.valid_rows, errors: body.errors, detected_mapping: body.applied_mapping } : current);
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || "Could not validate mapping.");
+      setPreview((current) => current ? { ...current, valid_rows: responseBody.valid_rows, errors: responseBody.errors, detected_mapping: responseBody.applied_mapping } : current);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not validate mapping.");
     } finally {
@@ -160,10 +160,10 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
       form.set("account_id", accountId);
       form.set("mapping", JSON.stringify(mapping));
       const res = await fetch("/api/transactions/import", { method: "POST", body: form });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || body.fieldErrors?.account_id || "Could not import statement.");
-      setResult(body);
-      toast.success(`Imported ${body.imported_rows ?? 0} transactions`);
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || responseBody.fieldErrors?.account_id || "Could not import statement.");
+      setResult(responseBody);
+      toast.success(`Imported ${responseBody.imported_rows ?? 0} transactions`);
       await loadHistory();
       onSuccess();
     } catch (error) {
@@ -186,12 +186,12 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
       const form = new FormData();
       form.set("file", selected);
       const res = await fetch("/api/transactions/scan-receipt", { method: "POST", body: form });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Could not read receipt.");
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || "Could not read receipt.");
       setScanUnavailable(false);
-      setScanDraft(body.draft);
-      const categoryId = categories.find((category) => category.name.toLowerCase() === body.draft.category_name?.toLowerCase())?.id;
-      setScanCategoryId(categoryId ?? "none");
+      setScanDraft(responseBody.draft);
+      const matchedId = categories.find((category) => category.name.toLowerCase() === responseBody.draft.category_name?.toLowerCase())?.id;
+      setScanCategoryId(matchedId ?? "none");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not read receipt.";
       if (message.includes("AI_GATEWAY_API_KEY")) {
@@ -222,8 +222,8 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
           notes: "Created from receipt scan",
         }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Could not save scanned transaction.");
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || "Could not save scanned transaction.");
       toast.success("Scanned transaction saved");
       setScanDraft(null);
       if (scanInputRef.current) scanInputRef.current.value = "";
@@ -244,9 +244,9 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Could not resolve duplicates.");
-      toast.success(action === "skip" ? `Skipped ${body.skipped ?? 0} duplicates` : `Imported ${body.imported ?? 0} duplicates`);
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || "Could not resolve duplicates.");
+      toast.success(action === "skip" ? `Skipped ${responseBody.skipped ?? 0} duplicates` : `Imported ${responseBody.imported ?? 0} duplicates`);
       await loadHistory();
       onSuccess();
     } catch (error) {
@@ -267,9 +267,9 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
         setHistoryBusy(true);
         try {
           const res = await fetch(`/api/import-batches/${batchId}/rollback`, { method: "POST" });
-          const body = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(body.error || "Could not roll back import.");
-          toast.success(`Rolled back ${body.deleted ?? 0} imported transactions`);
+          const responseBody = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(responseBody.error || "Could not roll back import.");
+          toast.success(`Rolled back ${responseBody.deleted ?? 0} imported transactions`);
           await loadHistory(); onSuccess();
         } catch (error) { toast.error(error instanceof Error ? error.message : "Could not roll back import."); }
         finally { setHistoryBusy(false); }
@@ -359,3 +359,4 @@ export function TransactionImportDialog({ open, onOpenChange, accounts, categori
     </>
   );
 }
+
