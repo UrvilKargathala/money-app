@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { TransactionRow } from "./transaction-row";
+import { PageHeader } from "@/components/common/page-header";
 import { TransactionFilters } from "./transaction-filters";
 import { formatINR } from "@/lib/format";
 import { Plus, TrendingUp, TrendingDown, Wallet, Download, ChevronLeft, ChevronRight, Upload, WandSparkles, Tags } from "lucide-react";
@@ -186,29 +187,29 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Transactions</h1>
-          <p className="text-sm text-faint font-body mt-1">{summary.count} transactions • Net {formatINR(summary.net)}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setRulesOpen(true)}><WandSparkles className="h-4 w-4" /> Merchant rules</Button>
-          <Button variant="outline" asChild>
-            <a href="/api/transactions/export" download>
-              <Download className="h-4 w-4" /> Export CSV
-            </a>
-          </Button>
-          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import statement</Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Transaction
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Transactions"
+        description={<>{summary.count} transactions • Net {formatINR(summary.net)}</>}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setRulesOpen(true)}><WandSparkles className="h-4 w-4" /> Merchant rules</Button>
+            <Button variant="outline" asChild>
+              <a href="/api/transactions/export" download>
+                <Download className="h-4 w-4" /> Export CSV
+              </a>
+            </Button>
+            <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import statement</Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Transaction
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label="Income" value={formatINR(summary.income)} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
