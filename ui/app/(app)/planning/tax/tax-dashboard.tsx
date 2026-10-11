@@ -93,7 +93,7 @@ function SalaryDialog({ open, onOpenChange, salary, fy, onSuccess }: { open: boo
           <input type="hidden" name="financial_year" value={fy} />
           <input type="hidden" name="employment_type" value={employmentType} />
 
-          {(state as unknown as { error?: string })?.error && <p className="text-sm text-error-dark">{(state as unknown as { error: string }).error}</p>}
+          {(state as unknown as { error?: string })?.error && <p className="text-sm text-error-dark dark:text-[#FCA5A5]">{(state as unknown as { error: string }).error}</p>}
 
           <div className="space-y-2">
             <Label>Employment type</Label>
@@ -154,7 +154,7 @@ function SalaryDialog({ open, onOpenChange, salary, fy, onSuccess }: { open: boo
           {(state as unknown as { fieldErrors?: Record<string,string> })?.fieldErrors && (
             <div className="space-y-1">
               {Object.entries((state as unknown as { fieldErrors: Record<string,string> }).fieldErrors).map(([k,v]) => (
-                <p key={k} className="text-xs text-error-dark">{k}: {v}</p>
+                <p key={k} className="text-xs text-error-dark dark:text-[#FCA5A5]">{k}: {v}</p>
               ))}
             </div>
           )}
@@ -204,7 +204,7 @@ function ItrDialog({ open, onOpenChange, doc, fy, onSuccess }: { open: boolean; 
           <input type="hidden" name="financial_year" value={fy} />
           <input type="hidden" name="category" value={category} />
           <input type="hidden" name="status" value={status} />
-          {(state as unknown as { error?: string })?.error && <p className="text-sm text-error-dark">{(state as unknown as { error: string }).error}</p>}
+          {(state as unknown as { error?: string })?.error && <p className="text-sm text-error-dark dark:text-[#FCA5A5]">{(state as unknown as { error: string }).error}</p>}
           <div className="space-y-2">
             <Label>Category</Label>
             <Select value={category} onValueChange={setCategory}>
@@ -220,7 +220,7 @@ function ItrDialog({ open, onOpenChange, doc, fy, onSuccess }: { open: boolean; 
           <div className="space-y-2">
             <Label htmlFor="document_name">Document name *</Label>
             <Input id="document_name" name="document_name" defaultValue={doc?.document_name ?? ""} placeholder="Form 16 - FY 2026-27" required />
-            {(state as unknown as { fieldErrors?: Record<string,string> })?.fieldErrors?.document_name && <p className="text-xs text-error-dark">{(state as unknown as { fieldErrors: Record<string,string> }).fieldErrors.document_name}</p>}
+            {(state as unknown as { fieldErrors?: Record<string,string> })?.fieldErrors?.document_name && <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{(state as unknown as { fieldErrors: Record<string,string> }).fieldErrors.document_name}</p>}
           </div>
           <div className="space-y-2">
             <Label>Status</Label>
@@ -414,7 +414,7 @@ export function TaxDashboard({
                     <p className="text-xs text-neutral-400">Gross {formatINR(compare.old_regime.gross_income)} • Exemptions {formatINR(compare.old_regime.exemptions)}</p>
                   </div>
                   <div className="rounded-lg border border-edge p-4 bg-info-soft/50 dark:bg-[#1E1E1E]/40">
-                    <p className="text-xs font-medium text-primary-700">New Regime</p>
+                    <p className="text-xs font-medium text-primary-700 dark:text-[#BFDBFE]">New Regime</p>
                     <p className="text-sm text-muted-foreground mt-1">Taxable {formatINR(compare.new_regime.taxable_income)} • Tax {formatINR(compare.new_regime.total_tax)}</p>
                     <p className="text-xs text-neutral-400">Gross {formatINR(compare.new_regime.gross_income)} • Exemptions {formatINR(compare.new_regime.exemptions)}</p>
                   </div>
