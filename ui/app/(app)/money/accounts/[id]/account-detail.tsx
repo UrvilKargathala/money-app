@@ -48,7 +48,7 @@ export function AccountDetail({
   transactions: Transaction[];
 }) {
   const router = useRouter();
-  const [balance, setBalance] = useState(String(account.balance));
+  const [balanceInput, setBalanceInput] = useState(String(account.balance));
   const [date, setDate] = useState(todayLocalISO());
   const [saving, setSaving] = useState(false);
   const saveSnapshot = async () => {
@@ -57,11 +57,11 @@ export function AccountDetail({
       const res = await fetch(`/api/accounts/${id}/snapshots`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ balance, date }),
+        body: JSON.stringify({ balance: balanceInput, date }),
       });
-      const body = await res.json().catch(() => ({}));
+      const responseBody = await res.json().catch(() => ({}));
       if (!res.ok)
-        throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Could not save snapshot.");
+        throw new Error(responseBody.error || Object.values(responseBody.fieldErrors || {})[0] || "Could not save snapshot.");
       toast.success("Balance snapshot saved");
       router.refresh();
     } catch (error) {
@@ -70,10 +70,10 @@ export function AccountDetail({
       setSaving(false);
     }
   };
-  const values = points.map((point) => point.balance);
-  const min = Math.min(...values, 0);
-  const max = Math.max(...values, 1);
-  const span = Math.max(1, max - min);
+  const balances = points.map((point) => point.balance);
+  const chartMin = Math.min(...balances, 0);
+  const chartMax = Math.max(...balances, 1);
+  const chartSpan = Math.max(1, chartMax - chartMin);
   return (
     <div className="space-y-6">
       <div>
@@ -149,7 +149,7 @@ export function AccountDetail({
                     key={point.date}
                     title={`${point.date}: ${formatINR(point.balance)}`}
                     className="min-w-1 flex-1 rounded-t bg-primary-500"
-                    style={{ height: `${Math.max(6, ((point.balance - min) / span) * 100)}%` }}
+                    style={{ height: `${Math.max(6, ((point.balance - chartMin) / chartSpan) * 100)}%` }}
                   />
                 ))}
               </div>
@@ -161,7 +161,7 @@ export function AccountDetail({
             <CardTitle>Record balance snapshot</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Input type="number" step="0.01" value={balance} onChange={(event) => setBalance(event.target.value)} />
+            <Input type="number" step="0.01" value={balanceInput} onChange={(event) => setBalanceInput(event.target.value)} />
             <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
             <Button className="w-full" onClick={() => void saveSnapshot()} disabled={saving}>
               {saving ? "Saving..." : "Save snapshot"}
