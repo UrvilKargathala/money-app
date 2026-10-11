@@ -75,7 +75,7 @@ export function ExportDashboard({
   // and POST /jobs reads {export_type, scope, module_name, date_range_start,
   // date_range_end}. PDF generation does not exist server-side (download
   // always rebuilds CSV), so CSV is the only offered format.
-  const [format] = useState<string>("csv");
+  const format = "csv";
   const [selectedModule, setSelectedModule] = useState<string>(initialModules[0]?.name ?? "");
   const [range, setRange] = useState<string>("All");
   const [dateFrom, setDateFrom] = useState("");
