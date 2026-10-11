@@ -920,37 +920,12 @@ export async function getCalendarEvents(month?: number, year?: number): Promise<
   return apiJson(`/api/calendar/events${qs}`);
 }
 
-export async function getCalendarEventsByDate(date: string): Promise<{
-  date: string;
-  events: CalendarApiEvent[];
-  total_inflow: number;
-  total_outflow: number;
-} | null> {
-  return apiJson(`/api/calendar/events?date=${encodeURIComponent(date)}`);
-}
-
-export async function getCalendarMonth(
-  month: number,
-  year: number
-): Promise<{
-  month: number;
-  year: number;
-  events: CalendarApiEvent[];
-  day_counts: Record<string, number>;
-} | null> {
-  return apiJson(`/api/calendar/month/${month}/${year}`);
-}
-
 export async function getCalendarTaxDeadlines(year?: number): Promise<{
   year: number;
   deadlines: { date: string; label: string; description: string; past: boolean }[];
 } | null> {
   const qs = year ? `?year=${year}` : "";
   return apiJson(`/api/calendar/tax-deadlines${qs}`);
-}
-
-export async function duplicateCalendarEvent(id: string): Promise<{ success: boolean; event: { id: string } } | null> {
-  return postOrNull<{ success: boolean; event: { id: string } }>(`/api/calendar/events/${id}/duplicate`, {});
 }
 
 export async function getCalendarCashflowProjection(days?: number): Promise<{
@@ -995,21 +970,6 @@ export async function getCalendarUpcoming(windowDays?: number): Promise<{
     return apiJson(`/api/calendar/upcoming?days=${w}`);
   }
   return apiJson("/api/calendar/upcoming");
-}
-
-// Backwards-compat alias - older pages expect { upcoming: ... } shape; map new shape if needed
-export async function getCalendarUpcomingLegacy(): Promise<{
-  upcoming: { date: string; events: { title: string; amount: number | null; type: string }[]; total: number }[];
-} | null> {
-  const data = await getCalendarUpcoming();
-  if (!data) return null;
-  return {
-    upcoming: data.days.map((d) => ({
-      date: d.date,
-      events: d.events.map((e) => ({ title: e.label, amount: e.amount, type: e.source })),
-      total: d.outflow_total - d.inflow_total,
-    })),
-  };
 }
 
 export async function getNotificationsData(): Promise<{
