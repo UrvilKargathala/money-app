@@ -78,7 +78,7 @@ export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit,
           {pnl >= 0 ? "+" : ""}
           {formatINR(pnl)} ({pnlPct.toFixed(1)}%)
         </span>
-        <span className="text-neutral-400">Buy {formatINR(Number(investment.buy_price))} • Now {formatINR(Number(investment.current_price))}{staleLabel ? ` • ${staleLabel}` : ""}</span>
+        <span className="text-faint">Buy {formatINR(Number(investment.buy_price))} • Now {formatINR(Number(investment.current_price))}{staleLabel ? ` • ${staleLabel}` : ""}</span>
       </div>
     </Card>
   );
