@@ -86,10 +86,10 @@ export const BudgetCard = memo(function BudgetCard({
       <Progress value={pct} indicatorClassName={getProgressColor(budget.utilization_pct)} />
 
       <div className="flex justify-between text-xs">
-        <span className={isOver ? "text-error font-medium" : "text-neutral-600"}>
+        <span className={isOver ? "text-error font-medium" : "text-faint"}>
           Spent {formatINR(budget.spent)}
         </span>
-        <span className={isOver ? "text-error font-medium" : "text-neutral-500"}>
+        <span className={isOver ? "text-error font-medium" : "text-faint"}>
           {isOver ? "Over by " + formatINR(Math.abs(budget.remaining)) : "Remaining " + formatINR(budget.remaining)}
         </span>
       </div>
