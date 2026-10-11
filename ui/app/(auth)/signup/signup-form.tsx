@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FieldError } from "@/components/common/form-primitives";
 import { signupAction } from "./actions";
 
 export default function SignupForm() {
@@ -31,26 +30,26 @@ export default function SignupForm() {
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
             <Input id="name" name="name" placeholder="Jane Doe" autoComplete="name" required error={!!state?.fieldErrors?.name} />
-            {state?.fieldErrors?.name && <FieldError message={state.fieldErrors.name} />}
+            {state?.fieldErrors?.name && <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.name}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" placeholder="you@example.com" autoComplete="email" required error={!!state?.fieldErrors?.email} />
-            {state?.fieldErrors?.email && <FieldError message={state.fieldErrors.email} />}
+            {state?.fieldErrors?.email && <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.email}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" placeholder="••••••••" autoComplete="new-password" required error={!!state?.fieldErrors?.password} />
-            {state?.fieldErrors?.password && <FieldError message={state.fieldErrors.password} />}
+            {state?.fieldErrors?.password && <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.password}</p>}
             <p className="text-xs text-faint">At least 8 characters, with a letter and a digit.</p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirm">Confirm password</Label>
             <Input id="confirm" name="confirm" type="password" placeholder="••••••••" autoComplete="new-password" required error={!!state?.fieldErrors?.confirm} />
-            {state?.fieldErrors?.confirm && <FieldError message={state.fieldErrors.confirm} />}
+            {state?.fieldErrors?.confirm && <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.confirm}</p>}
           </div>
 
           <Button type="submit" className="w-full" disabled={isPending}>
