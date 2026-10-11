@@ -59,7 +59,7 @@ export const BillCard = memo(function BillCard({
           <p className="text-xs text-faint">
             Due day {bill.due_day} • {bill.frequency} {bill.is_autopay ? "• Autopay" : ""} {bill.account_name ? `• ${bill.account_name}` : ""}
           </p>
-          {bill.category_name && <p className="text-xs text-neutral-400">{bill.category_name}</p>}
+          {bill.category_name && <p className="text-xs text-faint">{bill.category_name}</p>}
         </div>
         <div className="flex items-center gap-2">
           {statusBadge(bill.current_period_status)}
