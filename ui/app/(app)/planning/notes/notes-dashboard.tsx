@@ -404,7 +404,7 @@ export function NotesDashboard({
   if (!vaultKey) {
     return (
       <div className="mx-auto max-w-lg py-10">
-        <Card className="overflow-hidden border-primary-100">
+        <Card className="overflow-hidden border-primary-100 dark:border-[#1E3A5F]">
           <div className="bg-gradient-to-br from-primary-600 to-indigo-700 px-6 py-8 text-white">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15"><LockKeyhole className="h-6 w-6" /></div>
             <h1 className="text-2xl font-bold font-heading">{vaultReady ? "Unlock Secure Notes" : "Create your secure vault"}</h1>
@@ -456,7 +456,7 @@ export function NotesDashboard({
                     const active = filterCategory === c.name;
                     if (editingCategory === c.name) {
                       return (
-                        <span key={c.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 bg-base ring-1 ring-primary-200">
+                        <span key={c.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 dark:border-[#60A5FA] bg-base ring-1 ring-primary-200 dark:ring-[#60A5FA]/40">
                           <Input
                             autoFocus
                             value={categoryDraft}
@@ -493,7 +493,7 @@ export function NotesDashboard({
                     return (
                       <span
                         key={c.name}
-                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : "border-edge bg-base"}`}
+                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E3A5F]/50" : "border-edge bg-base"}`}
                       >
                         <button
                           type="button"
@@ -601,7 +601,7 @@ export function NotesDashboard({
               {filtered
                 .sort((a, b) => b.is_pinned - a.is_pinned)
                 .map((n) => (
-                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-info-soft/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
+                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-info-soft/50 dark:border-[#334155] dark:bg-[#1E3A5F]/40" : ""}`}>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-semibold font-heading text-foreground flex items-center gap-2">
