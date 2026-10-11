@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,26 @@ type EmailRow = { id: string; email_type: string; recipient: string; status: str
 const NOTIFICATION_TYPES = ["warning", "alert", "reminder", "insight", "summary", "info"] as const;
 const CHANNELS = ["in_app", "email"] as const;
 
+function emailStatusVariant(status: string) {
+  if (status === "sent") return "success";
+  if (status === "failed") return "error";
+  return "default";
+}
+
+function sseDotClass(status: "idle" | "checking" | "live" | "offline") {
+  if (status === "live") return "bg-success";
+  if (status === "checking") return "bg-warning animate-pulse";
+  if (status === "offline") return "bg-neutral-300";
+  return "bg-neutral-200";
+}
+
+function sseLabel(status: "idle" | "checking" | "live" | "offline") {
+  if (status === "idle") return "Not checked";
+  if (status === "live") return "Up to date";
+  if (status === "checking") return "Checking";
+  return "Offline";
+}
+
 function SseIndicator() {
   const [status, setStatus] = useState<"idle" | "checking" | "live" | "offline">("idle");
   const [latestCount, setLatestCount] = useState<number | null>(null);
@@ -76,9 +96,9 @@ function SseIndicator() {
 
   return (
     <div className="flex items-center gap-2 rounded-full border border-edge bg-base px-3 py-1.5 text-xs">
-      <span className={`h-2 w-2 rounded-full ${status === "live" ? "bg-success" : status === "checking" ? "bg-warning animate-pulse" : status === "offline" ? "bg-neutral-300" : "bg-neutral-200"}`} />
+      <span className={`h-2 w-2 rounded-full ${sseDotClass(status)}`} />
       <span className="font-medium flex items-center gap-1">
-        <Radio className="h-3 w-3" /> {status === "idle" ? "Not checked" : status === "live" ? "Up to date" : status === "checking" ? "Checking" : "Offline"}
+        <Radio className="h-3 w-3" /> {sseLabel(status)}
       </span>
       {latestCount !== null && <span className="text-faint">{latestCount} new since 1m</span>}
       {lastChecked && <span className="hidden sm:inline text-faint">{new Date(lastChecked).toLocaleTimeString("en-IN")}</span>}
@@ -146,17 +166,24 @@ export function NotificationsDashboard({
   const [previewResult, setPreviewResult] = useState<{ subject: string; body_html: string; body_text: string } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.is_read && !n.is_dismissed).length;
-  const dismissedCount = notifications.filter((n) => !!n.is_dismissed).length;
-  const readCount = notifications.filter((n) => n.is_read && !n.is_dismissed).length;
-
-  const filtered = notifications.filter((n) => {
-    if (activeTab === "all") return !n.is_dismissed;
-    if (activeTab === "unread") return !n.is_read && !n.is_dismissed;
-    if (activeTab === "read") return !!n.is_read && !n.is_dismissed;
-    if (activeTab === "dismissed") return !!n.is_dismissed;
-    return true;
-  });
+  const { unreadCount, dismissedCount, readCount, filtered } = useMemo(() => {
+    let unread = 0;
+    let dismissed = 0;
+    let read = 0;
+    for (const notification of notifications) {
+      if (notification.is_dismissed) dismissed += 1;
+      else if (!notification.is_read) unread += 1;
+      else read += 1;
+    }
+    const visible = notifications.filter((notification) => {
+      if (activeTab === "all") return !notification.is_dismissed;
+      if (activeTab === "unread") return !notification.is_read && !notification.is_dismissed;
+      if (activeTab === "read") return !!notification.is_read && !notification.is_dismissed;
+      if (activeTab === "dismissed") return !!notification.is_dismissed;
+      return true;
+    });
+    return { unreadCount: unread, dismissedCount: dismissed, readCount: read, filtered: visible };
+  }, [notifications, activeTab]);
 
   const handleMarkRead = async (id: string) => {
     if (!claimPending(id)) return;
@@ -240,8 +267,8 @@ export function NotificationsDashboard({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not fetch archive");
       setArchive(data.archive ?? []);
-    } catch (e) {
-      toast.error(String(e));
+    } catch (error) {
+      toast.error(String(error));
     } finally {
       setArchiveLoading(false);
     }
@@ -290,7 +317,7 @@ export function NotificationsDashboard({
     else {
       toast.success(`${type} • ${channel} → ${res.is_enabled ? "on" : "off"}`);
       setPrefs((prev) =>
-        prev.map((p) => (p.notification_type === type && p.channel === channel ? { ...p, is_enabled: !!res.is_enabled } : p))
+        prev.map((pref) => (pref.notification_type === type && pref.channel === channel ? { ...pref, is_enabled: !!res.is_enabled } : pref))
       );
       router.refresh();
     }
@@ -298,10 +325,10 @@ export function NotificationsDashboard({
   };
 
   const handleSaveAllPrefs = async () => {
-    const payload = prefs.map((p) => ({
-      notification_type: p.notification_type,
-      channel: p.channel,
-      is_enabled: p.is_enabled,
+    const payload = prefs.map((pref) => ({
+      notification_type: pref.notification_type,
+      channel: pref.channel,
+      is_enabled: pref.is_enabled,
     }));
     const res = await updatePreferencesAction(payload);
     if (res?.error) toast.error(res.error);
@@ -311,8 +338,8 @@ export function NotificationsDashboard({
     }
   };
 
-  const handlePreview = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePreview = async (event: React.FormEvent) => {
+    event.preventDefault();
     setPreviewLoading(true);
     setPreviewResult(null);
     const res = await previewEmailAction({ type: previewType, title: previewTitle, message: previewMessage });
@@ -324,7 +351,7 @@ export function NotificationsDashboard({
     setPreviewLoading(false);
   };
 
-  const prefLookup = (type: string, channel: string) => prefs.find((p) => p.notification_type === type && p.channel === channel)?.is_enabled ?? (channel === "in_app");
+  const prefLookup = (type: string, channel: string) => prefs.find((pref) => pref.notification_type === type && pref.channel === channel)?.is_enabled ?? (channel === "in_app");
 
   return (
     <div className="space-y-6">
@@ -370,7 +397,7 @@ export function NotificationsDashboard({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
-                  <TabsTrigger value="all">All ({notifications.filter((n) => !n.is_dismissed).length})</TabsTrigger>
+                  <TabsTrigger value="all">All ({notifications.length - dismissedCount})</TabsTrigger>
                   <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
                   <TabsTrigger value="read">Read ({readCount})</TabsTrigger>
                   <TabsTrigger value="dismissed">Dismissed ({dismissedCount})</TabsTrigger>
@@ -397,40 +424,40 @@ export function NotificationsDashboard({
             <EmptyState icon={<Bell className="h-6 w-6" />} title="No notifications" description="You're all caught up." />
           ) : (
             <div className="space-y-3">
-              {filtered.map((n) => (
-                <Card key={n.id} className={`p-4 flex items-start justify-between gap-3 ${!n.is_read && !n.is_dismissed ? "border-primary-200 bg-info-soft/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
+              {filtered.map((notification) => (
+                <Card key={notification.id} className={`p-4 flex items-start justify-between gap-3 ${!notification.is_read && !notification.is_dismissed ? "border-primary-200 bg-info-soft/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
                   <div className="flex gap-3 flex-1">
-                    {!n.is_dismissed && (
+                    {!notification.is_dismissed && (
                       <input
                         type="checkbox"
-                        checked={selected.has(n.id)}
-                        onChange={() => toggleSelect(n.id)}
+                        checked={selected.has(notification.id)}
+                        onChange={() => toggleSelect(notification.id)}
                         className="mt-1 h-4 w-4 rounded border-neutral-300"
-                        aria-label={`Select ${n.title}`}
+                        aria-label={`Select ${notification.title}`}
                       />
                     )}
                     <div className="flex-1">
                       <p className="text-sm font-semibold font-heading text-foreground flex items-center gap-2 flex-wrap">
-                        {n.title} <Badge variant="info">{n.type}</Badge> {n.module && <Badge variant="outline">{n.module}</Badge>}{" "}
-                        {!n.is_read && !n.is_dismissed && <Badge variant="error">New</Badge>}
-                        {n.is_dismissed ? <Badge variant="default">Dismissed</Badge> : null}
+                        {notification.title} <Badge variant="info">{notification.type}</Badge> {notification.module && <Badge variant="outline">{notification.module}</Badge>}{" "}
+                        {!notification.is_read && !notification.is_dismissed && <Badge variant="error">New</Badge>}
+                        {notification.is_dismissed ? <Badge variant="default">Dismissed</Badge> : null}
                       </p>
-                      <p className="text-sm text-muted-foreground font-body mt-1">{n.message}</p>
-                      <p className="text-xs text-faint mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
+                      <p className="text-sm text-muted-foreground font-body mt-1">{notification.message}</p>
+                      <p className="text-xs text-faint mt-1">{new Date(notification.created_at).toLocaleString("en-IN")}</p>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    {!n.is_read && !n.is_dismissed && (
-                      <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} title="Mark read" aria-label={`Mark as read: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                    {!notification.is_read && !notification.is_dismissed && (
+                      <Button variant="ghost" size="icon" onClick={() => handleMarkRead(notification.id)} title="Mark read" aria-label={`Mark as read: ${notification.title}`} disabled={pendingIds.has(notification.id)}>
                         <Check className="h-4 w-4" />
                       </Button>
                     )}
-                    {!n.is_dismissed ? (
-                      <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} title="Dismiss" aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                    {!notification.is_dismissed ? (
+                      <Button variant="ghost" size="icon" onClick={() => handleDismiss(notification.id)} title="Dismiss" aria-label={`Dismiss: ${notification.title}`} disabled={pendingIds.has(notification.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     ) : (
-                      <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} title="Restore" aria-label={`Restore: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleRestore(notification.id)} title="Restore" aria-label={`Restore: ${notification.title}`} disabled={pendingIds.has(notification.id)}>
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     )}
@@ -471,9 +498,9 @@ export function NotificationsDashboard({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All types</SelectItem>
-                  {NOTIFICATION_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
+                  {NOTIFICATION_TYPES.map((notifType) => (
+                    <SelectItem key={notifType} value={notifType}>
+                      {notifType}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -500,10 +527,10 @@ export function NotificationsDashboard({
                 Page {archivePage} • {archive.length} results {archiveSearch ? `for "${archiveSearch}"` : ""} {archiveType !== "all" ? `• type=${archiveType}` : ""}
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={archivePage <= 1 || archiveLoading} onClick={() => setArchivePage((p) => Math.max(1, p - 1))}>
+                <Button variant="outline" size="sm" disabled={archivePage <= 1 || archiveLoading} onClick={() => setArchivePage((prevPage) => Math.max(1, prevPage - 1))}>
                   Prev
                 </Button>
-                <Button variant="outline" size="sm" disabled={archive.length < 25 || archiveLoading} onClick={() => setArchivePage((p) => p + 1)}>
+                <Button variant="outline" size="sm" disabled={archive.length < 25 || archiveLoading} onClick={() => setArchivePage((prevPage) => prevPage + 1)}>
                   Next
                 </Button>
               </div>
@@ -517,28 +544,28 @@ export function NotificationsDashboard({
               <EmptyState icon={<Archive className="h-6 w-6" />} title="No archive results" description="Try adjusting search or type filter." />
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-auto pr-1">
-                {archive.map((n) => (
-                  <div key={n.id} className="rounded-lg border border-edge p-3 flex items-start justify-between gap-3">
+                {archive.map((archived) => (
+                  <div key={archived.id} className="rounded-lg border border-edge p-3 flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold flex items-center gap-2">
-                        {n.title} <Badge variant="info">{n.type}</Badge> {n.is_dismissed ? <Badge variant="default">dismissed</Badge> : null}{" "}
-                        {!n.is_read ? <Badge variant="error">unread</Badge> : <Badge variant="outline">read</Badge>}
+                        {archived.title} <Badge variant="info">{archived.type}</Badge> {archived.is_dismissed ? <Badge variant="default">dismissed</Badge> : null}{" "}
+                        {!archived.is_read ? <Badge variant="error">unread</Badge> : <Badge variant="outline">read</Badge>}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">{n.message}</p>
-                      <p className="text-xs text-faint mt-1">{new Date(n.created_at).toLocaleString("en-IN")}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{archived.message}</p>
+                      <p className="text-xs text-faint mt-1">{new Date(archived.created_at).toLocaleString("en-IN")}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
-                      {!n.is_read && !n.is_dismissed && (
-                        <Button variant="ghost" size="icon" onClick={() => handleMarkRead(n.id)} aria-label={`Mark as read: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                      {!archived.is_read && !archived.is_dismissed && (
+                        <Button variant="ghost" size="icon" onClick={() => handleMarkRead(archived.id)} aria-label={`Mark as read: ${archived.title}`} disabled={pendingIds.has(archived.id)}>
                           <Check className="h-4 w-4" />
                         </Button>
                       )}
-                      {!n.is_dismissed ? (
-                        <Button variant="ghost" size="icon" onClick={() => handleDismiss(n.id)} aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                      {!archived.is_dismissed ? (
+                        <Button variant="ghost" size="icon" onClick={() => handleDismiss(archived.id)} aria-label={`Dismiss: ${archived.title}`} disabled={pendingIds.has(archived.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button variant="ghost" size="icon" onClick={() => handleRestore(n.id)} aria-label={`Restore: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleRestore(archived.id)} aria-label={`Restore: ${archived.title}`} disabled={pendingIds.has(archived.id)}>
                           <RotateCcw className="h-4 w-4" />
                         </Button>
                       )}
@@ -582,19 +609,19 @@ export function NotificationsDashboard({
                   {NOTIFICATION_TYPES.map((type) => (
                     <tr key={type} className="border-t">
                       <td className="p-3 font-medium capitalize">{type}</td>
-                      {CHANNELS.map((ch) => {
-                        const enabled = prefLookup(type, ch);
-                        const key = `${type}|${ch}`;
+                      {CHANNELS.map((channel) => {
+                        const enabled = prefLookup(type, channel);
+                        const key = `${type}|${channel}`;
                         const saving = prefSaving === key;
                         // Locked email cells stay visible but non-interactive.
-                        const locked = ch === "email" && emailLocked;
+                        const locked = channel === "email" && emailLocked;
                         return (
-                          <td key={ch} className="p-3 text-center">
+                          <td key={channel} className="p-3 text-center">
                             <Button
                               variant={enabled ? "default" : "outline"}
                               size="sm"
                               disabled={!!prefSaving || locked}
-                              onClick={() => handleTogglePref(type, ch)}
+                              onClick={() => handleTogglePref(type, channel)}
                               title={locked ? "Email notifications require a paid plan." : undefined}
                               className="min-w-[80px]"
                             >
@@ -630,9 +657,9 @@ export function NotificationsDashboard({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {NOTIFICATION_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {NOTIFICATION_TYPES.map((notifType) => (
+                        <SelectItem key={notifType} value={notifType}>
+                          {notifType}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -682,17 +709,17 @@ export function NotificationsDashboard({
                     </tr>
                   </thead>
                   <tbody>
-                    {initialEmails.map((e) => (
-                      <tr key={e.id} className="border-t text-xs">
+                    {initialEmails.map((emailRow) => (
+                      <tr key={emailRow.id} className="border-t text-xs">
                         <td className="p-2">
-                          <Badge variant="info">{e.email_type}</Badge>
+                          <Badge variant="info">{emailRow.email_type}</Badge>
                         </td>
-                        <td className="p-2 font-medium">{e.recipient}</td>
+                        <td className="p-2 font-medium">{emailRow.recipient}</td>
                         <td className="p-2">
-                          <Badge variant={e.status === "sent" ? "success" : e.status === "failed" ? "error" : "default"}>{e.status}</Badge>
+                          <Badge variant={emailStatusVariant(emailRow.status)}>{emailRow.status}</Badge>
                         </td>
-                        <td className="p-2 text-faint">{e.sent_at ? new Date(e.sent_at).toLocaleString("en-IN") : "-"}</td>
-                        <td className="p-2 text-faint">{new Date(e.created_at).toLocaleString("en-IN")}</td>
+                        <td className="p-2 text-faint">{emailRow.sent_at ? new Date(emailRow.sent_at).toLocaleString("en-IN") : "-"}</td>
+                        <td className="p-2 text-faint">{new Date(emailRow.created_at).toLocaleString("en-IN")}</td>
                       </tr>
                     ))}
                   </tbody>
