@@ -96,7 +96,7 @@ function DtiCard({ dti }: { dti: Dti }) {
             <p className="text-xs text-faint font-body">
               {dti?.income_missing ? "Set monthly income to calculate DTI" : dti?.level ? `Level: ${dti.level}` : "No active EMI"}
             </p>
-            <p className="text-xs text-neutral-400">EMI {formatINR(dti?.total_monthly_emi ?? 0)} {dti?.monthly_income != null ? `• Income ${formatINR(dti.monthly_income)}` : ""}</p>
+            <p className="text-xs text-faint">EMI {formatINR(dti?.total_monthly_emi ?? 0)} {dti?.monthly_income != null ? `• Income ${formatINR(dti.monthly_income)}` : ""}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             {dti?.dti != null && <Badge variant={dti.level === "green" ? "success" : dti.level === "red" ? "error" : "warning"}>{dti.level}</Badge>}
@@ -395,7 +395,7 @@ function PrepaymentSimulatorDialog({ debt, open, onOpenChange }: { debt: Debt | 
                 <div><p className="text-xs text-faint">Original interest</p><p className="font-medium">{formatINR(result.original_interest)}</p></div>
                 <div><p className="text-xs text-faint">New interest</p><p className="font-medium">{formatINR(result.new_interest)}</p></div>
               </div>
-              <p className="text-xs text-neutral-400">Current debt-free {result.current_debt_free_date ?? "-"} → New {result.new_debt_free_date ?? "-"}</p>
+              <p className="text-xs text-faint">Current debt-free {result.current_debt_free_date ?? "-"} → New {result.new_debt_free_date ?? "-"}</p>
               <Button onClick={apply} variant="default" className="w-full mt-2">Apply prepayment</Button>
             </Card>
           )}
@@ -562,7 +562,7 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
                 <div key={m.month} className="rounded-lg border border-edge p-2 text-center">
                   <p className="font-medium">{m.month}</p>
                   <Badge variant={colorFor(m.status) as never} className="mt-1">{m.status}</Badge>
-                  <p className="text-[11px] text-neutral-400 mt-1">{m.amount != null ? formatINR(m.amount) : "-"} {m.scheduled_emi != null ? `/ ${formatINR(m.scheduled_emi)}` : ""}</p>
+                  <p className="text-[11px] text-faint mt-1">{m.amount != null ? formatINR(m.amount) : "-"} {m.scheduled_emi != null ? `/ ${formatINR(m.scheduled_emi)}` : ""}</p>
                 </div>
               ))}
             </div>
@@ -608,13 +608,13 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
       <CardHeader className="p-0 mb-3">
         <CardTitle className="flex items-center gap-2 text-base"><ArrowUpDown className="h-5 w-5" /> Strategies: Avalanche vs Snowball
           <span className="group relative inline-flex">
-            <Info className="h-4 w-4 text-neutral-400 cursor-help" aria-label="About payoff strategies" />
+            <Info className="h-4 w-4 text-faint cursor-help" aria-label="About payoff strategies" />
             <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-lg border border-edge bg-base p-3 text-xs font-normal normal-case text-muted-foreground shadow-lg group-hover:block group-focus-within:block">
               <strong className="text-foreground">Avalanche</strong> pays the highest-interest debt first — least total interest paid.
               <br />
               <strong className="text-foreground">Snowball</strong> clears the smallest balance first — fastest first win, keeps momentum.
               <br />
-              <span className="text-neutral-400">Educational comparison only, not financial advice.</span>
+              <span className="text-faint">Educational comparison only, not financial advice.</span>
             </span>
           </span>
         </CardTitle>
@@ -639,13 +639,13 @@ function StrategiesCompare({ debts }: { debts: Debt[] }) {
 <p className="text-xs text-green-700 dark:text-[#A7F3D0]">Avalanche (high rate first)</p>
             <p className="text-sm font-semibold">{data.avalanche.months_to_debt_free} months • Saved {formatINR(data.avalanche.interest_saved)}</p>
             <p className="text-xs text-faint">Interest {formatINR(data.avalanche.total_interest)}</p>
-            <p className="text-xs text-neutral-400 break-all">Order: {data.avalanche.payoff_order.join(" → ") || "-"}</p>
+            <p className="text-xs text-faint break-all">Order: {data.avalanche.payoff_order.join(" → ") || "-"}</p>
           </div>
 <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-[#1E3A5F] dark:bg-[#1E3A5F]/40">
 <p className="text-xs text-blue-700 dark:text-[#BFDBFE]">Snowball (small balance first)</p>
             <p className="text-sm font-semibold">{data.snowball.months_to_debt_free} months • Saved {formatINR(data.snowball.interest_saved)}</p>
             <p className="text-xs text-faint">Interest {formatINR(data.snowball.total_interest)}</p>
-            <p className="text-xs text-neutral-400 break-all">Order: {data.snowball.payoff_order.join(" → ") || "-"}</p>
+            <p className="text-xs text-faint break-all">Order: {data.snowball.payoff_order.join(" → ") || "-"}</p>
           </div>
         </div>
       )}
