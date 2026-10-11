@@ -341,7 +341,7 @@ export function CalendarDashboard({
             <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
               {/* Month grid */}
               <div>
-                <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-edge bg-neutral-200">
+                <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-edge bg-edge">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                     <div key={d} className="bg-deep py-2 text-center text-xs font-semibold text-faint">
                       {d}
@@ -356,7 +356,7 @@ export function CalendarDashboard({
                       <button
                         key={cell.iso}
                         onClick={() => setSelectedDate(cell.iso)}
-                        className={`min-h-[88px] p-1.5 text-left bg-base hover:bg-deep transition-colors flex flex-col ${!cell.inMonth ? "bg-deep/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-info-soft/60 dark:bg-[#1E1E1E]/60" : ""}`}
+                        className={`min-h-[88px] p-1.5 text-left bg-base hover:bg-deep transition-colors flex flex-col ${!cell.inMonth ? "bg-deep/60 text-faint" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-info-soft/60 dark:bg-[#1E1E1E]/60" : ""}`}
                       >
                         <div className="flex items-center justify-between">
                           <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#EAF1FF] dark:text-[#111111]" : "text-muted-foreground"}`}>
@@ -394,12 +394,12 @@ export function CalendarDashboard({
                 {!selectedDate ? (
                   <Card className="p-6 bg-deep border-dashed">
                     <p className="text-sm text-faint text-center">Click a date in the grid to view events with amounts.</p>
-                    <p className="text-xs text-neutral-400 text-center mt-1">{totalEvents} events in {monthLabel}</p>
+                    <p className="text-xs text-faint text-center mt-1">{totalEvents} events in {monthLabel}</p>
                   </Card>
                 ) : selectedEvents.length === 0 ? (
                   <Card className="p-6">
                     <p className="text-sm text-faint">No events on {selectedDate}</p>
-                    <p className="text-xs text-neutral-400 mt-1">Day totals: inflow {formatINR(0)} • outflow {formatINR(0)}</p>
+                    <p className="text-xs text-faint mt-1">Day totals: inflow {formatINR(0)} • outflow {formatINR(0)}</p>
                     <Button size="sm" variant="outline" className="mt-3" onClick={() => setFormOpen(true)}>
                       <Plus className="h-3 w-3" /> Add event on this date
                     </Button>
@@ -592,7 +592,7 @@ export function CalendarDashboard({
                   <p className="text-xs font-medium mt-1 text-muted-foreground">{new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </div>
               ))}
-              <p className="text-xs text-neutral-400">{taxList.length} deadlines • Registry from API</p>
+              <p className="text-xs text-faint">{taxList.length} deadlines • Registry from API</p>
             </div>
           ) : (
             <p className="text-sm text-faint">No tax deadlines found.</p>
@@ -666,7 +666,7 @@ export function CalendarDashboard({
             <div className="space-y-2">
               <Label htmlFor="cal-type">Type</Label>
               <Input id="cal-type" name="type" placeholder="custom" defaultValue="custom" />
-              <p className="text-xs text-neutral-400">Use income / expense / reminder / other for kind mapping. Custom events support duplicate.</p>
+              <p className="text-xs text-faint">Use income / expense / reminder / other for kind mapping. Custom events support duplicate.</p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
