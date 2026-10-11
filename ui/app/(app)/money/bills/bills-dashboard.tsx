@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { BillCard } from "./bill-card";
 import { useConfirm } from "@/components/common/confirm-dialog";
 import { formatINR } from "@/lib/format";
@@ -612,27 +613,27 @@ export function BillsDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Bills</h1>
-          <p className="text-sm text-faint font-body mt-1">Track recurring bills and due dates</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href="/api/bills/export" download>
-              <Download className="h-4 w-4" /> Export
-            </a>
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Bill
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Bills"
+        description="Track recurring bills and due dates"
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <a href="/api/bills/export" download>
+                <Download className="h-4 w-4" /> Export
+              </a>
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Bill
+            </Button>
+          </>
+        }
+      />
 
       {overview && (
         <div className="grid gap-6 md:grid-cols-3">
