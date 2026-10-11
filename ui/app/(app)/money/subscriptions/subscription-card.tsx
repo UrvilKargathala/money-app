@@ -86,7 +86,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
           <Badge variant="default">{sub.frequency}</Badge>
           <Badge variant="default">{sub.account_name || "No account"}</Badge>
         </div>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-faint">
           Next: {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")} • {sub.days_until_renewal >= 0 ? `Renews in ${sub.days_until_renewal}d` : "Overdue"}
         </p>
         {snoozed && (
