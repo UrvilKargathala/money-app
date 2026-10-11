@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FieldError } from "@/components/common/form-primitives";
 import { createTransfer } from "./actions";
 import { todayLocalISO } from "@/lib/format";
 import { toast } from "sonner";
@@ -32,6 +33,10 @@ export function TransferDialog({
     to_account_id?: string;
     amount?: string;
   }>({});
+  // Local errors win over server ones (same merge EntityFormDialog-style
+  // forms do inline via `??`).
+  const fieldMessage = (key: keyof typeof localErrors): string | undefined =>
+    localErrors[key] ?? state?.fieldErrors?.[key];
   const [state, formAction, isPending] = useActionState(createTransfer, null);
 
   useEffect(() => {
@@ -89,15 +94,15 @@ export function TransferDialog({
                   <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <input type="hidden" name="from_account_id" value={from} />
-              {(localErrors.from_account_id ?? state?.fieldErrors?.from_account_id) && <p className="text-xs text-error-dark">{localErrors.from_account_id ?? state?.fieldErrors?.from_account_id}</p>}
+              {fieldMessage("from_account_id") && <FieldError message={fieldMessage("from_account_id")} />}
             </div>
             <div className="space-y-2">
               <Label>To *</Label>
@@ -106,22 +111,22 @@ export function TransferDialog({
                   <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <input type="hidden" name="to_account_id" value={to} />
-              {(localErrors.to_account_id ?? state?.fieldErrors?.to_account_id) && <p className="text-xs text-error-dark">{localErrors.to_account_id ?? state?.fieldErrors?.to_account_id}</p>}
+              {fieldMessage("to_account_id") && <FieldError message={fieldMessage("to_account_id")} />}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tr-amount">Amount *</Label>
             <Input id="tr-amount" name="amount" type="number" step="0.01" placeholder="1000" required />
-            {(localErrors.amount ?? state?.fieldErrors?.amount) && <p className="text-xs text-error-dark">{localErrors.amount ?? state?.fieldErrors?.amount}</p>}
+            {fieldMessage("amount") && <FieldError message={fieldMessage("amount")} />}
           </div>
 
           <div className="space-y-2">
