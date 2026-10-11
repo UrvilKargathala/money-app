@@ -264,10 +264,10 @@ export function CalendarDashboard({
   }, [upcoming, upcomingWindow]);
 
   // Also support legacy upcoming if new shape missing
-  const legacyUp = legacyUpcoming ?? [];
+  const legacyUp = useMemo(() => legacyUpcoming ?? [], [legacyUpcoming]);
 
-  const cashflowProjections = cashflow?.projections ?? [];
-  const taxList = taxDeadlines?.deadlines ?? [];
+  const cashflowProjections = useMemo(() => cashflow?.projections ?? [], [cashflow]);
+  const taxList = useMemo(() => taxDeadlines?.deadlines ?? [], [taxDeadlines]);
 
   const totalEvents = events.length;
   const upcomingCount = useMemo(
