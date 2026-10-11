@@ -43,7 +43,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       <DialogContent className="p-0 gap-0 max-w-[560px] overflow-hidden rounded-2xl border-0 shadow-2xl">
         <DialogTitle className="sr-only">Command palette</DialogTitle>
         <div className="flex items-center gap-3 border-b border-edge px-4 py-3">
-          <Search className="h-5 w-5 text-neutral-400" />
+          <Search className="h-5 w-5 text-faint" />
           <Input
             autoFocus
             placeholder="Search commands - try 'new transaction', 'reports', 'bills'…"
@@ -81,7 +81,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               {/* Recommended */}
               {filterShortcuts("", SHORTCUTS.filter((s) => s.recommended)).length > 0 && !query && (
                 <div>
-                  <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-neutral-400 uppercase flex items-center gap-1.5">
+                  <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-faint uppercase flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3" /> Recommended
                   </p>
                   <div className="space-y-1">
@@ -110,7 +110,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
 
               {/* All / filtered */}
               <div>
-                <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-neutral-400 uppercase">{query ? `Results (${results.length})` : "All shortcuts"}</p>
+                <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-faint uppercase">{query ? `Results (${results.length})` : "All shortcuts"}</p>
                 <div id="command-palette-results" role="listbox" aria-label="Available commands" className="space-y-1">
                   {results.map((s, index) => {
                     const Icon = s.icon;
