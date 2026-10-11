@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import dynamic from "next/dynamic";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 
@@ -274,28 +275,31 @@ export function CalendarDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Calendar</h1>
-          <p className="text-sm text-faint font-body mt-1">
+      <PageHeader
+        title="Calendar"
+        description={
+          <>
             {totalEvents} events • Financial timeline • {monthLabel}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-edge bg-base">
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} aria-label="Previous month">
-              <ChevronLeft className="h-4 w-4" />
+          </>
+        }
+        actionsClassName="flex items-center gap-2"
+        actions={
+          <>
+            <div className="flex items-center rounded-lg border border-edge bg-base">
+              <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} aria-label="Previous month">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="px-3 text-sm font-medium font-heading min-w-[140px] text-center">{monthLabel}</span>
+              <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)} aria-label="Next month">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="h-4 w-4" /> Add Event
             </Button>
-            <span className="px-3 text-sm font-medium font-heading min-w-[140px] text-center">{monthLabel}</span>
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)} aria-label="Next month">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4" /> Add Event
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
