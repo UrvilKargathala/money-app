@@ -206,7 +206,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                   <p className="text-xs text-faint mt-1">{filter === "upcoming" ? "No upcoming reminders" : "You're all caught up"}</p>
                 </div>
               ) : (
-                <div className="divide-y divide-line">
+                <div className="divide-y divide-edge">
                   {display.map((n) => (
                     <div key={n.id} className={cn("p-3 flex gap-3 hover:bg-deep transition-colors", !n.is_read && "bg-primary-50/40 dark:bg-[#1E1E1E]/40")}>
                       <div className={cn("h-2 w-2 rounded-full mt-2 shrink-0", !n.is_read ? "bg-primary-600" : "bg-transparent")} />
