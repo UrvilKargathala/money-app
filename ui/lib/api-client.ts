@@ -702,18 +702,6 @@ export async function getDividendsData(): Promise<{
   return apiJson("/api/dividends");
 }
 
-export async function getPriceHistory(investmentId: string): Promise<{
-  price_history: { price: number; date: string }[];
-} | null> {
-  return apiJson(`/api/investments/${investmentId}/price-history`);
-}
-
-export async function getHoldingReturns(investmentId: string): Promise<{
-  returns: { xirr_pct: number | null; cagr_pct: number | null; method: string };
-} | null> {
-  return apiJson(`/api/investments/${investmentId}/returns`);
-}
-
 export async function getPortfolioReturns(): Promise<{ xirr_pct: number | null } | null> {
   return apiJson("/api/investments/returns/portfolio");
 }
@@ -735,12 +723,6 @@ export async function getMaturityAlerts(): Promise<{
   alerts: { id: string; name: string; type: string; maturity_date: string; days_until: number }[];
 } | null> {
   return apiJson("/api/investments/maturity-alerts");
-}
-
-export async function getInvestmentSnapshots(range = "All"): Promise<{
-  snapshots: { date: string; total_invested: number; total_current: number }[];
-} | null> {
-  return apiJson(`/api/investments/snapshots?range=${encodeURIComponent(range)}`);
 }
 
 export async function getNetWorthData(): Promise<{
