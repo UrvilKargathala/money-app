@@ -91,32 +91,32 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   }, [search, router]);
 
   const filtered = useMemo(() => {
-    return transactions.filter((t) => {
+    return transactions.filter((txn) => {
       if (search) {
-        const q = search.toLowerCase();
-        const hay = `${t.description ?? ""} ${t.merchant_clean ?? ""} ${t.category_name ?? ""} ${t.account_name}`.toLowerCase();
-        if (!hay.includes(q)) return false;
+        const query = search.toLowerCase();
+        const haystack = `${txn.description ?? ""} ${txn.merchant_clean ?? ""} ${txn.category_name ?? ""} ${txn.account_name}`.toLowerCase();
+        if (!haystack.includes(query)) return false;
       }
-      if (typeFilter !== "all" && t.type !== typeFilter) return false;
-      if (categoryFilter !== "all" && t.category_id !== categoryFilter) return false;
-      if (accountFilter !== "all" && t.account_id !== accountFilter) return false;
-      if (reviewOnly && !t.needs_review) return false;
+      if (typeFilter !== "all" && txn.type !== typeFilter) return false;
+      if (categoryFilter !== "all" && txn.category_id !== categoryFilter) return false;
+      if (accountFilter !== "all" && txn.account_id !== accountFilter) return false;
+      if (reviewOnly && !txn.needs_review) return false;
       return true;
     });
   }, [transactions, search, typeFilter, categoryFilter, accountFilter, reviewOnly]);
 
   // Group by date
   const groups = useMemo(() => {
-    const map = new Map<string, { date: string; total: number; items: Txn[] }>();
-    for (const t of filtered) {
-      const d = String(t.date).slice(0, 10);
-      if (!map.has(d)) map.set(d, { date: d, total: 0, items: [] });
-      const g = map.get(d)!;
-      g.items.push(t);
-      const sign = t.type === "income" ? 1 : t.type === "expense" ? -1 : 0;
-      g.total += sign * Number(t.amount);
+    const byDate = new Map<string, { date: string; total: number; items: Txn[] }>();
+    for (const txn of filtered) {
+      const day = String(txn.date).slice(0, 10);
+      if (!byDate.has(day)) byDate.set(day, { date: day, total: 0, items: [] });
+      const group = byDate.get(day)!;
+      group.items.push(txn);
+      const sign = txn.type === "income" ? 1 : txn.type === "expense" ? -1 : 0;
+      group.total += sign * Number(txn.amount);
     }
-    return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
+    return Array.from(byDate.values()).sort((newer, older) => older.date.localeCompare(newer.date));
   }, [filtered]);
 
   const reviewCount = useMemo(
@@ -125,13 +125,13 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   );
 
   const allSelected = useMemo(
-    () => filtered.length > 0 && filtered.every((t) => selected.has(t.id)),
+    () => filtered.length > 0 && filtered.every((txn) => selected.has(txn.id)),
     [filtered, selected]
   );
   const indeterminate = selected.size > 0 && !allSelected;
 
-  const handleEdit = (t: Txn) => {
-    setEditing(t);
+  const handleEdit = (txn: Txn) => {
+    setEditing(txn);
     setFormOpen(true);
   };
 
@@ -159,9 +159,37 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
   };
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
   const runBulk = async (action: "categorize" | "tag" | "delete") => {
     setBulkBusy(true);
-    try { const res = await fetch("/api/transactions/bulk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: Array.from(selected), action, ...(action === "categorize" ? { category_id: bulkCategory } : {}), ...(action === "tag" ? { tag_ids: [bulkTag] } : {}) }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Bulk action failed."); const skippedTransfers = Number(body.skipped_transfers ?? 0); const skipped = Number(body.skipped ?? 0) - skippedTransfers; toast.success(`Updated ${body.affected} transactions${skippedTransfers > 0 ? ` • ${skippedTransfers} transfer${skippedTransfers === 1 ? "" : "s"} skipped (edit the transfer itself)` : ""}${skipped > 0 ? ` • ${skipped} already up to date` : ""}`); setSelected(new Set()); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Bulk action failed."); } finally { setBulkBusy(false); }
+    try {
+      const res = await fetch("/api/transactions/bulk", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          ids: Array.from(selected),
+          action,
+          ...(action === "categorize" ? { category_id: bulkCategory } : {}),
+          ...(action === "tag" ? { tag_ids: [bulkTag] } : {}),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Bulk action failed.");
+      const skippedTransfers = Number(body.skipped_transfers ?? 0);
+      const skipped = Number(body.skipped ?? 0) - skippedTransfers;
+      const transferNote =
+        skippedTransfers > 0
+          ? ` • ${skippedTransfers} transfer${skippedTransfers === 1 ? "" : "s"} skipped (edit the transfer itself)`
+          : "";
+      const skippedNote = skipped > 0 ? ` • ${skipped} already up to date` : "";
+      toast.success(`Updated ${body.affected} transactions${transferNote}${skippedNote}`);
+      setSelected(new Set());
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Bulk action failed.");
+    } finally {
+      setBulkBusy(false);
+    }
   };
   const bulk = (action: "categorize" | "tag" | "delete") => {
     if (action !== "delete") { void runBulk(action); return; }
@@ -172,8 +200,25 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     });
   };
   const runMergeSelected = async () => {
-    const ids = Array.from(selected); if (ids.length !== 2) return;
-    setBulkBusy(true); try { const res = await fetch("/api/transactions/duplicates/merge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ existing_transaction_id: ids[0], duplicate_transaction_id: ids[1] }) }); const body = await res.json().catch(() => ({})); if (!res.ok) throw new Error(body.error || "Could not merge transactions."); toast.success("Duplicate transactions merged"); setSelected(new Set()); router.refresh(); } catch (error) { toast.error(error instanceof Error ? error.message : "Could not merge transactions."); } finally { setBulkBusy(false); }
+    const ids = Array.from(selected);
+    if (ids.length !== 2) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/transactions/duplicates/merge", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ existing_transaction_id: ids[0], duplicate_transaction_id: ids[1] }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Could not merge transactions.");
+      toast.success("Duplicate transactions merged");
+      setSelected(new Set());
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not merge transactions.");
+    } finally {
+      setBulkBusy(false);
+    }
   };
   const mergeSelected = () => {
     const ids = Array.from(selected); if (ids.length !== 2) return;
@@ -251,10 +296,10 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
               onChange={() => {
                 setSelected((current) => {
                   const next = new Set(current);
-                  if (filtered.every((t) => next.has(t.id))) {
-                    for (const t of filtered) next.delete(t.id);
-                  } else {
-                    for (const t of filtered) next.add(t.id);
+                  const allVisible = filtered.every((txn) => next.has(txn.id));
+                  for (const txn of filtered) {
+                    if (allVisible) next.delete(txn.id);
+                    else next.add(txn.id);
                   }
                   return next;
                 });
@@ -292,20 +337,20 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
         />
       ) : (
         <div className="space-y-4">
-          {groups.map((g) => (
-            <div key={g.date}>
+          {groups.map((group) => (
+            <div key={group.date}>
               <div className="flex items-center justify-between mb-1.5">
                 <h2 className="text-sm font-semibold font-heading text-muted-foreground">
-                  {new Date(g.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}
+                  {new Date(group.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}
                 </h2>
-                <span className={`text-sm font-semibold tabular-nums ${g.total >= 0 ? "text-success" : "text-error"}`}>
-                  {g.total >= 0 ? "+" : ""}
-                  {formatINR(g.total)}
+                <span className={`text-sm font-semibold tabular-nums ${group.total >= 0 ? "text-success" : "text-error"}`}>
+                  {group.total >= 0 ? "+" : ""}
+                  {formatINR(group.total)}
                 </span>
               </div>
               <div className="space-y-2">
-                {g.items.map((t) => (
-                  <TransactionRow key={t.id} txn={t} selected={selected.has(t.id)} onSelectedChange={(checked) => setSelected((current) => { const next = new Set(current); if (checked) next.add(t.id); else next.delete(t.id); return next; })} onEdit={() => handleEdit(t)} onDelete={() => handleDelete(t.id)} onOrganize={() => setToolsTransaction(t)} />
+                {group.items.map((txn) => (
+                  <TransactionRow key={txn.id} txn={txn} selected={selected.has(txn.id)} onSelectedChange={(checked) => setSelected((current) => { const next = new Set(current); if (checked) next.add(txn.id); else next.delete(txn.id); return next; })} onEdit={() => handleEdit(txn)} onDelete={() => handleDelete(txn.id)} onOrganize={() => setToolsTransaction(txn)} />
                 ))}
               </div>
             </div>
