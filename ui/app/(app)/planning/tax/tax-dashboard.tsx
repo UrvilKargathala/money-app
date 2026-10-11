@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useMemo, useState, useActionState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,6 +34,18 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 type Investment = { id: string; section: string; name: string; amount: string; investment_date: string; proof_status: string; financial_year: string; version: number };
+
+function utilizationColor(pct: number) {
+  if (pct >= 100) return "bg-success";
+  if (pct >= 80) return "bg-warning";
+  return "bg-primary-600";
+}
+
+function proofStatusVariant(status: string) {
+  if (status === "verified") return "success";
+  if (status === "collected") return "info";
+  return "default";
+}
 type Utilization = { section_code: string; section_name: string; limit: number; invested: number; utilization_pct: number };
 type Summary = { total_invested: number; total_deduction: number; financial_year: string } | null;
 type Salary = {
@@ -154,8 +166,8 @@ function SalaryDialog({ open, onOpenChange, salary, fy, onSuccess }: { open: boo
 
           {(state as unknown as { fieldErrors?: Record<string,string> })?.fieldErrors && (
             <div className="space-y-1">
-              {Object.entries((state as unknown as { fieldErrors: Record<string,string> }).fieldErrors).map(([k,v]) => (
-                <p key={k} className="text-xs text-error-dark dark:text-[#FCA5A5]">{k}: {v}</p>
+              {Object.entries((state as unknown as { fieldErrors: Record<string,string> }).fieldErrors).map(([field, msg]) => (
+                <p key={field} className="text-xs text-error-dark dark:text-[#FCA5A5]">{field}: {msg}</p>
               ))}
             </div>
           )}
@@ -319,21 +331,36 @@ export function TaxDashboard({
 
   const now = new Date();
   const currentFyStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
-  const fyOptions = [0, 1, 2, 3, 4].map((i) => {
-    const y = currentFyStart - i;
+  const fyOptions = useMemo(() => [0, 1, 2, 3, 4].map((offset) => {
+    const y = currentFyStart - offset;
     return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
-  });
+  }), [currentFyStart]);
 
-  const filteredItr = itrCategoryFilter === "all" ? itrDocuments : itrDocuments.filter((d) => d.category === itrCategoryFilter);
+  const filteredItr = useMemo(
+    () => (itrCategoryFilter === "all" ? itrDocuments : itrDocuments.filter((doc) => doc.category === itrCategoryFilter)),
+    [itrDocuments, itrCategoryFilter]
+  );
+
+  const itrStatusCounts = useMemo(() => {
+    let pending = 0;
+    let collected = 0;
+    let submitted = 0;
+    for (const doc of itrDocuments) {
+      if (doc.status === "pending") pending += 1;
+      else if (doc.status === "collected") collected += 1;
+      else if (doc.status === "submitted") submitted += 1;
+    }
+    return { pending, collected, submitted };
+  }, [itrDocuments]);
 
   const completionTotal = itrCompletion?.total ?? itrDocuments.length;
   const completionPct = itrCompletion?.completion_pct ?? 0;
-  const pendingCount = itrCompletion?.pending ?? itrDocuments.filter((d) => d.status === "pending").length;
-  const collectedCount = itrCompletion?.collected ?? itrDocuments.filter((d) => d.status === "collected").length;
-  const submittedCount = itrCompletion?.submitted ?? itrDocuments.filter((d) => d.status === "submitted").length;
+  const pendingCount = itrCompletion?.pending ?? itrStatusCounts.pending;
+  const collectedCount = itrCompletion?.collected ?? itrStatusCounts.collected;
+  const submittedCount = itrCompletion?.submitted ?? itrStatusCounts.submitted;
 
   // Gross / deductions derived from salary if available
-  const salaryGross = (() => {
+  const salaryGross = useMemo(() => {
     if (!salary) return null;
     if (salary.employment_type === "salaried") {
       const basicY = (salary.basic_monthly ?? 0) * 12;
@@ -344,7 +371,7 @@ export function TaxDashboard({
       return basicY + hraY + specialY + lta + add;
     }
     return (salary.gross_annual_income ?? 0) + (salary.additional_income ?? 0);
-  })();
+  }, [salary]);
 
   return (
     <div className="space-y-6">
@@ -359,9 +386,9 @@ export function TaxDashboard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {fyOptions.map((f) => (
-                  <SelectItem key={f} value={f}>
-                    {f}
+                {fyOptions.map((fyOption) => (
+                  <SelectItem key={fyOption} value={fyOption}>
+                    {fyOption}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -440,15 +467,15 @@ export function TaxDashboard({
               <p className="text-sm text-faint">No suggestions - all limits utilized or no actionable sections for FY {fy}.</p>
             ) : (
               <div className="space-y-3">
-                {suggestions.map((s) => (
-                  <div key={s.section} className="flex justify-between items-start rounded-lg border border-edge p-3">
+                {suggestions.map((suggestion) => (
+                  <div key={suggestion.section} className="flex justify-between items-start rounded-lg border border-edge p-3">
                     <div>
-                      <p className="text-sm font-medium font-heading text-foreground">{s.section} - {s.name}</p>
-                      <p className="text-xs text-faint">{s.reason}</p>
-                      <p className="text-xs text-faint mt-1">Invested {formatINR(s.invested)} / {formatINR(s.max_limit)} • Remaining {formatINR(s.remaining)}</p>
+                      <p className="text-sm font-medium font-heading text-foreground">{suggestion.section} - {suggestion.name}</p>
+                      <p className="text-xs text-faint">{suggestion.reason}</p>
+                      <p className="text-xs text-faint mt-1">Invested {formatINR(suggestion.invested)} / {formatINR(suggestion.max_limit)} • Remaining {formatINR(suggestion.remaining)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-primary-600">{formatINR(s.suggested_amount)}</p>
+                      <p className="text-sm font-semibold text-primary-600">{formatINR(suggestion.suggested_amount)}</p>
                       <p className="text-xs text-faint">suggested</p>
                     </div>
                   </div>
@@ -461,17 +488,17 @@ export function TaxDashboard({
             <Card className="p-6">
               <h2 className="font-semibold font-heading text-foreground mb-4">Section Utilization</h2>
               <div className="space-y-4">
-                {utilization.map((u) => (
-                  <div key={u.section_code} className="space-y-1">
+                {utilization.map((util) => (
+                  <div key={util.section_code} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">
-                        {u.section_code} - {u.section_name}
+                        {util.section_code} - {util.section_name}
                       </span>
                       <span className="text-faint">
-                        {formatINR(u.invested)} / {formatINR(u.limit)} • {u.utilization_pct.toFixed(1)}%
+                        {formatINR(util.invested)} / {formatINR(util.limit)} • {util.utilization_pct.toFixed(1)}%
                       </span>
                     </div>
-                    <Progress value={Math.min(u.utilization_pct, 100)} indicatorClassName={u.utilization_pct >= 100 ? "bg-success" : u.utilization_pct >= 80 ? "bg-warning" : "bg-primary-600"} />
+                    <Progress value={Math.min(util.utilization_pct, 100)} indicatorClassName={utilizationColor(util.utilization_pct)} />
                   </div>
                 ))}
               </div>
@@ -491,30 +518,30 @@ export function TaxDashboard({
             />
           ) : (
             <div className="space-y-3">
-              {investments.map((inv) => (
-                <Card key={inv.id} className="p-4 flex items-center justify-between">
+              {investments.map((investment) => (
+                <Card key={investment.id} className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold font-heading text-foreground">{inv.name}</p>
+                    <p className="text-sm font-semibold font-heading text-foreground">{investment.name}</p>
                     <p className="text-xs text-faint">
-                      {inv.section} • {formatINR(Number(inv.amount))} • {new Date(inv.investment_date).toLocaleDateString("en-IN")} • FY {inv.financial_year}
+                      {investment.section} • {formatINR(Number(investment.amount))} • {new Date(investment.investment_date).toLocaleDateString("en-IN")} • FY {investment.financial_year}
                     </p>
-                    <Badge variant={inv.proof_status === "verified" ? "success" : inv.proof_status === "collected" ? "info" : "default"} className="mt-1">
-                      {inv.proof_status}
+                    <Badge variant={proofStatusVariant(investment.proof_status) as never} className="mt-1">
+                      {investment.proof_status}
                     </Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={`Edit tax investment ${inv.name}`}
+                      aria-label={`Edit tax investment ${investment.name}`}
                       onClick={() => {
-                        setEditing(inv);
+                        setEditing(investment);
                         setFormOpen(true);
                       }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label={`Delete tax investment ${inv.name}`} onClick={() => handleDelete(inv.id)}>
+                    <Button variant="ghost" size="icon" aria-label={`Delete tax investment ${investment.name}`} onClick={() => handleDelete(investment.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -633,16 +660,16 @@ export function TaxDashboard({
                     <tr><th className="p-2 text-left">Category</th><th className="p-2 text-left">Document</th><th className="p-2 text-left">Status</th><th className="p-2 text-left">Notes</th><th className="p-2 text-right">Actions</th></tr>
                   </thead>
                   <tbody>
-                    {filteredItr.map((d) => (
-                      <tr key={d.id} className="border-t">
-                        <td className="p-2"><Badge variant="default">{d.category.replace(/_/g," ")}</Badge></td>
-                        <td className="p-2 font-medium">{d.document_name}</td>
-                        <td className="p-2"><Badge variant={d.status === "submitted" ? "success" : d.status === "collected" ? "info" : "warning"}>{d.status}</Badge></td>
-                        <td className="p-2 text-xs text-faint max-w-[20ch] truncate">{d.notes ?? "-"}</td>
+                    {filteredItr.map((doc) => (
+                      <tr key={doc.id} className="border-t">
+                        <td className="p-2"><Badge variant="default">{doc.category.replace(/_/g," ")}</Badge></td>
+                        <td className="p-2 font-medium">{doc.document_name}</td>
+                        <td className="p-2"><Badge variant={doc.status === "submitted" ? "success" : doc.status === "collected" ? "info" : "warning"}>{doc.status}</Badge></td>
+                        <td className="p-2 text-xs text-faint max-w-[20ch] truncate">{doc.notes ?? "-"}</td>
                         <td className="p-2 text-right">
                           <div className="flex gap-1 justify-end">
-                            <Button variant="ghost" size="icon" aria-label={`Edit document ${d.document_name}`} onClick={() => { setItrEditing(d); setItrOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" aria-label={`Delete document ${d.document_name}`} onClick={() => handleDeleteItr(d.id)}><Trash2 className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" aria-label={`Edit document ${doc.document_name}`} onClick={() => { setItrEditing(doc); setItrOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" aria-label={`Delete document ${doc.document_name}`} onClick={() => handleDeleteItr(doc.id)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </td>
                       </tr>
