@@ -38,7 +38,7 @@ export default function MagicLinkPage() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Sending..." : "Send magic link"}
           </Button>
-          <p className="text-center text-sm text-ink-3">
+          <p className="text-center text-sm text-faint">
             Prefer password? <Link href="/login" className="font-medium text-primary-600 hover:underline">Sign in</Link>
           </p>
         </form>
