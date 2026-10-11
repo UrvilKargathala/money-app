@@ -411,12 +411,12 @@ export function TaxDashboard({
                   <div className="rounded-lg border border-edge p-4">
                     <p className="text-xs font-medium text-faint">Old Regime</p>
                     <p className="text-sm text-muted-foreground mt-1">Taxable {formatINR(compare.old_regime.taxable_income)} • Tax {formatINR(compare.old_regime.total_tax)}</p>
-                    <p className="text-xs text-neutral-400">Gross {formatINR(compare.old_regime.gross_income)} • Exemptions {formatINR(compare.old_regime.exemptions)}</p>
+                    <p className="text-xs text-faint">Gross {formatINR(compare.old_regime.gross_income)} • Exemptions {formatINR(compare.old_regime.exemptions)}</p>
                   </div>
                   <div className="rounded-lg border border-edge p-4 bg-info-soft/50 dark:bg-[#1E1E1E]/40">
                     <p className="text-xs font-medium text-primary-700 dark:text-[#BFDBFE]">New Regime</p>
                     <p className="text-sm text-muted-foreground mt-1">Taxable {formatINR(compare.new_regime.taxable_income)} • Tax {formatINR(compare.new_regime.total_tax)}</p>
-                    <p className="text-xs text-neutral-400">Gross {formatINR(compare.new_regime.gross_income)} • Exemptions {formatINR(compare.new_regime.exemptions)}</p>
+                    <p className="text-xs text-faint">Gross {formatINR(compare.new_regime.gross_income)} • Exemptions {formatINR(compare.new_regime.exemptions)}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center text-sm">
@@ -443,11 +443,11 @@ export function TaxDashboard({
                     <div>
                       <p className="text-sm font-medium font-heading text-foreground">{s.section} - {s.name}</p>
                       <p className="text-xs text-faint">{s.reason}</p>
-                      <p className="text-xs text-neutral-400 mt-1">Invested {formatINR(s.invested)} / {formatINR(s.max_limit)} • Remaining {formatINR(s.remaining)}</p>
+                      <p className="text-xs text-faint mt-1">Invested {formatINR(s.invested)} / {formatINR(s.max_limit)} • Remaining {formatINR(s.remaining)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-primary-600">{formatINR(s.suggested_amount)}</p>
-                      <p className="text-xs text-neutral-400">suggested</p>
+                      <p className="text-xs text-faint">suggested</p>
                     </div>
                   </div>
                 ))}
@@ -558,7 +558,7 @@ export function TaxDashboard({
                     <div className="rounded-lg bg-deep p-3"><p className="text-xs text-faint">Gross annual (non-salaried)</p><p className="font-semibold">{salary.gross_annual_income != null ? formatINR(salary.gross_annual_income) : "-"}</p></div>
                     <div className="rounded-lg bg-info-soft p-3 dark:bg-[#1E1E1E]/50"><p className="text-xs text-primary-700 dark:text-[#BFDBFE]">Financial year</p><p className="font-semibold">{salary.financial_year}</p></div>
                   </div>
-                  <p className="text-xs text-neutral-400">FY {salary.financial_year} • All amounts in INR, from API salary structure.</p>
+                  <p className="text-xs text-faint">FY {salary.financial_year} • All amounts in INR, from API salary structure.</p>
                 </div>
               </div>
             )}
@@ -649,7 +649,7 @@ export function TaxDashboard({
                 </table>
               </div>
             )}
-            <p className="text-xs text-neutral-400 mt-3">Completion: {completionTotal} total • {pendingCount} pending • {collectedCount} collected • {submittedCount} submitted • All counts from API.</p>
+            <p className="text-xs text-faint mt-3">Completion: {completionTotal} total • {pendingCount} pending • {collectedCount} collected • {submittedCount} submitted • All counts from API.</p>
           </Card>
         </TabsContent>
       </Tabs>
