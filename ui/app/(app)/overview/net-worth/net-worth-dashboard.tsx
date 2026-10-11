@@ -69,8 +69,8 @@ export function NetWorthDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Net Worth</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">Assets minus liabilities</p>
+          <h1 className="text-3xl font-bold font-heading text-foreground">Net Worth</h1>
+          <p className="text-sm text-faint font-body mt-1">Assets minus liabilities</p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" /> Add Asset
@@ -85,11 +85,11 @@ export function NetWorthDashboard({
 
       {trend.length > 0 && (
         <Card className="p-6">
-          <h2 className="font-semibold font-heading text-ink-1 mb-4">Trend (last {trend.length} snapshots)</h2>
+          <h2 className="font-semibold font-heading text-foreground mb-4">Trend (last {trend.length} snapshots)</h2>
           <div className="flex gap-2 overflow-x-auto">
             {trend.map((p) => (
               <div key={p.date} className="text-center min-w-[80px]">
-                <p className="text-xs text-ink-3">{new Date(p.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</p>
+                <p className="text-xs text-faint">{new Date(p.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</p>
                 <p className="text-sm font-semibold">{formatINR(p.value)}</p>
               </div>
             ))}
@@ -98,7 +98,7 @@ export function NetWorthDashboard({
       )}
 
       <Card className="p-6">
-        <h2 className="font-semibold font-heading text-ink-1 mb-4">Manual Assets ({manualAssets.length})</h2>
+        <h2 className="font-semibold font-heading text-foreground mb-4">Manual Assets ({manualAssets.length})</h2>
         {manualAssets.length === 0 ? (
           <EmptyState
             icon={<Building2 className="h-6 w-6" />}
@@ -110,10 +110,10 @@ export function NetWorthDashboard({
         ) : (
           <div className="space-y-3">
             {manualAssets.map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-lg border border-line p-3">
+              <div key={a.id} className="flex items-center justify-between rounded-lg border border-edge p-3">
                 <div>
                   <p className="text-sm font-medium font-heading">{a.name}</p>
-                  <p className="text-xs text-ink-3">
+                  <p className="text-xs text-faint">
                     {a.category} • {formatINR(Number(a.valuation))} • {new Date(a.acquisition_date).toLocaleDateString("en-IN")}
                   </p>
                 </div>
