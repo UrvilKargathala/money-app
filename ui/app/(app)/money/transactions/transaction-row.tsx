@@ -30,7 +30,7 @@ export const TransactionRow = memo(
   const isExpense = txn.type === "expense";
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-edge bg-base p-3 hover:bg-sunken transition-colors">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-edge bg-base p-3 hover:bg-deep transition-colors">
       <input type="checkbox" checked={selected} onChange={(event) => onSelectedChange?.(event.target.checked)} aria-label={`Select ${txn.merchant_clean || txn.description || "transaction"}`} className="h-4 w-4 rounded border-neutral-300" />
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="h-9 w-9 rounded-[10px] flex items-center justify-center shrink-0 text-xs font-bold" style={{ backgroundColor: (txn.account_color || "#2563EB") + "15", color: txn.account_color || "#2563EB" }}>
