@@ -349,7 +349,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p>
-                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading ${planLoading ? "bg-soft text-neutral-400" : premium ? "bg-success-soft text-success-dark dark:bg-[#064E3B]/60 dark:text-[#A7F3D0]" : "bg-soft text-foreground"}`}>
+                <span className={`inline-block rounded-lg px-3 py-1.5 text-xl font-bold font-heading ${planLoading ? "bg-soft text-faint" : premium ? "bg-success-soft text-success-dark dark:bg-[#064E3B]/60 dark:text-[#A7F3D0]" : "bg-soft text-foreground"}`}>
                   {planLoading ? "Checking..." : premium ? "Premium active" : "Starter plan"}
                 </span>
               </p>
@@ -360,7 +360,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             </Button>
           </div>
           <div className="space-y-1.5 border-t border-indigo-100 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">Included in your plan</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-faint">Included in your plan</p>
             <div className="flex flex-wrap gap-1.5">
               {[
                 { icon: ShieldAlert, label: "Subscription audits" },
@@ -398,7 +398,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                 <Upload className="h-4 w-4" /> {avatarUploading ? "Uploading..." : "Upload photo"}
               </Label>
               <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatar} disabled={avatarUploading} />
-              <p className="text-xs text-neutral-400">PNG/JPG/WebP up to 2MB. Re-uploading replaces the previous photo.</p>
+              <p className="text-xs text-faint">PNG/JPG/WebP up to 2MB. Re-uploading replaces the previous photo.</p>
             </div>
           </div>
           <div className="grid gap-4">
@@ -444,7 +444,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <Label htmlFor="current_password">Current password</Label>
               <div className="relative">
                 <Input id="current_password" type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} required className="pr-10" />
-                <button type="button" aria-label={showCurrentPw ? "Hide current password" : "Show current password"} onClick={() => setShowCurrentPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-soft hover:text-muted-foreground">
+                <button type="button" aria-label={showCurrentPw ? "Hide current password" : "Show current password"} onClick={() => setShowCurrentPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-faint hover:bg-soft hover:text-muted-foreground">
                   {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -453,17 +453,17 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               <Label htmlFor="new_password">New password</Label>
               <div className="relative">
                 <Input id="new_password" type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => setNewPw(e.target.value)} required className="pr-10" />
-                <button type="button" aria-label={showNewPw ? "Hide new password" : "Show new password"} onClick={() => setShowNewPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-soft hover:text-muted-foreground">
+                <button type="button" aria-label={showNewPw ? "Hide new password" : "Show new password"} onClick={() => setShowNewPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-faint hover:bg-soft hover:text-muted-foreground">
                   {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <p className="text-xs text-neutral-400">At least 8 characters, letter + digit.</p>
+              <p className="text-xs text-faint">At least 8 characters, letter + digit.</p>
             </div>
             <div className="space-y-1">
               <Label htmlFor="confirm_password">Confirm new password</Label>
               <div className="relative">
                 <Input id="confirm_password" type={showConfirmPw ? "text" : "password"} value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required className="pr-10" />
-                <button type="button" aria-label={showConfirmPw ? "Hide password confirmation" : "Show password confirmation"} onClick={() => setShowConfirmPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-soft hover:text-muted-foreground">
+                <button type="button" aria-label={showConfirmPw ? "Hide password confirmation" : "Show password confirmation"} onClick={() => setShowConfirmPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-faint hover:bg-soft hover:text-muted-foreground">
                   {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -519,7 +519,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                 onDragEnd={() => setDragWidgetId(null)}
                 className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${dragWidgetId === id ? "border-primary-300 bg-primary-50/50 dark:border-[#60A5FA] dark:bg-[#1E1E1E]" : "border-edge bg-base"}`}
               >
-                <span title="Drag to reorder" aria-hidden className="cursor-grab text-neutral-400 active:cursor-grabbing">
+                <span title="Drag to reorder" aria-hidden className="cursor-grab text-faint active:cursor-grabbing">
                   <GripVertical className="h-4 w-4" />
                 </span>
                 <span className="flex-1 font-medium">{widget.label}</span>
@@ -820,7 +820,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
               </Button>
             ))}
           </div>
-          <p className="text-xs text-neutral-400 mt-3">Files are named MoneyMind_*.csv with UTF-8 BOM. Per-module quick exports stay here; batched jobs moved to /export.</p>
+          <p className="text-xs text-faint mt-3">Files are named MoneyMind_*.csv with UTF-8 BOM. Per-module quick exports stay here; batched jobs moved to /export.</p>
           <Button variant="outline" size="sm" asChild className="mt-2">
             <a href="/api/users/me/data-copy" download>
               <Download className="h-4 w-4" /> Full GDPR JSON export (/api/users/me/data-copy)
