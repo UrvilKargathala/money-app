@@ -841,22 +841,10 @@ export async function getNotesTrash(): Promise<{
   return apiJson("/api/notes/trash");
 }
 
-export async function restoreNoteApi(id: string): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>(`/api/notes/${id}/restore`, {});
-}
-
-export async function purgeNoteApi(id: string): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>(`/api/notes/${id}/purge`, undefined, "DELETE");
-}
-
 export async function getNoteCategories(): Promise<{
   categories: { name: string; count: number; seeded: boolean }[];
 } | null> {
   return apiJson("/api/notes/categories");
-}
-
-export async function patchNoteCategories(payload: { categories: { id?: string; name: string }[] }): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>("/api/notes/categories", payload, "PATCH");
 }
 
 export async function getNoteTemplates(): Promise<{
@@ -873,28 +861,6 @@ export type NoteUserTemplate = { id: string; title: string; category: string; co
 
 export async function getNoteUserTemplates(): Promise<{ templates: NoteUserTemplate[] } | null> {
   return apiJson("/api/notes/templates");
-}
-
-export async function getNoteAttachments(noteId: string): Promise<{
-  attachments: { id: string; note_id: string; file_name: string; href?: string }[];
-} | null> {
-  return apiJson(`/api/notes/${noteId}/attachments`);
-}
-
-export function getNoteAttachmentHref(noteId: string): string {
-  return `/api/notes/${noteId}/attachments`;
-}
-
-export async function deleteNoteAttachmentApi(noteId: string, attachmentId: string): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>(`/api/notes/${noteId}/attachments/${attachmentId}`, undefined, "DELETE");
-}
-
-export async function getVaultWrappedKey(): Promise<{ wrapped_key: string | null } | null> {
-  return apiJson("/api/vault/wrapped-key");
-}
-
-export async function verifyVaultPasswordApi(password: string): Promise<{ valid: boolean } | null> {
-  return postOrNull<{ valid: boolean }>("/api/vault/verify-password", { password });
 }
 
 export type CalendarApiEvent = {
