@@ -70,9 +70,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`min-h-screen bg-sunken antialiased ${jakarta.variable} ${questrial.variable}`}>
+      <body className={`min-h-screen bg-deep antialiased ${jakarta.variable} ${questrial.variable}`}>
         <script dangerouslySetInnerHTML={{ __html: `(() => { try { const theme = localStorage.getItem('moneymind-theme'); const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); document.documentElement.classList.toggle('dark', dark); } catch {} })()` }} />
-        <a href="#main-content" className="sr-only z-[100] rounded-md bg-surface px-4 py-2 text-ink-1 shadow focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
+        <a href="#main-content" className="sr-only z-[100] rounded-md bg-base px-4 py-2 text-foreground shadow focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
