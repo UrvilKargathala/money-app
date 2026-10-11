@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { PanelError, PanelLoading, TableLoadingRows } from "@/components/common/async-panel-state";
+import { FieldError } from "@/components/common/form-primitives";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -66,6 +67,15 @@ type ScheduleRow = { period: number; emi_amount: number; principal_part: number;
 type Payment = { id: string; debt_id: string; type: string; amount: number; principal_part: number; interest_part: number; outstanding_after: number; date: string; transaction_id: string | null; notes: string | null };
 type PaymentStatusEntry = { month: string; status: string; scheduled_emi: number | null; amount: number | null; period: number | null };
 
+// DTI level → chart color (server may omit color; fall back to level map).
+const DTI_LEVEL_COLORS: Record<string, string> = {
+  green: "#16a34a",
+  yellow: "#eab308",
+  orange: "#f97316",
+  red: "#dc2626",
+};
+const DTI_FALLBACK_COLOR = "#6b7280";
+
 function DtiCard({ dti }: { dti: Dti }) {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(dti?.monthly_income != null ? String(dti.monthly_income) : "");
@@ -83,7 +93,7 @@ function DtiCard({ dti }: { dti: Dti }) {
     setIncome(dti?.monthly_income != null ? String(dti.monthly_income) : "");
   }, [dti]);
 
-  const levelColor = dti?.color || (dti?.level === "green" ? "#16a34a" : dti?.level === "yellow" ? "#eab308" : dti?.level === "orange" ? "#f97316" : dti?.level === "red" ? "#dc2626" : "#6b7280");
+  const levelColor = dti?.color || DTI_LEVEL_COLORS[dti?.level ?? ""] || DTI_FALLBACK_COLOR;
 
   return (
     <>
@@ -120,7 +130,7 @@ function DtiCard({ dti }: { dti: Dti }) {
             <div className="space-y-2">
               <Label htmlFor="monthly_income">Monthly income (INR)</Label>
               <Input id="monthly_income" name="monthly_income" type="number" step="0.01" value={income} onChange={(e) => setIncome(e.target.value)} placeholder="50000" />
-              {(state as unknown as { fieldErrors?: Record<string, string> })?.fieldErrors?.monthly_income && <p className="text-xs text-error-dark">{(state as unknown as { fieldErrors?: Record<string, string> }).fieldErrors?.monthly_income}</p>}
+              {(state as unknown as { fieldErrors?: Record<string, string> })?.fieldErrors?.monthly_income && <FieldError message={(state as unknown as { fieldErrors?: Record<string, string> }).fieldErrors?.monthly_income} />}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
