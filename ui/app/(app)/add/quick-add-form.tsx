@@ -165,7 +165,7 @@ export function QuickAddForm({
                   <button
                     key={m}
                     type="button"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-sunken"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-deep"
                     onClick={() => {
                       setMerchant(m);
                       setShowMerchantSuggest(false);
