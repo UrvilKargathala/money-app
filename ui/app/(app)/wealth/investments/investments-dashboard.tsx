@@ -341,7 +341,7 @@ export function InvestmentsDashboard({
           </div>
 
           {sipsDue.length > 0 && (
-            <Card className="p-4 border-warning/20 bg-warning-soft/30 dark:bg-[#78350F]/30">
+            <Card className="p-4 border-warning/20 bg-warning-soft/30 dark:border-[#78350F] dark:bg-[#78350F]/30">
               <p className="text-sm font-medium font-heading text-warning-dark dark:text-[#FDE68A] flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> Due in next 7 days - {sipsDue.length}
               </p>
@@ -382,7 +382,7 @@ export function InvestmentsDashboard({
                         <Badge variant="default">{formatINR(Number(sip.amount))}</Badge>
                         <Badge variant="default">{sip.end_date ? `ends ${formatDate(sip.end_date)}` : "Ongoing"}</Badge>
                       </div>
-                      <p className={`text-xs ${sip.days_until_next != null && sip.days_until_next < 0 ? "text-error-dark font-medium" : sip.days_until_next != null && sip.days_until_next <= 7 ? "text-warning-dark font-medium" : "text-neutral-400"}`}>
+                      <p className={`text-xs ${sip.days_until_next != null && sip.days_until_next < 0 ? "text-error-dark dark:text-[#FCA5A5] font-medium" : sip.days_until_next != null && sip.days_until_next <= 7 ? "text-warning-dark dark:text-[#FDE68A] font-medium" : "text-faint"}`}>
                         Next: {formatDate(sip.next_date)}
                         {sip.days_until_next != null && (sip.days_until_next === 0 ? " • Due today" : sip.days_until_next > 0 ? ` • Due in ${sip.days_until_next} days` : ` • Overdue ${Math.abs(sip.days_until_next)} days`)}
                       </p>
@@ -553,7 +553,7 @@ export function InvestmentsDashboard({
                   ) : (
                     <div className="mt-2 space-y-2">
                       {alerts.map((al) => (
-                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-soft/20 px-3 py-2 text-sm dark:bg-[#78350F]/30">
+                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-soft/20 px-3 py-2 text-sm dark:border-[#78350F] dark:bg-[#78350F]/30">
                           <div>
                             <p className="font-medium font-heading">{al.name}</p>
                             <p className="text-xs text-faint">
