@@ -34,7 +34,7 @@ export const GoalCard = memo(function GoalCard({
   const isPaused = goal.status === "paused";
 
   return (
-      <Card className={`p-5 space-y-3 ${isCompleted ? "border-success/30 bg-success-soft/50 dark:bg-[#064E3B]/30" : isPaused ? "opacity-60" : ""}`}>
+      <Card className={`p-5 space-y-3 ${isCompleted ? "border-success/30 bg-success-soft/50 dark:border-[#064E3B] dark:bg-[#064E3B]/30" : isPaused ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold font-heading text-foreground">{goal.name}</p>
