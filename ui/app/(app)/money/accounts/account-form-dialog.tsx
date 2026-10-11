@@ -141,7 +141,7 @@ export function AccountFormDialog({
             onClick={() => pickerRef.current?.click()}
             aria-label="Pick account color"
             title="Pick account color"
-            className="h-11 w-11 shrink-0 rounded-xl border border-line transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            className="h-11 w-11 shrink-0 rounded-xl border border-edge transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
             style={{ backgroundColor: validColor }}
           />
           <Input
