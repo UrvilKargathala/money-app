@@ -170,16 +170,6 @@ export async function getAccountsData(): Promise<{
   };
 }
 
-export async function getAccountSummary(): Promise<{
-  summary: { total_assets: number; total_liabilities: number; net_worth: number; account_count: number };
-} | null> {
-  return apiJson("/api/accounts/summary");
-}
-
-export async function getAccountTypes(): Promise<{ types: unknown[] } | null> {
-  return apiJson("/api/account-types");
-}
-
 export async function getTransactionsData(params?: URLSearchParams): Promise<{
   transactions: {
     id: string;
@@ -230,10 +220,6 @@ export async function getCategories(): Promise<
 
 export async function getTags(): Promise<{ tags: { id: string; name: string; color: string | null }[] } | null> {
   return apiJson("/api/tags");
-}
-
-export async function getRecentMerchants(): Promise<{ merchants: string[] } | null> {
-  return apiJson("/api/transactions/merchants/recent");
 }
 
 export async function getBudgetsData(
@@ -292,10 +278,6 @@ export async function getBudgetOverview(
   };
 } | null> {
   return apiJson(`/api/budgets/overview?month=${month}&year=${year}`);
-}
-
-export async function getBudgetBreakdown(id: string): Promise<{ breakdown: { category_id: string; name: string; icon: string | null; color: string | null; spent: number; share_pct: number }[] } | null> {
-  return apiJson(`/api/budgets/${id}/breakdown`);
 }
 
 export async function getBillsData(): Promise<{
@@ -435,10 +417,6 @@ export async function getSubscriptionsData(): Promise<{
 
 export async function getSubscriptionsMonthlyBurn(): Promise<{ monthly_burn: number } | null> {
   return apiJson("/api/subscriptions/monthly-burn");
-}
-
-export async function getTransfersData(): Promise<{ transfers: unknown[] } | null> {
-  return apiJson("/api/transfers");
 }
 
 export async function getGoalsData(): Promise<{
