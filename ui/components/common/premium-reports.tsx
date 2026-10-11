@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useMembership, UpgradeCard } from "./membership";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { formatINR } from "@/lib/format";
 import { PanelError, PanelLoading } from "@/components/common/async-panel-state";
 export function PremiumReports({ children }: { children: React.ReactNode }) {

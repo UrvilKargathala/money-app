@@ -18,7 +18,7 @@ import { formatINR } from "@/lib/format";
 import { BarChart3, Download, TrendingUp, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReportsCharts from "./reports-charts";
-import { PremiumReports } from "@/components/premium-reports";
+import { PremiumReports } from "@/components/common/premium-reports";
 import { Paywall, TrialBanner } from "@/components/common/paywall";
 import { ReportsManager } from "./reports-manager";
 
