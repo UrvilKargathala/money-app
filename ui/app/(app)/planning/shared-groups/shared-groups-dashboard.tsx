@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, MailPlus, Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,20 +53,21 @@ export function SharedGroupsDashboard({ initialGroups }: { initialGroups: Shared
   const [members, setMembers] = useState<Member[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const group = initialGroups.find((g) => g.id === selected);
+  const group = useMemo(() => initialGroups.find((candidate) => candidate.id === selected), [initialGroups, selected]);
+  const visibleTransactions = useMemo(() => transactions.slice(0, 20), [transactions]);
   async function reloadDetails(id = selected) {
     if (!id) return;
-    const [m, i, t] = await Promise.all([
+    const [membersRes, invitesRes, transactionsRes] = await Promise.all([
       json(`/api/shared-groups/${id}/members`),
       group?.is_owner ? json(`/api/shared-groups/${id}/invites`) : Promise.resolve({ invites: [] }),
       json(`/api/shared-groups/${id}/transactions`),
     ]);
-    setMembers(m.members ?? []);
-    setInvites(i.invites ?? []);
-    setTransactions(t.transactions ?? []);
+    setMembers(membersRes.members ?? []);
+    setInvites(invitesRes.invites ?? []);
+    setTransactions(transactionsRes.transactions ?? []);
   }
   useEffect(() => {
-    reloadDetails().catch((e) => setMessage(e.message));
+    reloadDetails().catch((error) => setMessage(error.message));
   }, [selected]);
   async function action(path: string, init: RequestInit, success: string) {
     try {
@@ -117,15 +118,15 @@ export function SharedGroupsDashboard({ initialGroups }: { initialGroups: Shared
             </CardHeader>
             <CardContent className="space-y-2">
               {initialGroups.length === 0 && <p className="text-sm text-faint">Create your first shared group.</p>}
-              {initialGroups.map((g) => (
+              {initialGroups.map((candidate) => (
                 <button
-                  key={g.id}
-                  onClick={() => setSelected(g.id)}
-                  className={`w-full rounded-xl border border-edge bg-base p-3 text-left ${selected === g.id ? "border-primary-500 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : "hover:bg-deep"}`}
+                  key={candidate.id}
+                  onClick={() => setSelected(candidate.id)}
+                  className={`w-full rounded-xl border border-edge bg-base p-3 text-left ${selected === candidate.id ? "border-primary-500 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : "hover:bg-deep"}`}
                 >
-                  <div className="font-medium">{g.name}</div>
+                  <div className="font-medium">{candidate.name}</div>
                   <div className="text-xs text-faint">
-                    {g.member_count} members · {g.is_owner ? "Owner" : g.my_role}
+                    {candidate.member_count} members · {candidate.is_owner ? "Owner" : candidate.my_role}
                   </div>
                 </button>
               ))}
@@ -203,26 +204,26 @@ export function SharedGroupsDashboard({ initialGroups }: { initialGroups: Shared
                   <CardTitle>Members</CardTitle>
                 </CardHeader>
                 <CardContent className="divide-y">
-                  {members.map((m) => (
-                    <div key={m.user_id} className="flex items-center justify-between gap-2 py-3">
+                  {members.map((member) => (
+                    <div key={member.user_id} className="flex items-center justify-between gap-2 py-3">
                       <div>
-                        <p className="text-sm font-medium">{m.full_name || m.email}</p>
+                        <p className="text-sm font-medium">{member.full_name || member.email}</p>
                         <p className="text-xs text-faint">
-                          {m.is_owner ? "Owner" : m.role === "admin" ? "Can manage" : "View only"}
+                          {member.is_owner ? "Owner" : member.role === "admin" ? "Can manage" : "View only"}
                         </p>
                       </div>
-                      {group.is_owner && !m.is_owner && (
+                      {group.is_owner && !member.is_owner && (
                         <div className="flex items-center gap-2">
                           <select
-                            aria-label={`Permission for ${m.email}`}
-                            value={m.role}
-                            onChange={(e) =>
+                            aria-label={`Permission for ${member.email}`}
+                            value={member.role}
+                            onChange={(event) =>
                               action(
-                                `/api/shared-groups/${group.id}/members/${m.user_id}`,
+                                `/api/shared-groups/${group.id}/members/${member.user_id}`,
                                 {
                                   method: "PATCH",
                                   headers: { "content-type": "application/json" },
-                                  body: JSON.stringify({ role: e.target.value }),
+                                  body: JSON.stringify({ role: event.target.value }),
                                 },
                                 "Permission updated."
                               )
@@ -237,7 +238,7 @@ export function SharedGroupsDashboard({ initialGroups }: { initialGroups: Shared
                             variant="outline"
                             onClick={() =>
                               action(
-                                `/api/shared-groups/${group.id}/members/${m.user_id}`,
+                                `/api/shared-groups/${group.id}/members/${member.user_id}`,
                                 { method: "DELETE" },
                                 "Member removed."
                               )
@@ -258,18 +259,18 @@ export function SharedGroupsDashboard({ initialGroups }: { initialGroups: Shared
                 </CardHeader>
                 <CardContent className="divide-y">
                   {invites.length === 0 && <p className="text-sm text-faint">No pending invitations.</p>}
-                  {invites.map((i) => (
-                    <div key={i.id} className="flex items-center justify-between py-3">
+                  {invites.map((invite) => (
+                    <div key={invite.id} className="flex items-center justify-between py-3">
                       <div>
-                        <p className="text-sm font-medium">{i.invitee_email}</p>
-                        <p className="text-xs text-faint">Expires {new Date(i.expires_at).toLocaleDateString()}</p>
+                        <p className="text-sm font-medium">{invite.invitee_email}</p>
+                        <p className="text-xs text-faint">Expires {new Date(invite.expires_at).toLocaleDateString()}</p>
                       </div>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() =>
                           action(
-                            `/api/shared-groups/${group.id}/invites/${i.id}`,
+                            `/api/shared-groups/${group.id}/invites/${invite.id}`,
                             { method: "DELETE" },
                             "Invitation revoked."
                           )
@@ -294,16 +295,16 @@ export function SharedGroupsDashboard({ initialGroups }: { initialGroups: Shared
                     description="Transactions assigned to this group appear here."
                   />
                 )}
-                {transactions.slice(0, 20).map((t) => (
-                  <div key={t.id} className="flex justify-between py-3 text-sm">
+                {visibleTransactions.map((txn) => (
+                  <div key={txn.id} className="flex justify-between py-3 text-sm">
                     <div>
-                      <p className="font-medium">{t.description || "Transaction"}</p>
+                      <p className="font-medium">{txn.description || "Transaction"}</p>
                       <p className="text-xs text-faint">
-                        {t.date} · {t.added_by_email}
+                        {txn.date} · {txn.added_by_email}
                       </p>
                     </div>
-                    <span className={t.type === "income" ? "text-emerald-600" : "text-foreground"}>
-                      {t.type === "income" ? "+" : "-"}₹{Number(t.amount).toLocaleString()}
+                    <span className={txn.type === "income" ? "text-emerald-600" : "text-foreground"}>
+                      {txn.type === "income" ? "+" : "-"}₹{Number(txn.amount).toLocaleString()}
                     </span>
                   </div>
                 ))}
