@@ -355,14 +355,14 @@ function ContributionsDialog({ goal, accounts, open, onOpenChange }: { goal: Goa
                     <Label>From account</Label>
                     <Select value={fromAccount} onValueChange={setFromAccount}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>{accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{accounts.map((account) => <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>To account</Label>
                     <Select value={toAccount} onValueChange={setToAccount}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>{accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{accounts.map((account) => <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 </div>
@@ -697,10 +697,10 @@ const DistributeCard = memo(function DistributeCard({ goals }: { goals: Goal[] }
   };
 
   const suggestionsTotal = useMemo(
-    () => suggestions.reduce((a, b) => a + b.amount, 0),
+    () => suggestions.reduce((total, suggestion) => total + suggestion.amount, 0),
     [suggestions]
   );
-  const activeGoalsCount = useMemo(() => goals.filter((g) => g.status === "active").length, [goals]);
+  const activeGoalsCount = useMemo(() => goals.filter((goal) => goal.status === "active").length, [goals]);
 
   return (
     <Card className="p-6">
@@ -717,13 +717,13 @@ const DistributeCard = memo(function DistributeCard({ goals }: { goals: Goal[] }
       </div>
       {suggestions.length > 0 && (
         <div className="mt-4 space-y-2">
-          {suggestions.map((s) => (
-            <div key={s.goal_id} className="flex justify-between items-center rounded-lg bg-deep p-3">
+          {suggestions.map((suggestion) => (
+            <div key={suggestion.goal_id} className="flex justify-between items-center rounded-lg bg-deep p-3">
               <div>
-                <p className="text-sm font-medium">{s.name}</p>
-                <p className="text-xs text-faint">Remaining {formatINR(s.remaining)}</p>
+                <p className="text-sm font-medium">{suggestion.name}</p>
+                <p className="text-xs text-faint">Remaining {formatINR(suggestion.remaining)}</p>
               </div>
-              <p className="text-sm font-bold">{formatINR(s.amount)}</p>
+              <p className="text-sm font-bold">{formatINR(suggestion.amount)}</p>
             </div>
           ))}
           <p className="text-xs text-faint">Total {formatINR(suggestionsTotal)} across {suggestions.length} goals</p>
@@ -749,11 +749,11 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
 
   const filtered = useMemo(
     () =>
-      goals.filter((g) => {
+      goals.filter((goal) => {
         if (activeTab === "all") return true;
-        if (activeTab === "active") return g.status === "active";
-        if (activeTab === "paused") return g.status === "paused";
-        if (activeTab === "completed") return g.status === "completed";
+        if (activeTab === "active") return goal.status === "active";
+        if (activeTab === "paused") return goal.status === "paused";
+        if (activeTab === "completed") return goal.status === "completed";
         return true;
       }),
     [goals, activeTab]
@@ -761,8 +761,8 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
 
   const [goalConfirmState, closeGoalConfirm, confirmGoalDelete] = useDeleteConfirm();
 
-  const handleEditGoal = useCallback((g: Goal) => {
-    setEditing(g);
+  const handleEditGoal = useCallback((goal: Goal) => {
+    setEditing(goal);
     setFormOpen(true);
   }, []);
 
