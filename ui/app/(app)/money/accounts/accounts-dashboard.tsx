@@ -52,24 +52,29 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
 
   // Lowered once per render (was recomputed per account in the filter).
   const loweredSearch = search.toLowerCase();
-  const filtered = useMemo(
-    () =>
-      accounts.filter((a) => {
-        if (!showInactive && a.is_active !== 1) return false;
-        if (filterType !== "all" && a.type !== filterType) return false;
-        if (search && !a.name.toLowerCase().includes(loweredSearch) && !a.institution?.toLowerCase().includes(loweredSearch)) return false;
-        return true;
-      }),
-    [accounts, showInactive, filterType, search, loweredSearch]
-  );
+  const filtered = useMemo(() => {
+    // Matches name or institution, case-insensitively. Null institution
+    // counts as non-match (same as before — `!undefined` was true).
+    const matchesSearch = (account: Account): boolean => {
+      if (!search) return true;
+      if (account.name.toLowerCase().includes(loweredSearch)) return true;
+      return account.institution?.toLowerCase().includes(loweredSearch) ?? false;
+    };
+    return accounts.filter((account) => {
+      if (!showInactive && account.is_active !== 1) return false;
+      if (filterType !== "all" && account.type !== filterType) return false;
+      if (!matchesSearch(account)) return false;
+      return true;
+    });
+  }, [accounts, showInactive, filterType, search, loweredSearch]);
 
-  const activeAccounts = useMemo(() => accounts.filter((a) => a.is_active === 1), [accounts]);
+  const activeAccounts = useMemo(() => accounts.filter((account) => account.is_active === 1), [accounts]);
   const totals = useMemo(() => {
     let assets = 0;
     let liabilities = 0;
-    for (const a of activeAccounts) {
-      if (a.is_asset === 1) assets += a.balance;
-      else liabilities += Math.abs(a.balance);
+    for (const account of activeAccounts) {
+      if (account.is_asset === 1) assets += account.balance;
+      else liabilities += Math.abs(account.balance);
     }
     return { assets, liabilities, net: assets - liabilities };
   }, [activeAccounts]);
@@ -77,7 +82,7 @@ export function AccountsDashboard({ accounts, types, initialCreate = false, init
   const totalLiabilities = totals.liabilities;
   const net = totals.net;
   // Stable transfer options (were a new array+objects every render).
-  const transferOpts = useMemo(() => activeAccounts.map((a) => ({ id: a.id, name: a.name })), [activeAccounts]);
+  const transferOpts = useMemo(() => activeAccounts.map((account) => ({ id: account.id, name: account.name })), [activeAccounts]);
 
   const handleEditAccount = useCallback((a: Account) => {
     setEditing(a);
