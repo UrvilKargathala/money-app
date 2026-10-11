@@ -52,11 +52,11 @@ export const BillCard = memo(function BillCard({
   const isPaid = bill.current_period_status === "paid";
 
   return (
-      <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-tint-error/30 dark:bg-[#7F1D1D]/30" : isPaid ? "border-success/30 bg-tint-success/30 dark:bg-[#064E3B]/30" : ""}`}>
+      <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-soft/30 dark:bg-[#7F1D1D]/30" : isPaid ? "border-success/30 bg-success-soft/30 dark:bg-[#064E3B]/30" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-semibold font-heading text-ink-1">{bill.name}</p>
-          <p className="text-xs text-ink-3">
+          <p className="text-sm font-semibold font-heading text-foreground">{bill.name}</p>
+          <p className="text-xs text-faint">
             Due day {bill.due_day} • {bill.frequency} {bill.is_autopay ? "• Autopay" : ""} {bill.account_name ? `• ${bill.account_name}` : ""}
           </p>
           {bill.category_name && <p className="text-xs text-neutral-400">{bill.category_name}</p>}
@@ -100,8 +100,8 @@ export const BillCard = memo(function BillCard({
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs text-ink-3">Amount</p>
-          <p className="text-lg font-bold font-heading text-ink-1">{displayAmount != null ? formatINR(displayAmount) : "-"}</p>
+          <p className="text-xs text-faint">Amount</p>
+          <p className="text-lg font-bold font-heading text-foreground">{displayAmount != null ? formatINR(displayAmount) : "-"}</p>
         </div>
         {isActive && (
           <div className="flex gap-2">
