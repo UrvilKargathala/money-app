@@ -17,7 +17,7 @@ function base64ToBuffer(value: string): ArrayBuffer {
   return Uint8Array.from(base64ToBytes(value)).buffer;
 }
 
-export function randomBase64(length = 16): string {
+function randomBase64(length = 16): string {
   return bytesToBase64(crypto.getRandomValues(new Uint8Array(length)));
 }
 
