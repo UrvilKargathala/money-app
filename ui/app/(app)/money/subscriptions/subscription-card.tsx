@@ -46,10 +46,10 @@ export const SubscriptionCard = memo(function SubscriptionCard({
   const snoozed = sub.last_snooze_days != null && sub.last_snooze_date != null;
 
   return (
-    <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-tint-warning/30 dark:bg-[#78350F]/30" : ""}`}>
+    <Card className={`p-4 space-y-3 ${!isActive && !isPaused ? "opacity-60" : sub.days_until_renewal <= 3 && isActive ? "border-warning/30 bg-warning-soft/30 dark:bg-[#78350F]/30" : ""}`}>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold font-heading text-ink-1">{sub.service_name}</p>
+          <p className="truncate text-sm font-semibold font-heading text-foreground">{sub.service_name}</p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Actions for ${sub.service_name}`}>
@@ -98,8 +98,8 @@ export const SubscriptionCard = memo(function SubscriptionCard({
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs text-ink-3">Amount</p>
-          <p className="text-lg font-bold font-heading text-ink-1">{formatINR(sub.amount)}</p>
+          <p className="text-xs text-faint">Amount</p>
+          <p className="text-lg font-bold font-heading text-foreground">{formatINR(sub.amount)}</p>
         </div>
         {isActive && (
           <Button size="sm" onClick={() => onRenew(sub)}>
