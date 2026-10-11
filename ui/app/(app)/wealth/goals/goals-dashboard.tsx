@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { GoalCard } from "./goal-card";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
@@ -813,23 +814,23 @@ export function GoalsDashboard({ goals, dashboard, accounts, templates }: { goal
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Goals</h1>
-          <p className="text-sm text-faint font-body mt-1">{dashboard ? `${dashboard.goal_count} goals • ${dashboard.completion_pct.toFixed(1)}% overall` : "Track your savings goals"}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild><a href="/api/goals/export" download><Download className="h-4 w-4" /> Export CSV</a></Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Goal
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Goals"
+        description={dashboard ? `${dashboard.goal_count} goals • ${dashboard.completion_pct.toFixed(1)}% overall` : "Track your savings goals"}
+        actions={
+          <>
+            <Button variant="outline" asChild><a href="/api/goals/export" download><Download className="h-4 w-4" /> Export CSV</a></Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Goal
+            </Button>
+          </>
+        }
+      />
 
       {dashboard && (
         <div className="grid gap-6 md:grid-cols-3">
