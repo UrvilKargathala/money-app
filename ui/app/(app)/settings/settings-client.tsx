@@ -625,7 +625,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
       <Card className="">
         <CardHeader className="pb-4"><CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/>Account security history</CardTitle><CardDescription>Recent sign-ins and security actions on your account.</CardDescription></CardHeader>
-        <CardContent className="divide-y divide-line">{auditLogs.length===0&&<p className="text-sm text-faint">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div className="min-w-0"><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-faint">{log.ip_address||"IP unavailable"}</p></div><time className="shrink-0 text-xs tabular-nums text-faint">{new Date(log.created_at).toLocaleString("en-IN")}</time></div>)}</CardContent>
+        <CardContent className="divide-y divide-edge">{auditLogs.length===0&&<p className="text-sm text-faint">No recent security events.</p>}{auditLogs.map(log=><div key={String(log.id)} className="flex items-center justify-between gap-4 py-3 text-sm"><div className="min-w-0"><p className="font-medium capitalize">{log.action.replaceAll("_"," ")}</p><p className="text-xs text-faint">{log.ip_address||"IP unavailable"}</p></div><time className="shrink-0 text-xs tabular-nums text-faint">{new Date(log.created_at).toLocaleString("en-IN")}</time></div>)}</CardContent>
       </Card>
 
       {billing && (
@@ -658,7 +658,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between rounded-xl border border-edge bg-base p-4 hover:bg-deep transition-colors">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white dark:bg-[#EAF1FF] dark:text-[#111111]">
                 <SlidersHorizontal className="h-5 w-5" />
               </div>
               <div>
@@ -673,7 +673,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
           <div className="flex items-center justify-between rounded-xl border border-edge bg-base p-4 hover:bg-deep transition-colors">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-amber-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-amber-400 dark:bg-amber-400/15 dark:text-amber-300">
                 <Zap className="h-5 w-5" />
               </div>
               <div>
@@ -690,7 +690,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
           <div className="flex items-center justify-between rounded-xl border border-edge bg-base p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white dark:bg-[#EAF1FF] dark:text-[#111111]">
                 <Fingerprint className="h-5 w-5" />
               </div>
               <div>
