@@ -3,25 +3,24 @@
 @tailwind utilities;
 
 /*
- * Semantic surface tokens: single source of truth for light/dark color.
+ * Semantic color tokens: single source of truth for light/dark color.
  * Recoloring later = editing the values below, nothing else.
  * Light values mirror the DS light column; .dark mirrors the DS dark column.
  */
 @layer base {
   :root {
-    --surface: 255 255 255;
-    --sunken: 248 250 252;
-    --wash: 241 245 249;
-    --line: 226 232 240;
-    --ink-1: 15 23 42;
-    --ink-2: 71 85 105;
-    --ink-3: 100 116 139;
-    --tint-info: 239 246 255;
-    --tint-success: 236 253 245;
-    --tint-warning: 255 251 235;
-    --tint-error: 254 242 242;
+    --base: 255 255 255;
+    --deep: 248 250 252;
+    --soft: 241 245 249;
+    --edge: 226 232 240;
+    --foreground: 15 23 42;
+    --muted-foreground: 71 85 105;
+    --faint: 100 116 139;
+    --info-soft: 239 246 255;
+    --success-soft: 236 253 245;
+    --warning-soft: 255 251 235;
+    --error-soft: 254 242 242;
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
@@ -31,7 +30,6 @@
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
     --accent: 210 40% 96%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
@@ -42,17 +40,17 @@
     --radius: 0.75rem;
   }
   .dark {
-    --surface: 15 23 42;
-    --sunken: 30 41 59;
-    --wash: 30 41 59;
-    --line: 51 65 85;
-    --ink-1: 248 250 252;
-    --ink-2: 203 213 225;
-    --ink-3: 148 163 184;
-    --tint-info: 30 58 95;
-    --tint-success: 6 78 59;
-    --tint-warning: 120 53 15;
-    --tint-error: 127 29 29;
+    --base: 15 23 42;
+    --deep: 30 41 59;
+    --soft: 30 41 59;
+    --edge: 51 65 85;
+    --foreground: 248 250 252;
+    --muted-foreground: 203 213 225;
+    --faint: 148 163 184;
+    --info-soft: 30 58 95;
+    --success-soft: 6 78 59;
+    --warning-soft: 120 53 15;
+    --error-soft: 127 29 29;
     --background: 222 47% 18%;
     --foreground: 210 40% 98%;
     --card: 222 47% 11%;
@@ -64,7 +62,6 @@
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 91% 71%;
