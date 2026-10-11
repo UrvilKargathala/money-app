@@ -47,7 +47,7 @@ function VerifyForm() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Verifying..." : "Verify email"}
           </Button>
-          <p className="text-center text-sm text-ink-3">
+          <p className="text-center text-sm text-faint">
             Need a new link?{" "}
             <Link href="/login" className="font-medium text-primary-600 hover:underline">Back to sign in</Link>
           </p>
@@ -59,7 +59,7 @@ function VerifyForm() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<Card><CardContent><p className="text-sm text-ink-3">Loading...</p></CardContent></Card>}>
+    <Suspense fallback={<Card><CardContent><p className="text-sm text-faint">Loading...</p></CardContent></Card>}>
       <VerifyForm />
     </Suspense>
   );
