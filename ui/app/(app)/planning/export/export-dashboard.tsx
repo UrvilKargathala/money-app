@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileArchive, RefreshCw, Trash2, RotateCcw, Package, Activity, FileSpreadsheet } from "lucide-react";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import dynamic from "next/dynamic";
 import { useConfirm } from "@/components/common/confirm-dialog";
 
@@ -201,24 +202,25 @@ export function ExportDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground flex items-center gap-2">
-            <Package className="h-7 w-7" /> Data Export
-          </h1>
-          <p className="text-sm text-faint font-body mt-1">
+      <PageHeader
+        title={<span className="flex items-center gap-2"><Package className="h-7 w-7" /> Data Export</span>}
+        description={
+          <>
             {modules.length} exportable modules • {jobs.length} recent jobs • create CSV/PDF jobs and archives
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={refreshJobs}>
-            <RefreshCw className="h-4 w-4" /> Refresh
-          </Button>
-          <Button onClick={handleFullArchive} disabled={archiveLoading}>
-            <FileArchive className="h-4 w-4" /> {archiveLoading ? "Creating..." : "Full archive (ZIP)"}
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+        actionsClassName="flex items-center gap-2"
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={refreshJobs}>
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </Button>
+            <Button onClick={handleFullArchive} disabled={archiveLoading}>
+              <FileArchive className="h-4 w-4" /> {archiveLoading ? "Creating..." : "Full archive (ZIP)"}
+            </Button>
+          </>
+        }
+      />
 
       {/* Status panel */}
       <Card>
