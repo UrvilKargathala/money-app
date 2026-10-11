@@ -165,13 +165,13 @@ function AlertBody({ alert }: { alert: { type: string; details: unknown } }) {
   if (alert.type === "missed_payments" && Array.isArray(details.debts)) {
     return (
       <div className="mt-1.5 space-y-1.5">
-        {details.debts.map((d, j) => (
-          <p key={j} className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{d.name ?? "Debt"}</span>
+        {details.debts.map((debt, index) => (
+          <p key={index} className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{debt.name ?? "Debt"}</span>
             {" — missed "}
-            {(d.missed_months ?? []).map(shortMonth).join(", ") || "—"}
-            {(d.partial_months?.length ?? 0) > 0 && (
-              <span className="text-faint"> (partial: {(d.partial_months ?? []).map(shortMonth).join(", ")})</span>
+            {(debt.missed_months ?? []).map(shortMonth).join(", ") || "—"}
+            {(debt.partial_months?.length ?? 0) > 0 && (
+              <span className="text-faint"> (partial: {(debt.partial_months ?? []).map(shortMonth).join(", ")})</span>
             )}
           </p>
         ))}
@@ -190,10 +190,10 @@ function AlertBody({ alert }: { alert: { type: string; details: unknown } }) {
     if (!Array.isArray(stale)) return null;
     return (
       <div className="mt-1.5 space-y-1">
-        {stale.map((d, j) => (
-          <p key={j} className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{d.name ?? "Debt"}</span>
-            {typeof d.days_since === "number" ? ` — no EMI in ${d.days_since} days` : ""}
+        {stale.map((debt, index) => (
+          <p key={index} className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{debt.name ?? "Debt"}</span>
+            {typeof debt.days_since === "number" ? ` — no EMI in ${debt.days_since} days` : ""}
           </p>
         ))}
       </div>
@@ -283,8 +283,8 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
     if ((res as { error?: string })?.error) toast.error(String((res as { error: string }).error));
     else {
       toast.success("Schedule regenerated");
-      const r = await fetch(`/api/debts/${debt.id}/amortization`).then((x) => x.json());
-      setRows(r.schedule ?? []);
+      const refreshed = await fetch(`/api/debts/${debt.id}/amortization`).then((response) => response.json());
+      setRows(refreshed.schedule ?? []);
     }
   };
 
@@ -493,17 +493,17 @@ function PaymentsHistoryDialog({ debt, open, onOpenChange }: { debt: Debt | null
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-deep text-xs text-faint"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Type</th><th className="p-2 text-right">Amount</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2">Actions</th></tr></thead>
                 <tbody>
-                  {loading ? <TableLoadingRows columns={7} /> : payments.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-faint">No payments yet</td></tr> : payments.map((p) => (
-                    <tr key={p.id} className="border-t text-xs">
-                      <td className="p-2">{p.date}</td>
-                      <td className="p-2"><Badge variant={p.type === "prepayment" ? "warning" : "secondary"}>{p.type}</Badge></td>
-                      <td className="p-2 text-right">{formatINR(p.amount)}</td>
-                      <td className="p-2 text-right">{formatINR(p.principal_part)}</td>
-                      <td className="p-2 text-right">{formatINR(p.interest_part)}</td>
-                      <td className="p-2 text-right">{formatINR(p.outstanding_after)}</td>
+                  {loading ? <TableLoadingRows columns={7} /> : payments.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-faint">No payments yet</td></tr> : payments.map((payment) => (
+                    <tr key={payment.id} className="border-t text-xs">
+                      <td className="p-2">{payment.date}</td>
+                      <td className="p-2"><Badge variant={payment.type === "prepayment" ? "warning" : "secondary"}>{payment.type}</Badge></td>
+                      <td className="p-2 text-right">{formatINR(payment.amount)}</td>
+                      <td className="p-2 text-right">{formatINR(payment.principal_part)}</td>
+                      <td className="p-2 text-right">{formatINR(payment.interest_part)}</td>
+                      <td className="p-2 text-right">{formatINR(payment.outstanding_after)}</td>
                       <td className="p-2 flex gap-1 justify-center">
-                        <Button variant="ghost" size="sm" onClick={() => { setEditing(p); setAmount(String(p.amount)); setDate(p.date); setNotes(p.notes ?? ""); }}>Edit</Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(p.id)}>Delete</Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditing(payment); setAmount(String(payment.amount)); setDate(payment.date); setNotes(payment.notes ?? ""); }}>Edit</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(payment.id)}>Delete</Button>
                       </td>
                     </tr>
                   ))}
