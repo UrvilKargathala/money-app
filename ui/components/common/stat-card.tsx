@@ -71,7 +71,7 @@ const variantStyles: Record<StatCardVariant, { card: string; label: string; valu
     trend: "text-white/90",
   },
   amber: {
-    card: "bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 border-0 shadow-lg shadow-amber-500/20",
+    card: "bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 border-0 shadow-lg shadow-amber-500/20",
     label: "text-amber-100",
     value: "text-white",
     subtext: "text-amber-100/80",
