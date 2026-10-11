@@ -314,15 +314,15 @@ function AmortizationDialog({ debt, open, onOpenChange }: { debt: Debt | null; o
               <tr><th className="p-2 text-left">Period</th><th className="p-2 text-right">EMI</th><th className="p-2 text-right">Principal</th><th className="p-2 text-right">Interest</th><th className="p-2 text-right">Balance</th><th className="p-2 text-right">Cumulative</th><th className="p-2 text-left">Date</th></tr>
             </thead>
             <tbody>
-              {loading ? <TableLoadingRows columns={7} /> : rows.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-faint">No schedule (credit card or fully paid)</td></tr> : rows.map((r) => (
-                <tr key={r.period} className="border-t text-xs">
-                  <td className="p-2">{r.period}</td>
-                  <td className="p-2 text-right">{formatINR(r.emi_amount)}</td>
-                  <td className="p-2 text-right">{formatINR(r.principal_part)}</td>
-                  <td className="p-2 text-right">{formatINR(r.interest_part)}</td>
-                  <td className="p-2 text-right">{formatINR(r.outstanding_after)}</td>
-                  <td className="p-2 text-right">{formatINR(r.cumulative_interest)}</td>
-                  <td className="p-2">{r.scheduled_date ?? "-"}</td>
+              {loading ? <TableLoadingRows columns={7} /> : rows.length === 0 ? <tr><td colSpan={7} className="p-4 text-center text-faint">No schedule (credit card or fully paid)</td></tr> : rows.map((row) => (
+                <tr key={row.period} className="border-t text-xs">
+                  <td className="p-2">{row.period}</td>
+                  <td className="p-2 text-right">{formatINR(row.emi_amount)}</td>
+                  <td className="p-2 text-right">{formatINR(row.principal_part)}</td>
+                  <td className="p-2 text-right">{formatINR(row.interest_part)}</td>
+                  <td className="p-2 text-right">{formatINR(row.outstanding_after)}</td>
+                  <td className="p-2 text-right">{formatINR(row.cumulative_interest)}</td>
+                  <td className="p-2">{row.scheduled_date ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -569,11 +569,11 @@ function PaymentStatusDialog({ debt, open, onOpenChange }: { debt: Debt | null; 
         {loading ? <PanelLoading label="Loading payment status" /> : loadError ? <PanelError message="Could not load payment status." onRetry={loadStatus} /> : (
           <div className="space-y-2 max-h-[60vh] overflow-auto">
             <div className="grid grid-cols-4 gap-2 text-xs">
-              {entries.map((m) => (
-                <div key={m.month} className="rounded-lg border border-edge p-2 text-center">
-                  <p className="font-medium">{m.month}</p>
-                  <Badge variant={colorFor(m.status) as never} className="mt-1">{m.status}</Badge>
-                  <p className="text-[11px] text-faint mt-1">{m.amount != null ? formatINR(m.amount) : "-"} {m.scheduled_emi != null ? `/ ${formatINR(m.scheduled_emi)}` : ""}</p>
+              {entries.map((entry) => (
+                <div key={entry.month} className="rounded-lg border border-edge p-2 text-center">
+                  <p className="font-medium">{entry.month}</p>
+                  <Badge variant={colorFor(entry.status) as never} className="mt-1">{entry.status}</Badge>
+                  <p className="text-[11px] text-faint mt-1">{entry.amount != null ? formatINR(entry.amount) : "-"} {entry.scheduled_emi != null ? `/ ${formatINR(entry.scheduled_emi)}` : ""}</p>
                 </div>
               ))}
             </div>
@@ -788,15 +788,15 @@ export function DebtsDashboard({
             <CardDescription>Total outstanding {formatINR(combinedTimeline.combined.total_outstanding)} • EMI {formatINR(combinedTimeline.combined.total_monthly_emi)} • Debt-free {combinedTimeline.combined.debt_free_date ?? "-"}</CardDescription>
           </CardHeader>
           <div className="space-y-2">
-            {combinedTimeline.timeline.map((t) => (
-              <div key={t.debt_id} className="flex justify-between items-center rounded-lg bg-deep p-3">
+            {combinedTimeline.timeline.map((entry) => (
+              <div key={entry.debt_id} className="flex justify-between items-center rounded-lg bg-deep p-3">
                 <div>
-                  <p className="text-sm font-medium">{t.name} • {t.type.replace(/_/g, " ")}</p>
-                  <p className="text-xs text-faint">{t.months_remaining != null ? `${t.months_remaining} months remaining` : "no EMI"} {t.payoff_date ? `• Payoff ${t.payoff_date}` : ""}</p>
+                  <p className="text-sm font-medium">{entry.name} • {entry.type.replace(/_/g, " ")}</p>
+                  <p className="text-xs text-faint">{entry.months_remaining != null ? `${entry.months_remaining} months remaining` : "no EMI"} {entry.payoff_date ? `• Payoff ${entry.payoff_date}` : ""}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold">{formatINR(t.outstanding)}</p>
-                  <p className="text-xs text-faint">{t.emi_amount != null ? formatINR(t.emi_amount) : "-"} @ {t.interest_rate}%</p>
+                  <p className="text-sm font-semibold">{formatINR(entry.outstanding)}</p>
+                  <p className="text-xs text-faint">{entry.emi_amount != null ? formatINR(entry.emi_amount) : "-"} @ {entry.interest_rate}%</p>
                 </div>
               </div>
             ))}
@@ -820,20 +820,20 @@ export function DebtsDashboard({
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {debts.map((d) => (
-            <div key={d.id} className="space-y-2">
+          {debts.map((debt) => (
+            <div key={debt.id} className="space-y-2">
               <DebtCard
-                debt={d}
+                debt={debt}
                 onEdit={handleEditDebt}
                 onDelete={handleDelete}
                 onClose={handleClose}
                 onReopen={handleReopen}
               />
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" onClick={() => setHistoryDebt(d)}><History className="h-3 w-3" /> Payments</Button>
-                <Button variant="outline" size="sm" onClick={() => setStatusDebt(d)}><Calendar className="h-3 w-3" /> Status</Button>
-                <Button variant="outline" size="sm" onClick={() => setAmortDebt(d)}><BarChart3 className="h-3 w-3" /> Schedule</Button>
-                <Button variant="outline" size="sm" onClick={() => setPrepayDebt(d)}><Calculator className="h-3 w-3" /> Prepay</Button>
+                <Button variant="outline" size="sm" onClick={() => setHistoryDebt(debt)}><History className="h-3 w-3" /> Payments</Button>
+                <Button variant="outline" size="sm" onClick={() => setStatusDebt(debt)}><Calendar className="h-3 w-3" /> Status</Button>
+                <Button variant="outline" size="sm" onClick={() => setAmortDebt(debt)}><BarChart3 className="h-3 w-3" /> Schedule</Button>
+                <Button variant="outline" size="sm" onClick={() => setPrepayDebt(debt)}><Calculator className="h-3 w-3" /> Prepay</Button>
               </div>
             </div>
           ))}
