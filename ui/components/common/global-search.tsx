@@ -45,9 +45,9 @@ export function GlobalSearch({ mobile = false, onNavigate }: { mobile?: boolean;
 
   return (
     <div ref={rootRef} className={cn("relative", mobile ? "w-full" : "w-[240px]")}> 
-      <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-      <input value={query} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search transactions, notes, bills..." className={cn("h-10 w-full rounded-full border border-edge bg-deep pl-9 pr-9 text-sm text-foreground placeholder:text-neutral-400 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100", !mobile && "h-9")} />
-      {loading ? <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-neutral-400" /> : null}
+      <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-faint" />
+      <input value={query} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search transactions, notes, bills..." className={cn("h-10 w-full rounded-full border border-edge bg-deep pl-9 pr-9 text-sm text-foreground placeholder:text-faint focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100", !mobile && "h-9")} />
+      {loading ? <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-faint" /> : null}
       {open && query.trim().length >= 2 ? (
         <div className="absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border bg-base p-2 shadow-xl sm:min-w-[360px]">
           {!loading && results.length === 0 ? <p className="px-3 py-6 text-center text-sm text-faint">No matching records</p> : null}
