@@ -40,9 +40,10 @@ async function haptic(type: HapticType = "light"): Promise<void> {
   // Web fallback
   try {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      // light + selection share the tap pattern; success/error/medium differ.
       const pattern =
         type === "success" ? [10, 30, 10] : type === "error" ? [20, 20, 20] : type === "medium" ? [20] : [10];
-      (navigator as unknown as { vibrate: (p: number | number[]) => void }).vibrate(pattern as unknown as number);
+      (navigator as Navigator & { vibrate: (pattern: number | number[]) => boolean }).vibrate(pattern);
     }
   } catch {}
 }
