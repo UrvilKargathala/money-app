@@ -110,14 +110,14 @@ function sourceBadgeVariant(source: string): string {
     case "recurring":
       return "bg-teal-100 text-teal-700 border border-teal-200";
     default:
-      return "bg-wash text-ink-2 border border-line dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
+      return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
   }
 }
 
 function kindBadge(kind: string): string {
   if (kind === "inflow") return "bg-tint-success text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
   if (kind === "outflow") return "bg-tint-error text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
-  return "bg-wash text-ink-2 border border-line dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
+  return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -276,13 +276,13 @@ export function CalendarDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Calendar</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">
+          <h1 className="text-3xl font-bold font-heading text-foreground">Calendar</h1>
+          <p className="text-sm text-faint font-body mt-1">
             {totalEvents} events • Financial timeline • {monthLabel}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-line bg-surface">
+          <div className="flex items-center rounded-lg border border-edge bg-base">
             <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -306,7 +306,7 @@ export function CalendarDashboard({
 
       {/* Legend */}
       <Card className="p-4">
-        <p className="text-xs font-medium text-ink-3 mb-2">Legend - color coded by type</p>
+        <p className="text-xs font-medium text-faint mb-2">Legend - color coded by type</p>
         <div className="flex flex-wrap gap-2">
           {[
             { label: "Bill", cls: "bg-red-500" },
@@ -334,16 +334,16 @@ export function CalendarDashboard({
               <TabsTrigger value="grid">Month Grid</TabsTrigger>
               <TabsTrigger value="list">List</TabsTrigger>
             </TabsList>
-            <p className="text-xs text-ink-3 hidden sm:block">Click a date to view details • All data from API</p>
+            <p className="text-xs text-faint hidden sm:block">Click a date to view details • All data from API</p>
           </div>
 
           <TabsContent value="grid" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
               {/* Month grid */}
               <div>
-                <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-line bg-neutral-200">
+                <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-edge bg-neutral-200">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                    <div key={d} className="bg-sunken py-2 text-center text-xs font-semibold text-ink-3">
+                    <div key={d} className="bg-deep py-2 text-center text-xs font-semibold text-faint">
                       {d}
                     </div>
                   ))}
@@ -356,23 +356,23 @@ export function CalendarDashboard({
                       <button
                         key={cell.iso}
                         onClick={() => setSelectedDate(cell.iso)}
-                        className={`min-h-[88px] p-1.5 text-left bg-surface hover:bg-sunken transition-colors flex flex-col ${!cell.inMonth ? "bg-sunken/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-tint-info/60 dark:bg-[#1E1E1E]/60" : ""}`}
+                        className={`min-h-[88px] p-1.5 text-left bg-base hover:bg-deep transition-colors flex flex-col ${!cell.inMonth ? "bg-deep/60 text-neutral-400" : ""} ${isSelected ? "ring-2 ring-primary-600 ring-inset" : ""} ${isToday ? "bg-info-soft/60 dark:bg-[#1E1E1E]/60" : ""}`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#EAF1FF] dark:text-[#111111]" : "text-ink-2"}`}>
+                          <span className={`text-xs font-medium rounded-full h-6 w-6 flex items-center justify-center ${isToday ? "bg-primary-600 text-white" : isSelected ? "bg-neutral-900 text-white dark:bg-[#EAF1FF] dark:text-[#111111]" : "text-muted-foreground"}`}>
                             {cell.date.getDate()}
                           </span>
-                          {countFromApi > 0 && <span className="text-[10px] font-medium text-ink-3">{countFromApi}</span>}
+                          {countFromApi > 0 && <span className="text-[10px] font-medium text-faint">{countFromApi}</span>}
                         </div>
                         <div className="mt-1 space-y-0.5">
                           {dayEvents.slice(0, 3).map((ev, idx) => (
                             <div key={`${ev.source}-${ev.label}-${idx}`} className="flex items-center gap-1 truncate">
                               <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${sourceDot(ev.source)}`} />
-                              <span className="text-[11px] truncate text-ink-2">{ev.label}</span>
-                              {ev.amount != null && <span className="text-[10px] text-ink-3 truncate ml-auto">{formatINR(ev.amount).replace("₹", "").trim().slice(0, 6)}</span>}
+                              <span className="text-[11px] truncate text-muted-foreground">{ev.label}</span>
+                              {ev.amount != null && <span className="text-[10px] text-faint truncate ml-auto">{formatINR(ev.amount).replace("₹", "").trim().slice(0, 6)}</span>}
                             </div>
                           ))}
-                          {dayEvents.length > 3 && <p className="text-[10px] text-ink-3">+{dayEvents.length - 3} more</p>}
+                          {dayEvents.length > 3 && <p className="text-[10px] text-faint">+{dayEvents.length - 3} more</p>}
                         </div>
                       </button>
                     );
@@ -388,17 +388,17 @@ export function CalendarDashboard({
               {/* Day detail panel */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold font-heading text-ink-1">Day Detail</h2>
-                  {selectedDate && <span className="text-xs text-ink-3">{new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>}
+                  <h2 className="font-semibold font-heading text-foreground">Day Detail</h2>
+                  {selectedDate && <span className="text-xs text-faint">{new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>}
                 </div>
                 {!selectedDate ? (
-                  <Card className="p-6 bg-sunken border-dashed">
-                    <p className="text-sm text-ink-3 text-center">Click a date in the grid to view events with amounts.</p>
+                  <Card className="p-6 bg-deep border-dashed">
+                    <p className="text-sm text-faint text-center">Click a date in the grid to view events with amounts.</p>
                     <p className="text-xs text-neutral-400 text-center mt-1">{totalEvents} events in {monthLabel}</p>
                   </Card>
                 ) : selectedEvents.length === 0 ? (
                   <Card className="p-6">
-                    <p className="text-sm text-ink-3">No events on {selectedDate}</p>
+                    <p className="text-sm text-faint">No events on {selectedDate}</p>
                     <p className="text-xs text-neutral-400 mt-1">Day totals: inflow {formatINR(0)} • outflow {formatINR(0)}</p>
                     <Button size="sm" variant="outline" className="mt-3" onClick={() => setFormOpen(true)}>
                       <Plus className="h-3 w-3" /> Add event on this date
@@ -406,17 +406,17 @@ export function CalendarDashboard({
                   </Card>
                 ) : (
                   <div className="space-y-3">
-                    <Card className="p-3 bg-sunken">
+                    <Card className="p-3 bg-deep">
                       <div className="flex justify-between text-xs">
-                        <span className="text-ink-3">Inflow</span>
+                        <span className="text-faint">Inflow</span>
                         <span className="font-semibold text-success">{formatINR(selectedTotals.inflow)}</span>
                       </div>
                       <div className="flex justify-between text-xs mt-1">
-                        <span className="text-ink-3">Outflow</span>
+                        <span className="text-faint">Outflow</span>
                         <span className="font-semibold text-error">{formatINR(selectedTotals.outflow)}</span>
                       </div>
                       <div className="flex justify-between text-xs mt-1 border-t pt-1">
-                        <span className="text-ink-3">Net</span>
+                        <span className="text-faint">Net</span>
                         <span className="font-bold">{formatINR(selectedTotals.inflow - selectedTotals.outflow)}</span>
                       </div>
                     </Card>
@@ -430,7 +430,7 @@ export function CalendarDashboard({
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(ev.kind)}`}>{ev.kind}</span>
                             </div>
-                            <p className="text-xs text-ink-3 mt-1">
+                            <p className="text-xs text-faint mt-1">
                               {ev.amount != null ? formatINR(ev.amount) : "No amount"} {ev.status ? `• ${ev.status}` : ""}
                             </p>
                           </div>
@@ -462,7 +462,7 @@ export function CalendarDashboard({
               <div className="space-y-6">
                 {sortedDates.map((d) => (
                   <div key={d}>
-                    <h2 className="text-sm font-semibold font-heading text-ink-2 mb-2">
+                    <h2 className="text-sm font-semibold font-heading text-muted-foreground mb-2">
                       {new Date(d).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                     </h2>
                     <div className="space-y-2">
@@ -475,7 +475,7 @@ export function CalendarDashboard({
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${kindBadge(ev.kind)}`}>{ev.kind}</span>
                             </div>
-                            <p className="text-xs text-ink-3">
+                            <p className="text-xs text-faint">
                               {ev.amount != null ? formatINR(ev.amount) : "No amount"} {ev.status ? `• ${ev.status}` : ""}
                             </p>
                           </div>
@@ -509,7 +509,7 @@ export function CalendarDashboard({
         {/* Upcoming */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold font-heading text-ink-1 flex items-center gap-2">
+            <h2 className="font-semibold font-heading text-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" /> Upcoming
             </h2>
             <div className="flex gap-1">
@@ -523,19 +523,19 @@ export function CalendarDashboard({
           </div>
           {upcoming && upcomingDays.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-xs text-ink-3">Window {upcoming.window_days} days • Net {formatINR(upcoming.net_cashflow)} • Showing {upcomingDays.length} days • All from API</p>
+              <p className="text-xs text-faint">Window {upcoming.window_days} days • Net {formatINR(upcoming.net_cashflow)} • Showing {upcomingDays.length} days • All from API</p>
               <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
                 {upcomingDays.map((u) => (
                   <div key={u.date} className="border-b last:border-0 pb-3 last:pb-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
-                      <span className="text-xs text-ink-3">
+                      <span className="text-xs text-faint">
                         In {formatINR(u.inflow_total)} • Out {formatINR(u.outflow_total)}
                       </span>
                     </div>
                     <div className="space-y-1 mt-1">
                       {u.events.map((ev, i) => (
-                        <div key={i} className="flex justify-between text-xs text-ink-2 gap-2">
+                        <div key={i} className="flex justify-between text-xs text-muted-foreground gap-2">
                           <span className="flex items-center gap-1.5 truncate">
                             <span className={`h-1.5 w-1.5 rounded-full ${sourceDot(ev.source)}`} /> {ev.label}
                             <span className={`inline-flex px-1 py-0 rounded text-[10px] font-medium ${sourceBadgeVariant(ev.source)}`}>{ev.source}</span>
@@ -555,7 +555,7 @@ export function CalendarDashboard({
                   <p className="text-sm font-medium">{new Date(u.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })} - {formatINR(u.total)}</p>
                   <div className="space-y-1 mt-1">
                     {u.events.map((ev, i) => (
-                      <div key={i} className="flex justify-between text-xs text-ink-2">
+                      <div key={i} className="flex justify-between text-xs text-muted-foreground">
                         <span>
                           {ev.title} <Badge variant="default" className="ml-1 text-[10px]">{ev.type}</Badge>
                         </span>
@@ -567,61 +567,61 @@ export function CalendarDashboard({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-ink-3">No upcoming events in next {upcomingWindow} days.</p>
+            <p className="text-sm text-faint">No upcoming events in next {upcomingWindow} days.</p>
           )}
         </Card>
 
         {/* Tax deadlines */}
         <Card className="p-6">
-          <h2 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
+          <h2 className="font-semibold font-heading text-foreground mb-3 flex items-center gap-2">
             <Landmark className="h-4 w-4" /> Tax Deadlines {taxDeadlines ? `• ${taxDeadlines.year}` : ""}
           </h2>
           {taxList.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-auto pr-1">
               {taxList.map((t) => (
-                <div key={t.date} className={`rounded-lg border p-3 ${t.past ? "bg-sunken border-line opacity-70" : "bg-purple-50/50 border-purple-100"}`}>
+                <div key={t.date} className={`rounded-lg border p-3 ${t.past ? "bg-deep border-edge opacity-70" : "bg-purple-50/50 border-purple-100"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium font-heading">{t.label}</p>
-                      <p className="text-xs text-ink-3">{t.description}</p>
+                      <p className="text-xs text-faint">{t.description}</p>
                     </div>
                     <Badge variant={t.past ? "default" : "secondary"} className="shrink-0 text-[10px]">
                       {t.past ? "past" : "upcoming"}
                     </Badge>
                   </div>
-                  <p className="text-xs font-medium mt-1 text-ink-2">{new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  <p className="text-xs font-medium mt-1 text-muted-foreground">{new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </div>
               ))}
               <p className="text-xs text-neutral-400">{taxList.length} deadlines • Registry from API</p>
             </div>
           ) : (
-            <p className="text-sm text-ink-3">No tax deadlines found.</p>
+            <p className="text-sm text-faint">No tax deadlines found.</p>
           )}
         </Card>
 
         {/* Cashflow projection */}
         <Card className="p-6">
-          <h2 className="font-semibold font-heading text-ink-1 mb-3 flex items-center gap-2">
+          <h2 className="font-semibold font-heading text-foreground mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Cashflow Projection
           </h2>
           {cashflowProjections.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-xs text-ink-3">{cashflowProjections.length} accounts • Daily balances • All from API</p>
+              <p className="text-xs text-faint">{cashflowProjections.length} accounts • Daily balances • All from API</p>
               <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
                 {cashflowProjections.map((p) => (
-                  <div key={p.account_id} className="rounded-lg border border-line p-3 space-y-2">
+                  <div key={p.account_id} className="rounded-lg border border-edge p-3 space-y-2">
                     <p className="text-sm font-medium font-heading">{p.account_name}</p>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div>
-                        <p className="text-ink-3">Today</p>
+                        <p className="text-faint">Today</p>
                         <p className="font-semibold">{formatINR(p.balance_today)}</p>
                       </div>
                       <div>
-                        <p className="text-ink-3">+7 days</p>
+                        <p className="text-faint">+7 days</p>
                         <p className={`font-semibold ${p.balance_plus7 < 0 ? "text-error" : ""}`}>{formatINR(p.balance_plus7)}</p>
                       </div>
                       <div>
-                        <p className="text-ink-3">+30 days</p>
+                        <p className="text-faint">+30 days</p>
                         <p className={`font-semibold ${p.balance_plus30 < 0 ? "text-error" : ""}`}>{formatINR(p.balance_plus30)}</p>
                       </div>
                     </div>
@@ -638,7 +638,7 @@ export function CalendarDashboard({
               </div>
             </div>
           ) : (
-            <p className="text-sm text-ink-3">No cashflow projection available. Add accounts with balances.</p>
+            <p className="text-sm text-faint">No cashflow projection available. Add accounts with balances.</p>
           )}
         </Card>
       </div>
