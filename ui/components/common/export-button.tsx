@@ -25,14 +25,3 @@ export function ExportButton({
     </Button>
   );
 }
-
-/** Ghost icon-only variant for tight table/dialog headers. */
-export function ExportIconButton({ href, label = "Export CSV" }: { href: string; label?: string }) {
-  return (
-    <Button variant="ghost" size="icon" asChild aria-label={label} title={label}>
-      <a href={href} download>
-        <Download className="h-4 w-4" />
-      </a>
-    </Button>
-  );
-}
