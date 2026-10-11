@@ -18,6 +18,8 @@ type Category = { id: string; name: string };
 type Transaction = { id: string; amount: string; tags: Tag[] };
 type Split = { id: string; category_id: string; category_name: string | null; amount: number; notes: string | null };
 
+const DEFAULT_TAG_COLOR = "#2563EB";
+
 export function TransactionToolsDialog({
   open,
   onOpenChange,
@@ -38,26 +40,26 @@ export function TransactionToolsDialog({
   const [amount, setAmount] = useState("");
   const [tagId, setTagId] = useState("");
   const [tagName, setTagName] = useState("");
-  const [tagColor, setTagColor] = useState("#2563EB");
+  const [tagColor, setTagColor] = useState(DEFAULT_TAG_COLOR);
   const [busy, setBusy] = useState(false);
   const loadSplits = async () => {
     if (!transaction) return;
     const res = await fetch(`/api/transactions/${transaction.id}/splits`, { cache: "no-store" });
-    const body = await res.json();
+    const responseBody = await res.json();
     if (res.ok) {
-      setSplits(body.splits ?? []);
-      setRemaining(Number(body.remaining ?? 0));
+      setSplits(responseBody.splits ?? []);
+      setRemaining(Number(responseBody.remaining ?? 0));
     }
   };
   useEffect(() => {
     if (open) void loadSplits();
   }, [open, transaction?.id]);
-  const run = async (url: string, options: RequestInit, message: string) => {
+  const runRequest = async (url: string, options: RequestInit, message: string) => {
     setBusy(true);
     try {
       const res = await fetch(url, options);
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Action failed.");
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || Object.values(responseBody.fieldErrors || {})[0] || "Action failed.");
       toast.success(message);
       router.refresh();
       await loadSplits();
@@ -70,15 +72,15 @@ export function TransactionToolsDialog({
   const addTag = () =>
     transaction &&
     tagId &&
-    void run(
+    void runRequest(
       `/api/transactions/${transaction.id}/tags`,
       { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ tag_id: tagId }) },
       "Tag added"
     );
   const removeTag = (id: string) =>
-    transaction && void run(`/api/transactions/${transaction.id}/tags/${id}`, { method: "DELETE" }, "Tag removed");
+    transaction && void runRequest(`/api/transactions/${transaction.id}/tags/${id}`, { method: "DELETE" }, "Tag removed");
   const createTag = () =>
-    void run(
+    void runRequest(
       "/api/tags",
       {
         method: "POST",
@@ -89,7 +91,7 @@ export function TransactionToolsDialog({
     );
   const addSplit = () =>
     transaction &&
-    void run(
+    void runRequest(
       `/api/transactions/${transaction.id}/splits`,
       {
         method: "POST",
@@ -99,7 +101,7 @@ export function TransactionToolsDialog({
       "Split added"
     );
   const removeSplit = (id: string) =>
-    transaction && void run(`/api/transactions/${transaction.id}/splits/${id}`, { method: "DELETE" }, "Split removed");
+    transaction && void runRequest(`/api/transactions/${transaction.id}/splits/${id}`, { method: "DELETE" }, "Split removed");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
@@ -138,7 +140,7 @@ export function TransactionToolsDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {tags
-                    .filter((tag) => !transaction?.tags.some((current) => current.id === tag.id))
+                    .filter((tag) => !transaction?.tags.some((assigned) => assigned.id === tag.id))
                     .map((tag) => (
                       <SelectItem key={tag.id} value={tag.id}>
                         {tag.name}
