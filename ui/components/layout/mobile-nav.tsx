@@ -40,7 +40,7 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
                       aria-current={active ? "page" : undefined}
                       className={cn(
                         "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                        active ? "bg-info-soft text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-muted-foreground hover:bg-deep hover:text-foreground"
+                        active ? "bg-info-soft text-primary-600 font-semibold dark:bg-[#1E3A5F]/50 dark:text-[#BFDBFE]" : "text-muted-foreground hover:bg-deep hover:text-foreground"
                       )}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
@@ -63,7 +63,7 @@ export function MobileNavSheet({ onClose }: { onClose: () => void }) {
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
-                        active ? "bg-info-soft text-primary-600 font-semibold dark:text-[#BFDBFE]" : "text-muted-foreground hover:bg-deep"
+                        active ? "bg-info-soft text-primary-600 font-semibold dark:bg-[#1E3A5F]/50 dark:text-[#BFDBFE]" : "text-muted-foreground hover:bg-deep"
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
