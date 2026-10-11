@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -116,15 +116,26 @@ export function NotesDashboard({
     }
   };
 
-  const filtered = notes.filter((n) => {
-    if (search && !n.title.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filterCategory !== "all" && n.category !== filterCategory) return false;
-    return true;
-  });
+  const filtered = useMemo(() => {
+    const matches = notes.filter((note) => {
+      if (search && !note.title.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filterCategory !== "all" && note.category !== filterCategory) return false;
+      return true;
+    });
+    // Pinned first. Copy before sorting — sort() mutates in place.
+    return [...matches].sort((a, b) => b.is_pinned - a.is_pinned);
+  }, [notes, search, filterCategory]);
 
-  const filterCategories = Array.from(
-    new Set(notes.map((n) => n.category).filter(Boolean))
+  const filterCategories = useMemo(
+    () => Array.from(new Set(notes.map((note) => note.category).filter(Boolean))),
+    [notes]
   );
+
+  const noteCountByCategory = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const note of notes) counts.set(note.category, (counts.get(note.category) ?? 0) + 1);
+    return counts;
+  }, [notes]);
 
   const [confirmState, closeConfirm, confirmDelete] = useDeleteConfirm();
 
@@ -137,11 +148,11 @@ export function NotesDashboard({
       onDone: () => router.refresh(),
     });
   };
-  const handlePin = async (n: Note) => {
-    const res = n.is_pinned ? await unpinNoteAction(n.id) : await pinNoteAction(n.id);
+  const handlePin = async (note: Note) => {
+    const res = note.is_pinned ? await unpinNoteAction(note.id) : await pinNoteAction(note.id);
     if (res?.error) toast.error(res.error);
     else {
-      toast.success(n.is_pinned ? "Unpinned" : "Pinned");
+      toast.success(note.is_pinned ? "Unpinned" : "Pinned");
       router.refresh();
     }
   };
@@ -188,7 +199,7 @@ export function NotesDashboard({
     setEditing(null);
     setNoteTitle(template.name);
     setCategory(REGISTRY_CATEGORY[template.template_code] || "other");
-    setContent(fields.map((f) => `${f.label}: `).join("\n"));
+    setContent(fields.map((field) => `${field.label}: `).join("\n"));
     setAttachments([]);
     setFormOpen(true);
   };
@@ -201,20 +212,20 @@ export function NotesDashboard({
   const [tplContent, setTplContent] = useState("");
   const [tplSaving, setTplSaving] = useState(false);
 
-  const applyUserTemplate = (t: NoteUserTemplate) => {
+  const applyUserTemplate = (template: NoteUserTemplate) => {
     setEditing(null);
-    setNoteTitle(t.title);
-    setCategory(t.category || "other");
-    setContent(t.content || "");
+    setNoteTitle(template.title);
+    setCategory(template.category || "other");
+    setContent(template.content || "");
     setAttachments([]);
     setFormOpen(true);
   };
 
-  const openTemplateEditor = (t: NoteUserTemplate | null) => {
-    setTplEditing(t);
-    setTplTitle(t?.title ?? "");
-    setTplCategory(t?.category ?? "other");
-    setTplContent(t?.content ?? "");
+  const openTemplateEditor = (template: NoteUserTemplate | null) => {
+    setTplEditing(template);
+    setTplTitle(template?.title ?? "");
+    setTplCategory(template?.category ?? "other");
+    setTplContent(template?.content ?? "");
     setTplOpen(true);
   };
 
@@ -272,20 +283,20 @@ export function NotesDashboard({
     if (res) { toast.success("Saved as template"); router.refresh(); }
     else toast.error("Could not save the template. A template with this name may already exist.");
   };
-  const openEdit = async (n: Note) => {
+  const openEdit = async (note: Note) => {
     if (!vaultKey) return;
     try {
-      const decrypted = await decryptVaultText(vaultKey, n.data_encrypted, n.data_iv);
+      const decrypted = await decryptVaultText(vaultKey, note.data_encrypted, note.data_iv);
       setContent(decrypted.content);
-      if (decrypted.legacy) setLegacyIds((current) => new Set(current).add(n.id));
+      if (decrypted.legacy) setLegacyIds((current) => new Set(current).add(note.id));
     } catch {
       toast.error("This note could not be decrypted with the current vault key.");
       return;
     }
-    setEditing(n);
-    setNoteTitle(n.title);
-    setCategory(n.category);
-    fetch(`/api/notes/${n.id}/attachments`).then(r=>r.ok?r.json():null).then(d=>setAttachments(d?.attachments??[])).catch(()=>setAttachments([]));
+    setEditing(note);
+    setNoteTitle(note.title);
+    setCategory(note.category);
+    fetch(`/api/notes/${note.id}/attachments`).then((res) => (res.ok ? res.json() : null)).then((data) => setAttachments(data?.attachments ?? [])).catch(() => setAttachments([]));
     setFormOpen(true);
   };
 
@@ -444,7 +455,7 @@ export function NotesDashboard({
             <p className="text-xs text-faint">
               {notes.length === 0
                 ? "No notes yet — counts appear as you add notes."
-                : `${notes.length} note${notes.length === 1 ? "" : "s"} across ${categories.filter((c) => Boolean(c.name)).length} categories · tap to filter · pencil to rename`}
+                : `${notes.length} note${notes.length === 1 ? "" : "s"} across ${categories.filter((category) => Boolean(category.name)).length} categories · tap to filter · pencil to rename`}
             </p>
           </CardHeader>
           <CardContent>
@@ -453,22 +464,22 @@ export function NotesDashboard({
             ) : (
               <div className="flex flex-wrap gap-2">
                 {categories
-                  .filter((c) => Boolean(c.name))
-                  .map((c) => {
-                    const count = notes.filter((n) => n.category === c.name).length;
-                    const active = filterCategory === c.name;
-                    if (editingCategory === c.name) {
+                  .filter((category) => Boolean(category.name))
+                  .map((category) => {
+                    const count = noteCountByCategory.get(category.name) ?? 0;
+                    const active = filterCategory === category.name;
+                    if (editingCategory === category.name) {
                       return (
-                        <span key={c.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 dark:border-[#60A5FA] bg-base ring-1 ring-primary-200 dark:ring-[#60A5FA]/40">
+                        <span key={category.name} className="inline-flex items-center overflow-hidden rounded-lg border border-primary-300 dark:border-[#60A5FA] bg-base ring-1 ring-primary-200 dark:ring-[#60A5FA]/40">
                           <Input
                             autoFocus
                             value={categoryDraft}
                             onChange={(event) => setCategoryDraft(event.target.value)}
                             onKeyDown={(event) => {
-                              if (event.key === "Enter") { event.preventDefault(); void commitRenameCategory(c.name, categoryDraft); }
+                              if (event.key === "Enter") { event.preventDefault(); void commitRenameCategory(category.name, categoryDraft); }
                               else if (event.key === "Escape") setEditingCategory(null);
                             }}
-                            aria-label={`Rename category ${c.name}`}
+                            aria-label={`Rename category ${category.name}`}
                             className="h-7 w-32 border-0 px-2 py-0 text-xs shadow-none focus-visible:ring-0"
                           />
                           <span className="flex items-center border-l border-edge">
@@ -476,7 +487,7 @@ export function NotesDashboard({
                               type="button"
                               aria-label="Save rename"
                               disabled={renaming}
-                              onClick={() => void commitRenameCategory(c.name, categoryDraft)}
+                              onClick={() => void commitRenameCategory(category.name, categoryDraft)}
                               className="p-1.5 text-success-dark hover:bg-success-soft dark:hover:bg-[#064E3B]/50"
                             >
                               <Check className="h-3.5 w-3.5" />
@@ -495,24 +506,24 @@ export function NotesDashboard({
                     }
                     return (
                       <span
-                        key={c.name}
+                        key={category.name}
                         className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E3A5F]/50" : "border-edge bg-base"}`}
                       >
                         <button
                           type="button"
-                          title={`Filter by ${c.name}`}
-                          aria-label={`Filter by ${c.name}`}
+                          title={`Filter by ${category.name}`}
+                          aria-label={`Filter by ${category.name}`}
                           aria-pressed={active}
-                          onClick={() => setFilterCategory(active ? "all" : c.name)}
+                          onClick={() => setFilterCategory(active ? "all" : category.name)}
                           className={`px-2.5 py-1 text-xs font-medium hover:bg-deep ${active ? "text-primary-700 dark:text-[#BFDBFE]" : "text-muted-foreground"}`}
                         >
-                          {c.name} · {count}
+                          {category.name} · {count}
                         </button>
                         <button
                           type="button"
-                          title={`Rename ${c.name}`}
-                          aria-label={`Rename category ${c.name}`}
-                          onClick={() => { setEditingCategory(c.name); setCategoryDraft(c.name); }}
+                          title={`Rename ${category.name}`}
+                          aria-label={`Rename category ${category.name}`}
+                          onClick={() => { setEditingCategory(category.name); setCategoryDraft(category.name); }}
                           className="border-l border-edge px-1.5 text-faint hover:bg-soft hover:text-muted-foreground"
                         >
                           <Pencil className="h-3 w-3" />
@@ -532,13 +543,13 @@ export function NotesDashboard({
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              {userTemplates.map((t) => (
-                <span key={t.id} className="inline-flex items-center gap-1">
-                  <button type="button" title={`Use ${t.title}`} onClick={() => applyUserTemplate(t)}><Badge variant="secondary">{t.title} · Use template</Badge></button>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" aria-label={`Edit template ${t.title}`} onClick={() => openTemplateEditor(t)}>
+              {userTemplates.map((userTemplate) => (
+                <span key={userTemplate.id} className="inline-flex items-center gap-1">
+                  <button type="button" title={`Use ${userTemplate.title}`} onClick={() => applyUserTemplate(userTemplate)}><Badge variant="secondary">{userTemplate.title} · Use template</Badge></button>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" aria-label={`Edit template ${userTemplate.title}`} onClick={() => openTemplateEditor(userTemplate)}>
                     <Pencil className="h-3 w-3" />
                   </Button>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-error" aria-label={`Delete template ${t.title}`} onClick={() => void handleDeleteTemplate(t.id, t.title)}>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-error" aria-label={`Delete template ${userTemplate.title}`} onClick={() => void handleDeleteTemplate(userTemplate.id, userTemplate.title)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </span>
@@ -551,8 +562,8 @@ export function NotesDashboard({
               <div className="space-y-1.5 border-t border-edge pt-3">
                 <p className="text-[11px] font-medium uppercase tracking-wider text-faint">Starters</p>
                 <div className="flex flex-wrap gap-2">
-                  {templates.map((t) => (
-                    <button key={t.template_code} type="button" title={t.description ?? t.name} onClick={() => applyTemplate(t)}><Badge variant="default">{t.name}</Badge></button>
+                  {templates.map((template) => (
+                    <button key={template.template_code} type="button" title={template.description ?? template.name} onClick={() => applyTemplate(template)}><Badge variant="default">{template.name}</Badge></button>
                   ))}
                 </div>
               </div>
@@ -582,9 +593,9 @@ export function NotesDashboard({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All categories</SelectItem>
-                {filterCategories.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
+                {filterCategories.map((categoryName) => (
+                  <SelectItem key={categoryName} value={categoryName}>
+                    {categoryName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -601,34 +612,32 @@ export function NotesDashboard({
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered
-                .sort((a, b) => b.is_pinned - a.is_pinned)
-                .map((n) => (
-                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-info-soft/50 dark:border-[#334155] dark:bg-[#1E3A5F]/40" : ""}`}>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-semibold font-heading text-foreground flex items-center gap-2">
-                          {n.is_pinned ? <Pin className="h-3 w-3 shrink-0 text-primary-600" /> : null}
-                          <span className="truncate">{n.title}</span>
-                        </p>
-                        <span className="shrink-0 text-xs text-faint">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <Badge variant="default">{n.category}</Badge>
-                        {legacyIds.has(n.id) ? <Badge variant="warning">Needs encryption upgrade</Badge> : null}
-                      </div>
+              {filtered.map((note) => (
+                <Card key={note.id} className={`p-4 space-y-3 ${note.is_pinned ? "border-primary-200 bg-info-soft/50 dark:border-[#334155] dark:bg-[#1E3A5F]/40" : ""}`}>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-semibold font-heading text-foreground flex items-center gap-2">
+                        {note.is_pinned ? <Pin className="h-3 w-3 shrink-0 text-primary-600" /> : null}
+                        <span className="truncate">{note.title}</span>
+                      </p>
+                      <span className="shrink-0 text-xs text-faint">{new Date(note.created_at).toLocaleDateString("en-IN")}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => void openEdit(n)}>
-                        Edit
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handlePin(n)}>
-                        <Pin className="h-4 w-4" /> {n.is_pinned ? "Unpin" : "Pin"}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(n.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="default">{note.category}</Badge>
+                      {legacyIds.has(note.id) ? <Badge variant="warning">Needs encryption upgrade</Badge> : null}
                     </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => void openEdit(note)}>
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handlePin(note)}>
+                      <Pin className="h-4 w-4" /> {note.is_pinned ? "Unpin" : "Pin"}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(note.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                   </Card>
                 ))}
             </div>
@@ -642,22 +651,22 @@ export function NotesDashboard({
             </Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {trash.map((n) => (
-                <Card key={n.id} className="p-4 space-y-3 bg-deep">
+              {trash.map((trashedNote) => (
+                <Card key={trashedNote.id} className="p-4 space-y-3 bg-deep">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold font-heading text-foreground">{n.title}</p>
+                      <p className="text-sm font-semibold font-heading text-foreground">{trashedNote.title}</p>
                       <Badge variant="default" className="mt-1">
-                        {n.category}
+                        {trashedNote.category}
                       </Badge>
                     </div>
-                    <span className="text-xs text-faint">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
+                    <span className="text-xs text-faint">{new Date(trashedNote.created_at).toLocaleDateString("en-IN")}</span>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleRestore(n.id)}>
+                    <Button variant="outline" size="sm" onClick={() => handleRestore(trashedNote.id)}>
                       <RotateCcw className="h-4 w-4" /> Restore
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handlePurge(n.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => handlePurge(trashedNote.id)}>
                       <Trash2 className="h-4 w-4" /> Purge
                     </Button>
                   </div>
