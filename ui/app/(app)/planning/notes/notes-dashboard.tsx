@@ -474,7 +474,7 @@ export function NotesDashboard({
                               aria-label="Save rename"
                               disabled={renaming}
                               onClick={() => void commitRenameCategory(c.name, categoryDraft)}
-                              className="p-1.5 text-success-dark hover:bg-tint-success dark:hover:bg-[#064E3B]/50"
+                              className="p-1.5 text-success-dark hover:bg-success-soft dark:hover:bg-[#064E3B]/50"
                             >
                               <Check className="h-3.5 w-3.5" />
                             </button>
@@ -493,7 +493,7 @@ export function NotesDashboard({
                     return (
                       <span
                         key={c.name}
-                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-tint-info dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : "border-edge bg-base"}`}
+                        className={`inline-flex items-stretch overflow-hidden rounded-lg border ${active ? "border-primary-300 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : "border-edge bg-base"}`}
                       >
                         <button
                           type="button"
@@ -601,7 +601,7 @@ export function NotesDashboard({
               {filtered
                 .sort((a, b) => b.is_pinned - a.is_pinned)
                 .map((n) => (
-                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-tint-info/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
+                  <Card key={n.id} className={`p-4 space-y-3 ${n.is_pinned ? "border-primary-200 bg-info-soft/50 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40" : ""}`}>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-semibold font-heading text-foreground flex items-center gap-2">
