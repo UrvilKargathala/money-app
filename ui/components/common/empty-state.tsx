@@ -17,7 +17,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction, cl
   return (
     <div className={cn("flex flex-col items-center justify-center rounded-xl border border-dashed border-edge bg-base px-6 py-12 text-center", className)}>
       {icon && (
-        <div aria-hidden="true" className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-soft text-neutral-400">
+        <div aria-hidden="true" className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-soft text-faint">
           {icon}
         </div>
       )}
