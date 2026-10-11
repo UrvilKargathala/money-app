@@ -1156,7 +1156,6 @@ export type ExportJob = {
   updated_at?: string;
   error?: string | null;
 };
-export type ExportProgress = { id: string; status: string; progress: number; progress_pct?: number; bytes?: number; size_estimate?: number | null; message?: string | null };
 export type ExportStatusInfo = { health: string; queue_depth?: number; queue?: number; active_jobs?: number; last_run?: string | null; pipeline?: string | null; [k: string]: unknown };
 
 export async function getExportModules(): Promise<{ modules: ExportModuleInfo[] } | null> {
@@ -1170,45 +1169,4 @@ export async function getExportStatus(): Promise<ExportStatusInfo | null> {
 export async function getExportJobs(): Promise<{ jobs: ExportJob[] } | { items: ExportJob[] } | ExportJob[] | null> {
   const data = await apiJson<{ jobs: ExportJob[] } | { items: ExportJob[] } | ExportJob[]>("/api/export/jobs");
   return data;
-}
-
-export async function getExportJob(id: string): Promise<{ job: ExportJob } | ExportJob | null> {
-  return apiJson(`/api/export/jobs/${encodeURIComponent(id)}`);
-}
-
-export async function getExportJobProgress(id: string): Promise<ExportProgress | null> {
-  return apiJson(`/api/export/jobs/${encodeURIComponent(id)}/progress`);
-}
-
-export function getExportJobDownloadHref(id: string): string {
-  return `/api/export/jobs/${encodeURIComponent(id)}/download`;
-}
-
-export async function createExportJob(payload: {
-  format?: string;
-  module?: string;
-  modules?: string[];
-  range?: string;
-  date_from?: string | null;
-  date_to?: string | null;
-  column_set?: string[] | null;
-  [k: string]: unknown;
-}): Promise<{ job: ExportJob; success?: boolean } | ExportJob | null> {
-  return postOrNull<{ job: ExportJob; success?: boolean } | ExportJob>("/api/export/jobs", payload);
-}
-
-export async function retryExportJob(id: string): Promise<{ job: ExportJob; success?: boolean } | null> {
-  return postOrNull<{ job: ExportJob; success?: boolean }>(`/api/export/jobs/${encodeURIComponent(id)}/retry`, {});
-}
-
-export async function deleteExportJob(id: string): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>(`/api/export/jobs/${encodeURIComponent(id)}`, undefined, "DELETE");
-}
-
-export async function createFullArchive(payload?: Record<string, unknown>): Promise<{ job: ExportJob; archive?: unknown; success?: boolean } | null> {
-  return postOrNull<{ job: ExportJob; archive?: unknown; success?: boolean }>("/api/export/full-archive", payload ?? {});
-}
-
-export function getExportFullArchiveHref(): string {
-  return "/api/export/full-archive";
 }
