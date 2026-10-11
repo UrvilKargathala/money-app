@@ -993,40 +993,6 @@ export async function getNotificationEmails(limit?: number): Promise<{
   return apiJson(`/api/notification-emails${qs}`);
 }
 
-export async function getNotificationsStream(params?: { since?: string }): Promise<{
-  latest_server_time: string;
-  notifications: { id: string; type: string; title: string; message: string; created_at: string }[];
-} | null> {
-  const qs = params?.since ? `?since=${encodeURIComponent(params.since)}` : "";
-  return apiJson(`/api/notifications/stream${qs}`);
-}
-
-export function getNotificationsStreamHref(since?: string): string {
-  if (since) return `/api/notifications/stream?since=${encodeURIComponent(since)}`;
-  return "/api/notifications/stream";
-}
-
-export async function updateNotificationPreferencesApi(payload: {
-  preferences: { notification_type: string; channel: string; is_enabled: boolean | number }[];
-}): Promise<{ success: boolean } | null> {
-  return postOrNull<{ success: boolean }>("/api/notification-preferences", payload, "PATCH");
-}
-
-export async function toggleNotificationPreferenceApi(
-  type: string,
-  channel: string
-): Promise<{ success: boolean; is_enabled: boolean } | null> {
-  return postOrNull<{ success: boolean; is_enabled: boolean }>(`/api/notification-preferences/${encodeURIComponent(type)}/${encodeURIComponent(channel)}`, {}, "PATCH");
-}
-
-export async function previewNotificationEmailApi(payload: {
-  type: string;
-  title: string;
-  message: string;
-}): Promise<{ preview: { subject: string; body_html: string; body_text: string } } | null> {
-  return postOrNull<{ preview: { subject: string; body_html: string; body_text: string } }>("/api/notifications/email/preview", payload);
-}
-
 export async function getSettings(): Promise<unknown | null> {
   return apiJson("/api/users/me/settings");
 }
