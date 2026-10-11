@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Download, User, Bell, Palette, Shield, KeyRound, Monitor, Trash2, Upload, SlidersHorizontal, Zap, Fingerprint, History, ShieldAlert, Mail, RefreshCw, TrendingUp, PieChart, Eye, EyeOff, Check, LayoutGrid, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { triggerHaptic, setHapticsEnabledCache } from "@/lib/haptics";
 import { CommandPalette } from "@/components/common/command-palette";
@@ -104,36 +104,36 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
 
   useEffect(() => {
     fetch("/api/notification-preferences")
-      .then((r) => r.json())
-      .then((d) => setPrefs(Array.isArray(d.preferences) ? d.preferences.map((p: { notification_type: string; channel: string; is_enabled: boolean }) => ({ type: p.notification_type, channel: p.channel, enabled: p.is_enabled ? 1 : 0 })) : null))
+      .then((response) => response.json())
+      .then((data) => setPrefs(Array.isArray(data.preferences) ? data.preferences.map((pref: { notification_type: string; channel: string; is_enabled: boolean }) => ({ type: pref.notification_type, channel: pref.channel, enabled: pref.is_enabled ? 1 : 0 })) : null))
       .catch(() => {});
     fetch("/api/users/me/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d?.profile) {
-          setProfile(d.profile);
-          setFullName(d.profile.full_name ?? user?.full_name ?? "");
-          setBio(d.profile.bio ?? "");
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data?.profile) {
+          setProfile(data.profile);
+          setFullName(data.profile.full_name ?? user?.full_name ?? "");
+          setBio(data.profile.bio ?? "");
         }
       })
       .catch(() => {});
     fetch("/api/users/me/sessions")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setSessions(d?.sessions ?? null))
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setSessions(data?.sessions ?? null))
       .catch(() => setSessions([]));
     fetch("/api/users/me/audit-logs?limit=12")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setAuditLogs(d?.logs ?? []))
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setAuditLogs(data?.logs ?? []))
       .catch(() => setAuditLogs([]));
     fetch("/api/auth/email-delivery-status")
-      .then((r) => (r.ok ? r.json() : null))
+      .then((response) => (response.ok ? response.json() : null))
       .then((data) => setEmailDelivery(data))
       .catch(() => setEmailDelivery(null));
     // personalization settings
     fetch("/api/users/me/settings")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        const s = d?.settings ?? d ?? {};
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        const s = data?.settings ?? data ?? {};
         if (s.haptics_enabled !== undefined) setHapticsEnabled(!!Number(s.haptics_enabled));
         if (s.currency) setCurrency(s.currency);
         // Local choice wins: the server only seeds a fresh browser, so a
@@ -190,7 +190,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         return;
       }
       toast.success("Profile updated.");
-      setProfile((p) => (p ? { ...p, full_name: fullName, bio } : p));
+      setProfile((prevProfile) => (prevProfile ? { ...prevProfile, full_name: fullName, bio } : prevProfile));
     } catch {
       toast.error("Could not save profile.");
     } finally {
@@ -247,12 +247,21 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
         toast.error("Could not revoke session.");
         return;
       }
-      setSessions((s) => (s ? s.filter((x) => (x.id ?? x.token_id) !== id) : s));
+      setSessions((prevSessions) => (prevSessions ? prevSessions.filter((session) => (session.id ?? session.token_id) !== id) : prevSessions));
       toast.success("Session revoked.");
     } finally {
       setRevoking(null);
     }
   }
+
+  const moveWidget = (from: number, to: number) => {
+    if (to < 0 || to >= widgetLayout.length) return;
+    setWidgetLayout((prevLayout) => {
+      const next = [...prevLayout];
+      [next[from], next[to]] = [next[to], next[from]];
+      return next;
+    });
+  };
 
   const [avatarBust, setAvatarBust] = useState(0);
 
@@ -291,7 +300,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       // and broadcast so the topbar swaps without a reload.
       const bust = Date.now();
       setAvatarBust(bust);
-      setProfile((p) => (p ? { ...p, avatar_url: "set" } : p));
+      setProfile((prevProfile) => (prevProfile ? { ...prevProfile, avatar_url: "set" } : prevProfile));
       window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT));
     } catch {
       toast.error("Could not upload avatar.");
@@ -329,7 +338,7 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       const res = await fetch("/api/users/me/restore", { method: "POST" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(j.error || "No deactivated account to restore.");
+        toast.error("No deactivated account to restore.");
         return;
       }
       toast.success("Account restored.");
@@ -337,6 +346,12 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
       setGdprLoading(false);
     }
   }
+
+  const prefByKey = useMemo(() => {
+    const map = new Map<string, { type: string; channel: string; enabled: number }>();
+    for (const pref of prefs ?? []) map.set(`${pref.type}|${pref.channel}`, pref);
+    return map;
+  }, [prefs]);
 
   return (
     <div className="space-y-8">
@@ -370,9 +385,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                 { icon: RefreshCw, label: "Cross-device sync" },
                 { icon: TrendingUp, label: "Investments + SIPs" },
                 { icon: PieChart, label: "Advanced reports" },
-              ].map((f) => (
-                <Badge key={f.label} variant="secondary" className="gap-1.5 px-3 py-1.5 text-[13px]">
-                  <f.icon className="h-3.5 w-3.5" /> {f.label}
+              ].map((feature) => (
+                <Badge key={feature.label} variant="secondary" className="gap-1.5 px-3 py-1.5 text-[13px]">
+                  <feature.icon className="h-3.5 w-3.5" /> {feature.label}
                 </Badge>
               ))}
             </div>
@@ -489,10 +504,6 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           {widgetLayout.map((id, index) => {
             const widget = WIDGETS.find((item) => item.id === id);
             if (!widget) return null;
-            const moveWidget = (from: number, to: number) => {
-              if (to < 0 || to >= widgetLayout.length) return;
-              setWidgetLayout((current) => { const next = [...current]; [next[from], next[to]] = [next[to], next[from]]; return next; });
-            };
             return (
               <div
                 key={id}
@@ -508,8 +519,8 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                   const from = widgetLayout.indexOf(fromId);
                   const to = widgetLayout.indexOf(id);
                   if (from < 0 || to < 0) return;
-                  setWidgetLayout((current) => {
-                    const next = current.filter((w) => w !== fromId);
+                  setWidgetLayout((prevLayout) => {
+                    const next = prevLayout.filter((widgetId) => widgetId !== fromId);
                     const at = next.indexOf(id);
                     // Dropping onto a row inserts after it when dragging down,
                     // before it when dragging up.
@@ -553,17 +564,17 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             <EmptyState icon={<Monitor className="h-6 w-6" />} title="No active sessions found" description="Sessions appear here when you sign in." />
           ) : (
             <div className="space-y-2 max-h-64 overflow-auto">
-              {sessions.map((s) => {
-                const id = s.id ?? s.token_id ?? 0;
+              {sessions.map((session) => {
+                const id = session.id ?? session.token_id ?? 0;
                 return (
                   <div key={String(id)} className="flex items-center justify-between gap-3 rounded-lg border border-edge bg-base px-4 py-3 text-sm">
                     <div className="min-w-0">
-                      <p className="font-medium truncate" title={s.user_agent || undefined}>{deviceName(s.user_agent)} {s.is_current ? <Badge variant="success" className="ml-2">Current</Badge> : null}</p>
+                      <p className="font-medium truncate" title={session.user_agent || undefined}>{deviceName(session.user_agent)} {session.is_current ? <Badge variant="success" className="ml-2">Current</Badge> : null}</p>
                       <p className="text-xs text-faint">
-                        {s.ip_address ? `${s.ip_address} • ` : ""}{s.created_at ? new Date(s.created_at).toLocaleString() : ""}
+                        {session.ip_address ? `${session.ip_address} • ` : ""}{session.created_at ? new Date(session.created_at).toLocaleString() : ""}
                       </p>
                     </div>
-                    {!s.is_current && (
+                    {!session.is_current && (
                       <Button variant="outline" size="sm" onClick={() => handleRevoke(Number(id))} disabled={revoking === Number(id)}>
                         <Trash2 className="h-3 w-3" /> {revoking === Number(id) ? "Revoking..." : "Revoke"}
                       </Button>
@@ -763,14 +774,14 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
           {emailDelivery && <div className={`mb-4 rounded-xl border border-edge bg-base p-3 text-sm text-foreground ${emailDelivery.configured ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-[#064E3B] dark:bg-[#064E3B]/30 dark:text-[#A7F3D0]" : "border-amber-200 bg-amber-50 text-amber-800 dark:border-[#78350F] dark:bg-[#78350F]/30 dark:text-[#FDE68A]"}`}><p className="font-medium">Email delivery {emailDelivery.configured ? "is configured" : "needs production configuration"}</p><p className="mt-1 text-xs">{emailDelivery.configured ? (emailDelivery.sender_configured ? "The API key and sender address are ready." : "Delivery is enabled; add a verified sender address before launch.") : "Local links are written to the server log. Add RESEND_API_KEY and a verified RESEND_FROM_EMAIL before deployment."}</p></div>}
           {prefs ? (
             <div className="space-y-5">
-              {PREF_GROUPS.filter((g) => prefs.some((p) => p.type === g.type)).map((g) => (
-                <div key={g.type} className="space-y-2">
+              {PREF_GROUPS.filter((group) => prefs.some((pref) => pref.type === group.type)).map((group) => (
+                <div key={group.type} className="space-y-2">
                   <div>
-                    <p className="text-sm font-semibold font-heading text-foreground">{g.label}</p>
-                    <p className="text-xs text-faint">{g.description}</p>
+                    <p className="text-sm font-semibold font-heading text-foreground">{group.label}</p>
+                    <p className="text-xs text-faint">{group.description}</p>
                   </div>
                   {(["in_app", "email"] as const).map((channel) => {
-                    const row = prefs.find((p) => p.type === g.type && p.channel === channel);
+                    const row = prefByKey.get(`${group.type}|${channel}`);
                     if (!row) return null;
                     const locked = channel === "email" && !premium;
                     return (
@@ -782,9 +793,9 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
                         <Toggle
                           checked={locked ? false : !!row.enabled}
                           disabled={planLoading || locked}
-                          aria-label={`${g.label} via ${channel === "in_app" ? "in-app" : "email"}`}
+                          aria-label={`${group.label} via ${channel === "in_app" ? "in-app" : "email"}`}
                           title={locked ? "Upgrade to enable email alerts" : undefined}
-                          onCheckedChange={(enabled) => void savePref(g.type, channel, enabled)}
+                          onCheckedChange={(enabled) => void savePref(group.type, channel, enabled)}
                         />
                       </div>
                     );
@@ -813,10 +824,10 @@ export function SettingsClient({ user, settings, billing }: { user: { full_name:
             <span className="text-xs text-faint">Create jobs (CSV/PDF), track progress, download files</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {exportModules.map((m) => (
-              <Button key={m.href} variant="outline" size="sm" asChild>
-                <a href={m.href} download>
-                  <Download className="h-4 w-4" /> {m.label}
+            {exportModules.map((module) => (
+              <Button key={module.href} variant="outline" size="sm" asChild>
+                <a href={module.href} download>
+                  <Download className="h-4 w-4" /> {module.label}
                 </a>
               </Button>
             ))}
