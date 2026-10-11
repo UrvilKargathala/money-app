@@ -118,9 +118,9 @@ export function DebtFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No account</SelectItem>
-                    {accounts.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.name}
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
