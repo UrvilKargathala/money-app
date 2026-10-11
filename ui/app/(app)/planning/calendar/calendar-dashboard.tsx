@@ -115,8 +115,8 @@ function sourceBadgeVariant(source: string): string {
 }
 
 function kindBadge(kind: string): string {
-  if (kind === "inflow") return "bg-tint-success text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
-  if (kind === "outflow") return "bg-tint-error text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
+  if (kind === "inflow") return "bg-success-soft text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
+  if (kind === "outflow") return "bg-error-soft text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
   return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
 }
 
@@ -626,7 +626,7 @@ export function CalendarDashboard({
                       </div>
                     </div>
                     {p.negative_days.length > 0 ? (
-                      <div className="rounded bg-tint-error/50 p-2 dark:bg-[#7F1D1D]/40">
+                      <div className="rounded bg-error-soft/50 p-2 dark:bg-[#7F1D1D]/40">
                         <p className="text-xs font-medium text-error-dark">Negative on {p.negative_days.length} days</p>
                         <p className="text-[11px] text-error-dark/80 break-all">{p.negative_days.slice(0, 5).join(", ")}{p.negative_days.length > 5 ? ` +${p.negative_days.length - 5} more` : ""}</p>
                       </div>
