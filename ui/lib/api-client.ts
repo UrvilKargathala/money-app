@@ -589,40 +589,6 @@ export async function getTaxSalary(fy: string): Promise<{
   return apiJson(`/api/tax/salary?financial_year=${encodeURIComponent(fy)}`);
 }
 
-export async function createTaxSalary(payload: {
-  financial_year: string;
-  employment_type?: string;
-  basic_monthly?: string | number | null;
-  hra_monthly?: string | number | null;
-  lta_annual?: string | number | null;
-  special_allowances?: string | number | null;
-  employer_pf?: string | number | null;
-  actual_rent_monthly?: string | number | null;
-  other_exemptions?: string | number | null;
-  gross_annual_income?: string | number | null;
-  additional_income?: string | number | null;
-  tds_deducted?: string | number | null;
-}): Promise<{ salary: unknown } | null> {
-  return postOrNull<{ salary: unknown }>("/api/tax/salary", payload);
-}
-
-export async function patchTaxSalary(payload: {
-  financial_year: string;
-  employment_type?: string;
-  basic_monthly?: string | number | null;
-  hra_monthly?: string | number | null;
-  lta_annual?: string | number | null;
-  special_allowances?: string | number | null;
-  employer_pf?: string | number | null;
-  actual_rent_monthly?: string | number | null;
-  other_exemptions?: string | number | null;
-  gross_annual_income?: string | number | null;
-  additional_income?: string | number | null;
-  tds_deducted?: string | number | null;
-}): Promise<{ salary: unknown } | null> {
-  return postOrNull<{ salary: unknown }>("/api/tax/salary", payload, "PATCH");
-}
-
 export async function getTaxCompare(fy: string): Promise<{
   financial_year: string;
   has_salary: boolean;
@@ -670,40 +636,6 @@ export async function getTaxItrCompletion(fy: string): Promise<{
 
 export async function getTaxFinancialYears(): Promise<{ financial_years: string[] } | null> {
   return apiJson("/api/tax/financial-years");
-}
-
-export async function getTaxRegimeSlabs(fy: string, regime?: string): Promise<{
-  financial_year: string;
-  slabs: { id: string; financial_year: string; regime: string; slab_from: number; slab_to: number | null; rate: number; cess_rate: number }[];
-} | null> {
-  const qs = new URLSearchParams({ financial_year: fy });
-  if (regime) qs.set("regime", regime);
-  return apiJson(`/api/tax/regime-slabs?${qs.toString()}`);
-}
-
-export async function createTaxItrDocument(payload: {
-  financial_year: string;
-  category: string;
-  document_name: string;
-  status: string;
-  notes?: string | null;
-}): Promise<{ document: unknown } | null> {
-  return postOrNull<{ document: unknown }>("/api/tax/itr", payload);
-}
-
-export async function updateTaxItrDocument(
-  id: string,
-  payload: Partial<{ financial_year: string; category: string; document_name: string; status: string; notes: string | null }>
-): Promise<{ document: unknown } | null> {
-  return postOrNull<{ document: unknown }>(`/api/tax/itr/${id}`, payload, "PATCH");
-}
-
-export async function deleteTaxItrDocument(id: string): Promise<{ ok: boolean } | null> {
-  return postOrNull<{ ok: boolean }>(`/api/tax/itr/${id}`, undefined, "DELETE");
-}
-
-export async function suggestTaxItrDocuments(fy: string): Promise<{ financial_year: string; created: unknown[]; completion: unknown } | null> {
-  return postOrNull<{ financial_year: string; created: unknown[]; completion: unknown }>("/api/tax/itr/suggest", { financial_year: fy });
 }
 
 export async function getInvestmentsData(): Promise<{
