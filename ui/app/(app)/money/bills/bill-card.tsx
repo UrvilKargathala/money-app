@@ -52,7 +52,7 @@ export const BillCard = memo(function BillCard({
   const isPaid = bill.current_period_status === "paid";
 
   return (
-      <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-soft/30 dark:bg-[#7F1D1D]/30" : isPaid ? "border-success/30 bg-success-soft/30 dark:bg-[#064E3B]/30" : ""}`}>
+      <Card className={`p-4 space-y-3 ${!isActive ? "opacity-60" : bill.current_period_status === "overdue" ? "border-error/30 bg-error-soft/30 dark:border-[#7F1D1D] dark:bg-[#7F1D1D]/30" : isPaid ? "border-success/30 bg-success-soft/30 dark:border-[#064E3B] dark:bg-[#064E3B]/30" : ""}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold font-heading text-foreground">{bill.name}</p>
