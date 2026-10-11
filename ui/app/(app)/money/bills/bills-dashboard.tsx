@@ -51,6 +51,13 @@ type SuggestionsData = { suggestions: { description: string; avg_amount: number;
 
 type YoY = { current: { year: number; total: number }; previous: { year: number; total: number } };
 
+/** Year-over-year percent change label ("-" when the previous total is 0). */
+function yoyChangeLabel(yoy: YoY): string {
+  if (yoy.previous.total === 0) return "-";
+  const pct = ((yoy.current.total - yoy.previous.total) / yoy.previous.total) * 100;
+  return `${pct.toFixed(1)}%`;
+}
+
 function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const { payments, loading, loadError, reload: reloadPayments } = usePaymentsHistory(bill?.id ?? null, open, "/api/bills");
   const [yoy, setYoy] = useState<YoY | null>(null);
@@ -106,12 +113,12 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                     <TableLoadingRows columns={4} />
                   ) : payments.length === 0 ? (
                     <tr><td colSpan={4} className="p-4 text-center text-faint">No payments yet</td></tr>
-                  ) : payments.map((p) => (
-                    <tr key={p.id} className="border-t text-xs">
-                      <td className="p-2">{p.period_label}</td>
-                      <td className="p-2">{p.created_at.slice(0,10)}</td>
-                      <td className="p-2 text-right font-medium">{formatINR(p.amount)}</td>
-                      <td className="p-2 max-w-[20ch] truncate">{p.notes ?? "-"}</td>
+                  ) : payments.map((payment) => (
+                    <tr key={payment.id} className="border-t text-xs">
+                      <td className="p-2">{payment.period_label}</td>
+                      <td className="p-2">{payment.created_at.slice(0,10)}</td>
+                      <td className="p-2 text-right font-medium">{formatINR(payment.amount)}</td>
+                      <td className="p-2 max-w-[20ch] truncate">{payment.notes ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -132,7 +139,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                 <div className="col-span-2 rounded-lg bg-deep p-3 text-center">
                   <p className="text-xs text-faint">YoY change</p>
                   <p className="text-sm font-semibold">
-                    {yoy.previous.total === 0 ? "-" : `${(((yoy.current.total - yoy.previous.total) / yoy.previous.total) * 100).toFixed(1)}%`}{" "}
+                    {yoyChangeLabel(yoy)}{" "}
                     <span className="text-faint">({formatINR(yoy.current.total - yoy.previous.total)})</span>
                   </p>
                 </div>
@@ -156,25 +163,28 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
 
 type Reminder = { id: string; bill_id: string; days_before: number; channel: string; is_enabled: number };
 
+// Default "days before due" for new + edit reminder forms.
+const DEFAULT_REMINDER_DAYS = "3";
+
 function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const router = useRouter();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const [daysBefore, setDaysBefore] = useState("3");
+  const [daysBefore, setDaysBefore] = useState(DEFAULT_REMINDER_DAYS);
   const [channel, setChannel] = useState("in_app");
   const [editing, setEditing] = useState<Reminder | null>(null);
-  const [editDays, setEditDays] = useState("3");
+  const [editDays, setEditDays] = useState(DEFAULT_REMINDER_DAYS);
 
   const load = async () => {
     if (!bill) return;
     setLoading(true);
     setLoadError(false);
     try {
-      const r = await fetch(`/api/bills/${bill.id}/reminders`);
-      if (!r.ok) throw new Error();
-      const d = await r.json();
-      setReminders(d.reminders ?? []);
+      const response = await fetch(`/api/bills/${bill.id}/reminders`);
+      if (!response.ok) throw new Error();
+      const body = await response.json();
+      setReminders(body.reminders ?? []);
     } catch {
       setLoadError(true);
     } finally {
@@ -198,7 +208,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
     if (!res.ok) toast.error(data.error || data.fieldErrors?.days_before || "Could not create reminder");
     else {
       toast.success("Reminder created");
-      setDaysBefore("3");
+      setDaysBefore(DEFAULT_REMINDER_DAYS);
       load();
       router.refresh();
     }
@@ -272,16 +282,16 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
                   <TableLoadingRows columns={4} />
                 ) : reminders.length === 0 ? (
                   <tr><td colSpan={4} className="p-4 text-center text-faint">No reminders - add one below.</td></tr>
-                ) : reminders.map((r) => (
-                  <tr key={r.id} className="border-t text-xs">
-                    <td className="p-2">{r.days_before} days</td>
-                    <td className="p-2">{r.channel}</td>
-                    <td className="p-2 text-center"><Badge variant={r.is_enabled ? "success" : "default"}>{r.is_enabled ? "on" : "off"}</Badge></td>
+                ) : reminders.map((reminder) => (
+                  <tr key={reminder.id} className="border-t text-xs">
+                    <td className="p-2">{reminder.days_before} days</td>
+                    <td className="p-2">{reminder.channel}</td>
+                    <td className="p-2 text-center"><Badge variant={reminder.is_enabled ? "success" : "default"}>{reminder.is_enabled ? "on" : "off"}</Badge></td>
                     <td className="p-2 flex gap-1 justify-center">
-                      <Button variant="ghost" size="sm" onClick={() => { setEditing(r); setEditDays(String(r.days_before)); }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setEditing(reminder); setEditDays(String(reminder.days_before)); }}>
                         <Pencil className="h-3 w-3" /> Edit
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDelete(r.id)}>
+                      <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDelete(reminder.id)}>
                         <Trash2 className="h-3 w-3" /> Delete
                       </Button>
                     </td>
@@ -355,13 +365,13 @@ const CalendarPanel = memo(function CalendarPanel({ data }: { data: CalendarData
         <CardDescription>{data.events.length} upcoming bills in the next 30 days</CardDescription>
       </CardHeader>
       <div className="space-y-2 max-h-[300px] overflow-auto">
-        {data.events.map((e) => (
-          <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg border border-edge p-3">
+        {data.events.map((event) => (
+          <div key={`${event.bill_id}-${event.due_date}`} className="flex items-center justify-between rounded-lg border border-edge p-3">
             <div>
-              <p className="text-sm font-medium font-heading">{e.name}</p>
-              <p className="text-xs text-faint">{e.due_date} • {e.days_until >= 0 ? `${e.days_until}d` : "overdue"} • {e.status}</p>
+              <p className="text-sm font-medium font-heading">{event.name}</p>
+              <p className="text-xs text-faint">{event.due_date} • {event.days_until >= 0 ? `${event.days_until}d` : "overdue"} • {event.status}</p>
             </div>
-            <p className="text-sm font-semibold">{formatINR(e.amount)}</p>
+            <p className="text-sm font-semibold">{formatINR(event.amount)}</p>
           </div>
         ))}
       </div>
@@ -378,13 +388,13 @@ const UpcomingPanel = memo(function UpcomingPanel({ data }: { data: UpcomingData
         <CardDescription>{data.items.length} bills due soon</CardDescription>
       </CardHeader>
       <div className="space-y-2">
-        {data.items.map((e) => (
-                  <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg bg-warning-soft/20 p-3 dark:bg-[#78350F]/30">
+        {data.items.map((item) => (
+                  <div key={`${item.bill_id}-${item.due_date}`} className="flex items-center justify-between rounded-lg bg-warning-soft/20 p-3 dark:bg-[#78350F]/30">
             <div>
-              <p className="text-sm font-medium">{e.name}</p>
-              <p className="text-xs text-faint">{e.due_date} • {e.days_until}d • {e.status}</p>
+              <p className="text-sm font-medium">{item.name}</p>
+              <p className="text-xs text-faint">{item.due_date} • {item.days_until}d • {item.status}</p>
             </div>
-            <p className="text-sm font-bold">{formatINR(e.amount)}</p>
+            <p className="text-sm font-bold">{formatINR(item.amount)}</p>
           </div>
         ))}
       </div>
@@ -398,7 +408,10 @@ const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { p
     [projection, waterfall]
   );
   const wf = waterfall?.waterfall ?? null;
-  const totalProj = useMemo(() => proj.reduce((s, p) => s + (p.total ?? 0), 0), [proj]);
+  const totalProj = useMemo(
+    () => proj.reduce((sum, month) => sum + (month.total ?? 0), 0),
+    [proj]
+  );
   if ((!proj || proj.length === 0) && !wf) return null;
   return (
     <Card className="p-6">
@@ -408,10 +421,10 @@ const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { p
       </CardHeader>
       {proj.length > 0 && (
         <div className="space-y-2">
-          {proj.map((p) => (
-            <div key={p.month} className="flex items-center justify-between rounded-lg bg-deep p-3">
-              <p className="text-sm font-medium">{p.month}</p>
-              <p className="text-sm font-semibold">{formatINR(p.total)}</p>
+          {proj.map((month) => (
+            <div key={month.month} className="flex items-center justify-between rounded-lg bg-deep p-3">
+              <p className="text-sm font-medium">{month.month}</p>
+              <p className="text-sm font-semibold">{formatINR(month.total)}</p>
             </div>
           ))}
         </div>
@@ -420,12 +433,12 @@ const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { p
         <div className="mt-4">
           <p className="text-xs font-medium text-faint mb-2">Waterfall (cumulative)</p>
           <div className="space-y-2">
-            {wf.map((w) => (
-                  <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-info-soft/50 p-3 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40">
-                <p className="text-sm font-medium">{w.month}</p>
+            {wf.map((row) => (
+                  <div key={row.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-info-soft/50 p-3 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40">
+                <p className="text-sm font-medium">{row.month}</p>
                 <div className="text-right">
-                  <p className="text-sm font-semibold">{formatINR(w.total)}</p>
-                  <p className="text-xs text-faint">Cumulative {formatINR(w.cumulative)}</p>
+                  <p className="text-sm font-semibold">{formatINR(row.total)}</p>
+                  <p className="text-xs text-faint">Cumulative {formatINR(row.cumulative)}</p>
                 </div>
               </div>
             ))}
@@ -481,13 +494,13 @@ function SuggestRecurringPanel() {
         <p className="text-sm text-faint">{done ? "No recurring candidates found." : "Click Suggest to scan transactions."}</p>
       ) : (
         <div className="space-y-2">
-          {suggestions.map((s) => (
-            <div key={s.description} className="flex items-center justify-between rounded-lg border border-edge p-3">
+          {suggestions.map((candidate) => (
+            <div key={candidate.description} className="flex items-center justify-between rounded-lg border border-edge p-3">
               <div>
-                <p className="text-sm font-medium">{s.description}</p>
-                <p className="text-xs text-faint">{s.occurrence_count} occurrences • Avg {formatINR(s.avg_amount)}</p>
+                <p className="text-sm font-medium">{candidate.description}</p>
+                <p className="text-xs text-faint">{candidate.occurrence_count} occurrences • Avg {formatINR(candidate.avg_amount)}</p>
               </div>
-              <Badge variant="info">{s.occurrence_count}x</Badge>
+              <Badge variant="info">{candidate.occurrence_count}x</Badge>
             </div>
           ))}
         </div>
@@ -661,13 +674,13 @@ export function BillsDashboard({
             <CardDescription>{suggestions.suggestions.length} candidates from API</CardDescription>
           </CardHeader>
           <div className="space-y-2">
-            {suggestions.suggestions.map((s) => (
-              <div key={s.description} className="flex items-center justify-between rounded-lg border border-edge p-3">
+            {suggestions.suggestions.map((candidate) => (
+              <div key={candidate.description} className="flex items-center justify-between rounded-lg border border-edge p-3">
                 <div>
-                  <p className="text-sm font-medium">{s.description}</p>
-                  <p className="text-xs text-faint">{s.occurrence_count} times • Avg {formatINR(s.avg_amount)}</p>
+                  <p className="text-sm font-medium">{candidate.description}</p>
+                  <p className="text-xs text-faint">{candidate.occurrence_count} times • Avg {formatINR(candidate.avg_amount)}</p>
                 </div>
-                <Badge variant="info">{s.occurrence_count}x</Badge>
+                <Badge variant="info">{candidate.occurrence_count}x</Badge>
               </div>
             ))}
           </div>
@@ -704,10 +717,10 @@ export function BillsDashboard({
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((b) => (
-            <div key={b.id} className="space-y-2">
+          {filtered.map((bill) => (
+            <div key={bill.id} className="space-y-2">
               <BillCard
-                bill={b}
+                bill={bill}
                 onEdit={handleEdit}
                 onDeactivate={handleDeactivate}
                 onReactivate={handleReactivate}
@@ -716,32 +729,32 @@ export function BillsDashboard({
                 onToggleAutopay={handleToggleAutopay}
               />
               <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPaymentsBill(b)}>
+                <Button variant="outline" size="sm" onClick={() => setPaymentsBill(bill)}>
                   <History className="h-3 w-3" /> Payments
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setRemindersBill(b)}>
+                <Button variant="outline" size="sm" onClick={() => setRemindersBill(bill)}>
                   <Bell className="h-3 w-3" /> Reminders
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => toggleExpand(b.id)}>
-                  {expanded.has(b.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />} {expanded.has(b.id) ? "Hide" : "Detail"}
+                <Button variant="outline" size="sm" onClick={() => toggleExpand(bill.id)}>
+                  {expanded.has(bill.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />} {expanded.has(bill.id) ? "Hide" : "Detail"}
                 </Button>
               </div>
-              {expanded.has(b.id) && (
+              {expanded.has(bill.id) && (
                 <Card className="p-3 bg-deep space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><p className="text-faint">Amount</p><p className="font-medium">{b.amount != null ? formatINR(b.amount) : b.estimated_amount != null ? `~${formatINR(b.estimated_amount)}` : "-"}</p></div>
-                    <div><p className="text-faint">Frequency</p><p className="font-medium">{b.frequency}</p></div>
-                    <div><p className="text-faint">Account</p><p className="font-medium">{b.account_name ?? "-"}</p></div>
-                    <div><p className="text-faint">Category</p><p className="font-medium">{b.category_name ?? "-"}</p></div>
-                    <div><p className="text-faint">Reminder days</p><p className="font-medium">{b.reminder_days} days • {b.is_autopay ? "Autopay" : "Manual"}</p></div>
-                    <div><p className="text-faint">Last paid</p><p className="font-medium">{b.last_paid_date ? `${b.last_paid_date} • ${b.last_paid_amount != null ? formatINR(b.last_paid_amount) : "-"}` : "-"}</p></div>
+                    <div><p className="text-faint">Amount</p><p className="font-medium">{bill.amount != null ? formatINR(bill.amount) : bill.estimated_amount != null ? `~${formatINR(bill.estimated_amount)}` : "-"}</p></div>
+                    <div><p className="text-faint">Frequency</p><p className="font-medium">{bill.frequency}</p></div>
+                    <div><p className="text-faint">Account</p><p className="font-medium">{bill.account_name ?? "-"}</p></div>
+                    <div><p className="text-faint">Category</p><p className="font-medium">{bill.category_name ?? "-"}</p></div>
+                    <div><p className="text-faint">Reminder days</p><p className="font-medium">{bill.reminder_days} days • {bill.is_autopay ? "Autopay" : "Manual"}</p></div>
+                    <div><p className="text-faint">Last paid</p><p className="font-medium">{bill.last_paid_date ? `${bill.last_paid_date} • ${bill.last_paid_amount != null ? formatINR(bill.last_paid_amount) : "-"}` : "-"}</p></div>
                   </div>
-                  {b.notes && <p className="text-xs text-faint border-t pt-2">{b.notes}</p>}
+                  {bill.notes && <p className="text-xs text-faint border-t pt-2">{bill.notes}</p>}
                   <div className="flex gap-2 pt-1">
                     <Button variant="ghost" size="sm" asChild>
-                      <a href={`/api/bills/${b.id}/payments/export`} download>Export payments</a>
+                      <a href={`/api/bills/${bill.id}/payments/export`} download>Export payments</a>
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setPaymentsBill(b)}>View YoY</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setPaymentsBill(bill)}>View YoY</Button>
                   </div>
                 </Card>
               )}
