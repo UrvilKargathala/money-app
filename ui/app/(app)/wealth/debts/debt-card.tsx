@@ -70,9 +70,9 @@ export const DebtCard = memo(function DebtCard({
           <p className="text-xs text-faint">Outstanding</p>
           <p className="text-sm font-bold font-heading text-foreground">{formatINR(outstanding)}</p>
         </div>
-          <div className="rounded-lg bg-info-soft p-3 dark:bg-[#1E1E1E]/50">
-          <p className="text-xs text-primary-700">EMI</p>
-          <p className="text-sm font-bold font-heading text-primary-700">{formatINR(emi)}</p>
+          <div className="rounded-lg bg-info-soft p-3 dark:bg-[#1E3A5F]/50">
+          <p className="text-xs text-primary-700 dark:text-[#BFDBFE]">EMI</p>
+          <p className="text-sm font-bold font-heading text-primary-700 dark:text-[#BFDBFE]">{formatINR(emi)}</p>
         </div>
       </div>
     </Card>
