@@ -194,7 +194,7 @@ export function QuickAddForm({
         </form>
       </Card>
 
-      <p className="text-center text-xs text-neutral-400">Quick Add creates a transaction instantly. For transfers, use the Accounts page.</p>
+      <p className="text-center text-xs text-faint">Quick Add creates a transaction instantly. For transfers, use the Accounts page.</p>
     </div>
   );
 }
