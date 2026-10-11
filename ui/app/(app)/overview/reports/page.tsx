@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { formatINR } from "@/lib/format";
 import { BarChart3, Download, TrendingUp, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -87,10 +88,7 @@ export default async function ReportsPage() {
   return (
     <div className="space-y-6">
       {billing?.trial.active && <TrialBanner daysLeft={billing.trial.daysLeft} />}
-      <div>
-        <h1 className="text-3xl font-bold font-heading text-foreground">Reports</h1>
-        <p className="text-sm text-faint font-body mt-1">Analytics and insights</p>
-      </div>
+      <PageHeader title="Reports" description="Analytics and insights" />
 
       {summary && (
         <div className="grid gap-6 md:grid-cols-3">
