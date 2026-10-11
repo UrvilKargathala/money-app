@@ -80,6 +80,25 @@ type Dividend = {
 
 type AlertItem = { id: string; name: string; type: string; maturity_date: string; days_until: number };
 
+const SIP_DUE_SOON_DAYS = 7;
+
+type SipUrgency = "overdue" | "due-soon" | "upcoming";
+
+/** Urgency bucket + label for a SIP's next installment (was nested ternaries in JSX). */
+function getSipUrgency(daysUntilNext: number | null | undefined): { urgency: SipUrgency | null; label: string } {
+  if (daysUntilNext == null) return { urgency: null, label: "" };
+  if (daysUntilNext < 0) return { urgency: "overdue", label: ` • Overdue ${Math.abs(daysUntilNext)} days` };
+  if (daysUntilNext === 0) return { urgency: "due-soon", label: " • Due today" };
+  if (daysUntilNext <= SIP_DUE_SOON_DAYS) return { urgency: "due-soon", label: ` • Due in ${daysUntilNext} days` };
+  return { urgency: "upcoming", label: "" };
+}
+
+function sipUrgencyClass(urgency: SipUrgency | null): string {
+  if (urgency === "overdue") return "text-error-dark dark:text-[#FCA5A5] font-medium";
+  if (urgency === "due-soon") return "text-warning-dark dark:text-[#FDE68A] font-medium";
+  return "text-faint";
+}
+
 export function InvestmentsDashboard({
   investments,
   summary,
@@ -167,6 +186,33 @@ export function InvestmentsDashboard({
     },
     [confirmDelete, router]
   );
+
+  const openSipForm = useCallback((sip: Sip | null) => {
+    setEditingSip(sip);
+    setSipOpen(true);
+  }, []);
+
+  const openDividendForm = useCallback((dividend: Dividend | null) => {
+    setEditingDividend(dividend);
+    setDividendOpen(true);
+  }, []);
+
+  // Guarded "new" launchers: payouts/SIPs need a holding to attach to.
+  const openNewSip = useCallback(() => {
+    if (investments.length === 0) {
+      toast.error("Add a holding first");
+      return;
+    }
+    openSipForm(null);
+  }, [investments.length, openSipForm]);
+
+  const openNewDividend = useCallback(() => {
+    if (investments.length === 0) {
+      toast.error("Add a holding first");
+      return;
+    }
+    openDividendForm(null);
+  }, [investments.length, openDividendForm]);
 
   const handleDeleteSip = useCallback(
     (id: string) => {
@@ -330,14 +376,7 @@ export function InvestmentsDashboard({
             <h2 className="text-lg font-semibold font-heading">Systematic Investment Plans</h2>
             <Button
               size="sm"
-              onClick={() => {
-                if (investments.length === 0) {
-                  toast.error("Add a holding first");
-                  return;
-                }
-                setEditingSip(null);
-                setSipOpen(true);
-              }}
+              onClick={openNewSip}
             >
               <Plus className="h-4 w-4" /> Add SIP
             </Button>
@@ -349,9 +388,9 @@ export function InvestmentsDashboard({
                 <Calendar className="h-4 w-4" /> Due in next 7 days - {sipsDue.length}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {sipsDue.map((d) => (
-                  <Badge key={d.id} variant="warning">
-                    {d.investment_name} • {formatINR(d.amount)} • {d.next_date}
+                {sipsDue.map((due) => (
+                  <Badge key={due.id} variant="warning">
+                    {due.investment_name} • {formatINR(due.amount)} • {due.next_date}
                   </Badge>
                 ))}
               </div>
@@ -364,14 +403,7 @@ export function InvestmentsDashboard({
               title="No SIPs"
               description="Schedule SIPs to automate investing."
               actionLabel="Add SIP"
-              onAction={() => {
-                if (investments.length === 0) {
-                  toast.error("Add a holding first");
-                  return;
-                }
-                setEditingSip(null);
-                setSipOpen(true);
-              }}
+              onAction={openNewSip}
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -385,9 +417,10 @@ export function InvestmentsDashboard({
                         <Badge variant="default">{formatINR(Number(sip.amount))}</Badge>
                         <Badge variant="default">{sip.end_date ? `ends ${formatDate(sip.end_date)}` : "Ongoing"}</Badge>
                       </div>
-                      <p className={`text-xs ${sip.days_until_next != null && sip.days_until_next < 0 ? "text-error-dark dark:text-[#FCA5A5] font-medium" : sip.days_until_next != null && sip.days_until_next <= 7 ? "text-warning-dark dark:text-[#FDE68A] font-medium" : "text-faint"}`}>
+                      {/* getSipUrgency is pure + O(1): called twice (class + label) to stay expression-style in the map. */}
+                      <p className={`text-xs ${sipUrgencyClass(getSipUrgency(sip.days_until_next).urgency)}`}>
                         Next: {formatDate(sip.next_date)}
-                        {sip.days_until_next != null && (sip.days_until_next === 0 ? " • Due today" : sip.days_until_next > 0 ? ` • Due in ${sip.days_until_next} days` : ` • Overdue ${Math.abs(sip.days_until_next)} days`)}
+                        {getSipUrgency(sip.days_until_next).label}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -409,10 +442,7 @@ export function InvestmentsDashboard({
                               <Play className="h-4 w-4" /> Resume
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => {
-                            setEditingSip(sip);
-                            setSipOpen(true);
-                          }}>
+                          <DropdownMenuItem onClick={() => openSipForm(sip)}>
                             <Pencil className="h-4 w-4" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -447,14 +477,7 @@ export function InvestmentsDashboard({
             <h2 className="text-lg font-semibold font-heading">Dividends & Interest</h2>
             <Button
               size="sm"
-              onClick={() => {
-                if (investments.length === 0) {
-                  toast.error("Add a holding first");
-                  return;
-                }
-                setEditingDividend(null);
-                setDividendOpen(true);
-              }}
+              onClick={openNewDividend}
             >
               <Plus className="h-4 w-4" /> Add payout
             </Button>
@@ -466,14 +489,7 @@ export function InvestmentsDashboard({
               title="No payouts"
               description="Record dividends, interest and maturity proceeds."
               actionLabel="Add payout"
-              onAction={() => {
-                if (investments.length === 0) {
-                  toast.error("Add a holding first");
-                  return;
-                }
-                setEditingDividend(null);
-                setDividendOpen(true);
-              }}
+              onAction={openNewDividend}
             />
           ) : (
             <div className="space-y-3">
@@ -484,31 +500,28 @@ export function InvestmentsDashboard({
                 </span>
               </Card>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {dividends.map((div) => (
-                  <Card key={div.id} className="p-4 space-y-2">
+                {dividends.map((dividend) => (
+                  <Card key={dividend.id} className="p-4 space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-semibold font-heading text-foreground">{div.investment_name}</p>
+                        <p className="text-sm font-semibold font-heading text-foreground">{dividend.investment_name}</p>
                         <p className="text-xs text-faint">
-                          {div.type} • {formatDate(div.date)}
+                          {dividend.type} • {formatDate(dividend.date)}
                         </p>
                       </div>
-                      <Badge variant="info">{div.type}</Badge>
+                      <Badge variant="info">{dividend.type}</Badge>
                     </div>
-                    <p className="text-lg font-bold font-heading">{formatINR(Number(div.amount))}</p>
-                    {div.notes && <p className="text-xs text-faint">{div.notes}</p>}
+                    <p className="text-lg font-bold font-heading">{formatINR(Number(dividend.amount))}</p>
+                    {dividend.notes && <p className="text-xs text-faint">{dividend.notes}</p>}
                     <div className="flex gap-2 pt-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setEditingDividend(div);
-                          setDividendOpen(true);
-                        }}
+                        onClick={() => openDividendForm(dividend)}
                       >
                         Edit
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDeleteDividend(div.id)}>
+                      <Button variant="ghost" size="sm" className="text-error" onClick={() => handleDeleteDividend(dividend.id)}>
                         Delete
                       </Button>
                     </div>
@@ -555,15 +568,15 @@ export function InvestmentsDashboard({
                     <p className="text-xs text-faint mt-2">No maturities in next 30 days.</p>
                   ) : (
                     <div className="mt-2 space-y-2">
-                      {alerts.map((al) => (
-                        <div key={al.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-soft/20 px-3 py-2 text-sm dark:border-[#78350F] dark:bg-[#78350F]/30">
+                      {alerts.map((alert) => (
+                        <div key={alert.id} className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning-soft/20 px-3 py-2 text-sm dark:border-[#78350F] dark:bg-[#78350F]/30">
                           <div>
-                            <p className="font-medium font-heading">{al.name}</p>
+                            <p className="font-medium font-heading">{alert.name}</p>
                             <p className="text-xs text-faint">
-                              {al.type} • {formatDate(al.maturity_date)}
+                              {alert.type} • {formatDate(alert.maturity_date)}
                             </p>
                           </div>
-                          <Badge variant={al.days_until <= 7 ? "error" : "warning"}>{al.days_until <= 0 ? "matured" : `${al.days_until}d`}</Badge>
+                          <Badge variant={alert.days_until <= 7 ? "error" : "warning"}>{alert.days_until <= 0 ? "matured" : `${alert.days_until}d`}</Badge>
                         </div>
                       ))}
                     </div>

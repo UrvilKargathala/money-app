@@ -11,6 +11,18 @@ import Link from "next/link";
 
 import type { Investment } from "@/lib/entities";
 
+const MS_PER_DAY = 86_400_000;
+const STALE_HINT_DAYS = 30;
+
+/** Human "price updated … ago" label (null when never updated). */
+function describePriceFreshness(updatedAt: string | null | undefined): string | null {
+  if (!updatedAt) return null;
+  const daysAgo = Math.floor((Date.now() - new Date(updatedAt).getTime()) / MS_PER_DAY);
+  if (daysAgo <= 0) return "updated today";
+  if (daysAgo === 1) return "updated yesterday";
+  return `updated ${daysAgo}d ago${daysAgo > STALE_HINT_DAYS ? " • consider refreshing" : ""}`;
+}
+
 // Memoized: parent passes the stable investment object + stable
 // (investment)-param callbacks, so cards re-render only on data change.
 export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit, onDelete, onUpdatePrice }: { investment: Investment; onEdit: (investment: Investment) => void; onDelete: (investment: Investment) => void; onUpdatePrice: (investment: Investment) => void }) {
@@ -18,17 +30,7 @@ export const InvestmentCard = memo(function InvestmentCard({ investment, onEdit,
   const current = Number(investment.units) * Number(investment.current_price);
   const pnl = current - invested;
   const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-  const updatedDaysAgo = investment.updated_at
-    ? Math.floor((Date.now() - new Date(investment.updated_at).getTime()) / 86_400_000)
-    : null;
-  const staleLabel =
-    updatedDaysAgo === null
-      ? null
-      : updatedDaysAgo <= 0
-        ? "updated today"
-        : updatedDaysAgo === 1
-          ? "updated yesterday"
-          : `updated ${updatedDaysAgo}d ago${updatedDaysAgo > 30 ? " • consider refreshing" : ""}`;
+  const staleLabel = describePriceFreshness(investment.updated_at);
 
   return (
     <Card className="p-4 space-y-3">
