@@ -43,7 +43,7 @@ export default function SignupForm() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" placeholder="••••••••" autoComplete="new-password" required error={!!state?.fieldErrors?.password} />
             {state?.fieldErrors?.password && <p className="text-xs text-error-dark">{state.fieldErrors.password}</p>}
-            <p className="text-xs text-neutral-400">At least 8 characters, with a letter and a digit.</p>
+            <p className="text-xs text-faint">At least 8 characters, with a letter and a digit.</p>
           </div>
 
           <div className="space-y-2">
