@@ -259,7 +259,7 @@ export function ExportDashboard({
                 {modules.map((m) => (
                   <div
                     key={m.name}
-                    className={`rounded-lg border p-3 ${selectedModule === m.name ? "border-primary-600 bg-tint-info/40 dark:border-[#60A5FA] dark:bg-[#1E1E1E]/40" : "border-edge"}`}
+                    className={`rounded-lg border p-3 ${selectedModule === m.name ? "border-primary-600 bg-info-soft/40 dark:border-[#60A5FA] dark:bg-[#1E1E1E]/40" : "border-edge"}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium text-sm font-heading">{m.label ?? m.name}</p>
