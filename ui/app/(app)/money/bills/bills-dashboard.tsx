@@ -87,12 +87,12 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
           </TabsList>
           <TabsContent value="history" className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-ink-3">{payments.length} records</p>
+              <p className="text-xs text-faint">{payments.length} records</p>
               <ExportButton href={`/api/bills/${bill.id}/payments/export`} />
             </div>
             {loadError ? <PanelError message="Could not load bill payments." onRetry={handleRetry} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
+                <thead className="sticky top-0 bg-deep text-xs text-faint">
                   <tr>
                     <th className="p-2 text-left">Period</th>
                     <th className="p-2 text-left">Date</th>
@@ -121,15 +121,15 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
             {yoy ? (
               <div className="grid grid-cols-2 gap-3">
                 <Card className="p-4 text-center">
-                  <p className="text-xs text-ink-3">Current • {yoy.current.year}</p>
+                  <p className="text-xs text-faint">Current • {yoy.current.year}</p>
                   <p className="text-lg font-bold font-heading">{formatINR(yoy.current.total)}</p>
                 </Card>
                 <Card className="p-4 text-center">
-                  <p className="text-xs text-ink-3">Previous • {yoy.previous.year}</p>
+                  <p className="text-xs text-faint">Previous • {yoy.previous.year}</p>
                   <p className="text-lg font-bold font-heading">{formatINR(yoy.previous.total)}</p>
                 </Card>
-                <div className="col-span-2 rounded-lg bg-sunken p-3 text-center">
-                  <p className="text-xs text-ink-3">YoY change</p>
+                <div className="col-span-2 rounded-lg bg-deep p-3 text-center">
+                  <p className="text-xs text-faint">YoY change</p>
                   <p className="text-sm font-semibold">
                     {yoy.previous.total === 0 ? "-" : `${(((yoy.current.total - yoy.previous.total) / yoy.previous.total) * 100).toFixed(1)}%`}{" "}
                     <span className="text-neutral-400">({formatINR(yoy.current.total - yoy.previous.total)})</span>
@@ -137,7 +137,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-ink-3 py-6 text-center">No YoY data available.</p>
+              <p className="text-sm text-faint py-6 text-center">No YoY data available.</p>
             )}
             <div className="flex justify-end">
               <ExportButton href={`/api/bills/${bill.id}/payments/export`} />
@@ -258,7 +258,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
         <div className="space-y-4">
           {loadError ? <PanelError message="Could not load bill reminders." onRetry={() => void load()} /> : <div className="max-h-[30vh] overflow-auto rounded-lg border">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
+              <thead className="sticky top-0 bg-deep text-xs text-faint">
                 <tr>
                   <th className="p-2 text-left">Days before</th>
                   <th className="p-2 text-left">Channel</th>
@@ -291,7 +291,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
           </div>}
 
           {editing ? (
-            <form onSubmit={handleUpdate} className="space-y-3 rounded-lg bg-sunken p-3">
+            <form onSubmit={handleUpdate} className="space-y-3 rounded-lg bg-deep p-3">
               <p className="text-sm font-medium">Edit reminder</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -309,7 +309,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
               </div>
             </form>
           ) : (
-            <form onSubmit={handleCreate} className="space-y-3 rounded-lg bg-sunken p-3">
+            <form onSubmit={handleCreate} className="space-y-3 rounded-lg bg-deep p-3">
               <p className="text-sm font-medium">Add reminder</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -355,10 +355,10 @@ const CalendarPanel = memo(function CalendarPanel({ data }: { data: CalendarData
       </CardHeader>
       <div className="space-y-2 max-h-[300px] overflow-auto">
         {data.events.map((e) => (
-          <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg border border-line p-3">
+          <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg border border-edge p-3">
             <div>
               <p className="text-sm font-medium font-heading">{e.name}</p>
-              <p className="text-xs text-ink-3">{e.due_date} • {e.days_until >= 0 ? `${e.days_until}d` : "overdue"} • {e.status}</p>
+              <p className="text-xs text-faint">{e.due_date} • {e.days_until >= 0 ? `${e.days_until}d` : "overdue"} • {e.status}</p>
             </div>
             <p className="text-sm font-semibold">{formatINR(e.amount)}</p>
           </div>
@@ -378,10 +378,10 @@ const UpcomingPanel = memo(function UpcomingPanel({ data }: { data: UpcomingData
       </CardHeader>
       <div className="space-y-2">
         {data.items.map((e) => (
-                  <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg bg-tint-warning/20 p-3 dark:bg-[#78350F]/30">
+                  <div key={`${e.bill_id}-${e.due_date}`} className="flex items-center justify-between rounded-lg bg-warning-soft/20 p-3 dark:bg-[#78350F]/30">
             <div>
               <p className="text-sm font-medium">{e.name}</p>
-              <p className="text-xs text-ink-3">{e.due_date} • {e.days_until}d • {e.status}</p>
+              <p className="text-xs text-faint">{e.due_date} • {e.days_until}d • {e.status}</p>
             </div>
             <p className="text-sm font-bold">{formatINR(e.amount)}</p>
           </div>
@@ -408,7 +408,7 @@ const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { p
       {proj.length > 0 && (
         <div className="space-y-2">
           {proj.map((p) => (
-            <div key={p.month} className="flex items-center justify-between rounded-lg bg-sunken p-3">
+            <div key={p.month} className="flex items-center justify-between rounded-lg bg-deep p-3">
               <p className="text-sm font-medium">{p.month}</p>
               <p className="text-sm font-semibold">{formatINR(p.total)}</p>
             </div>
@@ -417,14 +417,14 @@ const CashflowPanel = memo(function CashflowPanel({ projection, waterfall }: { p
       )}
       {wf && wf.length > 0 && (
         <div className="mt-4">
-          <p className="text-xs font-medium text-ink-3 mb-2">Waterfall (cumulative)</p>
+          <p className="text-xs font-medium text-faint mb-2">Waterfall (cumulative)</p>
           <div className="space-y-2">
             {wf.map((w) => (
-                  <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-tint-info/50 p-3 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40">
+                  <div key={w.month} className="flex items-center justify-between rounded-lg border border-primary-100 bg-info-soft/50 p-3 dark:border-[#2A2A2A] dark:bg-[#1E1E1E]/40">
                 <p className="text-sm font-medium">{w.month}</p>
                 <div className="text-right">
                   <p className="text-sm font-semibold">{formatINR(w.total)}</p>
-                  <p className="text-xs text-ink-3">Cumulative {formatINR(w.cumulative)}</p>
+                  <p className="text-xs text-faint">Cumulative {formatINR(w.cumulative)}</p>
                 </div>
               </div>
             ))}
@@ -477,14 +477,14 @@ function SuggestRecurringPanel() {
         </div>
       </CardHeader>
       {suggestions.length === 0 ? (
-        <p className="text-sm text-ink-3">{done ? "No recurring candidates found." : "Click Suggest to scan transactions."}</p>
+        <p className="text-sm text-faint">{done ? "No recurring candidates found." : "Click Suggest to scan transactions."}</p>
       ) : (
         <div className="space-y-2">
           {suggestions.map((s) => (
-            <div key={s.description} className="flex items-center justify-between rounded-lg border border-line p-3">
+            <div key={s.description} className="flex items-center justify-between rounded-lg border border-edge p-3">
               <div>
                 <p className="text-sm font-medium">{s.description}</p>
-                <p className="text-xs text-ink-3">{s.occurrence_count} occurrences • Avg {formatINR(s.avg_amount)}</p>
+                <p className="text-xs text-faint">{s.occurrence_count} occurrences • Avg {formatINR(s.avg_amount)}</p>
               </div>
               <Badge variant="info">{s.occurrence_count}x</Badge>
             </div>
@@ -614,8 +614,8 @@ export function BillsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Bills</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">Track recurring bills and due dates</p>
+          <h1 className="text-3xl font-bold font-heading text-foreground">Bills</h1>
+          <p className="text-sm text-faint font-body mt-1">Track recurring bills and due dates</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -661,10 +661,10 @@ export function BillsDashboard({
           </CardHeader>
           <div className="space-y-2">
             {suggestions.suggestions.map((s) => (
-              <div key={s.description} className="flex items-center justify-between rounded-lg border border-line p-3">
+              <div key={s.description} className="flex items-center justify-between rounded-lg border border-edge p-3">
                 <div>
                   <p className="text-sm font-medium">{s.description}</p>
-                  <p className="text-xs text-ink-3">{s.occurrence_count} times • Avg {formatINR(s.avg_amount)}</p>
+                  <p className="text-xs text-faint">{s.occurrence_count} times • Avg {formatINR(s.avg_amount)}</p>
                 </div>
                 <Badge variant="info">{s.occurrence_count}x</Badge>
               </div>
@@ -726,16 +726,16 @@ export function BillsDashboard({
                 </Button>
               </div>
               {expanded.has(b.id) && (
-                <Card className="p-3 bg-sunken space-y-2">
+                <Card className="p-3 bg-deep space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><p className="text-ink-3">Amount</p><p className="font-medium">{b.amount != null ? formatINR(b.amount) : b.estimated_amount != null ? `~${formatINR(b.estimated_amount)}` : "-"}</p></div>
-                    <div><p className="text-ink-3">Frequency</p><p className="font-medium">{b.frequency}</p></div>
-                    <div><p className="text-ink-3">Account</p><p className="font-medium">{b.account_name ?? "-"}</p></div>
-                    <div><p className="text-ink-3">Category</p><p className="font-medium">{b.category_name ?? "-"}</p></div>
-                    <div><p className="text-ink-3">Reminder days</p><p className="font-medium">{b.reminder_days} days • {b.is_autopay ? "Autopay" : "Manual"}</p></div>
-                    <div><p className="text-ink-3">Last paid</p><p className="font-medium">{b.last_paid_date ? `${b.last_paid_date} • ${b.last_paid_amount != null ? formatINR(b.last_paid_amount) : "-"}` : "-"}</p></div>
+                    <div><p className="text-faint">Amount</p><p className="font-medium">{b.amount != null ? formatINR(b.amount) : b.estimated_amount != null ? `~${formatINR(b.estimated_amount)}` : "-"}</p></div>
+                    <div><p className="text-faint">Frequency</p><p className="font-medium">{b.frequency}</p></div>
+                    <div><p className="text-faint">Account</p><p className="font-medium">{b.account_name ?? "-"}</p></div>
+                    <div><p className="text-faint">Category</p><p className="font-medium">{b.category_name ?? "-"}</p></div>
+                    <div><p className="text-faint">Reminder days</p><p className="font-medium">{b.reminder_days} days • {b.is_autopay ? "Autopay" : "Manual"}</p></div>
+                    <div><p className="text-faint">Last paid</p><p className="font-medium">{b.last_paid_date ? `${b.last_paid_date} • ${b.last_paid_amount != null ? formatINR(b.last_paid_amount) : "-"}` : "-"}</p></div>
                   </div>
-                  {b.notes && <p className="text-xs text-ink-3 border-t pt-2">{b.notes}</p>}
+                  {b.notes && <p className="text-xs text-faint border-t pt-2">{b.notes}</p>}
                   <div className="flex gap-2 pt-1">
                     <Button variant="ghost" size="sm" asChild>
                       <a href={`/api/bills/${b.id}/payments/export`} download>Export payments</a>
