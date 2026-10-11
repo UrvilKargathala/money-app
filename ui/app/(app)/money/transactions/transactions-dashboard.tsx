@@ -188,8 +188,8 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Transactions</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">{summary.count} transactions • Net {formatINR(summary.net)}</p>
+          <h1 className="text-3xl font-bold font-heading text-foreground">Transactions</h1>
+          <p className="text-sm text-faint font-body mt-1">{summary.count} transactions • Net {formatINR(summary.net)}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setRulesOpen(true)}><WandSparkles className="h-4 w-4" /> Merchant rules</Button>
@@ -237,7 +237,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
         </div>
       </Card>
 
-      <Card className={`sticky top-20 z-30 p-3 shadow-md ${selected.size > 0 ? "border-primary-200 bg-tint-info dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : ""}`}>
+      <Card className={`sticky top-20 z-30 p-3 shadow-md ${selected.size > 0 ? "border-primary-200 bg-info-soft dark:border-[#60A5FA] dark:bg-[#1E1E1E]/50" : ""}`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <label className="flex shrink-0 items-center gap-2 text-sm font-semibold">
             <input
@@ -294,7 +294,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
           {groups.map((g) => (
             <div key={g.date}>
               <div className="flex items-center justify-between mb-1.5">
-                <h2 className="text-sm font-semibold font-heading text-ink-2">
+                <h2 className="text-sm font-semibold font-heading text-muted-foreground">
                   {new Date(g.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}
                 </h2>
                 <span className={`text-sm font-semibold tabular-nums ${g.total >= 0 ? "text-success" : "text-error"}`}>
@@ -312,7 +312,7 @@ export function TransactionsDashboard({ transactions, summary, total, page, page
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4 border-t">
-              <p className="text-sm text-ink-3">
+              <p className="text-sm text-faint">
                 Page {page} of {totalPages} • {total} total
               </p>
               <div className="flex gap-2">
