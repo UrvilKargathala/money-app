@@ -438,7 +438,7 @@ export function NotesDashboard({
             <CardTitle className="flex items-center gap-2 text-base">
               <Tag className="h-4 w-4" /> Categories
             </CardTitle>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-faint">
               {notes.length === 0
                 ? "No notes yet — counts appear as you add notes."
                 : `${notes.length} note${notes.length === 1 ? "" : "s"} across ${categories.filter((c) => Boolean(c.name)).length} categories · tap to filter · pencil to rename`}
@@ -446,7 +446,7 @@ export function NotesDashboard({
           </CardHeader>
           <CardContent>
             {categories.length === 0 ? (
-              <p className="text-sm text-neutral-400">No categories</p>
+              <p className="text-sm text-faint">No categories</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {categories
@@ -482,7 +482,7 @@ export function NotesDashboard({
                               type="button"
                               aria-label="Cancel rename"
                               onClick={() => setEditingCategory(null)}
-                              className="p-1.5 text-neutral-400 hover:bg-soft"
+                              className="p-1.5 text-faint hover:bg-soft hover:text-muted-foreground"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -510,7 +510,7 @@ export function NotesDashboard({
                           title={`Rename ${c.name}`}
                           aria-label={`Rename category ${c.name}`}
                           onClick={() => { setEditingCategory(c.name); setCategoryDraft(c.name); }}
-                          className="border-l border-edge px-1.5 text-neutral-400 hover:bg-soft hover:text-muted-foreground"
+                          className="border-l border-edge px-1.5 text-faint hover:bg-soft hover:text-muted-foreground"
                         >
                           <Pencil className="h-3 w-3" />
                         </button>
@@ -546,7 +546,7 @@ export function NotesDashboard({
             </div>
             {templates.length > 0 && (
               <div className="space-y-1.5 border-t border-edge pt-3">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">Starters</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-faint">Starters</p>
                 <div className="flex flex-wrap gap-2">
                   {templates.map((t) => (
                     <button key={t.template_code} type="button" title={t.description ?? t.name} onClick={() => applyTemplate(t)}><Badge variant="default">{t.name}</Badge></button>
@@ -555,7 +555,7 @@ export function NotesDashboard({
               </div>
             )}
             {userTemplates.length === 0 && templates.length === 0 && (
-              <p className="text-sm text-neutral-400">No templates</p>
+              <p className="text-sm text-faint">No templates</p>
             )}
           </CardContent>
         </Card>
@@ -570,7 +570,7 @@ export function NotesDashboard({
         <TabsContent value="notes" className="space-y-4">
           <Card className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
               <Input placeholder="Search notes..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -608,7 +608,7 @@ export function NotesDashboard({
                           {n.is_pinned ? <Pin className="h-3 w-3 shrink-0 text-primary-600" /> : null}
                           <span className="truncate">{n.title}</span>
                         </p>
-                        <span className="shrink-0 text-xs text-neutral-400">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
+                        <span className="shrink-0 text-xs text-faint">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <Badge variant="default">{n.category}</Badge>
@@ -648,7 +648,7 @@ export function NotesDashboard({
                         {n.category}
                       </Badge>
                     </div>
-                    <span className="text-xs text-neutral-400">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
+                    <span className="text-xs text-faint">{new Date(n.created_at).toLocaleDateString("en-IN")}</span>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleRestore(n.id)}>
@@ -700,13 +700,13 @@ export function NotesDashboard({
             <div className="space-y-2">
               <Label htmlFor="note-data">Content *</Label>
               <Textarea id="note-data" name="data" value={content} onChange={(event) => setContent(event.target.value)} placeholder="Encrypted content" required className="min-h-[140px]" />
-              <p className="text-xs text-neutral-400">Encrypted in this browser with AES-256-GCM before it is sent.</p>
+              <p className="text-xs text-faint">Encrypted in this browser with AES-256-GCM before it is sent.</p>
             </div>
             {editing && <div className="space-y-2">
               <Label className="flex items-center gap-2"><Paperclip className="h-4 w-4" />Attachments</Label>
               <Input type="file" disabled={attachmentBusy} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadAttachment(file); event.target.value = ""; }} />
               <div className="space-y-2">{attachments.map(item => <div key={item.id} className="flex items-center justify-between rounded-lg border p-2 text-sm"><span className="truncate">{item.file_name}</span><div className="flex gap-1"><Button type="button" size="sm" variant="ghost" onClick={() => void openAttachment(item, true)}><Eye className="h-4 w-4" /><span className="sr-only">Preview</span></Button><Button type="button" size="sm" variant="ghost" onClick={() => void openAttachment(item, false)}><Download className="h-4 w-4" /><span className="sr-only">Download</span></Button><Button type="button" size="sm" variant="ghost" onClick={() => void removeAttachment(item)}><Trash2 className="h-4 w-4" /><span className="sr-only">Delete</span></Button></div></div>)}</div>
-              <p className="text-xs text-neutral-400">Files are encrypted in this browser. Save a new note first, then edit it to add attachments.</p>
+              <p className="text-xs text-faint">Files are encrypted in this browser. Save a new note first, then edit it to add attachments.</p>
             </div>}
             <DialogFooter className="sm:justify-between">
               <Button type="button" variant="ghost" onClick={() => void saveNoteAsTemplate()}>
@@ -759,7 +759,7 @@ export function NotesDashboard({
                 placeholder={"Username: \nPassword: "}
                 className="min-h-[120px]"
               />
-              <p className="text-xs text-neutral-400">Stored as a plaintext starter; encrypted once used in a note.</p>
+              <p className="text-xs text-faint">Stored as a plaintext starter; encrypted once used in a note.</p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setTplOpen(false)}>
