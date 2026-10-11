@@ -146,7 +146,7 @@ export function Topbar({ userName, userEmail, initialUnread = 0, hasAvatar = fal
                         <DropdownMenuItem
                           key={item.href}
                           asChild
-                          className={cn("rounded-lg", active && "bg-info-soft text-primary-600 focus:bg-info-soft focus:text-primary-600 dark:text-[#BFDBFE]")}
+                          className={cn("rounded-lg", active && "bg-info-soft text-primary-600 focus:bg-info-soft focus:text-primary-600 dark:bg-[#1E3A5F]/50 dark:text-[#BFDBFE] dark:focus:bg-[#1E3A5F]/50 dark:focus:text-[#BFDBFE]")}
                         >
                           <Link href={item.href} className="flex items-center gap-2.5 w-full">
                             <Icon className="h-4 w-4 shrink-0" />
