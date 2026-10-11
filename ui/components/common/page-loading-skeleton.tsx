@@ -46,7 +46,7 @@ export function AppPageSkeleton() {
           </CardHeader>
           <CardContent className="space-y-3">
             {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="flex items-center gap-3 rounded-lg border border-line p-3">
+              <div key={index} className="flex items-center gap-3 rounded-lg border border-edge p-3">
                 <Skeleton className="h-10 w-10 rounded-xl" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-2/3" />
@@ -80,7 +80,7 @@ export function AppPageSkeleton() {
 
 export function AuthPageSkeleton() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sunken p-6" role="status" aria-label="Loading authentication page">
+    <div className="flex min-h-screen items-center justify-center bg-deep p-6" role="status" aria-label="Loading authentication page">
       <span className="sr-only">Loading authentication page</span>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 pb-4">
@@ -101,7 +101,7 @@ export function AuthPageSkeleton() {
 
 export function PricingPageSkeleton() {
   return (
-    <div className="min-h-screen bg-sunken p-6" role="status" aria-label="Loading pricing page">
+    <div className="min-h-screen bg-deep p-6" role="status" aria-label="Loading pricing page">
       <span className="sr-only">Loading pricing page</span>
       <div className="mx-auto max-w-6xl space-y-10">
         <div className="flex items-center justify-between">
