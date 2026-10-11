@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EntityFormDialog, useEntityFormSuccess } from "@/components/common/entity-form-dialog";
-import { FormFooter, FormGrid } from "@/components/common/form-primitives";
+import { FormFooter, FormGrid, FieldError } from "@/components/common/form-primitives";
 import { createSip, updateSip } from "./actions";
 import { todayLocalISO } from "@/lib/format";
 
@@ -84,7 +84,7 @@ export function SipFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {state?.fieldErrors?.investment_id && <p className="text-xs text-error">{state.fieldErrors.investment_id}</p>}
+              {state?.fieldErrors?.investment_id && <FieldError message={state.fieldErrors.investment_id} />}
             </div>
           )}
 
@@ -92,7 +92,7 @@ export function SipFormDialog({
             <div className="space-y-2">
               <Label htmlFor="sip-amount">Amount *</Label>
               <Input id="sip-amount" name="amount" type="number" step="0.01" defaultValue={sip ? String(sip.amount) : ""} placeholder="5000" required />
-              {state?.fieldErrors?.amount && <p className="text-xs text-error">{state.fieldErrors.amount}</p>}
+              {state?.fieldErrors?.amount && <FieldError message={state.fieldErrors.amount} />}
             </div>
             <div className="space-y-2">
               <Label>Frequency</Label>
@@ -112,7 +112,7 @@ export function SipFormDialog({
             <div className="space-y-2">
               <Label htmlFor="sip-next">Next date *</Label>
               <Input id="sip-next" name="next_date" type="date" defaultValue={sip?.next_date ?? todayLocalISO()} required />
-              {state?.fieldErrors?.next_date && <p className="text-xs text-error">{state.fieldErrors.next_date}</p>}
+              {state?.fieldErrors?.next_date && <FieldError message={state.fieldErrors.next_date} />}
             </div>
             <div className="space-y-2">
               <Label htmlFor="sip-end">End date <span className="font-normal text-faint">(optional)</span></Label>
