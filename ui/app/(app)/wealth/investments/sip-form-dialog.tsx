@@ -77,9 +77,9 @@ export function SipFormDialog({
                   <SelectValue placeholder="Select holding" />
                 </SelectTrigger>
                 <SelectContent>
-                  {investments.map((inv) => (
-                    <SelectItem key={inv.id} value={inv.id}>
-                      {inv.name}
+                  {investments.map((investment) => (
+                    <SelectItem key={investment.id} value={investment.id}>
+                      {investment.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
