@@ -201,9 +201,9 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                 </div>
               ) : display.length === 0 ? (
                 <div className="py-10 text-center">
-                  <Bell className="h-8 w-8 mx-auto text-neutral-300 mb-2" />
+                  <Bell className="h-8 w-8 mx-auto text-faint mb-2" />
                   <p className="text-sm font-medium text-muted-foreground">No notifications</p>
-                  <p className="text-xs text-neutral-400 mt-1">{filter === "upcoming" ? "No upcoming reminders" : "You're all caught up"}</p>
+                  <p className="text-xs text-faint mt-1">{filter === "upcoming" ? "No upcoming reminders" : "You're all caught up"}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-line">
@@ -214,10 +214,10 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                         <p className="text-sm font-medium text-foreground flex items-center gap-1.5 flex-wrap">
                           <span className="truncate">{n.title}</span>
                           <Badge variant="info" className="text-[10px] px-1 py-0 h-4">{n.type}</Badge>
-                          {n.module && <span className="text-[10px] text-neutral-400">• {n.module}</span>}
+                          {n.module && <span className="text-[10px] text-faint">• {n.module}</span>}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.message}</p>
-                        <p className="text-[11px] text-neutral-400 mt-1">{new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                        <p className="text-[11px] text-faint mt-1">{new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
                         {n.deep_link && (
                           <Link href={n.deep_link} onClick={() => setOpen(false)} className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline mt-1">
                             View <ExternalLink className="h-3 w-3" />
@@ -230,7 +230,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
                             <Check className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-400 hover:text-error" onClick={() => handleDismiss(n.id)} title="Dismiss" aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-faint hover:text-error" onClick={() => handleDismiss(n.id)} title="Dismiss" aria-label={`Dismiss: ${n.title}`} disabled={pendingIds.has(n.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -244,7 +244,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
               <Link href="/notifications" onClick={() => setOpen(false)} className="text-sm font-medium text-primary-600 hover:underline">
                 View all notifications
               </Link>
-              <span className="text-xs text-neutral-400">{notifications.length} total</span>
+              <span className="text-xs text-faint">{notifications.length} total</span>
             </div>
           </div>
         </>
