@@ -28,13 +28,13 @@ const LIGHT: ChartTheme = {
 };
 
 const DARK: ChartTheme = {
-  tick: "#8A94A6",
-  grid: "#262626",
-  tooltipBg: "#111111",
-  tooltipBorder: "#2A2A2A",
-  tooltipText: "#EAF1FF",
-  legendText: "#B9C7DE",
-  cursor: "#262626",
+  tick: "#94A3B8",
+  grid: "#334155",
+  tooltipBg: "#0F172A",
+  tooltipBorder: "#334155",
+  tooltipText: "#F8FAFC",
+  legendText: "#CBD5E1",
+  cursor: "#1E293B",
 };
 
 /**
