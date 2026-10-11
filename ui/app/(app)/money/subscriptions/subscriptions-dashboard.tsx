@@ -95,6 +95,8 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
 // ---------------------------------------------------------------------------
 
 const SNOOZE_PRESETS = ["7", "14", "30", "60", "90"] as const;
+const SNOOZE_MIN_DAYS = 1;
+const SNOOZE_MAX_DAYS = 90;
 
 function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const router = useRouter();
@@ -151,14 +153,15 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
     return dt.toLocaleDateString("en-IN");
   };
   const parsedDays = Number(days);
-  const validDays = Number.isInteger(parsedDays) && parsedDays >= 1 && parsedDays <= 90;
+  const validDays =
+    Number.isInteger(parsedDays) && parsedDays >= SNOOZE_MIN_DAYS && parsedDays <= SNOOZE_MAX_DAYS;
 
   const handleSnooze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sub) return;
-    const d = Number(days);
-    if (!Number.isInteger(d) || d < 1 || d > 90) {
-      toast.error("Snooze must be between 1 and 90 days.");
+    const daysCount = Number(days);
+    if (!Number.isInteger(daysCount) || daysCount < SNOOZE_MIN_DAYS || daysCount > SNOOZE_MAX_DAYS) {
+      toast.error(`Snooze must be between ${SNOOZE_MIN_DAYS} and ${SNOOZE_MAX_DAYS} days.`);
       return;
     }
     setLoading(true);
@@ -167,14 +170,14 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
       // already-recorded outcome, never shift the date a second time.
       const attempt = attemptIdFor(sub.id);
       // try server action first
-      const actionRes = await snoozeSubscriptionAction(sub.id, d, mode, attempt);
+      const actionRes = await snoozeSubscriptionAction(sub.id, daysCount, mode, attempt);
       if (actionRes?.error) {
         // fallback fetch
-        const res = await fetch(`/api/subscriptions/${sub.id}/snooze`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ days: d, source: mode, attempt }) });
+        const res = await fetch(`/api/subscriptions/${sub.id}/snooze`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ days: daysCount, source: mode, attempt }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || data.fieldErrors?.days || "Could not snooze");
       }
-      toast.success(`Snoozed ${d} days → renews ${shiftRenewal(sub.next_renewal_date, d)}`);
+      toast.success(`Snoozed ${daysCount} days → renews ${shiftRenewal(sub.next_renewal_date, daysCount)}`);
       onOpenChange(false);
       router.refresh();
     } catch (err) {
@@ -196,14 +199,14 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
           <div className="space-y-2">
             <Label>Days to snooze</Label>
             <div className="flex gap-1 rounded-lg bg-soft p-1">
-              {(["preset", "custom"] as const).map((m) => (
+              {(["preset", "custom"] as const).map((modeOption) => (
                 <button
-                  key={m}
+                  key={modeOption}
                   type="button"
-                  onClick={() => { setMode(m); persistSnoozeState({ mode: m, preset, custom }); }}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-base text-foreground shadow-sm" : "text-faint hover:text-foreground"}`}
+                  onClick={() => { setMode(modeOption); persistSnoozeState({ mode: modeOption, preset, custom }); }}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === modeOption ? "bg-base text-foreground shadow-sm" : "text-faint hover:text-foreground"}`}
                 >
-                  {m === "preset" ? "Presets" : "Custom"}
+                  {modeOption === "preset" ? "Presets" : "Custom"}
                 </button>
               ))}
             </div>
@@ -211,8 +214,8 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
               <Select value={preset} onValueChange={(v) => { setPreset(v); persistSnoozeState({ mode, preset: v, custom }); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {SNOOZE_PRESETS.map((p) => (
-                    <SelectItem key={p} value={p}>{p} days</SelectItem>
+                  {SNOOZE_PRESETS.map((presetDays) => (
+                    <SelectItem key={presetDays} value={presetDays}>{presetDays} days</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -268,19 +271,23 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
   }, [initialAudits, premium]);
 
   // Filter + aggregates in one pass (were 3 separate scans per render).
+  // Dismissed audits never surface, even under filter "all" — by design.
   const auditStats = useMemo(() => {
     const visible: Audit[] = [];
     let totalPotential = 0;
     let activeCount = 0;
-    for (const a of audits) {
-      if (!a.is_dismissed) {
-        activeCount += 1;
-        totalPotential += a.potential_savings ?? 0;
-      } else continue;
-      if (filter !== "all" && a.audit_type !== filter) continue;
-      visible.push(a);
+    let dismissedCount = 0;
+    for (const audit of audits) {
+      if (audit.is_dismissed) {
+        dismissedCount += 1;
+        continue;
+      }
+      activeCount += 1;
+      totalPotential += audit.potential_savings ?? 0;
+      if (filter !== "all" && audit.audit_type !== filter) continue;
+      visible.push(audit);
     }
-    return { visible, totalPotential, activeCount };
+    return { visible, totalPotential, activeCount, dismissedCount };
   }, [audits, filter]);
   const filtered = auditStats.visible;
   const totalPotential = auditStats.totalPotential;
@@ -288,7 +295,7 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
 
   const handleDismiss = async (auditId: string) => {
     // optimistic
-    setAudits((prev) => prev.map((a) => a.id === auditId ? { ...a, is_dismissed: 1 } : a));
+    setAudits((prev) => prev.map((audit) => audit.id === auditId ? { ...audit, is_dismissed: 1 } : audit));
     try {
       const res = await fetch(`/api/subscriptions/audits/${auditId}/dismiss`, { method: "POST" });
       if (!res.ok) {
@@ -323,7 +330,7 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-base"><ShieldAlert className="h-5 w-5" /> Audits</CardTitle>
-            <CardDescription>{activeCount} active • Potential savings {formatINR(totalPotential)} • {audits.filter(a=>a.is_dismissed).length} dismissed</CardDescription>
+            <CardDescription>{activeCount} active • Potential savings {formatINR(totalPotential)} • {auditStats.dismissedCount} dismissed</CardDescription>
           </div>
           <Badge variant={activeCount > 0 ? "warning" : "success"}>{activeCount} open</Badge>
         </div>
@@ -417,10 +424,10 @@ function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
   return (
     <Card className="p-4 bg-deep space-y-3">
       <div className="grid grid-cols-2 gap-x-2 gap-y-3 text-xs">
-        {rows.map((r) => (
-          <div key={r.label}>
-            <p className="text-faint">{r.label}</p>
-            <p className="font-medium text-foreground">{r.value}</p>
+        {rows.map((row) => (
+          <div key={row.label}>
+            <p className="text-faint">{row.label}</p>
+            <p className="font-medium text-foreground">{row.value}</p>
           </div>
         ))}
       </div>
