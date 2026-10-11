@@ -24,6 +24,10 @@ type AccountFormData = {
   version: number;
 };
 
+const DEFAULT_ACCOUNT_TYPE = "bank_savings";
+const DEFAULT_ACCOUNT_COLOR = "#2563EB";
+const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
+
 export function AccountFormDialog({
   open,
   onOpenChange,
@@ -36,10 +40,10 @@ export function AccountFormDialog({
   onSuccess?: () => void;
 }) {
   const isEdit = !!account;
-  const [type, setType] = useState(account?.type || "bank_savings");
-  const [color, setColor] = useState(account?.color || "#2563EB");
+  const [type, setType] = useState(account?.type || DEFAULT_ACCOUNT_TYPE);
+  const [color, setColor] = useState(account?.color || DEFAULT_ACCOUNT_COLOR);
   const pickerRef = useRef<HTMLInputElement>(null);
-  const validColor = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#2563EB";
+  const validColor = HEX_COLOR_RE.test(color) ? color : DEFAULT_ACCOUNT_COLOR;
   // Keep the action itself server-side. Passing a client wrapper to a form
   // action prevents React from dispatching the mutation in production.
   const [state, formAction, isPending] = useActionState(isEdit ? updateAccount : createAccount, null);
@@ -48,8 +52,8 @@ export function AccountFormDialog({
 
   useEffect(() => {
     if (open) {
-      setType(account?.type || "bank_savings");
-      setColor(account?.color || "#2563EB");
+      setType(account?.type || DEFAULT_ACCOUNT_TYPE);
+      setColor(account?.color || DEFAULT_ACCOUNT_COLOR);
     }
   }, [open, account]);
 
@@ -92,9 +96,9 @@ export function AccountFormDialog({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {ACCOUNT_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t.replace(/_/g, " ")}
+            {ACCOUNT_TYPES.map((accountType) => (
+              <SelectItem key={accountType} value={accountType}>
+                {accountType.replace(/_/g, " ")}
               </SelectItem>
             ))}
           </SelectContent>
