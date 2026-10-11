@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FieldError } from "@/components/common/form-primitives";
 import { magicLinkAction } from "./actions";
 
 export default function MagicLinkPage() {
@@ -34,7 +33,7 @@ export default function MagicLinkPage() {
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" placeholder="you@example.com" autoComplete="email" required error={!!state?.fieldErrors?.email} />
-            {state?.fieldErrors?.email && <FieldError message={state.fieldErrors.email} />}
+            {state?.fieldErrors?.email && <p className="text-xs text-error-dark dark:text-[#FCA5A5]">{state.fieldErrors.email}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Sending..." : "Send magic link"}
