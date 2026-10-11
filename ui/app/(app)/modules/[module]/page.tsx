@@ -1,4 +1,4 @@
-import { PlaceholderPage } from "@/components/common/placeholder-page";
+import { EmptyState } from "@/components/common/empty-state";
 
 const moduleMeta: Record<string, { title: string; description: string }> = {
   bills: { title: "Bills", description: "Track your recurring bills and due dates" },
@@ -17,5 +17,18 @@ const moduleMeta: Record<string, { title: string; description: string }> = {
 export default async function ModulePlaceholder({ params }: { params: Promise<{ module: string }> }) {
   const { module } = await params;
   const meta = moduleMeta[module] || { title: module, description: `The ${module} module` };
-  return <PlaceholderPage title={meta.title} description={meta.description} module={module} />;
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold font-heading text-foreground">{meta.title}</h1>
+        <p className="text-sm text-faint font-body mt-1">{meta.description}</p>
+      </div>
+      <EmptyState
+        title="Coming Soon"
+        description={`The ${module} module is under construction. This module will be available in the next update. Check back soon or explore the available modules from the sidebar.`}
+        actionLabel="Back to Dashboard"
+        href="/overview/dashboard"
+      />
+    </div>
+  );
 }
