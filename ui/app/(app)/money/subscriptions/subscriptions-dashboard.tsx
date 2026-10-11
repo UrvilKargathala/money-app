@@ -64,16 +64,16 @@ function SubscriptionPaymentsDialog({ sub, open, onOpenChange }: { sub: Sub | nu
           <DialogDescription>{payments.length} payments • {sub.frequency} • Next {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")}</DialogDescription>
         </DialogHeader>
         <div className="flex items-center justify-between">
-          <p className="text-xs text-ink-3">{payments.length} records</p>
+          <p className="text-xs text-faint">{payments.length} records</p>
           <ExportButton href={`/api/subscriptions/${sub.id}/payments/export`} />
         </div>
           {loadError ? <PanelError message="Could not load subscription payments." onRetry={reload} /> : <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-sunken text-xs text-ink-3">
+            <thead className="sticky top-0 bg-deep text-xs text-faint">
               <tr><th className="p-2 text-left">Period</th><th className="p-2 text-left">Date</th><th className="p-2 text-right">Amount</th><th className="p-2 text-left">Notes</th></tr>
             </thead>
             <tbody>
-              {loading ? <TableLoadingRows columns={4} /> : payments.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-ink-3">No payments yet</td></tr> : payments.map((p) => (
+              {loading ? <TableLoadingRows columns={4} /> : payments.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-faint">No payments yet</td></tr> : payments.map((p) => (
                 <tr key={p.id} className="border-t text-xs">
                   <td className="p-2">{p.period_label}</td>
                   <td className="p-2">{p.created_at.slice(0,10)}</td>
@@ -194,13 +194,13 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
         <form onSubmit={handleSnooze} className="space-y-4">
           <div className="space-y-2">
             <Label>Days to snooze</Label>
-            <div className="flex gap-1 rounded-lg bg-wash p-1">
+            <div className="flex gap-1 rounded-lg bg-soft p-1">
               {(["preset", "custom"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => { setMode(m); persistSnoozeState({ mode: m, preset, custom }); }}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-surface text-ink-1 shadow-sm" : "text-ink-3 hover:text-ink-1"}`}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === m ? "bg-base text-foreground shadow-sm" : "text-faint hover:text-foreground"}`}
                 >
                   {m === "preset" ? "Presets" : "Custom"}
                 </button>
@@ -227,7 +227,7 @@ function SnoozeDialog({ sub, open, onOpenChange }: { sub: Sub | null; open: bool
               />
             )}
             {validDays && sub ? (
-              <p className="text-xs text-ink-3">
+              <p className="text-xs text-faint">
                 Renews {new Date(sub.next_renewal_date).toLocaleDateString("en-IN")} → {shiftRenewal(sub.next_renewal_date, parsedDays)} ({parsedDays} days)
               </p>
             ) : null}
@@ -311,7 +311,7 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
           <CardTitle className="flex items-center gap-2 text-base"><ShieldAlert className="h-5 w-5" /> Audits</CardTitle>
           <CardDescription>No findings from the available data.</CardDescription>
         </CardHeader>
-        <p className="text-sm text-ink-3">Audits flag recorded price changes, possible duplicates and overlapping categories. Add last-used dates to help identify unused services.</p>
+        <p className="text-sm text-faint">Audits flag recorded price changes, possible duplicates and overlapping categories. Add last-used dates to help identify unused services.</p>
       </Card>
     );
   }
@@ -340,9 +340,9 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
 
       <div className="mt-4 space-y-3 max-h-[400px] overflow-auto">
         {filtered.length === 0 ? (
-          <p className="text-sm text-ink-3 py-6 text-center">No audits in this category.</p>
+          <p className="text-sm text-faint py-6 text-center">No audits in this category.</p>
         ) : filtered.map((a) => (
-          <div key={a.id} className="flex items-start justify-between rounded-lg border border-line p-3">
+          <div key={a.id} className="flex items-start justify-between rounded-lg border border-edge p-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant={a.audit_type === "price_change" ? "warning" : a.audit_type === "duplicate" ? "error" : a.audit_type === "unused" ? "info" : "secondary"}>{a.audit_type.replace("_"," ")}</Badge>
@@ -350,7 +350,7 @@ function AuditsPanel({ audits: initialAudits }: { audits: Audit[] | null }) {
                 <span className="text-xs text-neutral-400">{new Date(a.created_at).toLocaleDateString("en-IN")}</span>
               </div>
               <p className="text-sm font-medium font-heading">{a.finding ?? "Finding not provided"}</p>
-              <p className="text-xs text-ink-3">{a.recommendation ?? "-"}</p>
+              <p className="text-xs text-faint">{a.recommendation ?? "-"}</p>
               <p className="text-[11px] text-neutral-400">Subscription {a.subscription_id.slice(0,8)}…</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => handleDismiss(a.id)} className="shrink-0"><X className="h-3 w-3" /> Dismiss</Button>
@@ -414,18 +414,18 @@ function SubscriptionDetailPanel({ sub }: { sub: Sub }) {
   };
 
   return (
-    <Card className="p-4 bg-sunken space-y-3">
+    <Card className="p-4 bg-deep space-y-3">
       <div className="grid grid-cols-2 gap-x-2 gap-y-3 text-xs">
         {rows.map((r) => (
           <div key={r.label}>
-            <p className="text-ink-3">{r.label}</p>
-            <p className="font-medium text-ink-1">{r.value}</p>
+            <p className="text-faint">{r.label}</p>
+            <p className="font-medium text-foreground">{r.value}</p>
           </div>
         ))}
       </div>
-      {sub.notes && <p className="text-xs text-ink-3 border-t border-line pt-2">{sub.notes}</p>}
+      {sub.notes && <p className="text-xs text-faint border-t border-edge pt-2">{sub.notes}</p>}
       {premium && (
-        <form onSubmit={saveUsage} className="space-y-1.5 border-t border-line pt-3">
+        <form onSubmit={saveUsage} className="space-y-1.5 border-t border-edge pt-3">
           <div className="flex items-baseline justify-between">
             <Label htmlFor={`usage-${sub.id}`}>Last used</Label>
             <p className="text-[11px] text-neutral-400">
@@ -564,8 +564,8 @@ export function SubscriptionsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-ink-1">Subscriptions</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">{headerStats.active} active • {formatINR(monthlyBurn)}/mo</p>
+          <h1 className="text-3xl font-bold font-heading text-foreground">Subscriptions</h1>
+          <p className="text-sm text-faint font-body mt-1">{headerStats.active} active • {formatINR(monthlyBurn)}/mo</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
