@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { SubscriptionCard } from "./subscription-card";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
@@ -562,27 +563,27 @@ export function SubscriptionsDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Subscriptions</h1>
-          <p className="text-sm text-faint font-body mt-1">{headerStats.active} active • {formatINR(monthlyBurn)}/mo</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href="/api/subscriptions/export" download>
-              <Download className="h-4 w-4" /> Export
-            </a>
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Subscription
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Subscriptions"
+        description={<>{headerStats.active} active • {formatINR(monthlyBurn)}/mo</>}
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <a href="/api/subscriptions/export" download>
+                <Download className="h-4 w-4" /> Export
+              </a>
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Subscription
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label="Monthly Burn" value={formatINR(monthlyBurn)} subtext="Active subscriptions" icon={<Wallet className="h-5 w-5" />} variant="rose" />
