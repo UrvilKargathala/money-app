@@ -34,7 +34,7 @@ export function setHapticsEnabledCache(v: boolean) {
   cachedAt = Date.now();
 }
 
-export async function haptic(type: HapticType = "light"): Promise<void> {
+async function haptic(type: HapticType = "light"): Promise<void> {
   if (!(await isEnabled())) return;
 
   // Web fallback
