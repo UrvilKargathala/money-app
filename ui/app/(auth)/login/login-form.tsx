@@ -80,7 +80,7 @@ export default function LoginForm() {
             {isPending ? "Signing in..." : "Sign in"}
           </Button>
 
-          <p className="text-center text-sm text-ink-3">
+          <p className="text-center text-sm text-faint">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="font-medium text-primary-600 hover:underline">
               Sign up
