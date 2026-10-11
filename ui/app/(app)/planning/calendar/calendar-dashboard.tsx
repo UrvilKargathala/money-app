@@ -92,32 +92,32 @@ function sourceDot(source: string): string {
 function sourceBadgeVariant(source: string): string {
   switch (source) {
     case "bill":
-      return "bg-red-100 text-red-700 border border-red-200";
+      return "bg-red-100 text-red-700 border border-red-200 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:border-[#7F1D1D]";
     case "subscription":
-      return "bg-orange-100 text-orange-700 border border-orange-200";
+      return "bg-orange-100 text-orange-700 border border-orange-200 dark:bg-[#78350F]/40 dark:text-[#FDE68A] dark:border-[#78350F]";
     case "sip":
-      return "bg-blue-100 text-blue-700 border border-blue-200";
+      return "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-[#1E3A5F]/50 dark:text-[#BFDBFE] dark:border-[#1E3A5F]";
     case "goal":
-      return "bg-amber-100 text-amber-800 border border-amber-200";
+      return "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-[#78350F]/40 dark:text-[#FDE68A] dark:border-[#78350F]";
     case "tax_deadline":
-      return "bg-purple-100 text-purple-700 border border-purple-200";
+      return "bg-purple-100 text-purple-700 border border-purple-200 dark:bg-[#4C1D95]/40 dark:text-[#DDD6FE] dark:border-[#4C1D95]";
     case "custom":
-      return "bg-zinc-100 text-zinc-700 border border-zinc-200";
+      return "bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
     case "debt_emi":
-      return "bg-red-100 text-red-800 border border-red-200";
+      return "bg-red-100 text-red-800 border border-red-200 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:border-[#7F1D1D]";
     case "investment_maturity":
-      return "bg-emerald-100 text-emerald-700 border border-emerald-200";
+      return "bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:border-[#064E3B]";
     case "recurring":
-      return "bg-teal-100 text-teal-700 border border-teal-200";
+      return "bg-teal-100 text-teal-700 border border-teal-200 dark:bg-[#134E4A]/40 dark:text-[#99F6E0] dark:border-[#134E4A]";
     default:
-      return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
+      return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
   }
 }
 
 function kindBadge(kind: string): string {
-  if (kind === "inflow") return "bg-success-soft text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
-  if (kind === "outflow") return "bg-error-soft text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5] dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
-  return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E1E1E] dark:text-[#B9C7DE] dark:border-[#2A2A2A]";
+  if (kind === "inflow") return "bg-success-soft text-success-dark border border-success/20 dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]";
+  if (kind === "outflow") return "bg-error-soft text-error-dark border border-error/20 dark:bg-[#7F1D1D]/40 dark:text-[#FCA5A5]";
+  return "bg-soft text-muted-foreground border border-edge dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]";
 }
 
 function daysInMonth(year: number, month: number): number {
