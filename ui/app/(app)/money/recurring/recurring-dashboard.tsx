@@ -63,21 +63,21 @@ export function RecurringDashboard({
   const [endType, setEndType] = useState("never");
   const [busy, setBusy] = useState(false);
 
-  const launch = (item?: Template) => {
-    setEditing(item ?? null);
-    setType(item?.type ?? "expense");
-    setAccountId(item?.account_id ?? "");
-    setCategoryId(item?.category_id ?? "none");
-    setFrequency(item?.frequency ?? "monthly");
-    setEndType(item?.end_type ?? "never");
+  const launch = (template?: Template) => {
+    setEditing(template ?? null);
+    setType(template?.type ?? "expense");
+    setAccountId(template?.account_id ?? "");
+    setCategoryId(template?.category_id ?? "none");
+    setFrequency(template?.frequency ?? "monthly");
+    setEndType(template?.end_type ?? "never");
     setOpen(true);
   };
   const request = async (url: string, options: RequestInit, success: string) => {
     setBusy(true);
     try {
       const res = await fetch(url, options);
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || Object.values(body.fieldErrors || {})[0] || "Action failed.");
+      const responseBody = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseBody.error || Object.values(responseBody.fieldErrors || {})[0] || "Action failed.");
       toast.success(success);
       router.refresh();
       return true;
@@ -118,29 +118,29 @@ export function RecurringDashboard({
     )
       setOpen(false);
   };
-  const act = (item: Template, action: "execute" | "skip") =>
+  const act = (template: Template, action: "execute" | "skip") =>
     void request(
-      `/api/recurring-transactions/${item.id}/${action}`,
+      `/api/recurring-transactions/${template.id}/${action}`,
       { method: "POST" },
       action === "execute" ? "Transaction recorded" : "Occurrence skipped"
     );
-  const toggle = (item: Template) =>
+  const toggle = (template: Template) =>
     void request(
-      `/api/recurring-transactions/${item.id}`,
+      `/api/recurring-transactions/${template.id}`,
       {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ is_active: item.is_active !== 1, version: item.version }),
+        body: JSON.stringify({ is_active: template.is_active !== 1, version: template.version }),
       },
-      item.is_active ? "Schedule paused" : "Schedule resumed"
+      template.is_active ? "Schedule paused" : "Schedule resumed"
     );
   const [confirmState, askConfirm, closeConfirm] = useConfirm();
-  const remove = (item: Template) => {
+  const remove = (template: Template) => {
     askConfirm({
       title: "Delete this recurring transaction?",
       description: "Future occurrences stop being generated. This cannot be undone.",
       onConfirm: () => {
-        void request(`/api/recurring-transactions/${item.id}`, { method: "DELETE" }, "Recurring transaction deleted");
+        void request(`/api/recurring-transactions/${template.id}`, { method: "DELETE" }, "Recurring transaction deleted");
       },
     });
   };
@@ -167,55 +167,55 @@ export function RecurringDashboard({
           />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
-            {templates.map((item) => (
-              <Card key={item.id} className={item.is_active !== 1 ? "opacity-65" : item.is_due ? "border-warning" : ""}>
+            {templates.map((template) => (
+              <Card key={template.id} className={template.is_active !== 1 ? "opacity-65" : template.is_due ? "border-warning" : ""}>
                 <CardContent className="space-y-4 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-semibold text-foreground">{item.description || "Recurring transaction"}</h2>
-                        <Badge variant={item.is_active !== 1 ? "default" : item.is_due ? "warning" : "success"}>
-                          {item.is_active !== 1 ? "Paused" : item.is_due ? "Due" : "Active"}
+                        <h2 className="font-semibold text-foreground">{template.description || "Recurring transaction"}</h2>
+                        <Badge variant={template.is_active !== 1 ? "default" : template.is_due ? "warning" : "success"}>
+                          {template.is_active !== 1 ? "Paused" : template.is_due ? "Due" : "Active"}
                         </Badge>
                       </div>
                       <p className="mt-1 text-sm text-faint">
-                        Every {item.interval_value > 1 ? `${item.interval_value} ` : ""}
-                        {item.frequency}
-                        {item.account_name ? ` · ${item.account_name}` : ""}
+                        Every {template.interval_value > 1 ? `${template.interval_value} ` : ""}
+                        {template.frequency}
+                        {template.account_name ? ` · ${template.account_name}` : ""}
                       </p>
                     </div>
                     <p
                       className={
-                        item.type === "income" ? "font-semibold text-success-dark" : "font-semibold text-error-dark"
+                        template.type === "income" ? "font-semibold text-success-dark" : "font-semibold text-error-dark"
                       }
                     >
-                      {item.type === "income" ? "+" : "−"}
-                      {formatINR(item.amount)}
+                      {template.type === "income" ? "+" : "−"}
+                      {formatINR(template.amount)}
                     </p>
                   </div>
                   <div className="flex items-center justify-between rounded-lg bg-deep px-3 py-2 text-sm">
-                    <span>Next: {new Date(`${item.next_due_date}T00:00:00`).toLocaleDateString("en-IN")}</span>
-                    <span>{item.executed_count} recorded</span>
+                    <span>Next: {new Date(`${template.next_due_date}T00:00:00`).toLocaleDateString("en-IN")}</span>
+                    <span>{template.executed_count} recorded</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {item.is_due && item.is_active === 1 ? (
+                    {template.is_due && template.is_active === 1 ? (
                       <>
-                        <Button size="sm" onClick={() => act(item, "execute")} disabled={busy}>
+                        <Button size="sm" onClick={() => act(template, "execute")} disabled={busy}>
                           <Play className="h-3.5 w-3.5" /> Record now
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => act(item, "skip")} disabled={busy}>
+                        <Button size="sm" variant="outline" onClick={() => act(template, "skip")} disabled={busy}>
                           <SkipForward className="h-3.5 w-3.5" /> Skip
                         </Button>
                       </>
                     ) : null}
-                    <Button size="sm" variant="outline" onClick={() => launch(item)}>
+                    <Button size="sm" variant="outline" onClick={() => launch(template)}>
                       <Pencil className="h-3.5 w-3.5" /> Edit
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => toggle(item)} disabled={busy}>
-                      {item.is_active ? <Pause className="h-3.5 w-3.5" /> : <CircleCheck className="h-3.5 w-3.5" />}
-                      {item.is_active ? "Pause" : "Resume"}
+                    <Button size="sm" variant="ghost" onClick={() => toggle(template)} disabled={busy}>
+                      {template.is_active ? <Pause className="h-3.5 w-3.5" /> : <CircleCheck className="h-3.5 w-3.5" />}
+                      {template.is_active ? "Pause" : "Resume"}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(item)} disabled={busy}>
+                    <Button size="sm" variant="ghost" onClick={() => remove(template)} disabled={busy}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -285,9 +285,9 @@ export function RecurringDashboard({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No account</SelectItem>
-                      {accounts.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name}
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -301,9 +301,9 @@ export function RecurringDashboard({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No category</SelectItem>
-                      {categories.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name}
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
