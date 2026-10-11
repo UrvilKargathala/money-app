@@ -104,7 +104,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                   {loading ? (
                     <TableLoadingRows columns={4} />
                   ) : payments.length === 0 ? (
-                    <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No payments yet</td></tr>
+                    <tr><td colSpan={4} className="p-4 text-center text-faint">No payments yet</td></tr>
                   ) : payments.map((p) => (
                     <tr key={p.id} className="border-t text-xs">
                       <td className="p-2">{p.period_label}</td>
@@ -132,7 +132,7 @@ function PaymentsHistoryDialog({ bill, open, onOpenChange }: { bill: Bill | null
                   <p className="text-xs text-faint">YoY change</p>
                   <p className="text-sm font-semibold">
                     {yoy.previous.total === 0 ? "-" : `${(((yoy.current.total - yoy.previous.total) / yoy.previous.total) * 100).toFixed(1)}%`}{" "}
-                    <span className="text-neutral-400">({formatINR(yoy.current.total - yoy.previous.total)})</span>
+                    <span className="text-faint">({formatINR(yoy.current.total - yoy.previous.total)})</span>
                   </p>
                 </div>
               </div>
@@ -270,7 +270,7 @@ function RemindersDialog({ bill, open, onOpenChange }: { bill: Bill | null; open
                 {loading ? (
                   <TableLoadingRows columns={4} />
                 ) : reminders.length === 0 ? (
-                  <tr><td colSpan={4} className="p-4 text-center text-neutral-400">No reminders - add one below.</td></tr>
+                  <tr><td colSpan={4} className="p-4 text-center text-faint">No reminders - add one below.</td></tr>
                 ) : reminders.map((r) => (
                   <tr key={r.id} className="border-t text-xs">
                     <td className="p-2">{r.days_before} days</td>
