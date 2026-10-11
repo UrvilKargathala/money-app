@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -347,39 +348,40 @@ export function TaxDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Tax Planning</h1>
-          <p className="text-sm text-faint font-body mt-1">Section 80C/80D tracking • FY {fy}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Select value={selectedFy} onValueChange={handleFyChange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {fyOptions.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" asChild>
-            <a href={`/api/tax/exports/investments?financial_year=${fy}`} download>
-              <Download className="h-4 w-4" /> Export Investments
-            </a>
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add Investment
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Tax Planning"
+        description={<>Section 80C/80D tracking • FY {fy}</>}
+        actionsClassName="flex flex-wrap gap-2"
+        actions={
+          <>
+            <Select value={selectedFy} onValueChange={handleFyChange}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {fyOptions.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {f}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" asChild>
+              <a href={`/api/tax/exports/investments?financial_year=${fy}`} download>
+                <Download className="h-4 w-4" /> Export Investments
+              </a>
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add Investment
+            </Button>
+          </>
+        }
+      />
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
