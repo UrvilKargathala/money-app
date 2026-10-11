@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import dynamic from "next/dynamic";
 import { useDeleteConfirm } from "@/components/common/confirm-dialog";
 
@@ -422,15 +423,17 @@ export function NotesDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-heading text-foreground">Secure Notes</h1>
-          <p className="text-sm text-faint font-body mt-1">
+      <PageHeader
+        title="Secure Notes"
+        description={
+          <>
             {notes.length} notes • {trash.length} in trash • Encrypted vault
-          </p>
-        </div>
-        <div className="flex gap-2"><Button variant="outline" onClick={lockVault}><LockKeyhole className="h-4 w-4" /> Lock</Button><Button onClick={openCreate}><Plus className="h-4 w-4" /> Add Note</Button></div>
-      </div>
+          </>
+        }
+        actions={
+          <><Button variant="outline" onClick={lockVault}><LockKeyhole className="h-4 w-4" /> Lock</Button><Button onClick={openCreate}><Plus className="h-4 w-4" /> Add Note</Button></>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="space-y-4">
