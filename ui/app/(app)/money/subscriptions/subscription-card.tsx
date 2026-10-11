@@ -11,8 +11,8 @@ import Link from "next/link";
 
 import type { Sub } from "@/lib/entities";
 
-function statusBadge(s: string) {
-  switch (s) {
+function statusBadge(status: string) {
+  switch (status) {
     case "active":
       return <Badge variant="success">Active</Badge>;
     case "paused":
@@ -20,7 +20,7 @@ function statusBadge(s: string) {
     case "cancelled":
       return <Badge variant="default">Cancelled</Badge>;
     default:
-      return <Badge variant="default">{s}</Badge>;
+      return <Badge variant="default">{status}</Badge>;
   }
 }
 
