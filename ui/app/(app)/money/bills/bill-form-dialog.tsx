@@ -51,8 +51,7 @@ export function BillFormDialog({
 
   // Frontend-first: mirror the API's required-field rules so no invalid
   // create/update POST leaves the browser. Account stays optional by design.
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    const data = new FormData(e.currentTarget);
+  const validateBillForm = (data: FormData): Record<string, string> => {
     const name = String(data.get("name") ?? "").trim();
     const dueDay = Number(data.get("due_day"));
     const amount = String(data.get("amount") ?? "").trim();
@@ -70,6 +69,11 @@ export function BillFormDialog({
       next.amount = "Enter an amount, or an estimated amount for variable bills.";
     if (reminder !== "" && (!Number.isInteger(Number(reminder)) || Number(reminder) < 0 || Number(reminder) > 31))
       next.reminder_days = "Reminder days must be between 0 and 31.";
+    return next;
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const next = validateBillForm(new FormData(e.currentTarget));
     setLocalErrors(next);
     if (Object.keys(next).length > 0) e.preventDefault();
   };
